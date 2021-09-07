@@ -1,0 +1,7 @@
+name: BeansBeans
+version: 0.3.4
+api-version: 1.17
+main: me.playground.main.Main
+softdepend: [WorldEdit, dynmap, ProtocolLib]
+author: Beandon
+commands:

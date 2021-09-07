@@ -1,0 +1,6 @@
+name: FinalServer
+version: 0.12
+api-version: 1.17
+main: me.playground.main.Main
+softdepend: [WorldEdit, dynmap]
+commands:
