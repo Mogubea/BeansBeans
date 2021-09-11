@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -34,6 +35,10 @@ import org.json.JSONObject;
 
 import me.playground.celestia.logging.CelestiaAction;
 import me.playground.gui.UpdateEntry;
+import me.playground.items.BeanItem;
+import me.playground.loot.LootEntry;
+import me.playground.loot.LootManager;
+import me.playground.loot.LootTable;
 import me.playground.main.Main;
 import me.playground.npc.NPC;
 import me.playground.npc.NPCManager;
@@ -44,6 +49,9 @@ import me.playground.playerprofile.settings.PlayerSetting;
 import me.playground.playerprofile.skills.SkillData;
 import me.playground.playerprofile.skills.SkillInfo;
 import me.playground.playerprofile.skills.SkillType;
+import me.playground.playerprofile.stats.DirtyInteger;
+import me.playground.playerprofile.stats.PlayerStats;
+import me.playground.playerprofile.stats.StatType;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
 import me.playground.regions.RegionManager;
@@ -251,6 +259,7 @@ public class Datasource {
 		saveArmourWardrobe(pp);
 		savePickupBlacklist(pp.getId());
 		savePlayerHeirlooms(pp);
+		savePlayerStats(pp);
 	}
 
 	public static void saveProfileColumn(PlayerProfile pp, String column, Object value) {
@@ -473,6 +482,7 @@ public class Datasource {
 		saveDirtyShops();
 		saveDirtyWarps();
 		saveDirtyNPCs();
+		saveDirtyLootEntries();
 	}
 
 	public static void close(Object... c) {
@@ -570,6 +580,64 @@ public class Datasource {
 			close(r, c, statement);
 		}
 		return null;
+	}
+	
+	public static void savePlayerStats(PlayerProfile pp) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		
+		PlayerStats stats = pp.getStats();
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("INSERT INTO STATS (playerId, category, stat, value) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)");
+			statement.setInt(1, pp.getId());
+			
+			HashMap<StatType, HashMap<String, DirtyInteger>> map = stats.getMap();
+			
+			for (Entry<StatType, HashMap<String, DirtyInteger>> ent : map.entrySet()) {
+				statement.setByte(2, ent.getKey().getId());
+				
+				for(Entry<String, DirtyInteger> entt : ent.getValue().entrySet()) {
+					if (!entt.getValue().isDirty()) return;
+					
+					statement.setString(3, entt.getKey());
+					statement.setInt(4, entt.getValue().getValue());
+					statement.executeUpdate();
+					
+					entt.getValue().setDirty(false);
+				}
+			}
+			
+			statement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
+		}
+	}
+	
+	public static PlayerStats loadPlayerStats(PlayerProfile pp) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		ResultSet r = null;
+		
+		final PlayerStats stats = new PlayerStats(pp);
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("SELECT category,stat,value FROM stats WHERE playerId = ?");
+			statement.setInt(1, pp.getId());
+			r = statement.executeQuery();
+			
+			while(r.next())
+				stats.setStat(StatType.fromId(r.getByte(1)), r.getString(2), r.getInt(3), false);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(r, c, statement);
+		}
+		return stats;
 	}
 	
 	public static void savePlayerHeirlooms(PlayerProfile pp) {
@@ -1645,6 +1713,132 @@ public class Datasource {
 		} finally {
 			close(r, c, statement);
 		}
+	}
+	
+	// XXX: Loot
+	
+	public static void loadAllLoot() {
+		Connection c = null;
+		PreparedStatement statement = null;
+		ResultSet r = null;
+		
+		final LootManager lm = Main.getInstance().lootManager();
+		long then = System.currentTimeMillis();
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("SELECT * FROM loot");
+			r = statement.executeQuery();
+			
+			while(r.next()) {
+				final String itemType = r.getString("itemType");
+				final String compressedStack = r.getString("compressedStack");
+				final LootTable table = lm.getOrCreateTable(r.getString("tableName"));
+				ItemStack i = null;
+				
+				if (compressedStack != null) {
+					Utils.itemStackFromBase64(compressedStack);
+				} else {
+					try {
+						i = new ItemStack(Material.valueOf(itemType));
+					} catch (Exception e) {
+						BeanItem bi = BeanItem.from(itemType);
+						if (bi == null)
+							i = new ItemStack(Material.DIAMOND);
+						else
+							i = bi.getItemStack();
+					}
+				}
+				
+				table.addEntry(new LootEntry(r.getInt("id"), table, i, r.getInt("minStack"), r.getInt("maxStack"), r.getInt("chance")).setFlags(r.getByte("flags")));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(r, c, statement);
+			Main.getInstance().getLogger().info("Loaded " + lm.getAllEntries().size() + " Loot Entries in " + (System.currentTimeMillis()-then) + "ms");
+		}
+	}
+	
+	public static void saveDirtyLootEntries() {
+		final ArrayList<LootEntry> entries = Main.getInstance().lootManager().getAllEntries();
+		final int size = entries.size();
+		
+		for (int x = -1; ++x < size;) {
+			LootEntry entry = entries.get(x);
+			if (!entry.isDirty()) continue;
+			updateLootEntry(entry);
+			entry.setDirty(false);
+		}
+	}
+	
+	public static void updateLootEntry(LootEntry entry) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("UPDATE loot SET tableName = ?, chance = ?, minStack = ?, maxStack = ?, itemType = ?, flags = ?, compressedStack = ? WHERE id = ?");
+			statement.setString(1, entry.getTable().getName());
+			statement.setInt(2, entry.getChance());
+			statement.setInt(3, entry.getMinStackSize());
+			statement.setInt(4, entry.getMaxStackSize());
+			
+			String s = entry.getDisplayStack().getType().name();
+			BeanItem bi = BeanItem.from(entry.getDisplayStack());
+			if (bi != null)
+				s = bi.getIdentifier();
+			
+			statement.setString(5, s);
+			statement.setByte(6, entry.getFlags());
+			
+			if (entry.shouldCompress())
+				statement.setString(7, Utils.itemStackToBase64(entry.getDisplayStack()));
+			else
+				statement.setString(7, null);
+			
+			statement.setInt(8, entry.getId());
+			statement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
+		}
+	}
+	
+	public static LootEntry registerLootEntry(LootTable table, ItemStack itemStack, int min, int max, int chance, byte flags) throws SQLException {
+		Connection c = null;
+		ResultSet rs = null;
+		PreparedStatement statement = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("INSERT INTO loot (tableName, chance, minStack, maxStack, itemType, flags) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+			statement.setString(1, table.getName());
+			statement.setInt(2, chance);
+			statement.setInt(3, min);
+			statement.setInt(4, max);
+			
+			String s = itemStack.getType().name();
+			BeanItem bi = BeanItem.from(itemStack);
+			if (bi != null)
+				s = bi.getIdentifier();
+			
+			statement.setString(5, s);
+			statement.setByte(6, flags);
+			
+			statement.executeUpdate();
+			rs = statement.getGeneratedKeys();
+			if (rs.next())
+				return new LootEntry(rs.getInt(1), table, itemStack, min, max, chance).setFlags(flags);
+			else
+				throw new SQLException("Could not create new Loot Entry.");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, rs, statement);
+		}
+		return null;
 	}
 	
 	public static HashMap<Integer, Long> grabLinkedDiscordAccounts() {

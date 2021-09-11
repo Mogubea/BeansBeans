@@ -26,6 +26,7 @@ import com.google.common.cache.LoadingCache;
 
 import me.playground.command.BeanCommand;
 import me.playground.data.Datasource;
+import me.playground.discord.DiscordBot;
 import me.playground.gui.BeanGui;
 import me.playground.items.BeanItem;
 import me.playground.listeners.ConnectionListener;
@@ -33,6 +34,8 @@ import me.playground.main.Main;
 import me.playground.playerprofile.settings.PlayerSetting;
 import me.playground.playerprofile.skills.SkillData;
 import me.playground.playerprofile.skills.SkillType;
+import me.playground.playerprofile.stats.PlayerStats;
+import me.playground.playerprofile.stats.StatType;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
 import me.playground.utils.Utils;
@@ -148,6 +151,7 @@ public class PlayerProfile {
 	private Location					home;
 	private ItemStack[] 				armourWardrobe;
 	private final HeirloomInventory		heirloomInventory;
+	private final PlayerStats			stats;
 	private ArrayList<String> 			pickupBlacklist = new ArrayList<String>();
 	
 	private long 						booleanSettings = PlayerSetting.getDefaultSettings();
@@ -184,6 +188,7 @@ public class PlayerProfile {
 		this.armourWardrobe = Datasource.loadArmourWardrobe(id);
 		this.pickupBlacklist = Datasource.loadPickupBlacklist(id);
 		this.heirloomInventory = new HeirloomInventory(this, Datasource.loadPlayerHeirlooms(id));
+		this.stats = Datasource.loadPlayerStats(this);
 		
 		setRanks(ranks);
 		//Bukkit.getConsoleSender().sendMessage(Component.text("Profile was loaded for " + (hasNickname() ? getNickname() + " ("+getRealName()+")" : getRealName())));
@@ -612,6 +617,14 @@ public class PlayerProfile {
 	
 	public HeirloomInventory getHeirlooms() {
 		return this.heirloomInventory;
+	}
+	
+	public PlayerStats getStats() {
+		return stats;
+	}
+	
+	public int getStat(StatType type, String name) {
+		return getStats().getStat(type, name);
 	}
 	
 	public ArrayList<String> getPickupBlacklist() {

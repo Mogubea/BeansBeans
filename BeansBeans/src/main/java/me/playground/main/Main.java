@@ -20,6 +20,7 @@ import me.playground.highscores.Highscores;
 import me.playground.items.BeanItem;
 import me.playground.items.enchants.BeanEnchantment;
 import me.playground.listeners.ListenerManager;
+import me.playground.loot.LootManager;
 import me.playground.npc.NPCManager;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.ranks.Rank;
@@ -49,6 +50,7 @@ public class Main extends JavaPlugin {
 	private ShopManager shopManager;
 	private PermissionManager permissionManager;
 	private RecipeManager recipeManager;
+	private LootManager lootManager;
 	private SignMenuFactory signMenuFactory;
 	private DiscordBot discordBot;
 
@@ -74,6 +76,10 @@ public class Main extends JavaPlugin {
 		
 		// Register Commands
 		commandManager = new CommandManager(this);
+		
+		// Register Loot Manager
+		lootManager = new LootManager(this);
+		Datasource.loadAllLoot();
 		
 		// Register Listeners
 		new ListenerManager(this);
@@ -145,7 +151,6 @@ public class Main extends JavaPlugin {
 	public CommandManager commandManager() {
 		return commandManager;
 	}
-	
 	public RegionManager regionManager() {
 		return regionManager;
 	}
@@ -169,6 +174,9 @@ public class Main extends JavaPlugin {
 	}
 	public NPCManager npcManager() {
 		return npcManager;
+	}
+	public LootManager lootManager() {
+		return lootManager;
 	}
 
 	private void registerProtocol() {

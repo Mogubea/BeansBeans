@@ -4,6 +4,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.annotation.Nonnull;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -13,7 +15,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.Utils;
@@ -205,7 +206,7 @@ public abstract class BeanGui {
 	 * this method can be very useful in a forEach method to refresh with a criteria.
 	 */
 	@SuppressWarnings("unchecked") // It is checked lol?
-	public static <T extends BeanGui> Collection<T> getAllViewers(@NonNull final Class<T> clazz) {
+	public static <T extends BeanGui> Collection<T> getAllViewers(@Nonnull final Class<T> clazz) {
 		ArrayList<T> instances = new ArrayList<T>();
 		Bukkit.getOnlinePlayers().forEach((p) -> {
 			PlayerProfile pp = PlayerProfile.from(p);

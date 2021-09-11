@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Cat;
@@ -35,11 +36,14 @@ import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffectType;
 
 import me.playground.items.BeanItem;
+import me.playground.loot.LootTable;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.skills.BxpValues;
+import me.playground.playerprofile.stats.StatType;
 import me.playground.regions.Region;
 import me.playground.regions.flags.Flags;
 import me.playground.regions.flags.MemberLevel;
@@ -218,6 +222,8 @@ public class EntityListener extends EventListener {
 	@EventHandler(priority = EventPriority.LOW)
 	public void onEntityDeath(EntityDeathEvent e) {
 		if (e.getEntity().getKiller() != null) {
+			final Player p = e.getEntity().getKiller();
+			
 			final boolean passive = BxpValues.isPassiveMob(e.getEntityType());
 		
 			if (!passive) { // coin
@@ -238,24 +244,33 @@ public class EntityListener extends EventListener {
 				if (e.getEntity().fromMobSpawner())
 					return; // no coins
 				
-				PlayerProfile pp = PlayerProfile.from(e.getEntity().getKiller());
+				// Bonus Drops if the table exists
+				final LootTable testTable = getPlugin().lootManager().getLootTable(e.getEntityType());
+				if (testTable != null) {
+					
+					int luckVal = 0;
+					if (p.hasPotionEffect(PotionEffectType.LUCK))
+						luckVal += (p.getPotionEffect(PotionEffectType.LUCK).getAmplifier()+1);
+					if (p.hasPotionEffect(PotionEffectType.UNLUCK))
+						luckVal -= (p.getPotionEffect(PotionEffectType.UNLUCK).getAmplifier()+1);
+					e.getDrops().addAll(testTable.getRewardsFromSystem2(p, p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS), luckVal));
+				}
+				// End
+				
+				PlayerProfile pp = PlayerProfile.from(p);
 				int hp = (int) e.getEntity().getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
 				if (hp/2 < 1)
 					return;
 				pp.addToBalance((long) (2 + getPlugin().getRandom().nextInt(hp/2) * region.getEffectiveFlag(Flags.MOB_DROP_COIN)));
+				pp.getStats().addToStat(StatType.KILLS, e.getEntityType().name(), 1);
 			}
 			
 		// Slight nerf to grinders that require no player interaction
 		} else {
-			// 20% chance to drop nothing
-			if (getPlugin().getRandom().nextInt(5) == 0) {
+			// 50% chance to drop nothing
+			if (getPlugin().getRandom().nextInt(2) == 0) {
 				e.getDrops().clear();
 				e.setDroppedExp(0);
-			// random chance to reduce some drops, minimum of 1.
-			} else {
-				e.getDrops().forEach((item) -> {
-					item.setAmount(1 + getPlugin().getRandom().nextInt(item.getAmount()));
-				});
 			}
 		}
 	}

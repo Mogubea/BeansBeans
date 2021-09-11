@@ -37,6 +37,7 @@ import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
@@ -315,9 +316,10 @@ public class DiscordBot extends ListenerAdapter {
 	public void updateNickname(PlayerProfile pp) {
 		if (isDebug()) return;
 		Guild g = chatChannel().getGuild();
-		Member member = g.retrieveMemberById(linkedAccounts.getOrDefault(pp.getId(), 0L)).complete();
-		if (member != null)
+		try {
+			Member member = g.retrieveMemberById(linkedAccounts.getOrDefault(pp.getId(), 0L)).complete();
 			g.modifyNickname(member, pp.getDisplayName()).queue();
+		} catch (ErrorResponseException e) {}
 	}
 	
 	/**
@@ -327,8 +329,8 @@ public class DiscordBot extends ListenerAdapter {
 	public void updateRoles(PlayerProfile pp) {
 		if (isDebug()) return;
 		Guild g = chatChannel().getGuild();
-		Member member = g.retrieveMemberById(linkedAccounts.getOrDefault(pp.getId(), 0L)).complete();
-		if (member != null) {
+		try {
+			Member member = g.retrieveMemberById(linkedAccounts.getOrDefault(pp.getId(), 0L)).complete();
 			ArrayList<Role> addRoles = new ArrayList<Role>();
 			ArrayList<Role> remRoles = new ArrayList<Role>();
 			
@@ -348,7 +350,7 @@ public class DiscordBot extends ListenerAdapter {
 			});
 			
 			g.modifyMemberRoles(member, addRoles, remRoles).queue();
-		}
+		} catch (ErrorResponseException e) {}
 	}
 	
 	public <K, V> K getKey(Map<K, V> map, V value) {

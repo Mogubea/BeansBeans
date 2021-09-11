@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -42,7 +44,6 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.TropicalFishBucketMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -727,7 +728,11 @@ public abstract class BeanItem {
 		return identifier;
 	}
 	
-	@NonNull
+	
+	/**
+	 * @return A cloned version of the original item stack.
+	 */
+	@Nonnull
 	public ItemStack getItemStack() {
 		return originalStack.clone();
 	}

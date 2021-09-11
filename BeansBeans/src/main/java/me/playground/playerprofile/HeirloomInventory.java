@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bukkit.attribute.Attribute;
@@ -13,7 +14,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -88,12 +88,12 @@ public class HeirloomInventory {
 		return maxSize;
 	}
 	
-	public @NonNull HeirloomInventory setMaxHeirlooms(int amount) {
+	public @Nonnull HeirloomInventory setMaxHeirlooms(int amount) {
 		this.maxSize = amount;
 		return this;
 	}
 	
-	public @NonNull PlayerProfile getProfile() {
+	public @Nonnull PlayerProfile getProfile() {
 		return profile;
 	}
 	
@@ -101,7 +101,7 @@ public class HeirloomInventory {
 	 * @param item - The item to be added to the {@link HeirloomInventory}
 	 * @return Whether this was successful.
 	 */
-	public boolean addHeirloom(@NonNull ItemStack item) {
+	public boolean addHeirloom(@Nonnull ItemStack item) {
 		BeanItemHeirloom heirloom = BeanItemHeirloom.from(item);
 		if (heirloom != null && !this.heirlooms.containsKey(heirloom.getIdentifier())) {
 			ItemStack clone = item.clone();
@@ -117,7 +117,7 @@ public class HeirloomInventory {
 	 * @param item - The item to be removed from the {@link HeirloomInventory}
 	 * @return Whether this was successful.
 	 */
-	public boolean removeHeirloom(@NonNull ItemStack item) {
+	public boolean removeHeirloom(@Nonnull ItemStack item) {
 		BeanItemHeirloom heirloom = BeanItemHeirloom.from(item);
 		if (heirloom != null) {
 			removeStats(this.heirlooms.remove(heirloom.getIdentifier()), true);
@@ -126,15 +126,15 @@ public class HeirloomInventory {
 		return false;
 	}
 	
-	public boolean hasHeirloom(@NonNull String identifier) {
+	public boolean hasHeirloom(@Nonnull String identifier) {
 		return this.heirlooms.containsKey(identifier);
 	}
 	
-	public boolean hasHeirloom(@NonNull BeanItemHeirloom heirloom) {
+	public boolean hasHeirloom(@Nonnull BeanItemHeirloom heirloom) {
 		return this.hasHeirloom(heirloom.getIdentifier());
 	}
 	
-	public int getCounterFor(@NonNull BeanItemHeirloom heirloom) {
+	public int getCounterFor(@Nonnull BeanItemHeirloom heirloom) {
 		if (!hasHeirloom(heirloom)) throw new RuntimeException("Can't get counter for " + profile.getDisplayName() + "'s " + heirloom.getIdentifier() + " as they don't have one!");
 		return this.heirlooms.get(heirloom.getIdentifier()).getItemMeta().getPersistentDataContainer().getOrDefault(BeanItem.KEY_COUNTER, PersistentDataType.INTEGER, 0);
 	}
@@ -146,7 +146,7 @@ public class HeirloomInventory {
 	 * @param heirloom - {@link BeanItemHeirloom}
 	 * @param amt - The new counter value.
 	 */
-	public void setCounterFor(@NonNull BeanItemHeirloom heirloom, int amt) {
+	public void setCounterFor(@Nonnull BeanItemHeirloom heirloom, int amt) {
 		if (!hasHeirloom(heirloom)) throw new RuntimeException("Can't set counter for " + profile.getDisplayName() + "'s " + heirloom.getIdentifier() + " as they don't have one!");
 		
 		ItemStack item = this.heirlooms.get(heirloom.getIdentifier());
@@ -157,7 +157,7 @@ public class HeirloomInventory {
 		//BeanItem.formatItem(item); No point in formatting the item unless it's going to be viewed.
 	}
 	
-	private void addStats(@NonNull ItemStack i, boolean update) {
+	private void addStats(@Nonnull ItemStack i, boolean update) {
 		i.getItemMeta().getAttributeModifiers().forEach((attribute, modifier) -> { // ItemMeta is already confirmed from BeanItemHeirloom check.
 			if (modifier.getOperation() != AttributeModifier.Operation.ADD_NUMBER) return;
 			if (!attributeModifiers.containsKey(attribute)) return;
@@ -168,7 +168,7 @@ public class HeirloomInventory {
 		});
 	}
 	
-	private void removeStats(@NonNull ItemStack i, boolean update) {
+	private void removeStats(@Nonnull ItemStack i, boolean update) {
 		i.getItemMeta().getAttributeModifiers().forEach((attribute, modifier) -> { // ItemMeta is already confirmed from BeanItemHeirloom check.
 			if (modifier.getOperation() != AttributeModifier.Operation.ADD_NUMBER) return;
 			if (!attributeModifiers.containsKey(attribute)) return;
