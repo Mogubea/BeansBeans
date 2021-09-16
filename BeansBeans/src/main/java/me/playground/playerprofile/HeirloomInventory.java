@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -158,6 +159,7 @@ public class HeirloomInventory {
 	}
 	
 	private void addStats(@Nonnull ItemStack i, boolean update) {
+		if (!i.getItemMeta().hasAttributeModifiers()) return;
 		i.getItemMeta().getAttributeModifiers().forEach((attribute, modifier) -> { // ItemMeta is already confirmed from BeanItemHeirloom check.
 			if (modifier.getOperation() != AttributeModifier.Operation.ADD_NUMBER) return;
 			if (!attributeModifiers.containsKey(attribute)) return;
@@ -169,6 +171,7 @@ public class HeirloomInventory {
 	}
 	
 	private void removeStats(@Nonnull ItemStack i, boolean update) {
+		if (!i.getItemMeta().hasAttributeModifiers()) return;
 		i.getItemMeta().getAttributeModifiers().forEach((attribute, modifier) -> { // ItemMeta is already confirmed from BeanItemHeirloom check.
 			if (modifier.getOperation() != AttributeModifier.Operation.ADD_NUMBER) return;
 			if (!attributeModifiers.containsKey(attribute)) return;
@@ -234,8 +237,8 @@ public class HeirloomInventory {
 	}
 	
 	/**
-	 * Fires the {@link BeanItemHeirloom#onConsumeItem(PlayerItemConsumeEvent, ItemStack)} method for each {@link BeanItemHeirloom} within the {@link HeirloomInventory}.
-	 *<p>By default, the onConsumeItem method does nothing, and has to be overriden when an item is declared.</p>
+	 * Fires the {@link BeanItemHeirloom#onConsumeItem(PlayerItemConsumeEvent, HeirloomInventory)} method for each {@link BeanItemHeirloom} within the {@link HeirloomInventory}.
+	 *<p>By default, the method does nothing, and has to be overriden when an item is declared.</p>
 	 * @param e
 	 */
 	public void doPlayerItemConsumeEvent(PlayerItemConsumeEvent e) {
@@ -243,6 +246,32 @@ public class HeirloomInventory {
 			BeanItemHeirloom heirloom = (BeanItemHeirloom) BeanItemHeirloom.from(identifier);
 			if (heirloom == null) return; // Should never happen, but just in-case.
 			heirloom.onConsumeItem(e, this);
+		});
+	}
+	
+	/**
+	 * Fires the {@link BeanItemHeirloom#onMeleeDamageToEntity(EntityDamageByEntityEvent, HeirloomInventory)} method for each {@link BeanItemHeirloom} within the {@link HeirloomInventory}.
+	 *<p>By default, the method does nothing, and has to be overriden when an item is declared.</p>
+	 * @param e
+	 */
+	public void doMeleeDamageEvent(EntityDamageByEntityEvent e) {
+		this.heirlooms.keySet().forEach((identifier) -> {
+			BeanItemHeirloom heirloom = (BeanItemHeirloom) BeanItemHeirloom.from(identifier);
+			if (heirloom == null) return; // Should never happen, but just in-case.
+			heirloom.onMeleeDamageToEntity(e, this);
+		});
+	}
+	
+	/**
+	 * Fires the {@link BeanItemHeirloom#onDamageFromEntity(EntityDamageByEntityEvent, HeirloomInventory)} method for each {@link BeanItemHeirloom} within the {@link HeirloomInventory}.
+	 *<p>By default, the method does nothing, and has to be overriden when an item is declared.</p>
+	 * @param e
+	 */
+	public void doDamageTakenByEntityEvent(EntityDamageByEntityEvent e) {
+		this.heirlooms.keySet().forEach((identifier) -> {
+			BeanItemHeirloom heirloom = (BeanItemHeirloom) BeanItemHeirloom.from(identifier);
+			if (heirloom == null) return; // Should never happen, but just in-case.
+			heirloom.onDamageFromEntity(e, this);
 		});
 	}
 	

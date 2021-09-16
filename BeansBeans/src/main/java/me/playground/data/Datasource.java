@@ -1750,7 +1750,9 @@ public class Datasource {
 					}
 				}
 				
-				table.addEntry(new LootEntry(r.getInt("id"), table, i, r.getInt("minStack"), r.getInt("maxStack"), r.getInt("chance")).setFlags(r.getByte("flags")));
+				String s = r.getString("data");
+				
+				table.addEntry(new LootEntry(r.getInt("id"), table, i, r.getInt("minStack"), r.getInt("maxStack"), r.getInt("chance"), s == null ? null : new JSONObject(s)).setFlags(r.getByte("flags")));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -1778,7 +1780,7 @@ public class Datasource {
 		
 		try {
 			c = getNewConnection();
-			statement = c.prepareStatement("UPDATE loot SET tableName = ?, chance = ?, minStack = ?, maxStack = ?, itemType = ?, flags = ?, compressedStack = ? WHERE id = ?");
+			statement = c.prepareStatement("UPDATE loot SET tableName = ?, chance = ?, minStack = ?, maxStack = ?, itemType = ?, flags = ?, compressedStack = ?, data = ? WHERE id = ?");
 			statement.setString(1, entry.getTable().getName());
 			statement.setInt(2, entry.getChance());
 			statement.setInt(3, entry.getMinStackSize());
@@ -1798,6 +1800,9 @@ public class Datasource {
 				statement.setString(7, null);
 			
 			statement.setInt(8, entry.getId());
+			
+			JSONObject data = entry.getJsonData(); // Additional json information such as enchantments, levels and chances.
+			statement.setString(9, data != null ? data.toString() : null);
 			statement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();

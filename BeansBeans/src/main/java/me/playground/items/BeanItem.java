@@ -49,6 +49,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import me.playground.items.enchants.BeanEnchantmentListener;
+import me.playground.items.heirlooms.BItemHeirloomAncientSkull;
 import me.playground.items.heirlooms.BItemHeirloomMochi;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
@@ -283,10 +284,11 @@ public abstract class BeanItem {
 		}
 	};
 	
-	public final static BItemHeirloomMochi HL_MOCHI = new BItemHeirloomMochi("HL_MOCHI", "Mochi", Utils.getSkullWithCustomSkin(UUID.fromString("6145234d-06a3-402d-a4a0-68787735fbfd"), "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjkzNTUzYmU2ODMwMjJmODU5NTljNmMyMTdiNGE1NmJmMzNkZWZiZjUyYTZhODRjNjlkMmNiZGI1MTY0M2IifX19"), ItemRarity.RARE);
+	public final static BeanItemHeirloom HL_MOCHI 			= new BItemHeirloomMochi("HL_MOCHI", "Mochi", Utils.getSkullWithCustomSkin(UUID.fromString("6145234d-06a3-402d-a4a0-68787735fbfd"), "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjkzNTUzYmU2ODMwMjJmODU5NTljNmMyMTdiNGE1NmJmMzNkZWZiZjUyYTZhODRjNjlkMmNiZGI1MTY0M2IifX19"), ItemRarity.RARE);
+	public final static BeanItemHeirloom HL_ANCIENT_SKULL 	= new BItemHeirloomAncientSkull("HL_ANCIENT_SKULL", "Ancient Skull", Utils.getSkullWithCustomSkin(UUID.fromString("6145234d-06a3-402d-a4a0-68787735fbfc"), "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzk3MjNlNTIwYjMwNzAwZTNiYzUzZTg1MjYyMDdlMjJhZjdmZjhmOTY2ODk3OTVmYzk0OWZhYmQ4ZDk4NDcxNSJ9fX0="), ItemRarity.RARE);
 	
 	static {
-		items = itemsByName.values().toArray(new BeanItem[6]);
+		items = itemsByName.values().toArray(new BeanItem[7]);
 	}
 	
 	protected final TextComponent	displayName;
@@ -391,7 +393,7 @@ public abstract class BeanItem {
 	}
 	
 	public static ItemStack setDurability(ItemStack item, int newDura, int newMaxDura) {
-		if (item.getType().getMaxDurability() < 8)
+		if (item.getType().getMaxDurability() < 1)
 			return item;
 		
 		if (newDura < 0)
@@ -579,7 +581,10 @@ public abstract class BeanItem {
 		if (enchants.size() > 0) {
 			boolean skipLore = item.getType() != Material.ENCHANTED_BOOK;
 			for (Entry<Enchantment, Integer> enchant : enchants.entrySet()) {
-				lore.add(Component.text("\u269D ").color(TextColor.color(0x99CCCC)).append(enchant.getKey().displayName(enchant.getValue()).color(enchant.getKey().getMaxLevel() < enchant.getValue() ? BeanColor.ENCHANT_OP : BeanColor.ENCHANT)).decoration(TextDecoration.ITALIC, false));
+				if (enchant.getKey() == Enchantment.BINDING_CURSE || enchant.getKey() == Enchantment.VANISHING_CURSE)
+					lore.add(Component.text("\u269D ").color(TextColor.color(0xDF4444)).append(enchant.getKey().displayName(enchant.getValue()).color(TextColor.color(0xff5555))));
+				else
+					lore.add(Component.text("\u269D ").color(TextColor.color(0x99CCCC)).append(enchant.getKey().displayName(enchant.getValue()).color(enchant.getKey().getMaxLevel() < enchant.getValue() ? BeanColor.ENCHANT_OP : BeanColor.ENCHANT)).decoration(TextDecoration.ITALIC, false));
 				if (!skipLore)
 					lore.addAll(BeanEnchantmentListener.getEnchantLore(enchant.getKey(), enchant.getValue()));
 			}
@@ -604,7 +609,7 @@ public abstract class BeanItem {
 		}
 		
 		
-		if (item.getType().getMaxDurability() > 8) { // lore will never be empty
+		if (item.getType().getMaxDurability() > 0) { // lore will never be empty
 			lore.add(Component.empty());
 			meta.lore(lore);
 			item.setItemMeta(meta);

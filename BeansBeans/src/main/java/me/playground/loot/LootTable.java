@@ -70,7 +70,9 @@ public class LootTable {
 			for (int x = -1; ++x < size;) {
 				LootEntry entry = entries.get(x);
 				if ((random-=entry.getChance()) < 0) {
-					stacks.add(entry.generateReward(looting, luck));
+					ItemStack item = entry.generateReward(looting, luck);
+					if (item.getAmount() < 1) continue;
+					stacks.add(item);
 					break;
 				}
 			}
@@ -95,16 +97,16 @@ public class LootTable {
 		ArrayList<ItemStack> stacks = new ArrayList<ItemStack>();
 		
 		final int size = entries.size();
-		final float chanceMult = (1F + (luck/5F)); // XXX: +20% on every single item per Luck Level.
 		final PlayerProfile pp = PlayerProfile.from(p);
 		
 		for (int x = -1; ++x < size;) {
 			LootEntry entry = entries.get(x);
 			if (!entry.isGrindable() && p == null) continue;
 			
-			float chance = entry.allowsLuck() ? ((float)entry.getChance() * chanceMult) : entry.getChance();
+			float chance = entry.getChance(entry.allowsLuck() ? luck : 0);
 			if (chance > getManager().getRandom().nextInt(1000000)) {
 				ItemStack item = entry.generateReward(looting, luck);
+				if (item.getAmount() < 1) continue;
 				stacks.add(item);
 				if (entry.shouldAnnounce())
 					p.sendMessage(Component.text("\u00a77You found ").append(toHover(item)).append(Component.text(" \u00a77(\u00a7f"+(chance/10000)+"% Chance\u00a77)")));

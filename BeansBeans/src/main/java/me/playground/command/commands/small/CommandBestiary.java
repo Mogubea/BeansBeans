@@ -11,21 +11,21 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import me.playground.command.BeanCommand;
-import me.playground.gui.BeanGuiWarps;
+import me.playground.gui.BeanGuiBestiaryEntity;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import net.kyori.adventure.text.Component;
 
-public class CommandWarps extends BeanCommand {
+public class CommandBestiary extends BeanCommand {
 	
-	public CommandWarps(Main plugin) {
-		super(plugin, false, "warps");
-		description = "Alternative to /warp list";
+	public CommandBestiary(Main plugin) {
+		super(plugin, false, "bestiary", "beastiary");
+		description = "A command shortcut to access your Bestiary!";
 	}
 	
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
-		new BeanGuiWarps((Player)sender).openInventory();
+		new BeanGuiBestiaryEntity((Player)sender).openInventory();
 		return true;
 	}
 

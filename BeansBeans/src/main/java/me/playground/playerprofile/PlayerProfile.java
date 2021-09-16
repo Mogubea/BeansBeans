@@ -19,6 +19,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffectType;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -675,6 +676,16 @@ public class PlayerProfile {
 		if (!onCd)
 			addCooldown(id, mili);
 		return onCd;
+	}
+	
+	public float getLuck() {
+		float luck = 0.0F;
+		if (isOnline()) {
+			Player p = getPlayer();
+			luck += p.hasPotionEffect(PotionEffectType.LUCK) ? p.getPotionEffect(PotionEffectType.LUCK).getAmplifier()+1 : 0;
+			luck -= p.hasPotionEffect(PotionEffectType.UNLUCK) ? p.getPotionEffect(PotionEffectType.UNLUCK).getAmplifier()+1 : 0;
+		}
+		return luck;
 	}
 	
 	/**

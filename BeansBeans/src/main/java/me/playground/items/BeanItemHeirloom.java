@@ -1,5 +1,6 @@
 package me.playground.items;
 
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
@@ -30,5 +31,19 @@ public abstract class BeanItemHeirloom extends BeanItem {
 	 * @param inv - The {@link HeirloomInventory} that holds the {@link BeanItemHeirloom}.
 	 */
 	public void onConsumeItem(PlayerItemConsumeEvent e, HeirloomInventory inv) { }
+	
+	/**
+	 * Called whenever a player attacks an entity and they have this Heirloom in their {@link HeirloomInventory}
+	 * @param e - The {@link EntityDamageByEntityEvent} instance.
+	 * @param inv - The {@link HeirloomInventory} that holds the {@link BeanItemHeirloom}.
+	 */
+	public void onMeleeDamageToEntity(EntityDamageByEntityEvent e, HeirloomInventory inv) { }
+	
+	/**
+	 * Called whenever a player gets attacked by an entity and they have this Heirloom in their {@link HeirloomInventory}
+	 * @param e - The {@link EntityDamageByEntityEvent} instance.
+	 * @param inv - The {@link HeirloomInventory} that holds the {@link BeanItemHeirloom}.
+	 */
+	public void onDamageFromEntity(EntityDamageByEntityEvent e, HeirloomInventory inv) { }
 	
 }

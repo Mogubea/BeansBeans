@@ -33,7 +33,6 @@ public class BeanGuiShopCustomer extends BeanGuiShop {
 	
 	public BeanGuiShopCustomer(Player p, Shop s) {
 		super(p, s);
-		
 		this.presetSize = 45;
 		this.presetInv = new ItemStack[] {
 				blank,blank,blank,display,display,display,blank,blank,blank,

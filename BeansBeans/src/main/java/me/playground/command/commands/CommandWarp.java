@@ -50,7 +50,7 @@ public class CommandWarp extends BeanCommand {
 		final Player p = (Player) sender;
 		
 		if (args.length < 1) {
-			new BeanGuiWarps(getPlugin(), p).openInventory();
+			new BeanGuiWarps(p).openInventory();
 			return true;
 		}
 		
@@ -186,7 +186,7 @@ public class CommandWarp extends BeanCommand {
 			profile.clearCooldown("cmd");
 			p.performCommand("home");
 		} else if ("list".equals(subcmd)) {
-			new BeanGuiWarps(getPlugin(), p).openInventory();
+			new BeanGuiWarps(p).openInventory();
 			return true;
 		} else if ("settype".equals(subcmd)) {
 			if (args.length < 3) throw new CommandException(sender, "Usage: \u00a7f/warp settype " + (warp!=null ? args[1] : "\u00a77<warp>") + "\u00a77 <type>");

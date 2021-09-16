@@ -23,7 +23,6 @@ public class DiscordCommandOnline extends DiscordCommand {
 			playerList += p.getName() + (++x < count ? ", " : "");
 		
 		final EmbedBuilder eb = embedBuilder(0x44ddff, "**There is currently "+count+"/"+Bukkit.getMaxPlayers()+" Players online**\n" + playerList);
-		eb.setFooter("Responding to " + e.getMember().getUser().getAsTag() + "'s /online Command", e.getMember().getUser().getEffectiveAvatarUrl());
 		e.replyEmbeds(eb.build()).queue();
 	}
 	

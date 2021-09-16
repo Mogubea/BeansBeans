@@ -152,7 +152,7 @@ public class BeanEnchantmentListener implements Listener {
 		if (ench.equals(Enchantment.KNOCKBACK))
 			return Arrays.asList(Component.text("\u00a77 Attacks knock enemies back an"), Component.text("\u00a77 extra \u00a7c" + (3*level) + "\u00a77 blocks"));
 		if (ench.equals(Enchantment.LOOT_BONUS_MOBS))
-			return Arrays.asList(Component.text("\u00a77 All mobs potentially drop an extra"), Component.text("\u00a7a " + (1*level) + "\u00a77 common " + (level>1?"items":"item") + " and increases"), Component.text("\u00a77 rare item drops by \u00a7a" + (1*level) + "%"));
+			return Arrays.asList(Component.text("\u00a77 All mobs potentially drop an extra"), Component.text("\u00a7a " + (1*level) + "\u00a77 " + (level>1?"items":"item") + " where applicable."));
 		if (ench.equals(Enchantment.LOOT_BONUS_BLOCKS))
 			return Arrays.asList(Component.text("\u00a77 Mining ores potentially multiplies"), Component.text("\u00a77 drops by up to \u00a7a" + (1+(1*level)) + "x"));
 		if (ench.equals(Enchantment.LOYALTY))

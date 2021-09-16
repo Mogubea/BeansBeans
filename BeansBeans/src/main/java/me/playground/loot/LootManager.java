@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 
 import org.bukkit.entity.EntityType;
 
+import me.playground.data.Datasource;
 import me.playground.main.IPluginRef;
 import me.playground.main.Main;
 
@@ -32,7 +33,7 @@ public class LootManager implements IPluginRef {
 	public @Nonnull LootTable getOrCreateTable(@Nonnull String name) {
 		LootTable lt = lootTables.get(name);
 		if (lt == null) {
-			getPlugin().getLogger().info("Created LootTable: " + name);
+//			getPlugin().getLogger().info("Created LootTable: " + name);
 			lt = new LootTable(this, name);
 			lootTables.put(name, lt);
 		}
@@ -60,6 +61,12 @@ public class LootManager implements IPluginRef {
 	
 	public Random getRandom() {
 		return plugin.getRandom();
+	}
+	
+	public void reload() {
+		Datasource.saveDirtyLootEntries();
+		lootTables.clear();
+		Datasource.loadAllLoot();
 	}
 	
 }

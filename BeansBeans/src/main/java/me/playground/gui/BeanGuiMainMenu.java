@@ -14,7 +14,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import me.playground.currency.Currency;
-import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Calendar;
@@ -42,10 +41,11 @@ public class BeanGuiMainMenu extends BeanGui {
 	private static final ItemStack icon_warps = newItem(new ItemStack(Material.PURPLE_CARPET), "\u00a7dWarp Menu", "\u00a77\u00a7oTest warp menu?");
 	private static final ItemStack icon_echest = newItem(new ItemStack(Material.ENDER_CHEST), "\u00a75Ender Chest", "\u00a77\u00a7oOpen your Ender Chest!");
 	private static final ItemStack icon_blacklist = newItem(new ItemStack(Material.HOPPER_MINECART), "\u00a78Pickup Blacklist", "\u00a77\u00a7oWhich items do you absolutely", "\u00a77\u00a7orefuse to pick up?");
-	private static final ItemStack icon_commands = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), "\u00a7aCommands", "\u00a77\u00a7oView the list of commands!");
+	private static final ItemStack icon_commands = newItem(new ItemStack(Material.WRITABLE_BOOK), "\u00a7aCommands", "\u00a77\u00a7oView the list of commands!");
 	private static final ItemStack icon_news = newItem(new ItemStack(Material.ENCHANTED_BOOK), Component.text("Server News").color(TextColor.color(0x994411)), "\u00a77\u00a7oUpdates & Announcements");
 	private static final ItemStack icon_region = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGYxN2E2YTlhZmFhN2IwN2U0MjE4ZmU1NTVmMjgyM2IwMjg0Y2Q2OWI0OWI2OWI5N2ZhZTY3ZWIyOTc2M2IifX19"), Component.text("Region Menu").color(BeanColor.REGION), "\u00a77\u00a7oWIP");
 	private static final ItemStack icon_heirlooms = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjE3NmE0YzQ0NmI1NGQ1MGFlM2U1YmE4ZmU2ZjQxMzE3Njg5ZmY1YTc1MjMwMjgwOTdmNjExOTUzZDFkMTI5NyJ9fX0="), Component.text("Bag o' Heirlooms").color(BeanColor.HEIRLOOM), "\u00a77\u00a7oWIP");
+	private static final ItemStack icon_bestiary = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("Bestiary").color(TextColor.color(0x13bf27)), "\u00a77\u00a7oWIP");
 	
 	private static final ItemStack icon_resetOverride = newItem(new ItemStack(Material.BARRIER), "\u00a7cReset GUI Override", "\u00a77Go back to normal!");
 	
@@ -102,7 +102,7 @@ public class BeanGuiMainMenu extends BeanGui {
 		ItemMeta waameta = waa.getItemMeta();
 		TextColor aa = TextColor.color(TextColor.color(0x3d3d3d | BeanColor.HEIRLOOM.value()));
 		
-		waameta.lore(Arrays.asList(Component.text("\u00a77\u00a7oAlpha Heirloom inventory.."), Component.text(""), Component.text("\u00a7rStat Modifiers:").decoration(TextDecoration.ITALIC, false).color(BeanColor.HEIRLOOM),
+		waameta.lore(Arrays.asList(Component.text("\u00a77\u00a7oWIP"), Component.text(""), Component.text("\u00a7rStat Modifiers:").decoration(TextDecoration.ITALIC, false).color(BeanColor.HEIRLOOM),
 				Component.text(tpp.getHeirlooms().getDamageBonus() == 0 ? "\u00a78\u25C8 Attack Damage: 0" : "\u00a7r\u25C8 Attack Damage: \u00a7f" + (tpp.getHeirlooms().getDamageBonus())).colorIfAbsent(aa),
 				Component.text(tpp.getHeirlooms().getHealthBonus() == 0 ? "\u00a78\u25C8 Health: 0" : "\u00a7r\u25C8 Health: \u00a7f" + (tpp.getHeirlooms().getHealthBonus())).colorIfAbsent(aa),
 				Component.text(tpp.getHeirlooms().getMovementBonus() == 0 ? "\u00a78\u25C8 Speed: 0" : "\u00a7r\u25C8 Speed: \u00a7f" + (int)(tpp.getHeirlooms().getMovementBonus() * 1000)).colorIfAbsent(aa)));
@@ -113,6 +113,7 @@ public class BeanGuiMainMenu extends BeanGui {
 		//waa.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
 		
 		contents[29] = waa;
+		contents[30] = icon_bestiary;
 		contents[32] = icon_commands;
 		contents[33] = icon_blacklist;
 		contents[34] = icon_settings;
@@ -164,7 +165,7 @@ public class BeanGuiMainMenu extends BeanGui {
 			new BeanGuiRegionMain(p).openInventory();
 			return;
 		case 23: // Warps Button
-			new BeanGuiWarps(Main.getInstance(), p).openInventory();
+			new BeanGuiWarps(p).openInventory();
 			return;
 		case 24: // Wardrobe Button
 			if (tpp.isOnline())
@@ -178,8 +179,11 @@ public class BeanGuiMainMenu extends BeanGui {
 			if (p.hasPermission("bean.cmd.enderchest")) // TEMP
 				p.openInventory(p.getEnderChest());
 			return;
-		case 29:
+		case 29: // Heirloom Button
 			new BeanGuiHeirlooms(p).openInventory();
+			return;
+		case 30: // Bestiary Button
+			new BeanGuiBestiaryEntity(p).openInventory();
 			return;
 		case 32: // Command Button
 			new BeanGuiCommands(p).openInventory();

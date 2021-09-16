@@ -1,30 +1,41 @@
 package me.playground.loot;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import me.playground.items.BeanItem;
 
 /**
- * A basic loot entry, cannot handle random enchantment or durability generation, simply holds a basic ItemStack with a min-max stack.
- * <p>LootEntry's have flags that can further determine the greatness of the ItemStack generated. For example; 
+ * A LootEntry represents an instance of loot found within {@link LootTable}s.
+ * LootEntry's have flags that can further determine the greatness of the ItemStack generated. For example;
+ * <p>This entire class, and {@link LootEnchantEntry} utilise <b>Micro-Optimized</b> loops to ensure minimal delay.
+ * Some of the flags listed below only apply to System2 loot calculations.
  * <li>{@link #FLAG_GRINDABLE} being off will completely deny the item from even dropping if there was no player input.
  * <li>{@link #FLAG_LOOTING} adds 1 to the maximum stack size per Looting Level.
  * <li>{@link #FLAG_LUCK} can affect the odds for getting better enchants, durability etc..
+ * <li>{@link #FLAG_COMPRESS_STACK} means that the base stack information will be the same.
  */
 public class LootEntry {
-	private static final byte FLAG_GRINDABLE = 1; // 1
-	private static final byte FLAG_LOOTING = 2; // 2
-	private static final byte FLAG_LUCK = 3; // 4
-	private static final byte FLAG_COMPRESS_STACK = 4; // 8
-	private static final byte FLAG_ANNOUNCE = 5; // 16
+	private static final byte FLAG_GRINDABLE = 0; // 1
+	private static final byte FLAG_LOOTING = 1; // 2
+	private static final byte FLAG_LUCK = 2; // 4
+	private static final byte FLAG_COMPRESS_STACK = 3; // 8
+	private static final byte FLAG_ANNOUNCE = 4; // 16
 	
 	private final int id;
 	private final LootTable table;
 	private final ItemStack baseStack;
+	
+	private ArrayList<LootEnchantEntry> possibleEnchants = new ArrayList<LootEnchantEntry>();
+	private short minDurability;
+	private short maxDurability;
 	
 	private byte flags = FLAG_LUCK + FLAG_LOOTING;
 	
@@ -34,25 +45,31 @@ public class LootEntry {
 	private boolean dirty;
 	
 	public LootEntry(int id, LootTable tb, ItemStack itemStack, int chance) {
-		this(id, tb, itemStack, 1, 1, chance);
+		this(id, tb, itemStack, 1, 1, chance, null);
 	}
 	
 	public LootEntry(int id, LootTable tb, BeanItem beanItem, int min, int max, int chance) {
-		this(id, tb, beanItem.getItemStack(), min, max, chance);
+		this(id, tb, beanItem.getItemStack(), min, max, chance, null);
 	}
 	
 	public LootEntry(int id, LootTable tb, ItemStack itemStack, int min, int max, int chance) {
+		this(id, tb, itemStack, min, max, chance, null);
+	}
+	
+	public LootEntry(int id, LootTable tb, ItemStack itemStack, int min, int max, int chance, JSONObject data) {
 		this.id = id;
 		this.table = tb;
-		this.baseStack = itemStack;
+		this.baseStack = BeanItem.formatItem(itemStack);
 		setMaxStackSize(max);
 		setMinStackSize(min);
 		this.chance = chance;
 		this.dirty = false;
+		if (data != null)
+			this.applyJSON(data);
 	}
 	
 	public LootEntry(int id, LootTable tb, Material material, int min, int max, int chance) {
-		this(id, tb, new ItemStack(material, 1), min, max, chance);
+		this(id, tb, new ItemStack(material, 1), min, max, chance, null);
 	}
 	
 	public LootEntry setFlags(byte val) {
@@ -104,12 +121,29 @@ public class LootEntry {
 	 */
 	public ItemStack generateReward(int looting, float luck) {
 		ItemStack clone = baseStack.clone();
-		if ((flags & 1<<FLAG_LOOTING) != 0)
-			clone.setAmount(minStack + getRandom().nextInt(maxStack + looting - minStack));
+		if (allowsLooting())
+			clone.setAmount(minStack + getRandom().nextInt(maxStack + looting - minStack + 1));
 		else if (minStack >= maxStack)
 			clone.setAmount(minStack);
 		else
-			clone.setAmount(minStack + getRandom().nextInt(maxStack - minStack));
+			clone.setAmount(minStack + getRandom().nextInt(maxStack - minStack + 1));
+		
+		if (!this.possibleEnchants.isEmpty()) {
+			int size = possibleEnchants.size();
+			for (int x = -1; ++x < size;) {
+				LootEnchantEntry ench = possibleEnchants.get(x);
+				int levelGot = ench.getEnchantmentLevel(luck);
+				if (levelGot < 0) continue;
+				clone.addUnsafeEnchantment(ench.getEnchantment(), levelGot+1);
+			}
+			clone = BeanItem.formatItem(clone);
+		}
+		
+		if (clone.getType().getMaxDurability() > 0 && minDurability > 0) {
+			int dura = !hasDurabilityRange() ? minDurability : minDurability + getRandom().nextInt(maxDurability - minDurability);
+			clone = BeanItem.setDurability(clone, dura);
+		}
+		
 		return clone;
 	}
 	
@@ -121,8 +155,16 @@ public class LootEntry {
 		return chance;
 	}
 	
+	public int getChance(float luck) {
+		return (int) (chance * (1F + (luck/5F))); // XXX: +20% on every single item per Luck Level.
+	}
+	
 	public boolean isGrindable() {
 		return (flags & 1<<FLAG_GRINDABLE) != 0;
+	}
+	
+	public boolean allowsLooting() {
+		return (flags & 1<<FLAG_LOOTING) != 0;
 	}
 	
 	public boolean allowsLuck() {
@@ -135,6 +177,32 @@ public class LootEntry {
 	
 	public boolean shouldAnnounce() {
 		return (flags & 1<<FLAG_ANNOUNCE) != 0;
+	}
+	
+	public boolean hasPossibleEnchants() {
+		return !this.possibleEnchants.isEmpty() && this.possibleEnchants.size() > 0;
+	}
+	
+	public ArrayList<LootEnchantEntry> getPossibleEnchants() {
+		return this.possibleEnchants;
+	}
+	
+	/**
+	 * @return if {@link #getMaxDurability()} differs from {@link #getMinDurability()}.
+	 */
+	public boolean hasDurabilityRange() {
+		return this.maxDurability > this.minDurability;
+	}
+	
+	public short getMaxDurability() {
+		return this.maxDurability;
+	}
+	
+	/**
+	 * Can also function as a "getDurability()" of sorts if {@link #getMaxDurability()} is less than this.
+	 */
+	public short getMinDurability() {
+		return this.minDurability;
 	}
 	
 	public LootTable getTable() {
@@ -162,18 +230,110 @@ public class LootEntry {
 	 * @return valid byte version of int
 	 */
 	protected byte validateSize(int size) {
-		if (size < 1/* || size > baseStack.getMaxStackSize()*/) { // Handled elsewhere by dividing the item stacks
-			size = 1;
-			throw new IllegalArgumentException("Invalid stacksize, forcefully set to 1.");
-		}
+		if (size > baseStack.getMaxStackSize())
+			size = baseStack.getMaxStackSize();
 		return (byte)size;
 	}
 	
 	/**
-	 * 
 	 * @return
 	 */
-	public JSONObject getBonusData() {
-		return null;
+	public JSONObject getJsonData() {
+		JSONObject object = new JSONObject();
+		
+		if (!this.possibleEnchants.isEmpty()) {
+			JSONArray arrays = new JSONArray();
+			
+			final int size = this.possibleEnchants.size();
+			for (int x = -1; ++x<size;) {
+				final LootEnchantEntry ent = possibleEnchants.get(x);
+				JSONObject enchObj = new JSONObject();
+				enchObj.put("enchantKey", ent.getEnchantment().getKey().getKey());
+				enchObj.put("enchantNamespace", ent.getEnchantment().getKey().getNamespace());
+				enchObj.put("chance", ent.getFlatChance());
+				JSONArray lvls = new JSONArray();
+				JSONArray lucks = new JSONArray();
+				
+				final int ysize = ent.getFlatLvlChances().length; // Used for both loops
+				float[] luckarr = ent.getFlatLvlLuckEffects(); // Done this way to ensure the same length for both
+				for (int y = -1; ++y<ysize;) {
+					lvls.put(ent.getFlatLvlChances()[y]);
+					lucks.put((y < luckarr.length) ? luckarr[y] : 0.05F);
+				}
+					
+				enchObj.put("levels", lvls);
+				enchObj.put("luckEffects", lucks);
+				
+				arrays.put(enchObj);
+			}
+			
+			object.append("enchants", arrays);
+		}
+		
+		if (this.maxDurability != 0)
+			object.put("maxDurability", maxDurability);
+		if (this.minDurability != 0)
+			object.put("minDurability", minDurability);
+		
+		return object.isEmpty() ? null : object;
+	}
+	
+	private LootEntry applyJSON(JSONObject data) {
+		if (data == null || data.isEmpty()) return this;
+		
+		JSONArray enchants = data.optJSONArray("enchants");
+		if (enchants != null && !enchants.isEmpty()) {
+			int size = enchants.length();
+			for (int x = -1; ++x < size;) {
+				final JSONObject enchObj = enchants.optJSONObject(x);
+				if (enchObj == null) continue;
+				
+				float chance = enchObj.optNumber("chance").floatValue();
+				if (chance > 100F) chance = 100F;
+				
+				String sKey = enchObj.optString("enchantKey");
+				String sNamespace = enchObj.optString("enchantNamespace", "minecraft");
+				if (sKey == null) continue;
+				NamespacedKey key = NamespacedKey.fromString(sKey, sNamespace.equals("minecraft") ? null : getTable().getManager().getPlugin());
+				Enchantment enchant = Enchantment.getByKey(key);
+				if (enchant == null) {
+					getTable().getManager().getPlugin().getLogger().warning("Almost registered null Enchantment ("+key.asString()+") for LootEntry: " + this.getId() + 
+							", skipping this Enchantment entirely. If this LootEntry gets flagged as dirty, previous database JSON will be completely overwritten.");
+					continue;
+				}
+				
+				final JSONArray enchLevels = enchObj.optJSONArray("levels");
+				final JSONArray enchLuckEffects = enchObj.optJSONArray("luckEffects");
+				float[] levels = {100};
+				float[] luckEffects = {0.05F};
+				int lvlSize = 0;
+				
+				if (!(enchLevels == null || enchLuckEffects == null || enchLevels.isEmpty() || enchLuckEffects.isEmpty())) {
+					lvlSize = enchLevels.length();
+					levels = new float[lvlSize];
+					luckEffects = new float[lvlSize];
+					for (int y = -1; ++y < lvlSize;) {
+						levels[y] = enchLevels.getNumber(y).floatValue();
+						luckEffects[y] = enchLuckEffects.optNumber(y, 0.05F).floatValue();
+					}
+				} else {
+					getTable().getManager().getPlugin().getLogger().warning("There was an issue loading Level and Luck Effect information for LootEntry: " + this.getId() +
+							", setting it to default values. If this LootEntry gets flagged as dirty, previous database JSON will be completely overwritten.");
+				}
+				
+				this.possibleEnchants.add(new LootEnchantEntry(this, enchant, chance, levels, luckEffects));
+			}
+		}
+		
+		// Only assign durability to items with durability
+		if (getDisplayStack().getType().getMaxDurability() > 0) {
+			this.minDurability = data.optNumber("minDurability", 0).shortValue();
+			this.maxDurability = data.optNumber("maxDurability", 0).shortValue();
+			int max = BeanItem.getMaxDurability(getDisplayStack());
+			if (maxDurability > max)
+				maxDurability = (short) max; // TODO: Make getMaxDurability a short.
+		}
+		
+		return this;
 	}
 }

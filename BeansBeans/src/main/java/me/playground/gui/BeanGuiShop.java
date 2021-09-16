@@ -9,7 +9,6 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 
 import me.playground.items.BeanItem;
-import me.playground.main.Main;
 import me.playground.shop.Shop;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -20,7 +19,6 @@ public abstract class BeanGuiShop extends BeanGui {
 	protected static final ItemStack blank = newItem(new ItemStack(Material.YELLOW_STAINED_GLASS_PANE, 1), Component.empty());
 	
 	protected final Shop shop;
-	protected final Main plugin = Main.getInstance();
 	
 	public BeanGuiShop(Player p, Shop s) {
 		super(p);

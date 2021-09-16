@@ -28,6 +28,8 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 
 import me.playground.currency.Currency;
 
@@ -177,13 +179,33 @@ public class Utils {
 		return i;
 	}
 	
+	/**
+	 * For a skull that'll likely be used as an itemstack, using GameProfile's rather than PlayerProfile's for valid consistency.
+	 */
 	public static ItemStack getSkullWithCustomSkin(UUID uuid, String base64) {
 		ItemStack i = new ItemStack(Material.PLAYER_HEAD,1);
 		SkullMeta meta = (SkullMeta) i.getItemMeta();
-		PlayerProfile ack = Bukkit.createProfile(uuid);
-		ack.getProperties().add(new ProfileProperty("textures", base64));
-		meta.setPlayerProfile(ack);
-		i.setItemMeta(meta);
+		GameProfile ack = new GameProfile(uuid, null);
+		ack.getProperties().put("textures", new Property("textures", base64));
+		Field profileField = null;
+        try {
+            profileField = meta.getClass().getDeclaredField("profile");
+        } catch (NoSuchFieldException | SecurityException e) {
+            e.printStackTrace();
+        }
+        profileField.setAccessible(true);
+        try {
+            profileField.set(meta, ack);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        i.setItemMeta(meta);
+		
+		//PlayerProfile ack = (PlayerProfile) new GameProfile(uuid, null);
+		//ack.getProperties().add(new ProfileProperty("textures", base64));
+		//meta.prof
+		//meta.setPlayerProfile(ack);
+		//i.setItemMeta(meta);
 		return i;
 	}
 	

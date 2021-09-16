@@ -35,9 +35,11 @@ import me.playground.command.commands.CommandWarp;
 import me.playground.command.commands.CommandWhisper;
 import me.playground.command.commands.CommandWho;
 import me.playground.command.commands.CommandWorld;
+import me.playground.command.commands.small.CommandBestiary;
 import me.playground.command.commands.small.CommandFly;
 import me.playground.command.commands.small.CommandGod;
 import me.playground.command.commands.small.CommandHeirloom;
+import me.playground.command.commands.small.CommandLoot;
 import me.playground.command.commands.small.CommandMenu;
 import me.playground.command.commands.small.CommandNews;
 import me.playground.command.commands.small.CommandSkills;
@@ -84,6 +86,8 @@ public class CommandManager {
 		registerCommand(new CommandMenu(plugin));
 		registerCommand(new CommandEnderchest(plugin));
 		registerCommand(new CommandHeirloom(plugin));
+		registerCommand(new CommandBestiary(plugin));
+		registerCommand(new CommandLoot(plugin));
 		
 		// Other Commands
 		registerCommand(new CommandWho(plugin));

@@ -50,12 +50,10 @@ public class BeanGuiWarps extends BeanGui {
 	final HashMap<String, Warp> warps = Main.getWarpManager().getWarps();
 	private String nameFilter = null;
 	private WarpType typeFilter = null;
-	private final Main plugin;
 	
-	public BeanGuiWarps(Main pl, Player p) {
+	public BeanGuiWarps(Player p) {
 		super(p);
 		
-		this.plugin = pl;
 		this.name = "Settings";
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
@@ -68,8 +66,8 @@ public class BeanGuiWarps extends BeanGui {
 		};
 	}
 	
-	public BeanGuiWarps(Main pl, Player p, String name, WarpType type) {
-		this(pl, p);
+	public BeanGuiWarps(Player p, String name, WarpType type) {
+		this(p);
 		this.nameFilter = (name == null || name.isEmpty()) ? null : name;
 		this.typeFilter = type;
 	}
@@ -98,7 +96,7 @@ public class BeanGuiWarps extends BeanGui {
 				SignMenuFactory.Menu menuu = plugin.getSignMenuFactory().newMenu(Arrays.asList("","^^^^^^^^^^", "\u00a7d\u00a7lWarp Name", "\u00a7dto filter for"), Material.CRIMSON_WALL_SIGN)
 	            .reopenIfFail(true)
 	            .response((player, strings) -> {
-	                Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiWarps(plugin, p, strings[0], wt).openInventory(), 1L);
+	                Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiWarps(p, strings[0], wt).openInventory(), 1L);
 	                return true;
 	            });
 				menuu.open(p);

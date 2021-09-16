@@ -16,12 +16,14 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import me.playground.main.IPluginRef;
+import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 
-public abstract class BeanGui {
+public abstract class BeanGui implements IPluginRef {
 	
 	protected static final ItemStack blank = newItem(new ItemStack(Material.WHITE_STAINED_GLASS_PANE, 1), "");
 	protected static final ItemStack nextPage = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjgyYWQxYjljYjRkZDIxMjU5YzBkNzVhYTMxNWZmMzg5YzNjZWY3NTJiZTM5NDkzMzgxNjRiYWM4NGE5NmUifX19"), "\u00a78Next Page");
@@ -37,6 +39,7 @@ public abstract class BeanGui {
 	public static final ItemStack menuItem = newItem(new ItemStack(Material.NETHER_STAR), "\u00a7aPlayer Menu", "\u00a77\u00a7oClick to open!");
 	
 	protected final Player p;
+	protected final Main plugin;
 	
 	protected int presetSize = 27;
 	protected String name = "Error";
@@ -53,6 +56,7 @@ public abstract class BeanGui {
 	
 	public BeanGui(Player p, int page, int data) {
 		this.p = p;
+		this.plugin = (Main) Bukkit.getPluginManager().getPlugin("BeansBeans"); // XXX: Currently undetermined if this is efficient to do or not, gotta research this more.
 		PlayerProfile ack = PlayerProfile.from(p);
 		if (!ack.profileOverride.equals(ack.getUniqueId()))
 			tpp = PlayerProfile.from(ack.profileOverride);
@@ -216,6 +220,12 @@ public abstract class BeanGui {
 		return instances;
 	}
 	
+	@Override
+	public Main getPlugin() {
+		return plugin;
+	}
+	
 	protected final DecimalFormat df = new DecimalFormat("#,###");
+	protected final DecimalFormat oneDec = new DecimalFormat("#.#");
 	
 }
