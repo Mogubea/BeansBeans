@@ -120,6 +120,8 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 				float luckLevel = pp.getLuck();
 				
 				for (int e = -1; ++e < loots;) {
+					ItemStack entryDisplay;
+					ArrayList<Component> lore = new ArrayList<Component>();
 					int displaySlot = (e%7) + (Math.floorDiv(e, 7)*9) + offset;
 					int obtained = getStats().getStat(StatType.LOOT_EARNED, table.getEntries().get(e).getId()+"");
 					LootEntry entry = table.getEntries().get(e);
@@ -129,50 +131,62 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 						int maxStack = entry.getMaxStackSize();
 						int lootingMax = (entry.allowsLooting() ? maxStack + p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS) : maxStack);
 						
-						ItemStack entryDisplay = entry.getDisplayStack().clone();
-						ArrayList<Component> lore = new ArrayList<Component>();
+						entryDisplay = entry.getDisplayStack().clone();
 						
 						float chance = (float)entry.getChance()/10000;
 						float luckChance = (float)entry.getChance(entry.allowsLuck() ? luckLevel : 0)/10000;
 						float diff = luckChance-chance;
 						
 						lore.add(Component.text("\u00a77Chance: \u00a7f" + luckChance + "% " + (diff != 0 ? (diff > 0 ? "\u00a7a(+"+diff+")" : "\u00a7c(-"+diff+")") : "")));
-						lore.add(Component.text("\u00a77Quantity: \u00a7e" + entry.getMinStackSize() + "\u00a77 - \u00a7e" + lootingMax
-								+ (lootingMax > maxStack ? " \u00a7r(+"+(lootingMax-maxStack)+")" : "")).decoration(TextDecoration.ITALIC, false).colorIfAbsent(BeanColor.ENCHANT));
 						
-						if (entryDisplay.getType().getMaxDurability() > 0) {
-							if (entry.getMinDurability() > 0) {
-								if (entry.hasDurabilityRange()) // Has a set range of durability in the loot entry
-									lore.add(Component.text("\u00a77Durability: \u00a7c" + entry.getMinDurability() + "\u00a77 - \u00a7a" + entry.getMaxDurability()));
-								else // Has a set durability in the loot entry
-									lore.add(Component.text("\u00a77Durability: \u00a7f" + entry.getMinDurability()));
+						if (entry.hasTableRedirect()) {
+							lore.add(Component.text("\u00a77One of \u00a7f" + entry.getTableRedirect().getEntries().size() + "\u00a77 items."));
+						} else {
+							lore.add(Component.text("\u00a77Quantity: \u00a7e" + entry.getMinStackSize() + "\u00a77 - \u00a7e" + lootingMax
+									+ (lootingMax > maxStack ? " \u00a7r(+"+(lootingMax-maxStack)+")" : "")).decoration(TextDecoration.ITALIC, false).colorIfAbsent(BeanColor.ENCHANT));
+							
+							if (entryDisplay.getType().getMaxDurability() > 0) {
+								if (entry.getMinDurability() > 0) {
+									if (entry.hasDurabilityRange()) // Has a set range of durability in the loot entry
+										lore.add(Component.text("\u00a77Durability: \u00a7c" + entry.getMinDurability() + "\u00a77 - \u00a7a" + entry.getMaxDurability()));
+									else // Has a set durability in the loot entry
+										lore.add(Component.text("\u00a77Durability: \u00a7f" + entry.getMinDurability()));
+								}
 							}
-						}
-						
-						if (entry.hasPossibleEnchants()) {
-							int size = entry.getPossibleEnchants().size();
-							lore.add(Component.text("\u00a77Enchants: "));
-							for (int a = -1; ++a < size;) {
-								LootEnchantEntry ench = entry.getPossibleEnchants().get(a);
-								lore.add(Component.text("\u00a77 * ").append(Component.translatable(ench.getEnchantment().translationKey()).decoration(TextDecoration.ITALIC, false).color(BeanColor.ENCHANT)).append(Component.text(" \u00a77(\u00a7f"+oneDec.format(ench.getChance(luckLevel))+"%\u00a77)")));
-								
-								Component hell = Component.text("\u00a77  Levels: ");
-								
-								// TODO: update
-								for (int lvl = -1; ++lvl < ench.getEnchantment().getMaxLevel();)
-									hell = hell.append(Component.text("\u00a77[\u00a7r" + Utils.toRoman(lvl+1) + " \u00a77(\u00a7f" + oneDec.format(ench.getChanceOfLvl(lvl+1, luckLevel)) + "%\u00a77]").decoration(TextDecoration.ITALIC, false).color(BeanColor.ENCHANT));
-								lore.add(hell);
+							
+							if (entry.hasPossibleEnchants()) {
+								int size = entry.getPossibleEnchants().size();
+								lore.add(Component.text("\u00a77Enchants: "));
+								for (int a = -1; ++a < size;) {
+									LootEnchantEntry ench = entry.getPossibleEnchants().get(a);
+									lore.add(Component.text("\u00a77 * ").append(Component.translatable(ench.getEnchantment().translationKey()).decoration(TextDecoration.ITALIC, false).color(BeanColor.ENCHANT)).append(Component.text(" \u00a77(\u00a7f"+oneDec.format(ench.getChance(luckLevel))+"%\u00a77)")));
+									
+									Component hell = Component.text("\u00a77  Levels: ");
+									
+									// TODO: update
+									for (int lvl = -1; ++lvl < ench.getEnchantment().getMaxLevel();)
+										hell = hell.append(Component.text("\u00a77[\u00a7r" + Utils.toRoman(lvl+1) + " \u00a77(\u00a7f" + oneDec.format(ench.getChanceOfLvl(lvl+1, luckLevel)) + "%\u00a77]").decoration(TextDecoration.ITALIC, false).color(BeanColor.ENCHANT));
+									lore.add(hell);
+								}
 							}
 						}
 						
 						lore.add(Component.text(""));
 						lore.add(Component.text("\u00a78\u00a7oObtained " + obtained + " times."));
-						
-						entryDisplay.lore(lore);
-						
-						contents[displaySlot] = entryDisplay;
-					} else
-						contents[displaySlot] = missingLoot;
+					} else {
+						entryDisplay = missingLoot;
+						if (entry.requiresChargedCreeper() || entry.requiresSkeletonShot()) // Only bother with the slow .clone() method if there's a reason for it.
+							entryDisplay = missingLoot.clone();
+						lore.addAll(missingLoot.lore());
+					}
+					
+					if (entry.requiresChargedCreeper())
+						lore.add(0, Component.text("\u00a77Requires a \u00a7bCharged Creeper"));
+					else if (entry.requiresSkeletonShot())
+						lore.add(0, Component.text("\u00a77Requries a \u00a7fSkeleton Arrow"));
+					
+					entryDisplay.lore(lore);
+					contents[displaySlot] = entryDisplay;
 				}
 			}
 			
@@ -192,7 +206,8 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 					}
 					
 					ItemStack displayItem = newItem(creatureHeads.getOrDefault(creatures[x], notUnlocked), Component.translatable(creatures[x].translationKey()).color(TextColor.color(0x13bf27)), "",
-							"\u00a77Loot Found:" + "\u00a7a " + obtained + "\u00a77/\u00a72" + loots,
+							"\u00a77Kills: \u00a7a" + df.format(getStats().getStat(StatType.KILLS, creatures[x].name())),
+							"\u00a77Loot Found: " + "\u00a7a" + obtained + "\u00a77/\u00a72" + loots,
 							Utils.getProgressBar('-', 16, obtained, loots, ChatColor.DARK_GRAY, ChatColor.GREEN) +  (obtained>=loots ? "\u00a76 " : "\u00a7a ") + oneDec.format((((float)obtained/(float)loots) * 100F)) + "%");
 					contents[x] = displayItem;
 				} else { // Not

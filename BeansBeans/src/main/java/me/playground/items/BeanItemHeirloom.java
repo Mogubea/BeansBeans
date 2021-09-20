@@ -9,8 +9,8 @@ import me.playground.playerprofile.HeirloomInventory;
 
 public abstract class BeanItemHeirloom extends BeanItem {
 	
-	protected BeanItemHeirloom(String identifier, String name, ItemStack item, ItemRarity rarity) {
-		super(identifier, name, item, rarity, 0);
+	protected BeanItemHeirloom(int numeric, String identifier, String name, String base64, ItemRarity rarity) {
+		super(numeric, identifier, name, base64, rarity);
 	}
 	
 	@Override

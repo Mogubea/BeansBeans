@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -17,23 +18,28 @@ import me.playground.items.BeanItem;
  * LootEntry's have flags that can further determine the greatness of the ItemStack generated. For example;
  * <p>This entire class, and {@link LootEnchantEntry} utilise <b>Micro-Optimized</b> loops to ensure minimal delay.
  * Some of the flags listed below only apply to System2 loot calculations.
- * <li>{@link #FLAG_GRINDABLE} being off will completely deny the item from even dropping if there was no player input.
  * <li>{@link #FLAG_LOOTING} adds 1 to the maximum stack size per Looting Level.
  * <li>{@link #FLAG_LUCK} can affect the odds for getting better enchants, durability etc..
  * <li>{@link #FLAG_COMPRESS_STACK} means that the base stack information will be the same.
+ * <li>{@link #FLAG_SKELETON_KILL} SYSTEM2: means that in order for this loot to drop, a skeleton has to have done the final blow.
+ * <li>{@link #FLAG_CHARGED_CREEPER_KILL} SYSTEM2: means that in order for this loot to drop, a charged creeper has to have done the final blow.
  */
 public class LootEntry {
-	private static final byte FLAG_GRINDABLE = 0; // 1
-	private static final byte FLAG_LOOTING = 1; // 2
-	private static final byte FLAG_LUCK = 2; // 4
-	private static final byte FLAG_COMPRESS_STACK = 3; // 8
-	private static final byte FLAG_ANNOUNCE = 4; // 16
+	private static final byte FLAG_LOOTING = 0; // 1
+	private static final byte FLAG_LUCK = 1; // 2
+	private static final byte FLAG_COMPRESS_STACK = 2; // 4
+	private static final byte FLAG_ANNOUNCE = 3; // 8
+	
+	// System 2
+	private static final byte FLAG_SKELETON_KILL = 4; // 16
+	private static final byte FLAG_CHARGED_CREEPER_KILL = 5; // 32
 	
 	private final int id;
 	private final LootTable table;
 	private final ItemStack baseStack;
 	
 	private ArrayList<LootEnchantEntry> possibleEnchants = new ArrayList<LootEnchantEntry>();
+	private LootTable tableRedirect;
 	private short minDurability;
 	private short maxDurability;
 	
@@ -120,6 +126,12 @@ public class LootEntry {
 	 * @return The cloned and modified reward ItemStack
 	 */
 	public ItemStack generateReward(int looting, float luck) {
+		if (tableRedirect != null) {
+			if (tableRedirect.getEntries().size() > 0)
+				return tableRedirect.getRewardsFromSystem1(1, looting, luck).get(0);
+			return baseStack.clone();
+		}
+		
 		ItemStack clone = baseStack.clone();
 		if (allowsLooting())
 			clone.setAmount(minStack + getRandom().nextInt(maxStack + looting - minStack + 1));
@@ -134,7 +146,12 @@ public class LootEntry {
 				LootEnchantEntry ench = possibleEnchants.get(x);
 				int levelGot = ench.getEnchantmentLevel(luck);
 				if (levelGot < 0) continue;
-				clone.addUnsafeEnchantment(ench.getEnchantment(), levelGot+1);
+				if (clone.getType() == Material.ENCHANTED_BOOK) {
+					EnchantmentStorageMeta meta = (EnchantmentStorageMeta) clone.getItemMeta();
+					meta.addEnchant(ench.getEnchantment(), levelGot+1, true);
+				} else {
+					clone.addUnsafeEnchantment(ench.getEnchantment(), levelGot+1);
+				}
 			}
 			clone = BeanItem.formatItem(clone);
 		}
@@ -159,10 +176,6 @@ public class LootEntry {
 		return (int) (chance * (1F + (luck/5F))); // XXX: +20% on every single item per Luck Level.
 	}
 	
-	public boolean isGrindable() {
-		return (flags & 1<<FLAG_GRINDABLE) != 0;
-	}
-	
 	public boolean allowsLooting() {
 		return (flags & 1<<FLAG_LOOTING) != 0;
 	}
@@ -175,8 +188,27 @@ public class LootEntry {
 		return (flags & 1<<FLAG_COMPRESS_STACK) != 0;
 	}
 	
+	/**
+	 * @return true if this loot should be announced to the player when dropped.
+	 */
 	public boolean shouldAnnounce() {
 		return (flags & 1<<FLAG_ANNOUNCE) != 0;
+	}
+	
+	/**
+	 * Only used in System2.
+	 * @return true if a skeleton shot is required to get this loot.
+	 */
+	public boolean requiresSkeletonShot() {
+		return (flags & 1<<FLAG_SKELETON_KILL) != 0;
+	}
+	
+	/**
+	 * Only used in System2.
+	 * @return true if a charged creeper is required to get this loot.
+	 */
+	public boolean requiresChargedCreeper() {
+		return (flags & 1<<FLAG_CHARGED_CREEPER_KILL) != 0;
 	}
 	
 	public boolean hasPossibleEnchants() {
@@ -196,6 +228,14 @@ public class LootEntry {
 	
 	public short getMaxDurability() {
 		return this.maxDurability;
+	}
+	
+	public boolean hasTableRedirect() {
+		return this.tableRedirect != null;
+	}
+	
+	public LootTable getTableRedirect() {
+		return this.tableRedirect;
 	}
 	
 	/**
@@ -280,6 +320,12 @@ public class LootEntry {
 	
 	private LootEntry applyJSON(JSONObject data) {
 		if (data == null || data.isEmpty()) return this;
+		
+		String tbl = data.optString("table");
+		if (tbl != null && !tbl.isEmpty()) {
+			this.tableRedirect = getTable().getManager().getOrCreateTable(tbl);
+			return this; // Skip everything else if we're just grabbing a reward from another table.
+		}
 		
 		JSONArray enchants = data.optJSONArray("enchants");
 		if (enchants != null && !enchants.isEmpty()) {

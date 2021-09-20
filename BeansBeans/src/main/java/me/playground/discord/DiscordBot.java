@@ -2,7 +2,6 @@ package me.playground.discord;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -48,33 +47,31 @@ import net.kyori.adventure.text.format.TextColor;
 
 public class DiscordBot extends ListenerAdapter {
 	
-	private final HashMap<Integer, WebhookClient> clients = new HashMap<Integer, WebhookClient>();
+	private final Webhook hook;
+	private final WebhookClient chatClient;
+	private int lastId = -1;
+	
 	public final HashMap<Integer, Long> linkedAccounts = Datasource.grabLinkedDiscordAccounts();
 	
 	public WebhookClient getWebhookClient(int playerId) {
-		WebhookClient client = clients.get(playerId);
-		if (client == null) {
+		if (lastId != playerId) {
+			final String name = ((TextComponent)ProfileStore.from(playerId, false).getColouredName()).content();
+			hook.getManager().setName(name);
 			InputStream image;
 			try {
 				image = new URL("https://minotar.net/helm/"+ProfileStore.from(playerId, false).getRealName()+"/100.png").openStream();
-				Webhook wa = chatChannel().createWebhook(((TextComponent)ProfileStore.from(playerId, false).getColouredName()).content()).setAvatar(Icon.from(image)).complete();
-				client = WebhookClient.withId(wa.getIdLong(), wa.getToken());
-				client.setTimeout(25000);
-				clients.put(playerId, client);
-			} catch (MalformedURLException e1) {
-				e1.printStackTrace();
-			} catch (IOException e1) {
-				e1.printStackTrace();
+				hook.getManager().setAvatar(Icon.from(image)).complete();
+				hook.getManager().submit();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
+			lastId = playerId;
 		}
-		return client;
+		return chatClient;
 	}
 	
 	public void shutdown() {
-		for (WebhookClient client : clients.values()) {
-			//chatChannel().deleteWebhookById(""+client.getId());
-			client.close();
-		}
+		chatClient.close();
 		
 		updateServerStatus(false);
 		chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(546771060415135747L)).setDeny(Permission.MESSAGE_WRITE).queue();
@@ -125,6 +122,9 @@ public class DiscordBot extends ListenerAdapter {
 		discordBot.addEventListener(this);
 		chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setAllow(Permission.MESSAGE_WRITE).queue();
 		registerCommands();
+		
+		this.hook = chatChannel().createWebhook("Chat Webhook").complete();
+		this.chatClient = WebhookClient.withId(hook.getIdLong(), hook.getToken());
 	}
 	
 	private JDA buildBot() {

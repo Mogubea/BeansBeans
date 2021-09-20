@@ -3,6 +3,8 @@ package me.playground.loot;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.annotation.Nonnull;
+
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -61,7 +63,7 @@ public class LootTable {
 	 * @param player - If a player influenced the drops, used for {@link LootEntry#isGrindable()}.
 	 * @return A collection of itemstacks based on the parameters given.
 	 */
-	public Collection<ItemStack> getRewardsFromSystem1(int loops, int looting, float luck, boolean player) {
+	public ArrayList<ItemStack> getRewardsFromSystem1(int loops, int looting, float luck) {
 		ArrayList<ItemStack> stacks = new ArrayList<ItemStack>(loops);
 		
 		int size = entries.size();
@@ -90,10 +92,24 @@ public class LootTable {
 	 * 
 	 * <p>Looting and Luck within this system DO affect the chances of getting a specific drop as well as affecting the drop itself.
 	 * This method does not guarantee any drops unless drops are specifically mentioned to be guaranteed.
-	 * @param player - If a player influenced the drops, used for a check involving {@link LootEntry#isGrindable()}.
 	 * @return A collection of itemstacks based on the parameters given.
 	 */
-	public Collection<ItemStack> getRewardsFromSystem2(Player p, int looting, float luck) {
+	public Collection<ItemStack> getRewardsFromSystem2(@Nonnull Player p, int looting, float luck) {
+		return getRewardsFromSystem2(p, looting, luck, false, false);
+	}
+	
+	/**
+	 * This method is to be used for systems that rely on pure odds to get an item, but can get several of these items in one attempt 
+	 * if lucky enough, or none at all (eg. Mob Drops).
+	 * 
+	 * <p>Every entry is looped through, and the odds to add an entry to the final collection is based on <b>({@link LootEntry#getChance()} 
+	 * * (1 + luck/5)) / nextInt(1000000)</b>. The luck calculation is only included if {@link LootEntry#allowsLuck()} is enabled.
+	 * 
+	 * <p>Looting and Luck within this system DO affect the chances of getting a specific drop as well as affecting the drop itself.
+	 * This method does not guarantee any drops unless drops are specifically mentioned to be guaranteed.
+	 * @return A collection of itemstacks based on the parameters given.
+	 */
+	public Collection<ItemStack> getRewardsFromSystem2(@Nonnull Player p, int looting, float luck, boolean skeletonKill, boolean creeperKill) {
 		ArrayList<ItemStack> stacks = new ArrayList<ItemStack>();
 		
 		final int size = entries.size();
@@ -101,7 +117,8 @@ public class LootTable {
 		
 		for (int x = -1; ++x < size;) {
 			LootEntry entry = entries.get(x);
-			if (!entry.isGrindable() && p == null) continue;
+			if (entry.requiresChargedCreeper() && !creeperKill) continue;
+			if (entry.requiresSkeletonShot() && !skeletonKill) continue;
 			
 			float chance = entry.getChance(entry.allowsLuck() ? luck : 0);
 			if (chance > getManager().getRandom().nextInt(1000000)) {

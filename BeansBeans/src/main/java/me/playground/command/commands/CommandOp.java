@@ -33,6 +33,7 @@ import me.playground.npc.NPCType;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.ranks.Rank;
 import me.playground.utils.TabCompleter;
+import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -96,6 +97,16 @@ public class CommandOp extends BeanCommand {
 						as.remove();
 				}
 			}
+			return true;
+		}
+		
+		if ("serialize".equals(cmdStr) && checkPlayer(sender)) {
+			getPlugin().getLogger().info("Serialized ItemStack Request: " + p.getInventory().getItemInMainHand().serializeAsBytes());
+			return true;
+		}
+		
+		if ("base64".equals(cmdStr) && checkPlayer(sender)) {
+			getPlugin().getLogger().info("Base64 ItemStack Request: " + Utils.itemStackToBase64(p.getInventory().getItemInMainHand()));
 			return true;
 		}
 		

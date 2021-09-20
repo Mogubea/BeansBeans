@@ -4,9 +4,8 @@ import org.bukkit.inventory.ItemStack;
 
 public class BeanItemDwarvenDream extends BeanItem {
 
-	protected BeanItemDwarvenDream(String identifier, String name, ItemStack item, ItemRarity rarity,
-			int modelDataInt) {
-		super(identifier, name, item, rarity, modelDataInt);
+	protected BeanItemDwarvenDream(int numeric, String identifier, String name, ItemStack item, ItemRarity rarity, int modelDataInt) {
+		super(numeric, identifier, name, item, rarity, modelDataInt);
 		// TODO Auto-generated constructor stub
 	}
 	

@@ -11,12 +11,14 @@ import org.bukkit.entity.Animals;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Cat;
 import org.bukkit.entity.ChestedHorse;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Parrot;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.Wolf;
 import org.bukkit.event.EventHandler;
@@ -41,7 +43,6 @@ import me.playground.items.BeanItem;
 import me.playground.loot.LootTable;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.playerprofile.skills.BxpValues;
 import me.playground.playerprofile.stats.StatType;
 import me.playground.regions.Region;
 import me.playground.regions.flags.Flags;
@@ -225,55 +226,77 @@ public class EntityListener extends EventListener {
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onEntityDeath(EntityDeathEvent e) {
-		if (e.getEntity().getKiller() != null) {
-			final Player p = e.getEntity().getKiller();
-			
-			PlayerProfile pp = PlayerProfile.from(p);
-			pp.getStats().addToStat(StatType.KILLS, e.getEntityType().name(), 1);
-			pp.getStats().addToStat(StatType.KILLS, "total", 1);
-			
-			final boolean passive = BxpValues.isPassiveMob(e.getEntityType());
-		
-			if (!passive) { // coin
-				final Region region = getRegionAt(e.getEntity().getLocation());
-				
-				if (e.getEntity().getTicksLived() < 200)
-					return;
-				
-				if (e.getDroppedExp() > 0) // XXX: MOB_DROP_EXP_MULTIPLIER
-					e.setDroppedExp((int) ((float)e.getDroppedExp() * region.getEffectiveFlag(Flags.MOB_DROP_EXP)));
-				
-				int localEntCount = e.getEntity().getNearbyEntities(2, 7, 2).size();
-				if (localEntCount > 6) {
-					e.setDroppedExp((int)((float)e.getDroppedExp()/2F));
-					return; // no coins
+		final LootTable lootTable = getPlugin().lootManager().getLootTable(e.getEntityType());
+		boolean chargedKill = false, skeletonKill = false, nerfDrops = true, isMonster = e.getEntity() instanceof Monster;
+		Player p = null;
+		if (e.getEntity().getLastDamageCause() != null) {
+			if ((e.getEntity().getLastDamageCause()) instanceof EntityDamageByEntityEvent) {
+				EntityDamageByEntityEvent ev = (EntityDamageByEntityEvent) e.getEntity().getLastDamageCause();
+				if (ev.getDamager() instanceof Skeleton) {
+					skeletonKill = true;
+				} else if (ev.getDamager() instanceof Projectile) {
+					if (((Projectile)ev.getDamager()).getShooter() != null && ((Projectile)ev.getDamager()).getShooter() instanceof Skeleton)
+						skeletonKill = true;
+				} else if (ev.getDamager() instanceof Creeper && ((Creeper)ev.getDamager()).isPowered()) {
+					chargedKill = true;
 				}
-				
-				if (e.getEntity().fromMobSpawner())
-					return; // no coins
-				
-				// Replace drops if table exists
-				final LootTable testTable = getPlugin().lootManager().getLootTable(e.getEntityType());
-				if (testTable != null) {
-					e.getDrops().clear();
-					e.getDrops().addAll(testTable.getRewardsFromSystem2(p, p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS), pp.getLuck()));
-				}
-				// End
-				
-				int hp = (int) e.getEntity().getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
-				if (hp/2 < 1)
-					return;
-				pp.addToBalance((long) (2 + getPlugin().getRandom().nextInt(hp/2) * region.getEffectiveFlag(Flags.MOB_DROP_COIN)));
-			}
-			
-		// Slight nerf to grinders that require no player interaction
-		} else {
-			// 50% chance to drop nothing
-			if (getPlugin().getRandom().nextInt(2) == 0) {
-				e.getDrops().clear();
-				e.setDroppedExp(0);
 			}
 		}
+		
+		if (e.getEntity().getKiller() != null) {
+			nerfDrops = false;
+			// If the player kill designation hasn't timed out, check the local area if it's a grinder.
+			p = e.getEntity().getKiller();
+			
+			if (isMonster)
+				if (e.getEntity().fromMobSpawner() || e.getEntity().getNearbyEntities(2, 7, 2).size() > 6)
+					nerfDrops = true;
+		} else if (chargedKill || skeletonKill) {
+			nerfDrops = false;
+			// If the player kill designation timed out, just check for the entities' current player target, which 99.999% of the time they will have one when attempting these special drops.
+			if (isMonster)
+				if (((Monster)e.getEntity()).getTarget() instanceof Player)
+					p = (Player) ((Monster)e.getEntity()).getTarget();
+		}
+		
+		if (nerfDrops) {
+			// Slight nerf to grinders that require no player interaction
+			// 50% chance to drop nothing, just drop vanilla stuff otherwise, nerf XP by 50% always.
+			if (getPlugin().getRandom().nextInt(2) == 0)
+				e.getDrops().clear();
+			e.setDroppedExp((int) ((float)e.getDroppedExp()/2F));
+		} else if (p != null) {
+			// Do the magic of the custom stuff for this server.
+			// Add to the player's statistics if it's a non grinded mob, add coin drops, apply the multipliers and drop the custom loot.
+			final Region region = getRegionAt(e.getEntity().getLocation());
+			PlayerProfile pp = PlayerProfile.from(p);
+			
+			// Stats
+			pp.getStats().addToStat(StatType.KILLS, e.getEntityType().name(), 1);
+			pp.getStats().addToStat(StatType.KILLS, "total", 1);
+			if (skeletonKill) 
+				pp.getStats().addToStat(StatType.KILLS, "withSkeletonShot", 1);
+			if (chargedKill) 
+				pp.getStats().addToStat(StatType.KILLS, "withChargedCreeper", 1);
+			
+			// Coin Drops
+			if (isMonster) {
+				int hp = (int) e.getEntity().getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+				if (!(hp/2 < 1))
+					pp.addToBalance((long) (2 + getPlugin().getRandom().nextInt(hp/2) * region.getEffectiveFlag(Flags.MOB_DROP_COIN)));
+			}
+			
+			// EXP Multiplier
+			if (e.getDroppedExp() > 0) // XXX: MOB_DROP_EXP_MULTIPLIER
+				e.setDroppedExp((int) ((float)e.getDroppedExp() * region.getEffectiveFlag(Flags.MOB_DROP_EXP)));
+			
+			// Custom Loot
+			if (lootTable != null) {
+				e.getDrops().clear();
+				e.getDrops().addAll(lootTable.getRewardsFromSystem2(p, p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS), pp.getLuck(), skeletonKill, chargedKill));
+			}
+		}
+		// Vanilla Drops otherwise.
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)

@@ -599,7 +599,7 @@ public class Datasource {
 				statement.setByte(2, ent.getKey().getId());
 				
 				for(Entry<String, DirtyInteger> entt : ent.getValue().entrySet()) {
-					if (!entt.getValue().isDirty()) return;
+					if (!entt.getValue().isDirty()) continue;
 					
 					statement.setString(3, entt.getKey());
 					statement.setInt(4, entt.getValue().getValue());

@@ -3,13 +3,10 @@ package me.playground.items.heirlooms;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
-import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
-import org.bukkit.attribute.AttributeModifier.Operation;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -18,37 +15,30 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-
 import me.playground.items.BeanItemHeirloom;
 import me.playground.items.ItemRarity;
 import me.playground.main.Main;
 import me.playground.playerprofile.HeirloomInventory;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 
 public class BItemHeirloomMochi extends BeanItemHeirloom {
 
 	private Random rand = new Random();
 	
-	public BItemHeirloomMochi(String identifier, String name, ItemStack item, ItemRarity rarity) {
-		super(identifier, name, item, rarity);
-	}
-	
-	@Override
-	public Multimap<Attribute, AttributeModifier> getAttributes() {
-		final Multimap<Attribute, AttributeModifier> attributes = HashMultimap.create();
-		attributes.put(Attribute.GENERIC_MOVEMENT_SPEED, new AttributeModifier(UUID.fromString("8888888d-06a3-402d-a4a0-88888888fbfa"), "generic.movement_speed", 0.001, Operation.ADD_NUMBER, EquipmentSlot.FEET));
-		return attributes;
+	public BItemHeirloomMochi(int numeric, String identifier, String name, ItemRarity rarity) {
+		super(numeric, identifier, name, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjkzNTUzYmU2ODMwMjJmODU5NTljNmMyMTdiNGE1NmJmMzNkZWZiZjUyYTZhODRjNjlkMmNiZGI1MTY0M2IifX19", rarity);
+		addAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0.001, EquipmentSlot.HAND);
 	}
 	
 	@Override
 	public ArrayList<Component> getCustomLore(ItemStack item) {
 		final ArrayList<Component> lore = new ArrayList<Component>();
 		lore.addAll(Arrays.asList(
-				Component.text("\u00a77\"\u3082\u3050\u3082\u3050\u3082\u3050\u3082\u3050\""),
-				Component.text("\u00a77Mogu Counter: \u00a7f" + item.getItemMeta().getPersistentDataContainer().getOrDefault(KEY_COUNTER, PersistentDataType.INTEGER, 0))));
+				Component.text("\"\u3082\u3050\u3082\u3050\u3082\u3050\u3082\u3050\"", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false),
+				Component.text("Mogu Counter: ", NamedTextColor.GRAY).append(Component.text(item.getItemMeta().getPersistentDataContainer().getOrDefault(KEY_COUNTER, PersistentDataType.INTEGER, 0), NamedTextColor.WHITE)).decoration(TextDecoration.ITALIC, false)));
 		return lore;
 	}
 	

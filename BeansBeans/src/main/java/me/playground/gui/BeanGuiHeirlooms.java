@@ -12,11 +12,12 @@ import org.bukkit.inventory.ItemStack;
 import me.playground.items.BeanItem;
 import me.playground.items.BeanItemHeirloom;
 import me.playground.playerprofile.HeirloomInventory;
+import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
 
 public class BeanGuiHeirlooms extends BeanGui {
 	
-	protected static final ItemStack blankbl = newItem(new ItemStack(Material.WHITE_STAINED_GLASS_PANE, 1), "");
+	protected static final ItemStack blankbl = newItem(new ItemStack(Material.WHITE_STAINED_GLASS_PANE, 1), Component.text("Heirloom Bag").color(BeanColor.HEIRLOOM));
 	
 	public BeanGuiHeirlooms(Player p) {
 		super(p);
@@ -48,19 +49,19 @@ public class BeanGuiHeirlooms extends BeanGui {
 		if (bitem == null || !(bitem instanceof BeanItemHeirloom)) return;
 		
 		if (slot > presetSize) {
-			if (tpp.getHeirlooms().size() > 4) {
+			if (tpp.getHeirlooms().size() >= tpp.getHeirlooms().getMaxHeirlooms()) {
 				p.sendActionBar(Component.text("\u00a7cYou can't equip any more heirlooms!"));
 				return;
 			}
 			if (tpp.getHeirlooms().addHeirloom(item)) {
 				e.getClickedInventory().getItem(e.getSlot()).setAmount(item.getAmount()-1);
-				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.2F, 0.8F);
+				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.3F, 0.8F);
 			}
 		} else if (slot < presetSize-9) {
 			if (p.getInventory().firstEmpty() > -1) {
 				if (tpp.getHeirlooms().removeHeirloom(item)) {
 					p.getInventory().addItem(item);
-					p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.2F, 0.8F);
+					p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.3F, 0.8F);
 				}
 			} else {
 				p.sendActionBar(Component.text("\u00a7cYour inventory is full!"));

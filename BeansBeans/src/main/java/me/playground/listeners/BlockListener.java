@@ -4,6 +4,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
+import org.bukkit.block.Skull;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,6 +17,7 @@ import org.bukkit.event.block.BlockIgniteEvent.IgniteCause;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.persistence.PersistentDataType;
 
 import me.playground.items.BeanItem;
 import me.playground.main.Main;
@@ -46,7 +48,17 @@ public class BlockListener extends EventListener {
 			return;
 		}
 		
-		if (e.getBlock().getState() instanceof Container) {
+		// Handle custom skulls.
+		if (e.getItemInHand().getType() == Material.PLAYER_HEAD) {
+			if (BeanItem.from(e.getItemInHand()) != null) {
+				Skull skull = (Skull) e.getBlock().getState();
+				skull.getPersistentDataContainer().set(BeanItem.KEY_ID, PersistentDataType.STRING, e.getItemInHand().getItemMeta().getPersistentDataContainer().get(BeanItem.KEY_ID, PersistentDataType.STRING));
+				skull.update();
+			}
+		}
+		
+		// Handle the custom names on containers and make the illusion that nothing changed.
+		else if (e.getBlock().getState() instanceof Container) {
 			Container c = (Container) e.getBlock().getState();
 			if (c.customName() != null) { // Remove colour
 				c.customName(c.customName().color(TextColor.color(0x3F3F3F)));
@@ -54,13 +66,15 @@ public class BlockListener extends EventListener {
 			}
 		}
 		
-		if (e.getBlock().getState() instanceof Sign) { // Allow for signs to be edited
+		// Allow for signs to be edited.
+		else if (e.getBlock().getState() instanceof Sign) {
 			Sign sign = (Sign) e.getBlock().getState();
 			sign.setEditable(true);
 			sign.update();
 		}
 		
-		if (!(e.getBlock().getBlockData() instanceof Ageable)) // Allow for crops
+		// To prevent placing a crop and not being able to obtain experience from it after harvesting it later on the same reset cycle.
+		else if (!(e.getBlock().getBlockData() instanceof Ageable))
 			e.getBlock().setMetadata("placed", new FixedMetadataValue(getPlugin(), true));
 		
 	}
@@ -88,6 +102,16 @@ public class BlockListener extends EventListener {
 				custom.onBlockMined(e);
 		}
 		
+		// Handle custom skulls.
+		if (e.isDropItems() && (e.getBlock().getType() == Material.PLAYER_HEAD || e.getBlock().getType() == Material.PLAYER_WALL_HEAD)) {
+			String id = ((Skull)e.getBlock().getState()).getPersistentDataContainer().getOrDefault(BeanItem.KEY_ID, PersistentDataType.STRING, null);
+			if (id != null) {
+				e.setDropItems(false);
+				e.getBlock().getWorld().dropItem(e.getBlock().getLocation(), BeanItem.from(id).getItemStack());
+			}
+		}
+		
+		// Remove placed metadata for this boot cycle.
 		if (e.getBlock().hasMetadata("placed")) {
 			e.getBlock().removeMetadata("placed", getPlugin());
 			return;

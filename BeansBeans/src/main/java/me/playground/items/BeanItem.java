@@ -1,5 +1,6 @@
 package me.playground.items;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,19 +11,15 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
-import org.bukkit.GameMode;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.attribute.AttributeModifier.Operation;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.Container;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -44,6 +41,7 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.TropicalFishBucketMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -52,7 +50,6 @@ import me.playground.items.enchants.BeanEnchantmentListener;
 import me.playground.items.heirlooms.BItemHeirloomAncientSkull;
 import me.playground.items.heirlooms.BItemHeirloomMochi;
 import me.playground.main.Main;
-import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -61,7 +58,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 
-public abstract class BeanItem {
+public class BeanItem {
 	private final static HashMap<Material, ItemRarity> baseItemRarities = new HashMap<Material, ItemRarity>() {
 		private static final long serialVersionUID = 1018055300807913156L;
 	{
@@ -89,26 +86,26 @@ public abstract class BeanItem {
 		put(Material.CHAINMAIL_LEGGINGS, ItemRarity.UNCOMMON);
 		put(Material.CHAINMAIL_BOOTS, ItemRarity.UNCOMMON);
 		
-		put(Material.SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.BLACK_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.BLUE_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.GREEN_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.CYAN_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.RED_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.PURPLE_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.ORANGE_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.GRAY_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.LIGHT_GRAY_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.LIGHT_BLUE_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.LIME_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.BROWN_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.WHITE_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.PINK_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.YELLOW_SHULKER_BOX, ItemRarity.UNCOMMON);
-		put(Material.MAGENTA_SHULKER_BOX, ItemRarity.UNCOMMON);
-		
 		put(Material.EMERALD_ORE, ItemRarity.UNCOMMON);
 		put(Material.DEEPSLATE_DIAMOND_ORE, ItemRarity.UNCOMMON);
+		
+		put(Material.SHULKER_BOX, ItemRarity.RARE);
+		put(Material.BLACK_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.BLUE_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.GREEN_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.CYAN_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.RED_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.PURPLE_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.ORANGE_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.GRAY_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.LIGHT_GRAY_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.LIGHT_BLUE_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.LIME_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.BROWN_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.WHITE_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.PINK_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.YELLOW_SHULKER_BOX, ItemRarity.RARE);
+		put(Material.MAGENTA_SHULKER_BOX, ItemRarity.RARE);
 		
 		put(Material.NETHERITE_AXE, ItemRarity.RARE);
 		put(Material.NETHERITE_PICKAXE, ItemRarity.RARE);
@@ -124,9 +121,9 @@ public abstract class BeanItem {
 		put(Material.TRIDENT, ItemRarity.RARE);
 		put(Material.ELYTRA, ItemRarity.RARE);
 		put(Material.DRAGON_HEAD, ItemRarity.RARE);
-		put(Material.DRAGON_EGG, ItemRarity.RARE);
 		put(Material.BEACON, ItemRarity.RARE);
 		
+		put(Material.DRAGON_EGG, ItemRarity.EPIC);
 		put(Material.DEEPSLATE_EMERALD_ORE, ItemRarity.EPIC);
 		put(Material.TOTEM_OF_UNDYING, ItemRarity.EPIC);
 		
@@ -135,15 +132,16 @@ public abstract class BeanItem {
 		put(Material.COMMAND_BLOCK_MINECART, ItemRarity.UNTOUCHABLE);
 	}};
 	
-	private final static NamespacedKey KEY_ID = key("ID"); // String
+	public final static NamespacedKey KEY_ID = key("ID"); // String
 	public final static NamespacedKey KEY_DURABILITY = key("DURABILITY"); // Integer
 	public final static NamespacedKey KEY_MAX_DURABILITY = key("MAX_DURABILITY"); // Integer
 	public final static NamespacedKey KEY_COUNTER = key("COUNTER"); // Integer
 	
-	public final static HashMap<String, BeanItem> itemsByName = new HashMap<String, BeanItem>();
+	private final static HashMap<String, BeanItem> itemsByName = new HashMap<String, BeanItem>();
+	private final static ArrayList<Integer> usedNumerics = new ArrayList<Integer>();
 	private static BeanItem[] items;
 	
-	public final static BeanItem FORMATTING_WAND = new BeanItem("FORMATTING_WAND", "Formatting Wand", Material.GOLDEN_AXE, ItemRarity.UNTOUCHABLE, 1, 500) {
+	public final static BeanItem FORMATTING_WAND = new BeanItem(2000000, "FORMATTING_WAND", "Formatting Wand", Material.GOLDEN_AXE, ItemRarity.UNTOUCHABLE, 1, 500) {
 		public ArrayList<Component> getCustomLore(ItemStack item) {
 			item.getItemMeta().setUnbreakable(true);
 			
@@ -174,7 +172,7 @@ public abstract class BeanItem {
 		}
 	};
 	
-	public final static BeanItem DEFORMATTING_WAND = new BeanItem("DEFORMATTING_WAND", "Deformatting Wand", Material.NETHERITE_AXE, ItemRarity.UNTOUCHABLE, 1, 500) {
+	public final static BeanItem DEFORMATTING_WAND = new BeanItem(2000001, "DEFORMATTING_WAND", "Deformatting Wand", Material.NETHERITE_AXE, ItemRarity.UNTOUCHABLE, 1, 500) {
 		public ArrayList<Component> getCustomLore(ItemStack item) {
 			item.getItemMeta().setUnbreakable(true);
 			
@@ -205,51 +203,7 @@ public abstract class BeanItem {
 		}
 	};
 	
-	public final static BeanItem SHOP_STAND = new BeanItem("SHOP_STAND", "Shopping Stand", Utils.getSkullWithCustomSkin(UUID.fromString("6145234d-06a3-402d-a4a0-68787735fbfa"), "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2UzZGViNTdlYWEyZjRkNDAzYWQ1NzI4M2NlOGI0MTgwNWVlNWI2ZGU5MTJlZTJiNGVhNzM2YTlkMWY0NjVhNyJ9fX0="), ItemRarity.RARE, 1) {
-		public void onInteract(PlayerInteractEvent e) {
-			if (e.getHand() == EquipmentSlot.HAND && e.getAction() == Action.RIGHT_CLICK_BLOCK) {
-				e.setCancelled(true);
-				final Location l = e.getClickedBlock().getLocation().add(e.getBlockFace().getDirection().toLocation(e.getClickedBlock().getWorld()));
-				final boolean upwards = e.getBlockFace() == BlockFace.UP;
-				final boolean carpet = l.subtract(0,upwards ? 1 : 0,0).getBlock().getType().toString().endsWith("CARPET");
-				
-				if (upwards && !carpet)
-					l.add(0,1,0);
-				
-				final Block b = l.getBlock();
-				final Block below = l.subtract(0,1,0).getBlock();
-				
-				
-				if ((!carpet && b.getType() != Material.AIR) || !below.isSolid() || below.isPassable() || below.getType() == Material.HOPPER) {
-					e.getPlayer().sendActionBar(Component.text("\u00a7cThat is an invalid shop location!"));
-				} else if (b.getLocation().add(0.5, 0.5, 0.5).getNearbyEntitiesByType(ArmorStand.class, 2.49).size() > 0) {
-					e.getPlayer().sendActionBar(Component.text("\u00a7cThere are too many stands here!"));
-				} else {
-					try {
-						final PlayerProfile pp = PlayerProfile.from(e.getPlayer());
-						Main.getShopManager().createNewShop(pp.getId(), l);
-						if (e.getPlayer().getGameMode() != GameMode.CREATIVE)
-							e.getItem().setAmount(e.getItem().getAmount() - 1);
-					} catch (Throwable ee) {
-						e.getPlayer().sendActionBar(Component.text("\u00a7cReport this, there was a problem creating this shop!"));
-						ee.printStackTrace();
-					}
-				}
-			}
-		}
-		
-		public ArrayList<Component> getCustomLore(ItemStack item) {
-			final ArrayList<Component> lore = new ArrayList<Component>();
-			lore.addAll(Arrays.asList(
-					Component.text("\u00a77Place this down to create your"),
-					Component.text("\u00a77very own \u00a7eShop\u00a77 and start selling"),
-					Component.text("\u00a77via an interactive shopping interface!"),
-					Component.text("\u00a78\u00a7o(Maximum Storage: 1728 Items)")));
-			return lore;
-		}
-	};
-	
-	public final static BeanItem DEBUG_CAKE = new BeanItem("DEBUG_CAKE", "Bug Finder's Cake", Material.CAKE, ItemRarity.IRIDESCENT, 1) {
+	public final static BeanItem DEBUG_CAKE = new BeanItem(2000002, "DEBUG_CAKE", "Bug Finder's Cake", Material.CAKE, ItemRarity.IRIDESCENT, 1) {
 		public void onInteract(PlayerInteractEvent e) {
 			if (e.getHand() == EquipmentSlot.HAND && e.getAction() == Action.RIGHT_CLICK_BLOCK) {
 				e.setCancelled(true);
@@ -265,32 +219,35 @@ public abstract class BeanItem {
 		}
 	};
 	
-	public final static BeanItem TALARIANS = new BeanItem("TALARIANS", "Lesser Talarians", Utils.getDyedLeather(Material.LEATHER_BOOTS, 0xFF8833), ItemRarity.RARE, 1, 176) {
-		@Override
-		public Multimap<Attribute, AttributeModifier> getAttributes() {
-			final Multimap<Attribute, AttributeModifier> attributes = HashMultimap.create();
-			attributes.put(Attribute.GENERIC_ARMOR, new AttributeModifier(UUID.randomUUID(), "generic.armor", 1, Operation.ADD_NUMBER, EquipmentSlot.FEET));
-			attributes.put(Attribute.GENERIC_MOVEMENT_SPEED, new AttributeModifier(UUID.randomUUID(), "generic.movement_speed", 0.004, Operation.ADD_NUMBER, EquipmentSlot.FEET));
-			return attributes;
-		}
-		
-		public ArrayList<Component> getCustomLore(ItemStack item) {
-			final ArrayList<Component> lore = new ArrayList<Component>();
-			lore.addAll(Arrays.asList(
-					Component.text("\u00a77While sprinting, slowly gather momentum"),
-					Component.text("\u00a77up to a maximum bonus of \u00a7f+25% Movement"),
-					Component.text("\u00a7fSpeed\u00a77, at the cost of some durability!")));
-			return lore;
-		}
-	};
+	public final static BeanItem SHOP_STAND = new BItemShopStand(0, "SHOP_STAND", "Shopping Stand", ItemRarity.RARE);
 	
-	public final static BeanItemHeirloom HL_MOCHI 			= new BItemHeirloomMochi("HL_MOCHI", "Mochi", Utils.getSkullWithCustomSkin(UUID.fromString("6145234d-06a3-402d-a4a0-68787735fbfd"), "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjkzNTUzYmU2ODMwMjJmODU5NTljNmMyMTdiNGE1NmJmMzNkZWZiZjUyYTZhODRjNjlkMmNiZGI1MTY0M2IifX19"), ItemRarity.RARE);
-	public final static BeanItemHeirloom HL_ANCIENT_SKULL 	= new BItemHeirloomAncientSkull("HL_ANCIENT_SKULL", "Ancient Skull", Utils.getSkullWithCustomSkin(UUID.fromString("6145234d-06a3-402d-a4a0-68787735fbfc"), "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzk3MjNlNTIwYjMwNzAwZTNiYzUzZTg1MjYyMDdlMjJhZjdmZjhmOTY2ODk3OTVmYzk0OWZhYmQ4ZDk4NDcxNSJ9fX0="), ItemRarity.RARE);
+	public final static BeanItem TALARIANS = new BeanItem(3, "TALARIANS", "Lesser Talarians", Utils.getDyedLeather(Material.LEATHER_BOOTS, 0xFF8833), ItemRarity.RARE, 1, 176)
+			.setDefaultLore(
+					Component.text("While sprinting, slowly gather momentum", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false),
+					Component.text("up to a maximum bonus of ", NamedTextColor.GRAY).append(Component.text("+25% Movement", NamedTextColor.WHITE)).decoration(TextDecoration.ITALIC, false),
+					Component.text("Speed", NamedTextColor.WHITE).append(Component.text(", at the cost of some durability!", NamedTextColor.GRAY)).decoration(TextDecoration.ITALIC, false))
+			.addAttribute(Attribute.GENERIC_ARMOR, 1, EquipmentSlot.FEET)
+			.addAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0.004, EquipmentSlot.FEET);
+	
+	public final static BeanItemHeirloom HL_MOCHI 			= new BItemHeirloomMochi(10000, "HL_MOCHI", "Mochi", ItemRarity.RARE);
+	public final static BeanItemHeirloom HL_ANCIENT_SKULL 	= new BItemHeirloomAncientSkull(10001, "HL_ANCIENT_SKULL", "Ancient Skull", ItemRarity.RARE);
+	
+	public final static BeanItem SPIDER_HEAD = new BeanItem(20000, "SPIDER_HEAD", "Spider Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzg3YTk2YThjMjNiODNiMzJhNzNkZjA1MWY2Yjg0YzJlZjI0ZDI1YmE0MTkwZGJlNzRmMTExMzg2MjliNWFlZiJ9fX0=", ItemRarity.UNCOMMON);
+	public final static BeanItem BLAZE_HEAD = new BeanItem(20001, "BLAZE_HEAD", "Blaze Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjc4ZWYyZTRjZjJjNDFhMmQxNGJmZGU5Y2FmZjEwMjE5ZjViMWJmNWIzNWE0OWViNTFjNjQ2Nzg4MmNiNWYwIn19fQ==", ItemRarity.RARE);
+	public final static BeanItem PIGLIN_HEAD = new BeanItem(20002, "PIGLIN_HEAD", "Piglin Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTBiYzlkYmI0NDA0YjgwMGY4Y2YwMjU2MjIwZmY3NGIwYjcxZGJhOGI2NjYwMGI2NzM0ZjRkNjMzNjE2MThmNSJ9fX0=", ItemRarity.RARE);
+	public final static BeanItem PHANTOM_HEAD = new BeanItem(20003, "PHANTOM_HEAD", "Phantom Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzQ2ODMwZGE1ZjgzYTNhYWVkODM4YTk5MTU2YWQ3ODFhNzg5Y2ZjZjEzZTI1YmVlZjdmNTRhODZlNGZhNCJ9fX0=", ItemRarity.RARE);
+	public final static BeanItem COW_HEAD = new BeanItem(20004, "COW_HEAD", "Cow Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2RmYTBhYzM3YmFiYTJhYTI5MGU0ZmFlZTQxOWE2MTNjZDYxMTdmYTU2OGU3MDlkOTAzNzQ3NTNjMDMyZGNiMCJ9fX0=", ItemRarity.UNCOMMON);
+	public final static BeanItem PIG_HEAD = new BeanItem(20005, "PIG_HEAD", "Pig Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjIxNjY4ZWY3Y2I3OWRkOWMyMmNlM2QxZjNmNGNiNmUyNTU5ODkzYjZkZjRhNDY5NTE0ZTY2N2MxNmFhNCJ9fX0=", ItemRarity.UNCOMMON);
+	public final static BeanItem CHICKEN_HEAD = new BeanItem(20006, "CHICKEN_HEAD", "Chicken Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTYzODQ2OWE1OTljZWVmNzIwNzUzNzYwMzI0OGE5YWIxMWZmNTkxZmQzNzhiZWE0NzM1YjM0NmE3ZmFlODkzIn19fQ==", ItemRarity.UNCOMMON);
+	public final static BeanItem SHEEP_HEAD = new BeanItem(20007, "SHEEP_HEAD", "Sheep Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjMxZjljY2M2YjNlMzJlY2YxM2I4YTExYWMyOWNkMzNkMThjOTVmYzczZGI4YTY2YzVkNjU3Y2NiOGJlNzAifX19", ItemRarity.UNCOMMON);
+	public final static BeanItem DROWNED_HEAD = new BeanItem(20008, "DROWNED_HEAD", "Drowned Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzg0ZGY3OWM0OTEwNGIxOThjZGFkNmQ5OWZkMGQwYmNmMTUzMWM5MmQ0YWI2MjY5ZTQwYjdkM2NiYmI4ZTk4YyJ9fX0=", ItemRarity.UNCOMMON);
+	public final static BeanItem ENDERMAN_HEAD = new BeanItem(20009, "ENDERMAN_HEAD", "Enderman Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTZjMGIzNmQ1M2ZmZjY5YTQ5YzdkNmYzOTMyZjJiMGZlOTQ4ZTAzMjIyNmQ1ZTgwNDVlYzU4NDA4YTM2ZTk1MSJ9fX0=", ItemRarity.UNCOMMON);
 	
 	static {
-		items = itemsByName.values().toArray(new BeanItem[7]);
+		items = itemsByName.values().toArray(new BeanItem[17]);
 	}
 	
+	protected final byte[]		    bytes;
 	protected final TextComponent	displayName;
 	protected final String	 		identifier;
 	protected final Material  		material;
@@ -301,25 +258,43 @@ public abstract class BeanItem {
 	protected final boolean 		reforgable;
 	protected final boolean 		canRarityChange;
 	protected final int				maxDurability;
+	protected final Multimap<Attribute, AttributeModifier> baseAttributes = HashMultimap.create();
+	protected final ArrayList<Component> baseLore = new ArrayList<Component>();
 	
 	protected boolean 				enabled = true;
 	
-	protected BeanItem(String identifier, String name, Material material, ItemRarity rarity, int modelDataInt) {
-		this(identifier, name, new ItemStack(material), rarity, modelDataInt, 0);
+	/**
+	 * Used for creating an instance of {@link BeanItem} using a skull with a custom skin.
+	 */
+	protected BeanItem(@NonNull final int numeric, @NonNull final String identifier, String name, String skullBase64, ItemRarity rarity) {
+		this(numeric, identifier, name, Utils.getSkullWithCustomSkin(UUID.nameUUIDFromBytes(ByteBuffer.allocate(16).putInt(numeric).array()), skullBase64), rarity, 0, 0);
 	}
 	
-	protected BeanItem(String identifier, String name, ItemStack item, ItemRarity rarity, int modelDataInt) {
-		this(identifier, name, item, rarity, modelDataInt, 0);
+	protected BeanItem(@NonNull final int numeric, @NonNull final String identifier, String name, Material material, ItemRarity rarity, int modelDataInt) {
+		this(numeric, identifier, name, new ItemStack(material), rarity, modelDataInt, 0);
 	}
 	
-	protected BeanItem(String identifier, String name, Material material, ItemRarity rarity, int modelDataInt, int maxDurability) {
-		this(identifier, name, new ItemStack(material), rarity, modelDataInt, maxDurability);
+	protected BeanItem(@NonNull final int numeric, @NonNull final String identifier, String name, ItemStack item, ItemRarity rarity, int modelDataInt) {
+		this(numeric, identifier, name, item, rarity, modelDataInt, 0);
 	}
 	
-	protected BeanItem(String identifier, String name, ItemStack item, ItemRarity rarity, int modelDataInt, int maxDurability) {
+	protected BeanItem(@NonNull final int numeric, @NonNull final String identifier, String name, Material material, ItemRarity rarity, int modelDataInt, int maxDurability) {
+		this(numeric, identifier, name, new ItemStack(material), rarity, modelDataInt, maxDurability);
+	}
+	
+	/**
+	 * When the server has been booted on live at least once, do not change {@link #identifier} ever as it is the sole identifier for these items.
+	 * Additionally, do not change the numeric declaration number, as it is used to generate the {@link uuid} for {@link AttributeModifier}s.
+	 */
+	protected BeanItem(@NonNull final int numeric, @NonNull final String identifier, String name, ItemStack item, ItemRarity rarity, int modelDataInt, int maxDurability) {
+		if (usedNumerics.contains(numeric))
+			throw new IllegalArgumentException("The numeric value '"+numeric+"' was already used to declare a different item.");
+		
+		usedNumerics.add(numeric);
 		itemsByName.put(identifier, this);
 		
-		this.identifier = identifier;
+		this.identifier = identifier; // don't change.
+		this.bytes = ByteBuffer.allocate(16).putInt(numeric).array();
 		this.displayName = Component.text(name);
 		this.material = item.getType();
 		this.defaultRarity = rarity;
@@ -332,7 +307,7 @@ public abstract class BeanItem {
 		PersistentDataContainer container = meta.getPersistentDataContainer();
 		container.set(KEY_ID, PersistentDataType.STRING, identifier);
 		
-		if (maxDurability > 8) {
+		if (maxDurability > 0) {
 			container.set(KEY_DURABILITY, PersistentDataType.INTEGER, maxDurability);
 			container.set(KEY_MAX_DURABILITY, PersistentDataType.INTEGER, maxDurability);
 		}
@@ -359,17 +334,44 @@ public abstract class BeanItem {
 		if (e.useItemInHand() == Result.DENY) return;
 	}
 	
-	public ArrayList<Component> getCustomLore(ItemStack item) {
-		return null;
+	protected ArrayList<Component> getCustomLore(ItemStack item) {
+		return getDefaultLore();
 	}
 	
 	protected ItemStack initializeItem(ItemStack item) {
 		return item;
 	}
 	
+	protected byte[] getUniqueBytes() {
+		return bytes;
+	}
+	
+	protected UUID getUniqueId(Attribute attribute) {
+		byte[] newBytes = getUniqueBytes();
+		newBytes[15] = (byte) attribute.ordinal();
+		return UUID.nameUUIDFromBytes(newBytes);
+	}
+	
+	protected BeanItem addAttribute(Attribute attribute, double value, EquipmentSlot slot) {
+		this.baseAttributes.put(attribute, new AttributeModifier(getUniqueId(attribute), attribute.translationKey(), value, Operation.ADD_NUMBER, slot));
+		formatItem(this.originalStack);
+		return this;
+	}
+	
+	protected BeanItem setDefaultLore(Component...lore) {
+		final int size = lore.length;
+		for (int x = -1; ++x < size;)
+			this.baseLore.add(lore[x]);
+		formatItem(this.originalStack);
+		return this;
+	}
+	
+	protected ArrayList<Component> getDefaultLore() {
+		return baseLore;
+	}
+	
 	public Multimap<Attribute, AttributeModifier> getAttributes() {
-		final Multimap<Attribute, AttributeModifier> attributes = HashMultimap.create();
-		return attributes;
+		return baseAttributes;
 	}
 	
 	public static ItemStack reduceItemDurabilityBy(ItemStack item, int amt) {
@@ -414,7 +416,7 @@ public abstract class BeanItem {
 		meta.getPersistentDataContainer().set(KEY_DURABILITY, PersistentDataType.INTEGER, newDura);
 		
 		lore.remove(lore.size() - 1);
-		lore.add(Component.text("\u00a77Durability: \u00a7f" + (newDura-1) + "\u00a77/\u00a7f" + (maxDura-1)));
+		lore.add(Component.text("\u00a77Durability: \u00a7f" + (newDura) + "\u00a77/\u00a7f" + (maxDura)));
 		meta.lore(lore);
 		Damageable metad = (Damageable) meta;
 		int newDmg = (int) (newDura == 0 ? base_maxDura : (base_maxDura - (((float)newDura/(float)maxDura) * base_maxDura)));
@@ -637,7 +639,7 @@ public abstract class BeanItem {
 			return rarity.toComponent().append(Component.text(" Shovel"));
 		if (m.toString().endsWith("HOE"))
 			return rarity.toComponent().append(Component.text(" Hoe"));
-		if (m.toString().endsWith("HELMET") || m.toString().endsWith("SKULL"))
+		if (m.toString().endsWith("HELMET"))
 			return rarity.toComponent().append(Component.text(" Helmet"));
 		if (m.toString().endsWith("CHESTPLATE"))
 			return rarity.toComponent().append(Component.text(" Chestplate"));
@@ -732,7 +734,6 @@ public abstract class BeanItem {
 	public String getIdentifier() {
 		return identifier;
 	}
-	
 	
 	/**
 	 * @return A cloned version of the original item stack.
