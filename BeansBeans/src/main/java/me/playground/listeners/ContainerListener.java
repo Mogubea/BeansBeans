@@ -78,8 +78,8 @@ public class ContainerListener extends EventListener {
 	
 	@EventHandler
 	public void onCraft(PrepareItemCraftEvent e) {
-		if (e.getInventory() instanceof AnvilInventory || e.getInventory() instanceof SmithingInventory)
-			return;
+		if (e.getInventory() instanceof AnvilInventory || e.getInventory() instanceof SmithingInventory) return;
+		if (e.getRecipe() == null) return;
 		
 		// All Bukkit recipe instances implement Keyed.
 		NamespacedKey key = ((Keyed)e.getRecipe()).getKey();
