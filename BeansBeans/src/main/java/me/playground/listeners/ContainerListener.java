@@ -3,8 +3,9 @@ package me.playground.listeners;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Keyed;
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -80,6 +81,15 @@ public class ContainerListener extends EventListener {
 		if (e.getInventory() instanceof AnvilInventory || e.getInventory() instanceof SmithingInventory)
 			return;
 		
+		// All Bukkit recipe instances implement Keyed.
+		NamespacedKey key = ((Keyed)e.getRecipe()).getKey();
+		if (!key.getNamespace().equals(NamespacedKey.MINECRAFT)) {
+			if (!e.getView().getPlayer().hasDiscoveredRecipe(key))
+				e.getInventory().setResult(null);
+			e.getView().getPlayer().sendActionBar(Component.text("\u00a7cYou have not unlocked this recipe."));
+			return;
+		}
+		
 		ItemStack i = e.getInventory().getResult();
 		
 		if (i != null)
@@ -146,21 +156,12 @@ public class ContainerListener extends EventListener {
 		
 		final ItemStack stack = e.getClickedInventory().getItem(e.getSlot());
 		final boolean menuItem = stack != null && (stack.equals(BeanGui.menuItem));
-		final boolean coin = stack != null && stack.getType() == Material.GOLD_NUGGET && stack.containsEnchantment(Enchantment.ARROW_INFINITE);
 		
-		
-		if (menuItem || coin)
+		if (menuItem)
 			e.setCancelled(true);
 		
 		final Player p = (Player) e.getView().getPlayer();
 		final PlayerProfile pp = PlayerProfile.from(p);
-		
-		if (coin) {
-			int gold = stack.getEnchantmentLevel(Enchantment.ARROW_INFINITE);
-			if (gold > 0)
-				pp.addToBalance(gold);
-			e.getCurrentItem().setAmount(0);
-		}
 		
 		BeanGui bui = pp.getBeanGui();
 		
@@ -171,7 +172,8 @@ public class ContainerListener extends EventListener {
 			}
 		}
 		
-		if (bui != null && e.getCurrentItem() != null && !bui.checkPageClick(e))
+		// No point in firing this if the item is null.
+		if (bui != null && e.getCurrentItem() != null && !bui.preInventoryClick(e))
 			bui.onInventoryClicked(e);
 	}
 	
