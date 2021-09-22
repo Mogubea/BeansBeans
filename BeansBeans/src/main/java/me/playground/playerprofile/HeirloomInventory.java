@@ -36,7 +36,7 @@ public class HeirloomInventory {
 	private int maxSize;
 	final private PlayerProfile profile;
 	final private LinkedHashMap<String, ItemStack> heirlooms = new LinkedHashMap<String, ItemStack>();
-	final private HashMap<Attribute, Double> attributeModifiers = new HashMap<Attribute, Double>(3);
+	final private HashMap<Attribute, Double> visualModifiers = new HashMap<Attribute, Double>(3); // Purely for show
 	
 	public HeirloomInventory(PlayerProfile owner, @Nullable JSONObject data) {
 		putDefaultValues();
@@ -162,11 +162,11 @@ public class HeirloomInventory {
 		if (!i.getItemMeta().hasAttributeModifiers()) return;
 		i.getItemMeta().getAttributeModifiers().forEach((attribute, modifier) -> { // ItemMeta is already confirmed from BeanItemHeirloom check.
 			if (modifier.getOperation() != AttributeModifier.Operation.ADD_NUMBER) return;
-			if (!attributeModifiers.containsKey(attribute)) return;
-			double newAmt = attributeModifiers.get(attribute) + modifier.getAmount();
-			attributeModifiers.put(attribute, newAmt);
-			if (update)
-				profile.updateAttribute(attribute, newAmt);
+			if (!visualModifiers.containsKey(attribute)) return; // Valid Attribute
+			double newAmt = visualModifiers.get(attribute) + modifier.getAmount();
+			visualModifiers.put(attribute, newAmt);
+			if (profile.isOnline() && !profile.getPlayer().getAttribute(attribute).getModifiers().contains(modifier)) // Bukkit throws an error if the modifier already exists..
+				profile.getPlayer().getAttribute(attribute).addModifier(modifier);
 		});
 	}
 	
@@ -174,11 +174,11 @@ public class HeirloomInventory {
 		if (!i.getItemMeta().hasAttributeModifiers()) return;
 		i.getItemMeta().getAttributeModifiers().forEach((attribute, modifier) -> { // ItemMeta is already confirmed from BeanItemHeirloom check.
 			if (modifier.getOperation() != AttributeModifier.Operation.ADD_NUMBER) return;
-			if (!attributeModifiers.containsKey(attribute)) return;
-			double newAmt = attributeModifiers.get(attribute) - modifier.getAmount();
-			attributeModifiers.put(attribute, newAmt);
-			if (update)
-				profile.updateAttribute(attribute, newAmt);
+			if (!visualModifiers.containsKey(attribute)) return; // Valid Attribute
+			double newAmt = visualModifiers.get(attribute) - modifier.getAmount();
+			visualModifiers.put(attribute, newAmt);
+			if (profile.isOnline())
+				profile.getPlayer().getAttribute(attribute).removeModifier(modifier);
 		});
 	}
 	
@@ -187,23 +187,22 @@ public class HeirloomInventory {
 		heirlooms.forEach((identifier, item) -> {
 			addStats(item, false);
 		});
-		profile.updateAttributeBonuses();
 	}
 	
 	public double getDamageBonus() {
-		return attributeModifiers.get(Attribute.GENERIC_ATTACK_DAMAGE);
+		return visualModifiers.get(Attribute.GENERIC_ATTACK_DAMAGE);
 	}
 	
 	public double getMovementBonus() {
-		return attributeModifiers.get(Attribute.GENERIC_MOVEMENT_SPEED);
+		return visualModifiers.get(Attribute.GENERIC_MOVEMENT_SPEED);
 	}
 	
 	public double getHealthBonus() {
-		return attributeModifiers.get(Attribute.GENERIC_MAX_HEALTH);
+		return visualModifiers.get(Attribute.GENERIC_MAX_HEALTH);
 	}
 	
 	public HashMap<Attribute, Double> getModifiers() {
-		return attributeModifiers;
+		return visualModifiers;
 	}
 	
 	/**
@@ -231,9 +230,10 @@ public class HeirloomInventory {
 	}
 	
 	private void putDefaultValues() {
-		attributeModifiers.put(Attribute.GENERIC_ATTACK_DAMAGE, 0d);
-		attributeModifiers.put(Attribute.GENERIC_MAX_HEALTH, 0d);
-		attributeModifiers.put(Attribute.GENERIC_MOVEMENT_SPEED, 0d);
+		final Attribute[] atts = {Attribute.GENERIC_ATTACK_DAMAGE, Attribute.GENERIC_MAX_HEALTH, Attribute.GENERIC_MOVEMENT_SPEED};
+		int size = atts.length;
+		for (int x = -1; ++x < size;)
+			visualModifiers.put(atts[x], 0d);
 	}
 	
 	/**

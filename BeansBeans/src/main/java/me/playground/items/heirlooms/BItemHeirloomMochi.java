@@ -30,7 +30,7 @@ public class BItemHeirloomMochi extends BeanItemHeirloom {
 	
 	public BItemHeirloomMochi(int numeric, String identifier, String name, ItemRarity rarity) {
 		super(numeric, identifier, name, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjkzNTUzYmU2ODMwMjJmODU5NTljNmMyMTdiNGE1NmJmMzNkZWZiZjUyYTZhODRjNjlkMmNiZGI1MTY0M2IifX19", rarity);
-		addAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0.001, EquipmentSlot.HAND);
+		addAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0.001, EquipmentSlot.FEET);
 	}
 	
 	@Override

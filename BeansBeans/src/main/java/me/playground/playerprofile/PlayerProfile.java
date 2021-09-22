@@ -11,13 +11,9 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.Statistic;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
-import org.bukkit.attribute.AttributeModifier.Operation;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
@@ -516,25 +512,6 @@ public class PlayerProfile {
 		if (chatLine == null)
 			updateComponentName();
 		return chatLine;
-	}
-	
-	// XXX: Attributes
-	public void updateAttributeBonuses() {
-		if (this.isOnline()) {
-			this.getHeirlooms().getModifiers().forEach((attribute, amount) -> {
-				updateAttribute(attribute, amount);
-			});
-		}
-	}
-	
-	public void updateAttribute(Attribute attribute, double amount) {
-		if (this.isOnline()) {
-			Player p = this.getPlayer();
-			p.getAttribute(attribute).getModifiers().forEach((modifier) -> {
-				p.getAttribute(attribute).removeModifier(modifier);
-			});
-			p.getAttribute(attribute).addModifier(new AttributeModifier(UUID.randomUUID(), attribute.translationKey(), amount, Operation.ADD_NUMBER, EquipmentSlot.HEAD));
-		}
 	}
 	
 	public void updateLastLocation(Location l, int type) {

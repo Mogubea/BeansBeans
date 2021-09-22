@@ -103,7 +103,7 @@ public class BlockListener extends EventListener {
 		}
 		
 		// Handle custom skulls.
-		if (e.isDropItems() && (e.getBlock().getType() == Material.PLAYER_HEAD || e.getBlock().getType() == Material.PLAYER_WALL_HEAD)) {
+		if (p.getGameMode() != GameMode.CREATIVE && (e.getBlock().getType() == Material.PLAYER_HEAD || e.getBlock().getType() == Material.PLAYER_WALL_HEAD)) {
 			String id = ((Skull)e.getBlock().getState()).getPersistentDataContainer().getOrDefault(BeanItem.KEY_ID, PersistentDataType.STRING, null);
 			if (id != null) {
 				e.setDropItems(false);
