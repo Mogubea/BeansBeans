@@ -1,122 +1,107 @@
-package me.playground.items.enchants;
+package me.playground.enchants;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
-import org.bukkit.Material;
-import org.bukkit.Particle;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
 
+import me.playground.items.ItemRarity;
 import net.kyori.adventure.text.Component;
 
-public class BeanEnchantmentListener implements Listener {
+public enum EnchantmentInfo {
 	
-	@EventHandler
-	public void onBlockBreak(BlockBreakEvent e) {
-		Player p = e.getPlayer();
-		ItemStack item = p.getEquipment().getItemInMainHand();
-		
-		if (item != null) {
-			if (item.containsEnchantment(BeanEnchantment.MOLTEN_TOUCH)) {
-				if (e.isDropItems()) {
-					final ItemMeta meta = item.getItemMeta();
-					final Damageable tool;
-					if (meta instanceof Damageable) {
-						tool = (Damageable) meta;
-						if (tool.getDamage() >= item.getType().getMaxDurability())
-							return;
-						
-						int toDamage = 2;
-						if (tool.getDamage()+toDamage >= item.getType().getMaxDurability())
-							tool.setDamage(item.getType().getMaxDurability());
-						else
-							tool.setDamage(tool.getDamage()+toDamage);
-						item.setItemMeta(meta);
-					}
-					
-					//int fortuneLevel = item.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
-					
-					ItemStack newDrop = null;
-					
-					switch (e.getBlock().getType()) {
-					case SANDSTONE:
-						newDrop = new ItemStack(Material.SMOOTH_SANDSTONE, 1);
-						break;
-					case RED_SANDSTONE:
-						newDrop = new ItemStack(Material.SMOOTH_RED_SANDSTONE, 1);
-						break;
-					case NETHERRACK:
-						newDrop = new ItemStack(Material.NETHER_BRICK, 1);
-						break;
-					case STONE_BRICKS:
-						newDrop = new ItemStack(Material.CRACKED_STONE_BRICKS, 1);
-						break;
-					case NETHER_BRICKS:
-						newDrop = new ItemStack(Material.CRACKED_NETHER_BRICKS, 1);
-						break;
-					case CACTUS:
-						newDrop = new ItemStack(Material.GREEN_DYE, 1);
-						break;
-					case QUARTZ_BLOCK:
-						newDrop = new ItemStack(Material.SMOOTH_QUARTZ, 1);
-						break;
-					case SEA_PICKLE:
-						newDrop = new ItemStack(Material.LIME_DYE, 1);
-						break;
-					case CLAY:
-						newDrop = new ItemStack(Material.BRICK, 4);
-						break;
-					case WET_SPONGE:
-						newDrop = new ItemStack(Material.SPONGE, 1);
-						break;
-					case STONE:
-						newDrop = new ItemStack(Material.SMOOTH_STONE, 1);
-						break;
-					case COBBLESTONE:
-						newDrop = new ItemStack(Material.STONE, 1);
-						break;
-					case IRON_ORE:
-						newDrop = new ItemStack(Material.IRON_INGOT, 1);
-						e.setExpToDrop(1);
-						break;
-					case GOLD_ORE:
-						newDrop = new ItemStack(Material.GOLD_INGOT, 1);
-						e.setExpToDrop(1);
-						break;
-					case ANCIENT_DEBRIS:
-						newDrop = new ItemStack(Material.NETHERITE_SCRAP, 1);
-						e.setExpToDrop(10);
-						break;
-					case OAK_LOG: case SPRUCE_LOG: case BIRCH_LOG: case JUNGLE_LOG: case ACACIA_LOG: case DARK_OAK_LOG: case CRIMSON_STEM: case WARPED_STEM:
-					case STRIPPED_OAK_LOG: case STRIPPED_SPRUCE_LOG: case STRIPPED_BIRCH_LOG: case STRIPPED_JUNGLE_LOG: case STRIPPED_ACACIA_LOG: case STRIPPED_DARK_OAK_LOG:
-					case STRIPPED_CRIMSON_STEM: case STRIPPED_WARPED_STEM:
-						newDrop = new ItemStack(Material.CHARCOAL, 1);
-						e.setExpToDrop(1);
-						break;
-					case SAND: case RED_SAND:
-						newDrop = new ItemStack(Material.GLASS, 1);
-						e.setExpToDrop(1);
-						break;
-					default:
-						return;
-					}
-					
-					e.setDropItems(false);
-					e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), newDrop);
-					e.getBlock().getWorld().spawnParticle(Particle.FLAME, e.getBlock().getLocation().add(0.5, 0.5, 0.5), 4);
-				}
-			}
-		}
+	ARROW_DAMAGE(Enchantment.ARROW_DAMAGE, 1F, 0.5F),
+	ARROW_FIRE(Enchantment.ARROW_FIRE, 2F),
+	ARROW_INFINITE(Enchantment.ARROW_INFINITE, 5F),
+	ARROW_KNOCKBACK(Enchantment.ARROW_KNOCKBACK, 1F, 1F),
+	BINDING_CURSE(Enchantment.BINDING_CURSE, 0F),
+	CHANNELING(Enchantment.CHANNELING, 3F),
+	DEPTH_STRIDER(Enchantment.DEPTH_STRIDER, 1F, 1F),
+	DIG_SPEED(Enchantment.DIG_SPEED, 1F, 0.7F),
+	DAMAGE_ALL(Enchantment.DAMAGE_ALL, 1F, 0.7F),
+	DAMAGE_ARTHROPODS(Enchantment.DAMAGE_ARTHROPODS, 0.4F, 0.5F),
+	DAMAGE_UNDEAD(Enchantment.DAMAGE_UNDEAD, 1F, 0.7F),
+	DURABILITY(Enchantment.DURABILITY, 1F, 1F),
+	FIRE_ASPECT(Enchantment.FIRE_ASPECT, 1F, 0.5F),
+	FROST_WALKER(Enchantment.FROST_WALKER, 2F),
+	IMPALING(Enchantment.IMPALING, 1F, 1F),
+	KNOCKBACK(Enchantment.KNOCKBACK, 0.25F, 0.5F),
+	LOOT_BONUS_MOBS(Enchantment.LOOT_BONUS_MOBS, 1F, 1F),
+	LOOT_BONUS_BLOCKS(Enchantment.LOOT_BONUS_BLOCKS, 1F, 1.25F),
+	LOYALTY(Enchantment.LOYALTY, 3F, 0.5F),
+	LUCK(Enchantment.LUCK, 1F, 1F),
+	LURE(Enchantment.LURE, 1F, 1F),
+	MENDING(Enchantment.MENDING, 10F),
+	MULTISHOT(Enchantment.MULTISHOT, 4F),
+	OXYGEN(Enchantment.OXYGEN, 1F, 0.5F),
+	PROTECTION_ENVIRONMENTAL(Enchantment.PROTECTION_ENVIRONMENTAL, 0.6F, 0.8F),
+	PROTECTION_EXPLOSIONS(Enchantment.PROTECTION_EXPLOSIONS, 0.3F, 0.3F),
+	PROTECTION_FIRE(Enchantment.PROTECTION_FIRE, 0.3F, 0.3F),
+	PROTECTION_PROJECTILE(Enchantment.PROTECTION_PROJECTILE, 0.4F, 0.4F),
+	PROTECTION_FALL(Enchantment.PROTECTION_FALL, 0.4F, 0.4F),
+	PIERCING(Enchantment.PIERCING, 0.4F, 0.4F),
+	QUICK_CHARGE(Enchantment.QUICK_CHARGE, 1F, 0.5F),
+	RIPTIDE(Enchantment.RIPTIDE, 3F, 1F),
+	SILK_TOUCH(Enchantment.SILK_TOUCH, 4F),
+	SOUL_SPEED(Enchantment.SOUL_SPEED, 1F, 7F),
+	SWEEPING_EDGE(Enchantment.SWEEPING_EDGE, 0.5F, 0.7F),
+	THORNS(Enchantment.THORNS, 0.3F, 0.4F),
+	WATER_WORKER(Enchantment.WATER_WORKER, 3.5F),
+	
+	MOLTEN_TOUCH(BeanEnchantment.MOLTEN_TOUCH, 10F);
+	
+	private final Enchantment enchant;
+	private final float value; // Base value for rarity calculation
+	private final float levelIncr; // Value increase per level for rarity calculation
+	
+	EnchantmentInfo(Enchantment enchant, float value) {
+		this(enchant, value, 0F);
 	}
 	
-	public static List<Component> getEnchantLore(Enchantment ench, int level) {
+	EnchantmentInfo(Enchantment enchant, float value, float levelIncr) {
+		this.enchant = enchant;
+		this.value = value;
+		this.levelIncr = levelIncr;
+	}
+	
+	public static ItemRarity rarityOf(Map<Enchantment, Integer> enchants) {
+		float totalValue = 0F;
+		
+		for (Entry<Enchantment, Integer> ench : enchants.entrySet()) {
+			EnchantmentInfo ei = valueOf(ench.getKey());
+			totalValue += ei.getBaseValue() + (ei.getPerLevelValue() * (ench.getValue()-1));
+		}
+		
+		if (totalValue >= 30)
+			return ItemRarity.LEGENDARY;
+		if (totalValue >= 20)
+			return ItemRarity.EPIC;
+		if (totalValue >= 10)
+			return ItemRarity.RARE;
+		if (totalValue >= 3)
+			return ItemRarity.UNCOMMON;
+		return ItemRarity.COMMON;
+		
+	}
+	
+	public float getBaseValue() {
+		return this.value;
+	}
+	
+	public float getPerLevelValue() {
+		return this.levelIncr;
+	}
+	
+	public static EnchantmentInfo valueOf(Enchantment ench) {
+		final int size = values().length;
+		for (int x = -1; ++x < size;)
+			if (values()[x].enchant.equals(ench)) return values()[x];
+		return ARROW_DAMAGE; // default generic values
+	}
+	
+	public static List<Component> loreOf(Enchantment ench, int level) {
 		if (ench.equals(BeanEnchantment.MOLTEN_TOUCH))
 			return Arrays.asList(Component.text("\u00a77 Automatically \u00a76smelt\u00a77 blocks at"), Component.text("\u00a77 the cost of \u00a7c2\u00a77 durability"));
 		if (ench.equals(Enchantment.ARROW_DAMAGE))

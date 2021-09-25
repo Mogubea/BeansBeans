@@ -1,4 +1,4 @@
-package me.playground.items.enchants;
+package me.playground.enchants;
 
 import java.util.ArrayList;
 import java.util.Set;

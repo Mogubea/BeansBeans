@@ -1,6 +1,7 @@
 package me.playground.listeners;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -24,6 +25,7 @@ import org.bukkit.entity.Villager;
 import org.bukkit.entity.Wolf;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
@@ -35,12 +37,17 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
+import org.bukkit.event.entity.VillagerAcquireTradeEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.MerchantRecipe;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 
+import me.playground.enchants.EnchantmentInfo;
 import me.playground.items.BeanItem;
+import me.playground.items.ItemRarity;
 import me.playground.loot.LootTable;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
@@ -180,9 +187,19 @@ public class EntityListener extends EventListener {
 			e.setCancelled(true);
 		
 		// Prevent boat griefing in non-world regions
-		if (e.getEntity().getType() == EntityType.BOAT)
-			if (!getRegionAt(e.getBlock().getLocation()).isWorldRegion())
-				e.setCancelled(true);
+		else if (e.getEntity().getType() == EntityType.BOAT)
+			e.setCancelled(!getRegionAt(e.getBlock().getLocation()).isWorldRegion());
+	}
+	
+	@EventHandler(priority = EventPriority.LOW)
+	public void onSnowman(EntityBlockFormEvent e) {
+		// Prevent mobs leaving ice and snow trails
+		if (!(e.getEntity() instanceof Player))
+			e.setCancelled(!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.ENTITY_TRAILS));
+		else {
+			final Region r = getRegionAt(e.getBlock().getLocation());
+			e.setCancelled(r.getEffectiveFlag(Flags.BUILD_ACCESS).higherThan(r.getMember((Player)e.getEntity())));
+		}
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
@@ -332,6 +349,65 @@ public class EntityListener extends EventListener {
 				e.setCancelled(true);
 		}
 	}
+	
+	@EventHandler(priority = EventPriority.LOW)
+	public void onVillagerAcquireTrade(VillagerAcquireTradeEvent e) {
+		MerchantRecipe recipe = e.getRecipe();
+		List<ItemStack> ingredients = recipe.getIngredients();
+		
+		// Nerf positive and negative effects to villager prices
+		recipe.setPriceMultiplier(recipe.getPriceMultiplier() / 2);
+		
+		// Make enchants rarer
+		if (recipe.getResult().getType() == Material.ENCHANTED_BOOK) {
+			ItemRarity rarity = EnchantmentInfo.rarityOf(((EnchantmentStorageMeta)recipe.getResult().getItemMeta()).getStoredEnchants());
+			int max = 5;
+			switch(rarity) {
+			case LEGENDARY: max = 1; ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 30 + getPlugin().getRandom().nextInt(5))); ingredients.set(1, new ItemStack(Material.NETHER_STAR, 3)); break;
+			case EPIC: max = 1; ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 9 + getPlugin().getRandom().nextInt(5))); break;
+			case RARE: max = 2; ingredients.set(0, new ItemStack(Material.EMERALD, 48 + getPlugin().getRandom().nextInt(15))); break;
+			case UNCOMMON: max = 4; ingredients.set(0, new ItemStack(Material.EMERALD, 16 + getPlugin().getRandom().nextInt(10))); break;
+			default: max = 5; ingredients.set(0, new ItemStack(Material.EMERALD, 8 + getPlugin().getRandom().nextInt(7))); break;
+			}
+			recipe.setPriceMultiplier(0.01F); // Even harder nerf, this is mostly for the positive discounts which are INSANE in Vanilla.
+			recipe.setMaxUses(max);
+		}
+		
+		final int iSize = ingredients.size();
+		for (int y = -1; ++y < iSize;)
+			if (ingredients.get(y).getType() != Material.AIR)
+				BeanItem.formatItem(ingredients.get(y));
+		
+		MerchantRecipe newRecipe = new MerchantRecipe(BeanItem.formatItem(recipe.getResult()), recipe.getUses(), 
+				recipe.getMaxUses(), recipe.hasExperienceReward(), recipe.getVillagerExperience(), recipe.getPriceMultiplier(), recipe.shouldIgnoreDiscounts());
+		newRecipe.setIngredients(ingredients);
+		
+		e.setRecipe(newRecipe);
+	}
+	
+	/*@EventHandler(priority = EventPriority.LOW)
+	public void onVillagerChangeCareer(VillagerCareerChangeEvent e) {
+		List<MerchantRecipe> recipes = e.getEntity().getRecipes();
+		final int size = recipes.size();
+		
+		for (int x = -1; ++x < size;) {
+			MerchantRecipe recipe = recipes.get(x);
+			// Make enchants rarer
+			if (recipe.getResult().getType() == Material.ENCHANTED_BOOK) {
+				recipe.setMaxUses(recipe.getMaxUses() / 2);
+				if (((EnchantmentStorageMeta)recipe.getResult().getItemMeta()).hasEnchant(Enchantment.MENDING))
+					recipe.setMaxUses(2);
+			}
+			
+			BeanItem.formatItem(recipe.getResult()); // This should work.
+			List<ItemStack> ingredients = recipe.getIngredients();
+			final int iSize = ingredients.size();
+			for (int y = -1; ++y < iSize;)
+				if (ingredients.get(y).getType() != Material.AIR)
+					BeanItem.formatItem(ingredients.get(y));
+			recipe.setIngredients(ingredients); // Need to do this since getIngredients clones by default.
+		}
+	}*/
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onEntitySpawn(CreatureSpawnEvent e) {

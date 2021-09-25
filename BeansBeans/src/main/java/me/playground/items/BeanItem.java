@@ -46,7 +46,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
-import me.playground.items.enchants.BeanEnchantmentListener;
+import me.playground.enchants.EnchantmentInfo;
 import me.playground.items.heirlooms.BItemHeirloomAncientSkull;
 import me.playground.items.heirlooms.BItemHeirloomMochi;
 import me.playground.main.Main;
@@ -470,14 +470,8 @@ public class BeanItem {
 		
 		if (item.getType() == Material.ENCHANTED_BOOK) {
 			EnchantmentStorageMeta bmeta = (EnchantmentStorageMeta) meta;
-			int score = 0;
+			rarity = EnchantmentInfo.rarityOf(bmeta.getStoredEnchants());
 			enchants = bmeta.getStoredEnchants();
-			for (int s : enchants.values()) // TODO: Make a better score system for Enchantments..
-				score += s;
-			if (score > 3)
-				rarity = rarity.upOne();
-			if (score > 9)
-				rarity = rarity.upOne();
 		} else {
 			enchants = item.getEnchantments();
 		}
@@ -588,7 +582,7 @@ public class BeanItem {
 				else
 					lore.add(Component.text("\u269D ").color(TextColor.color(0x99CCCC)).append(enchant.getKey().displayName(enchant.getValue()).color(enchant.getKey().getMaxLevel() < enchant.getValue() ? BeanColor.ENCHANT_OP : BeanColor.ENCHANT)).decoration(TextDecoration.ITALIC, false));
 				if (!skipLore)
-					lore.addAll(BeanEnchantmentListener.getEnchantLore(enchant.getKey(), enchant.getValue()));
+					lore.addAll(EnchantmentInfo.loreOf(enchant.getKey(), enchant.getValue()));
 			}
 		}
 		

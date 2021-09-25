@@ -19,9 +19,9 @@ public final class Flags {
 	public static final FlagMember 	BUILD_ACCESS 		= register(new FlagMember("build-access", "Build Access", MemberLevel.MEMBER))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
-					Component.text("\u00a79Membership Level\u00a77 will be able to place and"),
-					Component.text("\u00a77break blocks. \u00a7cThis flag undermines other"),
-					Component.text("\u00a7cblock related flags."));
+					Component.text("\u00a79Membership Level\u00a77 will be able to place,"),
+					Component.text("\u00a77break and use blocks."),
+					Component.text("\u00a78(Undermines other block related flags!!!)"));
 	public static final FlagMember 	CONTAINER_ACCESS 	= register(new FlagMember("container-access", "Container Access", MemberLevel.MEMBER))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
@@ -74,6 +74,12 @@ public final class Flags {
 					Component.text("\u00a74Hostile mobs\u00a77 and \u00a79Non-Members\u00a77 will be able"),
 					Component.text("\u00a77to harm animals and villagers inside of the region."));
 	
+	public static final FlagBoolean ENTITY_TRAILS		= register(new FlagBoolean("entity-trail", "Mob Trails", true))
+			.setDescription(
+					Component.text("\u00a77Can \u00a7fSnowmen \u00a77leave a \u00a7fSnow Trail\u00a77 and can"),
+					Component.text("\u00a7bFrost Walker\u00a74 mobs\u00a77 cover \u00a79water\u00a77 in \u00a7bice\u00a77?"),
+					Component.text("\u00a78(Does not effect Frost Walking players, and note"),
+					Component.text("\u00a78that Snowmen die without snow on the ground!)"));
 	public static final FlagBoolean MOB_HOSTILE_SPAWNS	= register(new FlagBoolean("hostile-spawning", "Hostile Mob Spawning", true))
 			.setDescription(
 					Component.text("\u00a77Can \u00a74hostile mobs \u00a77like Creepers, Zombies etc."),

@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 
 import me.playground.celestia.logging.CelestiaListener;
-import me.playground.items.enchants.BeanEnchantmentListener;
+import me.playground.enchants.BeanEnchantmentListener;
 import me.playground.main.Main;
 import me.playground.playerprofile.skills.BxpListener;
 
