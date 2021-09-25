@@ -1,0 +1,47 @@
+{
+    "criteria": {
+        "hasgoldblock": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [
+                    {
+                        "items": [
+                            "minecraft:gold_block"
+                        ]
+                    }
+                ]
+            }
+        },
+        "hasemerald": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [
+                    {
+                        "items": [
+                            "minecraft:emerald"
+                        ]
+                    }
+                ]
+            }
+        },
+        "has_the_recipe": {
+            "trigger": "minecraft:recipe_unlocked",
+            "conditions": {
+                "recipe": "beansbeans:recipe_shop_stand_1"
+            }
+        }
+  },
+    "requirements": [
+        [
+            "hasgoldblock",
+            "hasemerald",
+            "has_the_recipe"
+        ]
+    ],
+    "rewards": {
+        "recipes": [
+            "beansbeans:recipe_shop_stand_1"
+        ]
+    },
+    "parent": "beansbeans:root"
+}

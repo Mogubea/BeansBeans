@@ -1,0 +1,33 @@
+{
+    "parent": "beansbeans:root",
+    "display": {
+        "title": {
+            "text": "Welcome to the Discord!",
+            "color": "blue"
+        },
+        "description": {
+            "text": "Link your Discord and Minecraft accounts through our Discord!",
+            "color": "white"
+        },
+        "icon": {
+            "item": "minecraft:blue_glazed_terracotta"
+        },
+        "frame": "task",
+        "show_toast": false,
+        "announce_to_chat": false,
+        "hidden": false
+    },
+    "criteria": {
+        "linked": {
+            "trigger": "minecraft:impossible"
+        }
+    },
+    "requirements": [
+        [
+            "linked"
+        ]
+    ],
+    "rewards": {
+        "experience": 200
+    }
+}

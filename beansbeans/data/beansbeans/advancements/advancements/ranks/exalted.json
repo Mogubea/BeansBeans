@@ -1,0 +1,33 @@
+{
+    "parent": "beansbeans:advancements/ranks/prestigious",
+    "display": {
+        "title": {
+            "text": "You are Exalted!",
+            "color": "yellow"
+        },
+        "description": {
+            "text": "Four whole months, it's flattering how much you've stuck around! Thank you, and congratulations on your new Exalted rank!",
+            "color": "light_purple"
+        },
+        "icon": {
+            "item": "minecraft:nether_star"
+        },
+        "frame": "challenge",
+        "show_toast": true,
+        "announce_to_chat": true,
+        "hidden": false
+    },
+    "criteria": {
+        "rank": {
+            "trigger": "minecraft:impossible"
+        }
+    },
+    "requirements": [
+        [
+            "rank"
+        ]
+    ],
+    "rewards": {
+        "experience": 7000
+    }
+}

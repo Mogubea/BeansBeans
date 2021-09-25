@@ -1,0 +1,38 @@
+{
+    "parent": "beansbeans:advancements/smoothlikebutter",
+    "display": {
+        "title": {
+            "text": "The Good Stuff"
+        },
+        "description": {
+            "text": "Mine some Deepslate Emerald Ore with a Silk Touch pickaxe."
+        },
+        "icon": {
+            "item": "minecraft:deepslate_emerald_ore"
+        },
+        "frame": "challenge",
+        "show_toast": true,
+        "announce_to_chat": true,
+        "hidden": false
+    },
+    "criteria": {
+        "hasore": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [
+                    {
+                        "items": ["minecraft:deepslate_emerald_ore"]
+                    }
+                ]
+            }
+        }
+    },
+    "requirements": [
+        [
+            "hasore"
+        ]
+    ],
+    "rewards": {
+        "experience": 50
+    }
+}

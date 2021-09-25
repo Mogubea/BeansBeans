@@ -1,0 +1,33 @@
+{
+    "parent": "beansbeans:advancements/ranks/apprentice",
+    "display": {
+        "title": {
+            "text": "A Familiar Face",
+            "color": "red"
+        },
+        "description": {
+            "text": "72 hours! 3 days! You're looking pretty familiar around here!",
+            "color": "white"
+        },
+        "icon": {
+            "item": "minecraft:orange_wool"
+        },
+        "frame": "goal",
+        "show_toast": true,
+        "announce_to_chat": true,
+        "hidden": false
+    },
+    "criteria": {
+        "rank": {
+            "trigger": "minecraft:impossible"
+        }
+    },
+    "requirements": [
+        [
+            "rank"
+        ]
+    ],
+    "rewards": {
+        "experience": 600
+    }
+}

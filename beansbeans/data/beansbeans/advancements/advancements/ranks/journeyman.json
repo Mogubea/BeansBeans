@@ -1,0 +1,33 @@
+{
+    "parent": "beansbeans:advancements/ranks/familiar",
+    "display": {
+        "title": {
+            "text": "The Journeyman",
+            "color": "red"
+        },
+        "description": {
+            "text": "You've spent an entire week in-game on the server!",
+            "color": "white"
+        },
+        "icon": {
+            "item": "minecraft:orange_wool"
+        },
+        "frame": "goal",
+        "show_toast": true,
+        "announce_to_chat": true,
+        "hidden": false
+    },
+    "criteria": {
+        "rank": {
+            "trigger": "minecraft:impossible"
+        }
+    },
+    "requirements": [
+        [
+            "rank"
+        ]
+    ],
+    "rewards": {
+        "experience": 1000
+    }
+}

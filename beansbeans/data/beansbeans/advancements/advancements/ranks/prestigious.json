@@ -1,0 +1,33 @@
+{
+    "parent": "beansbeans:advancements/ranks/veteran",
+    "display": {
+        "title": {
+            "text": "Truly Prestigious",
+            "color": "gold"
+        },
+        "description": {
+            "text": "Six weeks in-game, worthy of a prestigious title!",
+            "color": "light_purple"
+        },
+        "icon": {
+            "item": "minecraft:yellow_wool"
+        },
+        "frame": "challenge",
+        "show_toast": true,
+        "announce_to_chat": true,
+        "hidden": false
+    },
+    "criteria": {
+        "rank": {
+            "trigger": "minecraft:impossible"
+        }
+    },
+    "requirements": [
+        [
+            "rank"
+        ]
+    ],
+    "rewards": {
+        "experience": 3500
+    }
+}

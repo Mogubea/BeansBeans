@@ -1,0 +1,33 @@
+{
+    "parent": "beansbeans:advancements/ranks/rookie",
+    "display": {
+        "title": {
+            "text": "Apprenticeship",
+            "color": "green"
+        },
+        "description": {
+            "text": "You've played on Bean's Beans for 24 hours! A whole day!",
+            "color": "white"
+        },
+        "icon": {
+            "item": "minecraft:lime_wool"
+        },
+        "frame": "task",
+        "show_toast": true,
+        "announce_to_chat": true,
+        "hidden": false
+    },
+    "criteria": {
+        "rank": {
+            "trigger": "minecraft:impossible"
+        }
+    },
+    "requirements": [
+        [
+            "rank"
+        ]
+    ],
+    "rewards": {
+        "experience": 300
+    }
+}

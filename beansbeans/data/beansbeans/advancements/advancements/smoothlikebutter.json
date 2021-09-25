@@ -1,0 +1,52 @@
+{
+    "parent": "beansbeans:root",
+    "display": {
+        "title": {
+            "text": "Smooth like Butter"
+        },
+        "description": {
+            "text": "Enchant an item with Silk Touch"
+        },
+        "icon": {
+            "item": "minecraft:enchanting_table"
+        },
+        "frame": "task",
+        "show_toast": true,
+        "announce_to_chat": true,
+        "hidden": false
+    },
+    "criteria": {
+        "hassilk": {
+            "trigger": "minecraft:enchanted_item",
+            "conditions": {
+                "item": {
+                    "enchantments": [
+                        {
+                            "enchantment": "minecraft:silk_touch"
+                        }
+                    ]
+                }
+            }
+        },
+        "alreadyhassilk": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [
+                    {
+                        "enchantments": [
+                            {
+                                "enchantment": "minecraft:silk_touch"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "requirements": [
+        [
+            "hassilk",
+            "alreadyhassilk"
+        ]
+    ]
+}

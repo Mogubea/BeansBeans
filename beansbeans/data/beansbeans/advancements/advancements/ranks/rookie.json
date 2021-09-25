@@ -1,0 +1,33 @@
+{
+    "parent": "beansbeans:root",
+    "display": {
+        "title": {
+            "text": "Let's go, Rookie!",
+            "color": "dark_green"
+        },
+        "description": {
+            "text": "You've played on Bean's Beans for 6 hours! We hope you're enjoying your stay!",
+            "color": "white"
+        },
+        "icon": {
+            "item": "minecraft:green_wool"
+        },
+        "frame": "task",
+        "show_toast": true,
+        "announce_to_chat": true,
+        "hidden": false
+    },
+    "criteria": {
+        "rank": {
+            "trigger": "minecraft:impossible"
+        }
+    },
+    "requirements": [
+        [
+            "rank"
+        ]
+    ],
+    "rewards": {
+        "experience": 100
+    }
+}

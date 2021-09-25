@@ -1,0 +1,33 @@
+{
+    "parent": "beansbeans:advancements/ranks/journeyman",
+    "display": {
+        "title": {
+            "text": "Minecraft Veteran",
+            "color": "dark_red"
+        },
+        "description": {
+            "text": "Three whole weeks in-game, you definitely know your way around!",
+            "color": "white"
+        },
+        "icon": {
+            "item": "minecraft:red_wool"
+        },
+        "frame": "goal",
+        "show_toast": true,
+        "announce_to_chat": true,
+        "hidden": false
+    },
+    "criteria": {
+        "rank": {
+            "trigger": "minecraft:impossible"
+        }
+    },
+    "requirements": [
+        [
+            "rank"
+        ]
+    ],
+    "rewards": {
+        "experience": 2000
+    }
+}
