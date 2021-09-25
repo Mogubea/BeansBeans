@@ -477,12 +477,14 @@ public class Datasource {
 	}
 
 	public static void saveAll() {
+		long then = System.currentTimeMillis();
 		PlayerProfile.profileCache.asMap().values().forEach(profile -> saveProfile(profile));
 		saveDirtyRegions();
 		saveDirtyShops();
 		saveDirtyWarps();
 		saveDirtyNPCs();
 		saveDirtyLootEntries();
+		Utils.sendActionBar(Rank.ADMINISTRATOR, Component.text("\u00a7dSaved everything in roughly \u00a7f" + (System.currentTimeMillis()-then) + "ms"));
 	}
 
 	public static void close(Object... c) {
@@ -1521,8 +1523,22 @@ public class Datasource {
 		}
 	}
 	
-	public static void saveDirtyRegions() {
+	@SuppressWarnings("unchecked") // weird.
+	public static <T extends Flag<V>, V> void saveDirtyRegions() {
 		for (Region region : Main.getRegionManager().getAllRegions()) {
+			if (!region.getDirtyFlags().isEmpty()) {
+				final int size = region.getDirtyFlags().size();
+				for (int x = -1; ++x < size;) {
+					T flag = (T) region.getDirtyFlags().get(x);
+					V val = region.getFlag(flag);
+					if (val == null)
+						removeRegionFlag(region.getRegionId(), flag.getName());
+					else
+						setRegionFlag(region.getRegionId(), flag.getName(), flag.marshal(val));
+				}
+				region.getDirtyFlags().clear();
+			}
+			
 			if (region.isDirty()) {
 				saveRegion(region.getRegionId(), region.getPriority(), region.getParentId(), region.getName(), region.getWorld(), region.getMinimumPoint(), region.getMaximumPoint());
 				region.setDirty(false);

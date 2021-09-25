@@ -11,6 +11,7 @@ public enum CelestiaAction {
 	ITEM_DROP,
 	ITEM_PICKUP,
 	INV_TRANSACTION,
-	LINK_DISCORD;
+	LINK_DISCORD,
+	REGION_CHANGE;
 	
 }

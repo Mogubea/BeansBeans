@@ -6,8 +6,8 @@ public class FlagInt extends Flag<Integer> {
 	
 	private int def;
 	
-	public FlagInt(String name, int def) {
-		super(name, true);
+	public FlagInt(String name, String displayName, int def) {
+		super(name, displayName, true);
 		this.def = def;
 	}
 	
@@ -34,5 +34,10 @@ public class FlagInt extends Flag<Integer> {
     public String marshal(Integer o) {
         return o.toString();
     }
+
+	@Override
+	public Integer validateValue(Integer o) {
+		return o;
+	}
 	
 }

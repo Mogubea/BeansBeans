@@ -14,6 +14,7 @@ public class BeanColor implements TextColor {
 	public static final BeanColor WARP_SHOP 	= new BeanColor(0xffdd66);
 	public static final BeanColor WARP_SERVER 	= new BeanColor(0xcf79ff);
 	public static final BeanColor HEIRLOOM		= new BeanColor(0x98baff);
+	public static final BeanColor BESTIARY		= new BeanColor(0x23df37);
 	
 	final int val;
 	BeanColor(int val) {

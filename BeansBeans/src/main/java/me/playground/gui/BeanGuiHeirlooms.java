@@ -93,8 +93,8 @@ public class BeanGuiHeirlooms extends BeanGui {
 		contents[46] = page > 0 ? prevPage : blankbl;
 		contents[52] = (page < 2 && (hinv.size()+1)>(45*(page+1))) ? nextPage : blankbl;
 		
-		contents[48] = newItem(new ItemStack(Material.ENDER_CHEST), "\u00a7fHeirloom Bag", "", "\u00a77You have used \u00a7f" + hinv.size() + "\u00a77 of your", "\u00a77" + hinv.getMaxHeirlooms() + " available \u00a7fheirloom \u00a77slots!");
-		contents[50] = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), "\u00a7fWhat is this?", "", 
+		contents[50] = newItem(new ItemStack(Material.ENDER_CHEST), "\u00a7fHeirloom Bag", "", "\u00a77You have used \u00a7f" + hinv.size() + "\u00a77 of your", "\u00a77" + hinv.getMaxHeirlooms() + " available \u00a7fheirloom \u00a77slots!");
+		contents[48] = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), "\u00a7fWhat is this?", "", 
 				"\u00a77This is your \u00a7fHeirloom Bag\u00a77! You can store any", 
 				"\u00a7fHeirlooms \u00a77you may have picked up on your", 
 				"\u00a77adventure. You gain the full effect of any \u00a7fHeirlooms",

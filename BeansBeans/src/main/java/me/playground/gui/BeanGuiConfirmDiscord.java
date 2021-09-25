@@ -2,10 +2,7 @@ package me.playground.gui;
 
 import java.util.ArrayList;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
@@ -81,10 +78,7 @@ public class BeanGuiConfirmDiscord extends BeanGuiConfirm {
 		
 		channel.sendMessageEmbeds(eb.build()).queue();
 		Datasource.logCelestia(CelestiaAction.LINK_DISCORD, pp.getId(), p.getLocation(), "Linked to Discord: " + member.getUser().getAsTag() + " (ID: "+member.getIdLong()+")");
-		NamespacedKey key = manager.getPlugin().key("discord");
-		AdvancementProgress progress = p.getAdvancementProgress(Bukkit.getAdvancement(key));
-		for(String criteria : progress.getRemainingCriteria())
-		    progress.awardCriteria(criteria);
+		pp.grantAdvancement("beansbeans:advancements/discord");
 		p.closeInventory();
 	}
 	

@@ -30,27 +30,34 @@ public class ShopManager {
 		return s;
 	}
 	
-	public void unloadShopEntities() {
-		for (Shop s : shopList.values())
-			s.unloadEntities();
+	private void unloadShopEntities(boolean loadChunks) {
+		for (Shop s : shopList.values()) {
+			if (loadChunks)
+				s.getLocation().getChunk().load();
+			if (s.getLocation().isChunkLoaded())
+				s.unloadEntities();
+		}
 	}
 	
-	public void loadShopEntities() {
-		for (Shop s : shopList.values())
-			s.loadEntities();
+	private void loadShopEntities(boolean loadChunks) {
+		for (Shop s : shopList.values()) {
+			if (loadChunks)
+				s.getLocation().getChunk().load();
+			if (s.getLocation().isChunkLoaded())
+				s.loadEntities();
+		}
 	}
 	
-	public void reloadAllShops() {
-		unloadShopEntities();
+	/**
+	 * Reloads all shops
+	 * @param loadChunks - Forceably load chunks to refresh ALL entities, not just loaded ones.
+	 */
+	public void reload(boolean loadChunks) {
+		Datasource.saveDirtyShops();
+		unloadShopEntities(loadChunks);
 		shopList.clear();
 		shopList.putAll(Datasource.loadAllShops());
-		loadShopEntities();
-	}
-	
-	public void saveDirtyShops() {
-		for (Shop s : this.shopList.values())
-			if (s.isDirty())
-				Datasource.saveDirtyShop(s);
+		loadShopEntities(loadChunks);
 	}
 	
 	public void deleteShop(Shop s, int deletedBy) {

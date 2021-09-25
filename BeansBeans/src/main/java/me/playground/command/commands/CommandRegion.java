@@ -52,18 +52,18 @@ public class CommandRegion extends BeanCommand {
 		this.description = "The general region command.";
 	}
 	
-	final List<String> subCmds = Arrays.asList("addmember", "define", "here", "list", "info", "priority", "redefine", "reload", "removemember", "rename", "select", "setflag", "warpto");
+	final List<String> subCmds = Arrays.asList("addmember", "define", "list", "info", "priority", "redefine", "reload", "removemember", "rename", "select", "setflag", "warpto");
 	final String[] para2 = { "~" };
 	
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
+		final Player p = (Player) sender;
+		
 		if (args.length < 1) {
-			profile.clearCooldown("cmd");
-			((Player)sender).performCommand("region here");
+			new BeanGuiRegionMain(p).openInventory();
 			return false;
 		}
 		
-		final Player p = (Player) sender;
 		final String subcmd = args[0].toLowerCase();
 		final RegionManager rm = getPlugin().regionManager();
 		Region region = (hasPermission(sender, "search") && args.length > 1 && !args[1].equals("~") ? rm.getRegion(args[1].toLowerCase()) : rm.getRegion(p.getLocation()));
@@ -77,14 +77,9 @@ public class CommandRegion extends BeanCommand {
 			return false;
 		}
 		
-		// REGION HERE
-		if (subcmd.equals("here")) {
-			new BeanGuiRegionMain(p).openInventory();
-		}
-		
 		// REGION INFO <NAME>
-		else if (subcmd.equals("info")) {
-			p.sendMessage(Component.text("\u00a77Information about region ").append(regionInfo(p, region)));
+		if (subcmd.equals("info")) {
+			p.sendMessage(Component.text("\u00a77Information about region ").append(region.toComponent()));
 			p.sendMessage("\u00a77Your level of power here: \u00a7f" +  region.getMember(p).toString());
 			final StringBuilder sb = new StringBuilder();
 			for (Flag<?> flag : Flags.getRegisteredFlags()) {
@@ -134,7 +129,7 @@ public class CommandRegion extends BeanCommand {
 				
 				int priority = 0, parent = 0;
 				region = Datasource.createNewRegion(profile.getId(), priority, parent, regionName, p.getWorld(), fromVector3(wer.getMinimumPoint()), fromVector3(wer.getMaximumPoint()));
-				p.sendMessage(Component.text("\u00a7aYou Successfully defined the region ").append(regionInfo(p, region)));
+				p.sendMessage(Component.text("\u00a7aYou Successfully defined the region ").append(region.toComponent()));
 				for (int ownerId : ownerIds) {
 					region.addMember(ownerId, MemberLevel.OWNER);
 					p.sendMessage(PlayerProfile.getDisplayName(ownerId).append(Component.text("\u00a77 was added as an Owner.")));
@@ -166,7 +161,7 @@ public class CommandRegion extends BeanCommand {
 				BlockVector3 max = wer.getMaximumPoint();
 				
 				region.setMinimumPoint(min.getX(), min.getY(), min.getZ()).setMaximumPoint(max.getX(), max.getY(), max.getZ()).update();
-				p.sendMessage(Component.text("\u00a77Successfully updated the boundaries of ").append(regionInfo(p, region)));
+				p.sendMessage(Component.text("\u00a77Successfully updated the boundaries of ").append(region.toComponent()));
 			} catch (IncompleteRegionException e) {
 				throw new CommandException(p, "Please select an area using your wand/selection commands.");
 			} catch (CommandException e) {
@@ -178,16 +173,16 @@ public class CommandRegion extends BeanCommand {
 		} else if (subcmd.equals("priority")) {
 			if (args.length > 2) {
 				int prio = toIntMinMax(p, args[2], 0, 20);
-				region.setPriority(prio);
-				p.sendMessage(regionInfo(p, region).append(Component.text("\u00a77 now has a priority of \u00a7b" + region.getPriority())));
+				region.setPriority(p, prio);
+				p.sendMessage(region.toComponent().append(Component.text("\u00a77 now has a priority of \u00a7b" + region.getPriority())));
 			} else {
-				p.sendMessage(regionInfo(p, region).append(Component.text("\u00a77 has a priority of \u00a7b" + region.getPriority())));
+				p.sendMessage(region.toComponent().append(Component.text("\u00a77 has a priority of \u00a7b" + region.getPriority())));
 			}
 		} else if (subcmd.equals("warpto")) {
 			if (args.length < 2)
 				throw new CommandException(p, "Please specify a region to warp to!");
 			if (p.teleport(region.getRegionCenter(), TeleportCause.COMMAND))
-				p.sendMessage(Component.text("\u00a77Successfully warped to the center of ").append(regionInfo(p, region)));
+				p.sendMessage(Component.text("\u00a77Successfully warped to the center of ").append(region.toComponent()));
 		} else if (subcmd.equals("rename")) {
 			if (args.length < 2)
 				throw new CommandException(p, "Usage: \u00a7f/"+str+" addmember \u00a77 <region> <name>");
@@ -205,9 +200,9 @@ public class CommandRegion extends BeanCommand {
 			
 			String oldName = region.getName();
 			
-			region.setName(regionName);
+			region.setName(p, regionName);
 			
-			p.sendMessage(Component.text("\u00a77Renamed \u00a7f"+oldName+" \u00a77to ").append(regionInfo(p, region)));
+			p.sendMessage(Component.text("\u00a77Renamed \u00a7f"+oldName+" \u00a77to ").append(region.toComponent()));
 			refreshRegionViewers(region);
 		} else if (subcmd.equals("addmember")) {
 			if (args.length < 3)
@@ -225,7 +220,7 @@ public class CommandRegion extends BeanCommand {
 			int id = toId(p, args[2]);
 			region.addMember(id, level);
 			refreshRegionViewers(region);
-			p.sendMessage(Component.text("\u00a77Added ").append(PlayerProfile.getDisplayName(id)).append(Component.text(" \u00a77to ").append(regionInfo(p, region)).append(Component.text("\u00a77 as a \u00a7f" + level.name()))));	
+			p.sendMessage(Component.text("\u00a77Added ").append(PlayerProfile.getDisplayName(id)).append(Component.text(" \u00a77to ").append(region.toComponent()).append(Component.text("\u00a77 as a \u00a7f" + level.name()))));	
 		} else if (subcmd.equals("removemember")) {
 			if (args.length < 3)
 				throw new CommandException(p, "Usage: \u00a7f/"+str+" removemember \u00a77<region> <player>");
@@ -233,7 +228,7 @@ public class CommandRegion extends BeanCommand {
 			int id = toId(p, args[2]);
 			region.removeMember(id);
 			refreshRegionViewers(region);
-			p.sendMessage(Component.text("\u00a77Removed ").append(PlayerProfile.getDisplayName(id)).append(Component.text(" \u00a77from ").append(regionInfo(p, region))));
+			p.sendMessage(Component.text("\u00a77Removed ").append(PlayerProfile.getDisplayName(id)).append(Component.text(" \u00a77from ").append(region.toComponent())));
 		} else if (subcmd.equals("reload") && checkRank(p, Rank.OWNER)) {
 			rm.reload();
 			sender.sendMessage("\u00a7aSaved and reloaded "+rm.countRegions()+" regions.");
@@ -245,7 +240,7 @@ public class CommandRegion extends BeanCommand {
 			try {
 				f = Flags.getFlag(args[2]);
 				region.setFlag(f, (args.length == 3) ? null : f.parseInput(args[3]));
-				p.sendMessage(Component.text("\u00a77Set ").append(regionInfo(p, region)).append(Component.text("\u00a77's \u00a79" + f.getName() + "\u00a77 to \u00a7f" + region.getFlag(f))));
+				p.sendMessage(Component.text("\u00a77Set ").append(region.toComponent()).append(Component.text("\u00a77's \u00a79" + f.getName() + "\u00a77 to \u00a7f" + region.getFlag(f))));
 				refreshRegionViewers(region);
 			} catch (NullPointerException e) {
 				throw new CommandException(p, "'"+args[2]+"' is not a valid flag.");
@@ -260,9 +255,9 @@ public class CommandRegion extends BeanCommand {
 			
 			Component text = Component.text("\u00a77Listing regions [Page: \u00a78"+(page+1)+"\u00a77](\u00a7f"+(page*10+1)+"\u00a77-\u00a7f"+Math.min(regions.size(), 10 + page*10)+"\u00a77/\u00a7f"+regions.size()+"\u00a77):");
 			
-			for (int x = page*10; x < Math.min(regions.size(), 10 + page*10); x++) {
-				text = text.append(Component.text("\n\u00a78 - ").append(regionInfo(p, regions.get(x))));
-			}
+			for (int x = page*10; x < Math.min(regions.size(), 10 + page*10); x++)
+				text = text.append(Component.text("\n\u00a78 - ").append(regions.get(x).toComponent()));
+			
 			p.sendMessage(text);
 		} else if (subcmd.equals("select")) {
 			if (region.isWorldRegion())
@@ -280,7 +275,7 @@ public class CommandRegion extends BeanCommand {
 				selector.selectPrimary(BlockVector3.at(max.getX(), max.getY(), max.getZ()), ActorSelectorLimits.forActor(BukkitAdapter.adapt(p)));
 					selector.explainSecondarySelection(BukkitAdapter.adapt(p), session, BlockVector3.at(max.getX(), max.getY(), max.getZ()));
 				session.setRegionSelector(BukkitAdapter.adapt(p.getWorld()), selector);
-				p.sendMessage(Component.text("\u00a77WorldEdit Selection has been mapped to ").append(regionInfo(p, region)));
+				p.sendMessage(Component.text("\u00a77WorldEdit Selection has been mapped to ").append(region.toComponent()));
 			} catch (Exception e) {
 				throw new CommandException(p, "There was an error with WorldEdit.");
 			}

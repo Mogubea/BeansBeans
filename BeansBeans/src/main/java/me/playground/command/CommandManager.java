@@ -35,6 +35,7 @@ import me.playground.command.commands.CommandWarp;
 import me.playground.command.commands.CommandWhisper;
 import me.playground.command.commands.CommandWho;
 import me.playground.command.commands.CommandWorld;
+import me.playground.command.commands.CommandWorldSpawn;
 import me.playground.command.commands.small.CommandBestiary;
 import me.playground.command.commands.small.CommandFly;
 import me.playground.command.commands.small.CommandGod;
@@ -48,8 +49,6 @@ import me.playground.command.commands.small.CommandTpblock;
 import me.playground.command.commands.small.CommandWardrobe;
 import me.playground.command.commands.small.CommandWarps;
 import me.playground.main.Main;
-import me.playground.utils.BeanColor;
-import net.kyori.adventure.text.Component;
 
 public class CommandManager {
 	
@@ -106,7 +105,8 @@ public class CommandManager {
 		registerCommand(new CommandSun(plugin));
 		registerCommand(new CommandHug(plugin));
 		registerCommand(new CommandReport(plugin));
-		Bukkit.getConsoleSender().sendMessage(Component.text("Registered "+myCommands.size()+" commands in " + (System.currentTimeMillis()-mili) + "ms").color(BeanColor.COMMAND));
+		registerCommand(new CommandWorldSpawn(plugin));
+		plugin.getLogger().info("Registered " + myCommands.size() + " commands in " + (System.currentTimeMillis()-mili) + "ms");
 	}
 	
 	private void registerCommand(BeanCommand cmd) {

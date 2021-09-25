@@ -18,10 +18,12 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.entity.Animals;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -33,6 +35,7 @@ import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketEntityEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerHarvestBlockEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -44,6 +47,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerFishEvent.State;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -194,6 +198,16 @@ public class PlayerListener extends EventListener {
 	@EventHandler(priority = EventPriority.LOW)
 	public void onClickEntity(PlayerInteractEntityEvent e) {
 		Entity ent = e.getRightClicked();
+		// Villager
+		if (ent.getType() == EntityType.VILLAGER) {
+			final Region r = getRegionAt(ent.getLocation());
+			if (r.getEffectiveFlag(Flags.VILLAGER_ACCESS).higherThan(r.getMember(e.getPlayer()))) {
+				e.getPlayer().sendActionBar(Component.text("\u00a7cYou don't have permission to trade here."));
+				e.getPlayer().playSound(ent.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.7F, 1F);
+				e.setCancelled(true);
+			}
+		} else 
+		// Frames and such
 		if (ent.getType() == EntityType.GLOW_ITEM_FRAME || ent.getType() == EntityType.ITEM_FRAME || ent.getType() == EntityType.LEASH_HITCH) {
 			final Region r = getRegionAt(ent.getLocation());
 			if (r.getEffectiveFlag(Flags.BUILD_ACCESS).higherThan(r.getMember(e.getPlayer()))) {
@@ -567,6 +581,22 @@ public class PlayerListener extends EventListener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onConsume(PlayerItemConsumeEvent e) {
 		PlayerProfile.from(e.getPlayer()).getHeirlooms().doPlayerItemConsumeEvent(e);
+	}
+	
+	/**
+	 * Protect animals and villagers from being reeled - {@link Flags#PROTECT_ANIMALS}.
+	 */
+	@EventHandler(priority = EventPriority.LOW)
+	public void onPlayerFish(PlayerFishEvent e) {
+		if (e.getState() != State.CAUGHT_ENTITY) return;
+		if (!(e.getCaught() instanceof Animals || e.getCaught() instanceof Villager)) return;
+		
+		final Player p = e.getPlayer();
+		final Region r = getRegionAt(e.getCaught().getLocation());
+		if (r.getEffectiveFlag(Flags.PROTECT_ANIMALS) && r.getMember(p).lowerThan(MemberLevel.MEMBER)) {
+			p.sendActionBar(Component.text("\u00a7cYou don't have permission to fish animals here."));
+			e.setCancelled(true);
+		}
 	}
 	
 	private boolean hasGmPerm(Player p, GameMode gm) {

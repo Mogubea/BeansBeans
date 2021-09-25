@@ -21,7 +21,6 @@ import me.playground.playerprofile.stats.StatType;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 
 public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
@@ -109,7 +108,7 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 		// XXX: Statistics and information about the entity in question.
 		if (getEntityType() != null) {
 			slotToLootId.clear();
-			contents[4] = newItem(creatureHeads.get(getEntityType()), Component.translatable(getEntityType().translationKey()).color(TextColor.color(0x13bf27)));
+			contents[4] = newItem(creatureHeads.get(getEntityType()), Component.translatable(getEntityType().translationKey()).color(BeanColor.BESTIARY));
 			
 			LootTable table = getPlugin().lootManager().getLootTable(getEntityType());
 			if (table != null) {
@@ -137,7 +136,7 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 						float luckChance = (float)entry.getChance(entry.allowsLuck() ? luckLevel : 0)/10000;
 						float diff = luckChance-chance;
 						
-						lore.add(Component.text("\u00a77Chance: \u00a7f" + luckChance + "% " + (diff != 0 ? (diff > 0 ? "\u00a7a(+"+diff+")" : "\u00a7c(-"+diff+")") : "")));
+						lore.add(Component.text("\u00a77Chance: \u00a7f" + oneDec.format(luckChance) + "% " + (diff != 0 ? (diff > 0 ? "\u00a7a(+"+diff+")" : "\u00a7c(-"+diff+")") : "")));
 						
 						if (entry.hasTableRedirect()) {
 							lore.add(Component.text("\u00a77One of \u00a7f" + entry.getTableRedirect().getEntries().size() + "\u00a77 items."));
@@ -159,7 +158,7 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 								lore.add(Component.text("\u00a77Enchants: "));
 								for (int a = -1; ++a < size;) {
 									LootEnchantEntry ench = entry.getPossibleEnchants().get(a);
-									lore.add(Component.text("\u00a77 * ").append(Component.translatable(ench.getEnchantment().translationKey()).decoration(TextDecoration.ITALIC, false).color(BeanColor.ENCHANT)).append(Component.text(" \u00a77(\u00a7f"+oneDec.format(ench.getChance(luckLevel))+"%\u00a77)")));
+									lore.add(Component.text("\u00a77 * ").append(Component.translatable(ench.getEnchantment().translationKey(), BeanColor.ENCHANT).decoration(TextDecoration.ITALIC, false)).append(Component.text(" \u00a77(\u00a7f"+oneDec.format(ench.getChance(luckLevel))+"%\u00a77)")));
 									
 									Component hell = Component.text("\u00a77  Levels: ");
 									
@@ -205,7 +204,7 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 								obtained++;
 					}
 					
-					ItemStack displayItem = newItem(creatureHeads.getOrDefault(creatures[x], notUnlocked), Component.translatable(creatures[x].translationKey()).color(TextColor.color(0x13bf27)), "",
+					ItemStack displayItem = newItem(creatureHeads.getOrDefault(creatures[x], notUnlocked), Component.translatable(creatures[x].translationKey(), BeanColor.BESTIARY), "",
 							"\u00a77Kills: \u00a7a" + df.format(getStats().getStat(StatType.KILLS, creatures[x].name())),
 							"\u00a77Loot Found: " + "\u00a7a" + obtained + "\u00a77/\u00a72" + loots,
 							Utils.getProgressBar('-', 16, obtained, loots, ChatColor.DARK_GRAY, ChatColor.GREEN) +  (obtained>=loots ? "\u00a76 " : "\u00a7a ") + oneDec.format((((float)obtained/(float)loots) * 100F)) + "%");
@@ -217,7 +216,7 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 			}
 		}
 		
-		contents[50] = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), "\u00a72What is the Bestiary?", "", 
+		contents[48] = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("What is the Bestiary?", BeanColor.BESTIARY), "", 
 				"\u00a77The \u00a72Bestiary\u00a77 is an interface where",
 				"\u00a77you can view information about various",
 				"\u00a77things you've encountered in your adventure!",
@@ -240,7 +239,7 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 	}
 	
 	@Override
-	public boolean checkPageClick(InventoryClickEvent e) {
+	public boolean preInventoryClick(InventoryClickEvent e) {
 		e.setCancelled(true);
 		final ItemStack i = e.getClickedInventory().getItem(e.getSlot());
 		if (i != null) {

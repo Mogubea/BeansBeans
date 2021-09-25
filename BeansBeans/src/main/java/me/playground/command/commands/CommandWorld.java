@@ -31,8 +31,8 @@ import net.kyori.adventure.text.Component;
 public class CommandWorld extends BeanCommand {
 
 	public CommandWorld(Main plugin) {
-		super(plugin, true, Rank.MODERATOR, "world");
-		description = "World command.";
+		super(plugin, true, "bean.cmd.world", "world");
+		description = "General world command.";
 	}
 	
 	final String[] subCmds = { "create", "close", "dbregister", "info", "list", "open", "tpto",  };
@@ -42,7 +42,7 @@ public class CommandWorld extends BeanCommand {
 		if (args.length > 0) {
 			final String subCmd = args[0].toLowerCase();
 			
-			if (subCmd.equals("create") && checkRank(sender, Rank.OWNER)) {
+			if (subCmd.equals("create") && sender.hasPermission("bean.cmd.world.create")) {
 				if (args.length > 1) {
 					final WorldCreator wc = new WorldCreator(args[1]);
 					wc.type(args.length > 2 ? WorldType.valueOf(args[2].toUpperCase()) : WorldType.NORMAL);

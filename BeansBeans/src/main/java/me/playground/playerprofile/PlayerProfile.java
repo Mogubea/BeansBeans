@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
+import javax.annotation.Nonnull;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -463,7 +465,7 @@ public class PlayerProfile {
 			if (this.armourWardrobe[offset + x] == null)
 				continue;
 			
-			Bukkit.getServer().getWorld(p.getWorld().getName()).dropItem(p.getLocation(), this.armourWardrobe[offset + x]);
+			p.getWorld().dropItem(p.getLocation(), this.armourWardrobe[offset + x]);
 			this.armourWardrobe[offset + x] = null;
 		}
 		
@@ -591,6 +593,22 @@ public class PlayerProfile {
 		this.profileOverride = this.getUniqueId();
 		if (this.currentlyViewedGUI != null) // Shouldn't happen.
 			this.currentlyViewedGUI.setProfile(this);
+	}
+	
+	/**
+	 * If the player is online, grant them the specified advancement.
+	 * @param advancementKey - The exact directory and key.
+	 */
+	public void grantAdvancement(@Nonnull String advancementKey) {
+		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "advancement grant " + getDisplayName() + " only " + advancementKey); // cheeky
+	}
+	
+	/**
+	 * If the player is online, revoke them of the specified advancement.
+	 * @param advancementKey - The exact directory and key.
+	 */
+	public void revokeAdvancement(@Nonnull String advancementKey) {
+		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "advancement revoke " + getDisplayName() + " only " + advancementKey); // cheeky
 	}
 	
 	public HeirloomInventory getHeirlooms() {

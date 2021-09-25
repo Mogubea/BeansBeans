@@ -75,8 +75,8 @@ public class BeanGuiPickupfilter extends BeanGui {
 		contents[46] = page > 0 ? prevPage : blankbl;
 		contents[52] = (page < 2 && (blacklist.size()+1)>(45*(page+1))) ? nextPage : blankbl;
 		
-		contents[48] = newItem(new ItemStack(Material.ENDER_CHEST), "\u00a78Blacklist Limit", "", "\u00a77You have used \u00a7f" + blacklist.size() + "\u00a77 of your", "\u00a77135 available blacklist slots!");
-		contents[50] = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), "\u00a78What is this?", "", 
+		contents[50] = newItem(new ItemStack(Material.ENDER_CHEST), "\u00a78Blacklist Limit", "", "\u00a77You have used \u00a7f" + blacklist.size() + "\u00a77 of your", "\u00a77135 available blacklist slots!");
+		contents[48] = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), "\u00a78What is this?", "", 
 				"\u00a77Any item which you have added to this list", 
 				"\u00a77\u00a7ccan no longer\u00a77 be picked up by you,", 
 				"\u00a77regardless of enchants, durability or data.",

@@ -12,10 +12,20 @@ import org.bukkit.inventory.ItemStack;
 import me.playground.main.Main;
 import me.playground.regions.Region;
 import me.playground.regions.RegionManager;
+import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 
 public abstract class BeanGuiRegion extends BeanGui {
+	
+	protected static final ItemStack whatIsThis = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("What is this?", BeanColor.REGION), 
+			"\u00a77This is the \u00a79Region Menu\u00a77. Here, you are able", 
+			"\u00a77to view various attributes about the \u00a79Regions", 
+			"\u00a77that are currently overlapping your location.",
+			"",
+			"\u00a77The \u00a79Region Owner\u00a77 and \u00a7bStaff \u00a77are able to modify",
+			"\u00a77various attributes about the \u00a79Region\u00a77 such as;",
+			"\u00a77name, priority, flags and members from this menu.");
 	
 	protected ItemStack blank;
 	protected final RegionManager rm;
@@ -51,9 +61,11 @@ public abstract class BeanGuiRegion extends BeanGui {
 	public void onInventoryOpened() {
 		final ItemStack[] contents = i.getContents();
 		
+		contents[48] = whatIsThis;
+		
 		this.blank = newItem(new ItemStack(Material.BLUE_STAINED_GLASS_PANE, 1), getRegion().getColouredName());
 		for (int x = presetSize-9; x < presetSize; x++) {
-			if (x == 49 || x == 50) continue;
+			if (x == 48 || x == 49 || x == 50) continue;
 			contents[x] = blank;
 		}
 		
@@ -68,6 +80,9 @@ public abstract class BeanGuiRegion extends BeanGui {
 				
 			contents[50] = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzY0YzBiYWFlYTM5NDU4NjQwNWUxNTU3ZjU3ZTUwNTlmNGQ0YjAzYmYwN2FhMmJhMGYyMDkzODQ3MWQyNzFhYiJ9fX0="), 
 					Component.text("\u00a77Region: \u00a7r").append(getRegion().getColouredName()), lore);
+		} else {
+			contents[50] = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzY0YzBiYWFlYTM5NDU4NjQwNWUxNTU3ZjU3ZTUwNTlmNGQ0YjAzYmYwN2FhMmJhMGYyMDkzODQ3MWQyNzFhYiJ9fX0="), 
+					Component.text("\u00a77Region: \u00a7r").append(getRegion().getColouredName()));
 		}
 		
 		i.setContents(contents);
@@ -84,7 +99,7 @@ public abstract class BeanGuiRegion extends BeanGui {
 	}
 	
 	@Override
-	public boolean checkPageClick(InventoryClickEvent e) {
+	public boolean preInventoryClick(InventoryClickEvent e) {
 		e.setCancelled(true);
 		final ItemStack i = e.getClickedInventory().getItem(e.getSlot());
 		if (i != null) {
@@ -92,6 +107,7 @@ public abstract class BeanGuiRegion extends BeanGui {
 				return true;
 			
 			if (e.getRawSlot() == 50) {
+				if (getRegions().size() <= 1) return true;
 				regionIdx = (++regionIdx >= getRegions().size() ? 0 : regionIdx);
 				p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.35F, 1.0F);
 				setPage(0);

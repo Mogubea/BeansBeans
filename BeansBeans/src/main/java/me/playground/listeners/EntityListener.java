@@ -20,6 +20,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Tameable;
+import org.bukkit.entity.Villager;
 import org.bukkit.entity.Wolf;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -142,8 +143,8 @@ public class EntityListener extends EventListener {
 		} else if (e.getEntity() instanceof LivingEntity) {
 			boolean bother = true;
 			
-			// Check for Animal Protection
-			if (e.getEntity() instanceof Animals && r2.getEffectiveFlag(Flags.PROTECT_ANIMALS)) {
+			// Check for Animal/Villager Protection
+			if ((e.getEntity() instanceof Villager || e.getEntity() instanceof Animals) && r2.getEffectiveFlag(Flags.PROTECT_ANIMALS)) {
 				Player p = (e.getDamager() instanceof Player) ? (Player)e.getDamager() : null;
 				if ((e.getDamager() instanceof Projectile && ((Projectile)e.getDamager()).getShooter() instanceof Player))
 					p = (Player) ((Projectile)e.getDamager()).getShooter();

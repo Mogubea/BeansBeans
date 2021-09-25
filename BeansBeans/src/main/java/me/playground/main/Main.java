@@ -100,6 +100,7 @@ public class Main extends JavaPlugin {
 		startMainServerLoop();
 	}
 
+	@SuppressWarnings("deprecation")
 	public void onDisable() {
 		for (UUID uuid : permissionManager.getRankPreviewers())
 			permissionManager.stopPreviewingRank(Bukkit.getPlayer(uuid));
@@ -305,8 +306,10 @@ public class Main extends JavaPlugin {
 							// Playtime Check - Only checks for the next rank in line, this could be a non-playtime rank (eg. Exalted -> Moderator), that's why there's a check.
 							if (!permissionManager().isPreviewing(p)) {
 								Rank next = Rank.values()[pp.getPlaytimeRank().ordinal()+1];
-								if (next.isPlaytimeRank() && (p.getStatistic(Statistic.PLAY_ONE_MINUTE)/20) >= next.getPlaytimeRequirement())
+								if (next.isPlaytimeRank() && (p.getStatistic(Statistic.PLAY_ONE_MINUTE)/20) >= next.getPlaytimeRequirement()) {
+									pp.grantAdvancement("beansbeans:advancements/ranks/"+next.lowerName());
 									pp.addRank(next);
+								}
 							}
 							
 							pp.updateComponentName();

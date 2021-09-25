@@ -6,8 +6,8 @@ public class FlagMember extends Flag<MemberLevel> {
 	
 	private final MemberLevel def;
 	
-	public FlagMember(String name, MemberLevel def) {
-		super(name, false);
+	public FlagMember(String name, String displayName, MemberLevel def) {
+		super(name, displayName, false);
 		this.def = def;
 	}
 	
@@ -38,5 +38,10 @@ public class FlagMember extends Flag<MemberLevel> {
     public String marshal(MemberLevel o) {
         return o.name();
     }
+
+	@Override
+	public MemberLevel validateValue(MemberLevel o) {
+		return o;
+	}
 	
 }

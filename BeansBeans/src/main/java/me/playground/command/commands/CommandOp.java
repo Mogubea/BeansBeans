@@ -48,6 +48,7 @@ public class CommandOp extends BeanCommand {
 	final String[] subCmds = { "commands", "customitems", "fixformatting", "guiprofile", "lockserver", "menuitem", "moltentouch", "openserver", "pissoff", "previewrank", "shops" };
 	final String[] npcSubCmds = { "create", "list", "reload", "setskin", "tphere", "warpto", };
 	final String[] shopSubCmds = { "enable", "disable", "reload" };
+	final String[] shopReloadCmds = { "-f" };
 	
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
@@ -173,15 +174,17 @@ public class CommandOp extends BeanCommand {
 		
 		if ("shops".equals(cmdStr) || "shop".equals(cmdStr)) {
 			if ("reload".equals(subcmd)) {
-				Datasource.saveDirtyShops();
 				for (Player pp : Bukkit.getOnlinePlayers()) {
 					PlayerProfile prof = PlayerProfile.from(pp);
 					if (prof.getBeanGui() != null && prof.getBeanGui() instanceof BeanGuiShop)
 						pp.closeInventory(Reason.UNLOADED);
 				}
+				
+				boolean forceEntityReload = args.length > 2 && args[2].equalsIgnoreCase("-f");
+				
 				Datasource.deleteShopMarkers();
-				getPlugin().shopManager().reloadAllShops();
-				sender.sendMessage("\u00a7eShops \u00a77have been reloaded.");
+				getPlugin().shopManager().reload(forceEntityReload);
+				sender.sendMessage("\u00a7eShop \u00a77entries" + (forceEntityReload ? " and entities" : "") + " have been reloaded.");
 			} else if ("enable".equals(subcmd)) {
 				getPlugin().shopManager().enable();
 				sender.sendMessage("\u00a7eShops \u00a77are now \u00a7aenabled\u00a77!");
@@ -249,8 +252,13 @@ public class CommandOp extends BeanCommand {
 			return TabCompleter.completeString(args[0], this.subCmds);
 		if (args.length == 2 && args[0].equalsIgnoreCase("npc"))
 			return TabCompleter.completeString(args[1], this.npcSubCmds);
-		if (args.length == 2 && args[0].equals("shops") || args[0].equals("shop"))
-			return TabCompleter.completeString(args[1], this.shopSubCmds);
+		if (args.length >= 2 && args[0].equals("shops") || args[0].equals("shop")) {
+			if (args.length == 3 && args[1].equals("reload"))
+				return TabCompleter.completeString(args[2], this.shopReloadCmds);
+			else if (args.length == 2)
+				return TabCompleter.completeString(args[1], this.shopSubCmds);
+			return Collections.emptyList();
+		}
 		if (args.length == 2 && args[0].equals("fixformatting"))
 			return TabCompleter.completeOnlinePlayer(sender, args[1]);
 		if (args.length == 2 && args[0].equals("guiprofile"))

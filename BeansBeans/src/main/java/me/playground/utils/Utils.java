@@ -30,6 +30,8 @@ import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 
 import me.playground.currency.Currency;
+import me.playground.ranks.Rank;
+import net.kyori.adventure.text.Component;
 
 public class Utils {
 
@@ -269,6 +271,14 @@ public class Utils {
 			}
 		}
 		return null;
+	}
+	
+	public static void sendActionBar(Rank rank, Component message) {
+		Bukkit.getOnlinePlayers().forEach((player) -> {
+			me.playground.playerprofile.PlayerProfile pp = me.playground.playerprofile.PlayerProfile.from(player);
+			if (!pp.isRank(rank)) return;
+			player.sendActionBar(message);
+		});
 	}
 	
 	private final static TreeMap<Integer, String> map = new TreeMap<Integer, String>();

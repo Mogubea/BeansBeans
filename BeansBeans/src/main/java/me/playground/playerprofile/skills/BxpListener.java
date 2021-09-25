@@ -12,6 +12,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerFishEvent;
+import org.bukkit.event.player.PlayerFishEvent.State;
 
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.MaterialHelper;
@@ -73,10 +74,10 @@ public class BxpListener implements Listener {
 		
 	}
 	
-	@EventHandler(priority = EventPriority.HIGHEST)
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerFish(PlayerFishEvent e) {
-		if (e.isCancelled())
-			return;
+		if (e.getState() != State.CAUGHT_FISH) return;
+		
 		SkillData sd = PlayerProfile.from(e.getPlayer()).getSkills();
 		sd.addXp(SkillType.FISHING, 43 * e.getExpToDrop());
 	}

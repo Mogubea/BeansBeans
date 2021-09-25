@@ -71,23 +71,27 @@ public abstract class BeanGui implements IPluginRef {
 	public abstract void onInventoryOpened();
 	public abstract void onInventoryClicked(InventoryClickEvent e);
 	
-	public boolean checkPageClick(InventoryClickEvent e) {
+	/**
+	 * Fires {@link BeanGui#onInventoryClicked(InventoryClickEvent)} if this returns false.
+	 * @param e - The {@link InventoryClickEvent} involved.
+	 * @return True if something happened during this method.
+	 */
+	public boolean preInventoryClick(InventoryClickEvent e) {
 		e.setCancelled(true);
-		final ItemStack i = e.getClickedInventory().getItem(e.getSlot());
-		if (i != null) {
-			if (pp.onCdElseAdd("guiClick", 300))
-				return true;
+		final ItemStack i = e.getCurrentItem();
+		
+		if (pp.onCdElseAdd("guiClick", 300))
+			return true;
 			
-			if (i.isSimilar(goBack)) {
-				new BeanGuiMainMenu(p).openInventory();
-				return true;
-			} else if (i.isSimilar(nextPage)) {
-				pageUp();
-				return true;
-			} else if (i.isSimilar(prevPage)) {
-				pageDown();
-				return true;
-			}
+		if (i.isSimilar(goBack)) {
+			new BeanGuiMainMenu(p).openInventory();
+			return true;
+		} else if (i.isSimilar(nextPage)) {
+			pageUp();
+			return true;
+		} else if (i.isSimilar(prevPage)) {
+			pageDown();
+			return true;
 		}
 		return false;
 	}
@@ -207,7 +211,7 @@ public abstract class BeanGui implements IPluginRef {
 	
 	/**
 	 * Get all of the currently viewed instances of the specified {@link BeanGui},
-	 * this method can be very useful in a forEach method to refresh with a criteria.
+	 * this method can be very useful in a forEach loop to {@link BeanGui#refresh()} with a criteria.
 	 */
 	@SuppressWarnings("unchecked") // It is checked lol?
 	public static <T extends BeanGui> Collection<T> getAllViewers(@Nonnull final Class<T> clazz) {

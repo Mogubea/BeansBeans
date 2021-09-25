@@ -6,12 +6,12 @@ public class FlagBoolean extends Flag<Boolean> {
 	
 	private final boolean def;
 	
-	public FlagBoolean(String name, boolean def) {
-		this(name, def, true);
+	public FlagBoolean(String name, String displayName, boolean def) {
+		this(name, displayName, def, true);
 	}
 	
-	public FlagBoolean(String name, boolean def, boolean inherit) {
-		super(name, inherit);
+	public FlagBoolean(String name, String displayName, boolean def, boolean inherit) {
+		super(name, displayName, inherit);
 		this.def = def;
 	}
 	
@@ -54,5 +54,10 @@ public class FlagBoolean extends Flag<Boolean> {
             return null;
         }
     }
+
+	@Override
+	public Boolean validateValue(Boolean o) {
+		return o;
+	}
 	
 }

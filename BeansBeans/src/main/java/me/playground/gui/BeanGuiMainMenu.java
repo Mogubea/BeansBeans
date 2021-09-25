@@ -1,5 +1,6 @@
 package me.playground.gui;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.bukkit.Bukkit;
@@ -19,6 +20,7 @@ import me.playground.utils.BeanColor;
 import me.playground.utils.Calendar;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 
@@ -92,7 +94,24 @@ public class BeanGuiMainMenu extends BeanGui {
 		wallet.setItemMeta(wmeta);
 		
 		contents[20] = icon_skills;
-		contents[21] = icon_region;
+		
+		ItemStack region = icon_region.clone();
+		TextColor regionCol = TextColor.color(TextColor.color(0x3d3d3d | BeanColor.REGION.value()));
+		ArrayList<Component> regionLore = new ArrayList<Component>();
+		
+		if (getPlugin().regionManager().getRegions(p.getLocation()).size() < 1)
+			regionLore.add(Component.text("\u00a7cNo region nearby.."));
+		else
+			regionLore.add(Component.text("Region: \u00a79" + getPlugin().regionManager().getRegion(p.getLocation()).getName()).colorIfAbsent(regionCol).decoration(TextDecoration.ITALIC, false));
+		
+		regionLore.addAll(Arrays.asList(
+				Component.empty(), 
+				Component.text("\u00a77\u00a7oView and/or Edit attributes"), 
+				Component.text("\u00a77\u00a7oabout nearby Regions.")));
+		
+		region.lore(regionLore);
+		
+		contents[21] = region;
 		contents[22] = wallet;
 		contents[23] = icon_warps;
 		contents[24] = icon_wardrobe;
@@ -102,10 +121,16 @@ public class BeanGuiMainMenu extends BeanGui {
 		ItemMeta waameta = waa.getItemMeta();
 		TextColor aa = TextColor.color(TextColor.color(0x3d3d3d | BeanColor.HEIRLOOM.value()));
 		
-		waameta.lore(Arrays.asList(Component.text("\u00a77\u00a7oWIP"), Component.text(""), Component.text("\u00a7rStat Modifiers:").decoration(TextDecoration.ITALIC, false).color(BeanColor.HEIRLOOM),
-				Component.text(tpp.getHeirlooms().getDamageBonus() == 0 ? "\u00a78\u25C8 Attack Damage: 0" : "\u00a7r\u25C8 Attack Damage: \u00a7f" + (tpp.getHeirlooms().getDamageBonus())).colorIfAbsent(aa),
-				Component.text(tpp.getHeirlooms().getHealthBonus() == 0 ? "\u00a78\u25C8 Health: 0" : "\u00a7r\u25C8 Health: \u00a7f" + (tpp.getHeirlooms().getHealthBonus())).colorIfAbsent(aa),
-				Component.text(tpp.getHeirlooms().getMovementBonus() == 0 ? "\u00a78\u25C8 Speed: 0" : "\u00a7r\u25C8 Speed: \u00a7f" + (int)(tpp.getHeirlooms().getMovementBonus() * 1000)).colorIfAbsent(aa)));
+		waameta.lore(Arrays.asList(
+				Component.text("Using \u00a7f" + tpp.getHeirlooms().size() + "\u00a7r/\u00a77" + tpp.getHeirlooms().getMaxHeirlooms() + "\u00a7r Slots").colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false), 
+				Component.text(""),
+				Component.text("\u00a77\u00a7oStore and utilise the effects of"),
+				Component.text("\u00a77\u00a7oyour Heirlooms in this magical bag."),
+				Component.text(""),
+				Component.text("Stat Modifiers:", BeanColor.HEIRLOOM).decoration(TextDecoration.ITALIC, false),
+				Component.text(tpp.getHeirlooms().getDamageBonus() == 0 ? "\u00a78\u25C8 Damage: 0" : "\u00a7r\u25C8 Damage: \u00a7f" + (tpp.getHeirlooms().getDamageBonus())).colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false),
+				Component.text(tpp.getHeirlooms().getHealthBonus() == 0 ? "\u00a78\u25C8 Health: 0" : "\u00a7r\u25C8 Health: \u00a7f" + (tpp.getHeirlooms().getHealthBonus())).colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false),
+				Component.text(tpp.getHeirlooms().getMovementBonus() == 0 ? "\u00a78\u25C8 Movement Speed: 0" : "\u00a7r\u25C8 Movement Speed: \u00a7f" + (int)(tpp.getHeirlooms().getMovementBonus() * 1000)).colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false)));
 		int heirloomCount = tpp.getHeirlooms().size();
 		if (heirloomCount > 0)
 			waa.setAmount(Math.min(64, heirloomCount));
@@ -115,7 +140,16 @@ public class BeanGuiMainMenu extends BeanGui {
 		contents[29] = waa;
 		contents[30] = icon_bestiary;
 		contents[32] = icon_commands;
-		contents[33] = icon_blacklist;
+		
+		ItemStack blacklist = icon_blacklist.clone();
+		TextColor blacklistCol = TextColor.color(TextColor.color(0x3d3d3d | NamedTextColor.DARK_GRAY.value()));
+		blacklist.lore(Arrays.asList(
+				Component.text("Using \u00a7f" + tpp.getPickupBlacklist().size() + "\u00a7r/\u00a77135\u00a7r Slots").colorIfAbsent(blacklistCol).decoration(TextDecoration.ITALIC, false),
+				Component.empty(),
+				Component.text("\u00a77\u00a7oWhich items do you absolutely"),
+				Component.text("\u00a77\u00a7orefuse to pick up?")));
+		
+		contents[33] = blacklist;
 		contents[34] = icon_settings;
 		
 		ItemStack time = icon_time.clone();

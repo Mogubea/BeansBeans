@@ -1,5 +1,7 @@
 package me.playground.regions;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -9,7 +11,6 @@ import javax.annotation.Nullable;
 
 import org.bukkit.World;
 
-import me.playground.data.Datasource;
 import me.playground.regions.flags.Flag;
 
 public abstract class RegionBase {
@@ -19,6 +20,7 @@ public abstract class RegionBase {
 	protected int priority;
 	
 	protected ConcurrentMap<Flag<?>, Object> flags = new ConcurrentHashMap<>();
+	protected List<Flag<?>> dirtyFlags = new ArrayList<Flag<?>>();
 	
 	public RegionBase(int id, World world) {
 		this.regionId = id;
@@ -45,8 +47,7 @@ public abstract class RegionBase {
 	
 	@SuppressWarnings("unchecked") @Nonnull
 	public <T extends Flag<V>, V> V getEffectiveFlag(T flag) {
-		Object obj = flags.get(flag);
-		V val = (V) obj;
+		V val = (V) flags.get(flag);
 		if (val == null && !isWorldRegion() && flag.inheritsFromWorld())
 			val = RegionManager.getWorldRegionAt(getWorld()).getFlag(flag);
 		if (val == null)
@@ -60,17 +61,15 @@ public abstract class RegionBase {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <T extends Flag<V>, V> V setFlag(T flag, @Nullable Object val, boolean save) {
-		if (val == null) {
-			if (save)
-				Datasource.removeRegionFlag(regionId, flag.getName());
+	public <T extends Flag<V>, V> V setFlag(T flag, @Nullable Object val, boolean markDirty) {
+		if (val == null)
 			flags.remove(flag);
-		} else {
-			if (save)
-				Datasource.setRegionFlag(regionId, flag.getName(), flag.marshal((V)val));
-			flags.put(flag, val);
-		}
-		return (V) val;
+		else
+			flags.put(flag, flag.validateValue((V)val));
+		
+		if (markDirty && !dirtyFlags.contains(flag))
+			dirtyFlags.add(flag);
+		return (V)val;
 	}
 	
 	public void setFlags(Map<Flag<?>, Object> flags) {
@@ -81,8 +80,8 @@ public abstract class RegionBase {
 		return priority;
 	}
 	
-	public int setPriority(int val) {
-		return priority = val;
+	public List<Flag<?>> getDirtyFlags() {
+		return dirtyFlags;
 	}
 	
 	public abstract String getName();

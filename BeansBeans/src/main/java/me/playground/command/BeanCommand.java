@@ -28,8 +28,6 @@ import me.playground.main.IPluginRef;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.ranks.Rank;
-import me.playground.regions.Region;
-import me.playground.regions.flags.Flags;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -361,35 +359,6 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 			return Component.text(world.getName()).color(BeanColor.WORLD).hoverEvent(HoverEvent.showText(text));
 		}
 		
-	}
-	
-	protected Component regionInfo(CommandSender sender, Region region) {
-		Component text;
-		if (!(sender instanceof Player))
-			return Component.text(region.getName()).color(BeanColor.REGION);
-		
-		final Player p = (Player) sender;
-		
-		if (region.isWorldRegion()) {
-			text = Component.text(
-					"\u00a7rWorld Region" +
-					"\n\u00a77Can you build here: " + (region.getEffectiveFlag(Flags.BUILD_ACCESS).lowerOrEqTo(region.getMember(p)) ? "\u00a7aYes" : "\u00a7cNo"));
-		} else {
-			text = Component.text(
-					"\u00a7rPlayer Region" +
-					"\n\u00a7e(\u00a78" + region.getMinimumPoint().toString() + "\u00a77 - \u00a78" + region.getMaximumPoint() + "\u00a7e)" +
-					"\n\u00a77Can you build here: " + (region.getEffectiveFlag(Flags.BUILD_ACCESS).lowerOrEqTo(region.getMember(p)) ? "\u00a7aYes" : "\u00a7cNo") +
-					"\n\u00a77Priority: \u00a7b" + region.getPriority()
-					
-					).append(region.getComponentMembers());
-		}
-		text = text.colorIfAbsent(region.isWorldRegion() ? BeanColor.REGION_WORLD : BeanColor.REGION);
-		Component done = region.getColouredName().hoverEvent(HoverEvent.showText(text));
-		
-		if (sender.hasPermission("bean.cmd.region.warpto") || sender.hasPermission("bean.cmd.region.*"))
-			return Component.empty().append(done.clickEvent(ClickEvent.suggestCommand("/region warpto " + region.getName())));
-		else
-			return Component.empty().append(done);
 	}
 	
 	protected DiscordBot getDiscord() {

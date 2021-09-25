@@ -6,11 +6,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import javax.annotation.Nonnull;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BlockVector;
 
+import me.playground.celestia.logging.Celestia;
 import me.playground.data.Datasource;
 import me.playground.data.Dirty;
 import me.playground.playerprofile.PlayerProfile;
@@ -20,6 +23,8 @@ import me.playground.regions.flags.MemberLevel;
 import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 
 public class Region extends RegionBase implements Dirty {
 	
@@ -159,8 +164,14 @@ public class Region extends RegionBase implements Dirty {
 		return this.regionKeys;
 	}
 	
-	public void setName(String name) {
+	/**
+	 * Player parameter is required for {@link Celestia}
+	 * @param p
+	 * @param name
+	 */
+	public void setName(@Nonnull Player p, @Nonnull String name) {
 		rm.renameRegion(this.name, name);
+		Celestia.logRegionChange(p, "Renamed from " + this.name + " to " + name + ".");
 		this.name = name;
 		setDirty(true);
 	}
@@ -181,8 +192,9 @@ public class Region extends RegionBase implements Dirty {
 		return dirty;
 	}
 	
-	public int setPriority(int val) {
+	public int setPriority(Player p, int val) {
 		setDirty(true);
+		Celestia.logRegionChange(p, "Priority changed from " + priority + " to " + val + ".");
 		return priority = val;
 	}
 	
@@ -218,7 +230,7 @@ public class Region extends RegionBase implements Dirty {
 		return new Location(world, min.getX() + (max.getX()-min.getX()) / 2, min.getY() + (max.getY()-min.getY()) / 2, min.getZ() + (max.getZ()-min.getZ()) / 2);
 	}
 	
-	public Component getComponentMembers() {
+	private Component getComponentMembers() {
 		Component text = Component.empty();
 		MemberLevel[] seek = {MemberLevel.OWNER, MemberLevel.OFFICER, MemberLevel.TRUSTED, MemberLevel.MEMBER, MemberLevel.VISITOR };
 		
@@ -233,15 +245,36 @@ public class Region extends RegionBase implements Dirty {
 		return text;
 	}
 	
+	private Component component;
+	public Component toComponent() {
+		if (component != null) return component;
+		Component text;
+		
+		if (isWorldRegion()) {
+			text = Component.text(
+					"\u00a7rWorld Region" + 
+					"\n\u00a7e(\u00a78World: " + getWorld().getName() + "\u00a7e)");
+		} else {
+			text = Component.text(
+					"\u00a7rPlayer Region" +
+					"\n\u00a7e(\u00a78" + getMinimumPoint().toString() + "\u00a77 - \u00a78" + getMaximumPoint() + "\u00a7e)" +
+					"\n\u00a77Priority: \u00a7b" + getPriority())
+					.append(getComponentMembers());
+		}
+		text = text.colorIfAbsent(isWorldRegion() ? BeanColor.REGION_WORLD : BeanColor.REGION);
+		Component done = getColouredName().hoverEvent(HoverEvent.showText(text));
+		component = Component.empty().append(done.clickEvent(ClickEvent.suggestCommand("/region warpto " + getName())));
+		return component;
+	}
+	
 	public Region update() {
 		rm.refreshRegion(this);
 		return this;
 	}
 	
-	/*public <T extends Flag<V>, V> boolean can(Player p, T flag) {
-		if (flag instanceof FlagMember) maybe?
-			return !this.getEffectiveFlag((FlagMember)flag).higherThan(this.getMember(p));
-		return true;
-	}*/
+	public boolean canModify(Player p) {
+		if (this.isWorldRegion()) return p.hasPermission("bean.region.override");
+		return p.hasPermission("bean.region.modifyothers") || getMember(p).higherThan(MemberLevel.OFFICER);
+	}
 	
 }

@@ -18,7 +18,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 
 public class BeanGuiCommands extends BeanGui {
 	
-	protected static final ItemStack blank = newItem(new ItemStack(Material.CYAN_STAINED_GLASS_PANE, 1), "");
+	protected static final ItemStack blank = newItem(new ItemStack(Material.LIME_STAINED_GLASS_PANE, 1), "\u00a7aCommands");
 	
 	final List<Command> cmds = Main.getCommandManager().getMyCommands();
 	
