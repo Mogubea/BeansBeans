@@ -70,7 +70,7 @@ public class PermissionManager {
 		preview.add(rank);
 		
 		final PlayerProfile pp = PlayerProfile.from(p);
-		this.rankPreviewers.put(p.getUniqueId(), pp.getRanks());
+		this.rankPreviewers.put(p.getUniqueId(), new ArrayList<>(pp.getRanks()));
 		pp.setRanks(preview);
 	}
 	
