@@ -23,6 +23,8 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import me.playground.civilizations.Civilization;
+import me.playground.civilizations.jobs.Job;
 import me.playground.command.BeanCommand;
 import me.playground.data.Datasource;
 import me.playground.discord.DiscordBot;
@@ -109,15 +111,15 @@ public class PlayerProfile {
 	}
 	
 	public static int getDBID(String name) {
-		return ProfileStore.from(name, false).getDBID();
+		return ProfileStore.from(name, false).getId();
 	}
 	
 	public static int getDBID(OfflinePlayer p) {
-		return ProfileStore.from(p.getUniqueId(), false).getDBID();
+		return ProfileStore.from(p.getUniqueId(), false).getId();
 	}
 	
 	public static int getDBID(UUID uuid) {
-		return ProfileStore.from(uuid, false).getDBID();
+		return ProfileStore.from(uuid, false).getId();
 	}
 	
 	public static TextComponent getDisplayName(UUID uuid) {
@@ -154,6 +156,10 @@ public class PlayerProfile {
 	private ArrayList<String> 			pickupBlacklist = new ArrayList<String>();
 	
 	private long 						booleanSettings = PlayerSetting.getDefaultSettings();
+	
+	// Saved for performance
+	private Civilization				civilization;
+	private Job							job;
 	
 	// Not Saved
 	private int							warpLimit;
@@ -391,7 +397,7 @@ public class PlayerProfile {
 	public void updateRealName(String name) {
 		if (this.name != name) {
 			this.name = name;
-			Datasource.saveProfileColumn(this, "name", name);
+			Datasource.saveProfileColumn(getId(), "name", name);
 		}
 	}
 	
@@ -502,6 +508,9 @@ public class PlayerProfile {
 		int mins = getOfflinePlayer().getStatistic(Statistic.PLAY_ONE_MINUTE)/20/60;
 		int hours = Math.floorDiv(mins, 60);
 		mins -= hours*60;
+		
+		if (isInCivilization() && hasJob())
+			hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Job: ").append(getJob().toComponent()));
 		
 		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Playtime: \u00a7f" + (hours > 0 ? hours + " Hours and " : "") + mins + " Minutes"));
 		
@@ -727,6 +736,48 @@ public class PlayerProfile {
 	
 	public Region updateCurrentRegion(Region region) {
 		return this.currentRegion = region;
+	}
+	
+	public int getCivilizationId() {
+		return civilization == null ? 0 : civilization.getId();
+	}
+	
+	public Civilization getCivilization() {
+		return civilization;
+	}
+	
+	public boolean isInCivilization() {
+		return civilization != null;
+	}
+	
+	public void setCivilization(Civilization civ) {
+		this.civilization = civ;
+		this.job = null;
+	}
+	
+	/**
+	 * @return the player's current {@link Job}. Through conventional methods, this 
+	 * will usually return null if the player is not in a {@link Civilization}.
+	 */
+	public Job getJob() {
+		return job;
+	}
+	
+	public boolean hasJob() {
+		return job != null;
+	}
+	
+	/**
+	 * Will set the player's {@link Job} if possible. Forcing will only assign a job,
+	 * regardless of unlocks, if the player is in a {@link Civilization}.
+	 * @return if the job change was successful.
+	 */
+	public boolean setJob(Job job, boolean force) {
+		if (!isInCivilization()) return false;
+		if (!force && !getCivilization().hasUnlocked(job)) return false;
+		
+		this.job = job;
+		return true;
 	}
 	
 }

@@ -53,7 +53,7 @@ public class DiscordCommandEmbed extends DiscordCommand {
 				
 				if (isLinked(e.getMember().getIdLong())) {
 					final ProfileStore deeb = getLinkedStore(e.getMember());
-					suggestion.setFooter("Posted at " + df.format(date), "https://minotar.net/helm/"+deeb.getRealName()+"/100.png");
+					suggestion.setFooter("Posted at " + df.format(date), DiscordBot.getIconURL(deeb.getId()));
 				} else {
 					suggestion.setFooter("Posted at " + df.format(date), e.getMember().getUser().getAvatarUrl());
 				}

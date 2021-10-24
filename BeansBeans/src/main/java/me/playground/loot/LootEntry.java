@@ -5,6 +5,7 @@ import java.util.Random;
 
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.Biome;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
@@ -17,21 +18,40 @@ import me.playground.items.BeanItem;
  * A LootEntry represents an instance of loot found within {@link LootTable}s.
  * LootEntry's have flags that can further determine the greatness of the ItemStack generated. For example;
  * <p>This entire class, and {@link LootEnchantEntry} utilise <b>Micro-Optimized</b> loops to ensure minimal delay.
- * Some of the flags listed below only apply to System2 loot calculations.
- * <li>{@link #FLAG_LOOTING} adds 1 to the maximum stack size per Looting Level.
- * <li>{@link #FLAG_LUCK} can affect the odds for getting better enchants, durability etc..
- * <li>{@link #FLAG_COMPRESS_STACK} means that the base stack information will be the same.
- * <li>{@link #FLAG_SKELETON_KILL} SYSTEM2: means that in order for this loot to drop, a skeleton has to have done the final blow.
- * <li>{@link #FLAG_CHARGED_CREEPER_KILL} SYSTEM2: means that in order for this loot to drop, a charged creeper has to have done the final blow.
  */
 public class LootEntry {
+	/**
+	 * Adds 1 to the maximum possible stack-size when generating the reward.
+	 */
 	private static final byte FLAG_LOOTING = 0; // 1
+	/**
+	 * Allows the Luck Potion Effect and various other things (eg. Luck of the Sea enchantments) affect the
+	 * odds of various additional variables when generating the reward. These variables include;
+	 * <li>Drop Chance
+	 * <li>Enchantment Chance
+	 * <li>Higher Enchantment Level Chance
+	 * <li>Higher Durability Chance
+	 */
 	private static final byte FLAG_LUCK = 1; // 2
+	/**
+	 * When saving and loading, a compressed ItemStack will be used.
+	 */
 	private static final byte FLAG_COMPRESS_STACK = 2; // 4
+	/**
+	 * Announces the reward to the player, alongside the % chance, in chat.
+	 */
 	private static final byte FLAG_ANNOUNCE = 3; // 8
 	
 	// System 2
+	/**
+	 * Requires the player to have caused a Skeleton to influence the drops.
+	 * <p>Only used in System2 checks.
+	 */
 	private static final byte FLAG_SKELETON_KILL = 4; // 16
+	/**
+	 * Requires the player to have caused a Charged Creeper to influence the drops.
+	 * <p>Only used in System2 checks.
+	 */
 	private static final byte FLAG_CHARGED_CREEPER_KILL = 5; // 32
 	
 	private final int id;
@@ -39,43 +59,51 @@ public class LootEntry {
 	private final ItemStack baseStack;
 	
 	private ArrayList<LootEnchantEntry> possibleEnchants = new ArrayList<LootEnchantEntry>();
+	private String descriptionOverride;
 	private LootTable tableRedirect;
+	private Material cookedMaterial;
+	
 	private short minDurability;
 	private short maxDurability;
 	
-	private byte flags = FLAG_LUCK + FLAG_LOOTING;
+	private byte flags = FLAG_LUCK;
 	
 	private byte minStack = 1;
 	private byte maxStack = 1;
-	private int chance;
+	private float chance;
+	private float luckEffectiveness;
 	private boolean dirty;
 	
-	public LootEntry(int id, LootTable tb, ItemStack itemStack, int chance) {
-		this(id, tb, itemStack, 1, 1, chance, null);
+	private ArrayList<Biome> requiredBiome = new ArrayList<Biome>();
+	
+	public LootEntry(int id, LootTable tb, ItemStack itemStack, float chance) {
+		this(id, tb, itemStack, null, 1, 1, chance, 0.2F, null);
 	}
 	
-	public LootEntry(int id, LootTable tb, BeanItem beanItem, int min, int max, int chance) {
-		this(id, tb, beanItem.getItemStack(), min, max, chance, null);
+	public LootEntry(int id, LootTable tb, BeanItem beanItem, int min, int max, float chance, float luckEffectiveness) {
+		this(id, tb, beanItem.getItemStack(), null, min, max, chance, luckEffectiveness, null);
 	}
 	
-	public LootEntry(int id, LootTable tb, ItemStack itemStack, int min, int max, int chance) {
-		this(id, tb, itemStack, min, max, chance, null);
+	public LootEntry(int id, LootTable tb, ItemStack itemStack, int min, int max, float chance, float luckEffectiveness) {
+		this(id, tb, itemStack, null, min, max, chance, luckEffectiveness, null);
 	}
 	
-	public LootEntry(int id, LootTable tb, ItemStack itemStack, int min, int max, int chance, JSONObject data) {
+	public LootEntry(int id, LootTable tb, ItemStack itemStack, Material cookedMaterial, int min, int max, float chance, float luckEffectiveness, JSONObject data) {
 		this.id = id;
 		this.table = tb;
 		this.baseStack = BeanItem.formatItem(itemStack);
 		setMaxStackSize(max);
 		setMinStackSize(min);
 		this.chance = chance;
+		this.luckEffectiveness = luckEffectiveness;
 		this.dirty = false;
+		this.cookedMaterial = cookedMaterial;
 		if (data != null)
 			this.applyJSON(data);
 	}
 	
-	public LootEntry(int id, LootTable tb, Material material, int min, int max, int chance) {
-		this(id, tb, new ItemStack(material, 1), min, max, chance, null);
+	public LootEntry(int id, LootTable tb, Material material, Material cookedMaterial, int min, int max, int chance, float luckEffectiveness) {
+		this(id, tb, new ItemStack(material, 1), cookedMaterial, min, max, chance, luckEffectiveness, null);
 	}
 	
 	public LootEntry setFlags(byte val) {
@@ -125,14 +153,17 @@ public class LootEntry {
 	 * <li>{@link #FLAG_LUCK} can affect the odds for getting better enchants, durability etc..
 	 * @return The cloned and modified reward ItemStack
 	 */
-	public ItemStack generateReward(int looting, float luck) {
+	public ItemStack generateReward(int looting, float luck, boolean burn) {
 		if (tableRedirect != null) {
-			if (tableRedirect.getEntries().size() > 0)
-				return tableRedirect.getRewardsFromSystem1(1, looting, luck).get(0);
+			if (tableRedirect.getEntries().size() > 1)
+				return LootRetriever.from(tableRedirect, RetrieveMethod.CUMULATIVE_CHANCE).getLoot().get(0);
 			return baseStack.clone();
 		}
 		
 		ItemStack clone = baseStack.clone();
+		if (burn && hasCookedVariant())
+			clone.setType(cookedMaterial);
+		
 		if (allowsLooting())
 			clone.setAmount(minStack + getRandom().nextInt(maxStack + looting - minStack + 1));
 		else if (minStack >= maxStack)
@@ -142,17 +173,20 @@ public class LootEntry {
 		
 		if (!this.possibleEnchants.isEmpty()) {
 			int size = possibleEnchants.size();
+			EnchantmentStorageMeta meta = (clone.getType() == Material.ENCHANTED_BOOK) ? (EnchantmentStorageMeta) clone.getItemMeta() : null;
+			
 			for (int x = -1; ++x < size;) {
 				LootEnchantEntry ench = possibleEnchants.get(x);
 				int levelGot = ench.getEnchantmentLevel(luck);
 				if (levelGot < 0) continue;
-				if (clone.getType() == Material.ENCHANTED_BOOK) {
-					EnchantmentStorageMeta meta = (EnchantmentStorageMeta) clone.getItemMeta();
-					meta.addEnchant(ench.getEnchantment(), levelGot+1, true);
-				} else {
+				if (meta != null)
+					meta.addStoredEnchant(ench.getEnchantment(), levelGot+1, true);
+				else
 					clone.addUnsafeEnchantment(ench.getEnchantment(), levelGot+1);
-				}
 			}
+			if (meta != null)
+				clone.setItemMeta(meta);
+			
 			clone = BeanItem.formatItem(clone);
 		}
 		
@@ -168,12 +202,22 @@ public class LootEntry {
 		return baseStack;
 	}
 	
-	public int getChance() {
+	/*
+	 * Get the effectiveness of Luck and Luck enchantments on the base chance.
+	 */
+	public float getLuckEffectiveness() {
+		return luckEffectiveness;
+	}
+	
+	public float getChance() {
 		return chance;
 	}
 	
-	public int getChance(float luck) {
-		return (int) (chance * (1F + (luck/5F))); // XXX: +20% on every single item per Luck Level.
+	public float getChance(float luck) {
+		if (!this.allowsLuck()) return chance;
+		float chanc = (chance + (luck * luckEffectiveness));
+		if (chanc < 0) chanc = 0F;
+		return chanc;
 	}
 	
 	public boolean allowsLooting() {
@@ -211,6 +255,14 @@ public class LootEntry {
 		return (flags & 1<<FLAG_CHARGED_CREEPER_KILL) != 0;
 	}
 	
+	public ArrayList<Biome> getRequiredBiomes() {
+		return requiredBiome;
+	}
+	
+	public boolean isBiomeExclusive() {
+		return requiredBiome != null && !requiredBiome.isEmpty();
+	}
+	
 	public boolean hasPossibleEnchants() {
 		return !this.possibleEnchants.isEmpty() && this.possibleEnchants.size() > 0;
 	}
@@ -238,6 +290,14 @@ public class LootEntry {
 		return this.tableRedirect;
 	}
 	
+	public boolean hasCookedVariant() {
+		return this.cookedMaterial != null;
+	}
+	
+	public Material getCookedMaterial() {
+		return this.cookedMaterial;
+	}
+	
 	/**
 	 * Can also function as a "getDurability()" of sorts if {@link #getMaxDurability()} is less than this.
 	 */
@@ -259,6 +319,14 @@ public class LootEntry {
 	
 	public int getId() {
 		return id;
+	}
+	
+	public boolean hasDescription() {
+		return this.descriptionOverride != null && !this.descriptionOverride.isEmpty();
+	}
+	
+	public String getDescription() {
+		return this.descriptionOverride;
 	}
 	
 	protected Random getRandom() {
@@ -321,6 +389,21 @@ public class LootEntry {
 	private LootEntry applyJSON(JSONObject data) {
 		if (data == null || data.isEmpty()) return this;
 		
+		this.descriptionOverride = data.optString("description").replace("\u00e2", ""); // stupid
+		
+		JSONArray biomes = data.optJSONArray("biomes");
+		if (biomes != null && !biomes.isEmpty()) {
+			int size = biomes.length();
+			for (int x = -1; ++x < size;) {
+				final String biomeStr = biomes.optString(x);
+				if (biomeStr == null || biomeStr.isEmpty()) continue;
+				
+				Biome biome = Biome.valueOf(biomeStr.toUpperCase());
+				if (biome != null)
+					this.requiredBiome.add(biome);
+			}
+		}
+		
 		String tbl = data.optString("table");
 		if (tbl != null && !tbl.isEmpty()) {
 			this.tableRedirect = getTable().getManager().getOrCreateTable(tbl);
@@ -377,7 +460,7 @@ public class LootEntry {
 			this.maxDurability = data.optNumber("maxDurability", 0).shortValue();
 			int max = BeanItem.getMaxDurability(getDisplayStack());
 			if (maxDurability > max)
-				maxDurability = (short) max; // TODO: Make getMaxDurability a short.
+				maxDurability = (short) max;
 		}
 		
 		return this;

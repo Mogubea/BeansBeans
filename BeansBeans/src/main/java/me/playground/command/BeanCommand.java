@@ -174,7 +174,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 			try {
 				Material m = Material.valueOf(str.toUpperCase());
 				if (m == null)
-					return null;
+					throw new IllegalArgumentException();
 				i = BeanItem.formatItem(new ItemStack(m));
 			} catch (IllegalArgumentException e) {
 				throw new CommandException(sender, "Unknown item '"+str+"'");
@@ -317,7 +317,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	}
 	
 	protected boolean isSafe(Location loc) {
-		if (loc.getBlock().getType() == Material.LAVA || loc.subtract(0,1,0).getBlock().isEmpty())
+		if (loc.getBlock().getType() == Material.LAVA || !(loc.subtract(0,0.2,0).getBlock().isEmpty()))
 			return false;
 		return true;
 	}

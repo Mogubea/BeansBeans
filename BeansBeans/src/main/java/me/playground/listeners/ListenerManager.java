@@ -21,7 +21,8 @@ public class ListenerManager {
 		pm.registerEvents(new BlockListener(pl), pl);
 		pm.registerEvents(new ShopListener(pl), pl);
 
-		pm.registerEvents(new BxpListener(), pl);
+		pm.registerEvents(new BxpListener(pl), pl);
+		pm.registerEvents(new JobListener(pl), pl);
 		pm.registerEvents(new BeanEnchantmentListener(), pl);
 		
 		pm.registerEvents(new CelestiaListener(), pl);

@@ -21,7 +21,6 @@ public class RecipesShaped {
 				.setIngredient('E', Material.EMERALD)
 				.setIngredient('g', Material.GOLD_BLOCK)
 				.setIngredient('W', Material.DARK_OAK_LOG);
-		
 	}
 	
 	private ShapedRecipe shapedRecipe(String name, ItemStack result, String...shape) {

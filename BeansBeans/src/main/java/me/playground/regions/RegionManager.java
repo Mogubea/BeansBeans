@@ -1,8 +1,9 @@
 package me.playground.regions;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -115,19 +116,20 @@ public class RegionManager {
 	
 	public Region getRegion(World world, int x, int y, int z) {
 		Region dominantRegion = getWorldRegion(world);
-		
-		for (Region region : getRegions(world, x, y, z))
-			if (dominantRegion == null || (region.getPriority() > dominantRegion.getPriority() || dominantRegion.isWorldRegion()))
-				dominantRegion = region;
+		List<Region> regions = getRegions(world, x, y, z);
+		if (!regions.isEmpty()) {
+			Collections.sort(regions);
+			dominantRegion = regions.get(0);
+		}
 		
 		return dominantRegion;
 	}
 	
-	public Collection<Region> getRegions(Location location) {
+	public List<Region> getRegions(Location location) {
 		return getRegions(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
 	}
 	
-	public Collection<Region> getRegions(World world, int x, int y, int z) {
+	public List<Region> getRegions(World world, int x, int y, int z) {
 		return getRegionMap(world).getRegions(x, y, z);
 	}
 	

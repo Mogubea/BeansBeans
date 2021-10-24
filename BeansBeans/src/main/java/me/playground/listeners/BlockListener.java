@@ -12,9 +12,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockFormEvent;
+import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockIgniteEvent.IgniteCause;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.persistence.PersistentDataType;
@@ -111,12 +114,6 @@ public class BlockListener extends EventListener {
 			}
 		}
 		
-		// Remove placed metadata for this boot cycle.
-		if (e.getBlock().hasMetadata("placed")) {
-			e.getBlock().removeMetadata("placed", getPlugin());
-			return;
-		}
-		
 		if (p.getGameMode() != GameMode.SURVIVAL)
 			return;
 		
@@ -142,12 +139,24 @@ public class BlockListener extends EventListener {
 		
 	}
 	
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onBlockBreakMeta(BlockBreakEvent e) {
+		// Remove placed metadata for this boot cycle.
+		if (e.getBlock().hasMetadata("placed")) {
+			e.getBlock().removeMetadata("placed", getPlugin());
+			return;
+		}
+	}
+	
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onExplosion(BlockExplodeEvent e) {
 		if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.EXPLOSIONS))
 			e.blockList().clear();
 	}
 	
+	/**
+	 * Blocks burning due to fire
+	 */
 	@EventHandler(priority = EventPriority.LOW)
 	public void onBurn(BlockBurnEvent e) {
 		e.setCancelled(true);
@@ -157,6 +166,39 @@ public class BlockListener extends EventListener {
 	public void onSpread(BlockIgniteEvent e) {
 		if (e.getCause() == IgniteCause.SPREAD)
 			e.setCancelled(true);
+	}
+	
+	/**
+	 * Effects blocks such as Vines and Mushrooms
+	 */
+	@EventHandler(priority = EventPriority.LOW)
+	public void onBlockSpread(BlockSpreadEvent e) {
+		if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.BLOCK_SPREAD))
+			e.setCancelled(true);
+	}
+	
+	/**
+	 * Effects blocks such as Wheat, Sugar Cane, Bamboo, Cactus, Watermelon, Pumpkins and Eggs.
+	 */
+	@EventHandler(priority = EventPriority.LOW)
+	public void onBlockGrow(BlockGrowEvent e) {
+		if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.BLOCK_SPREAD))
+			e.setCancelled(true);
+	}
+	
+	/**
+	 * Effects the formation of things like Obsidian, Ice and Snow Layers.
+	 * We're only checking for snow and ice here.
+	 */
+	@EventHandler(priority = EventPriority.LOW)
+	public void onBlockForm(BlockFormEvent e) {
+		if (e.getNewState().getType() == Material.SNOW) {
+			if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.SNOW_FORMATION))
+				e.setCancelled(true);
+		} else if (e.getNewState().getType() == Material.ICE) {
+			if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.ICE_FORMATION))
+				e.setCancelled(true);
+		}
 	}
 	
 }

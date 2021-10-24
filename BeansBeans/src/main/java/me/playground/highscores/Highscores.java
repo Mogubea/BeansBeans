@@ -7,11 +7,12 @@ public class Highscores {
 	public final static int UPDATE_INTERVAL = 1000 * 60 * 15;
 	private static int idx = 0;
 	
-	final public Highscore[] highscores = new Highscore[9];
+	final public Highscore[] highscores = new Highscore[10];
 	
 	public Highscores() {
 		for (SkillType skill : SkillType.values())
-			highscores[idx++] = new SkillHighscore(skill);
+			highscores[idx++] = new HighscoreSkills(skill);
+		highscores[idx++] = new HighscoreTotalSkill();
 	}
 	
 	public void updateStoredHighscores() {

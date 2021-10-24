@@ -63,7 +63,7 @@ public class DiscordCommandReport extends DiscordCommand {
 					
 					if (isLinked(e.getMember().getIdLong())) {
 						final ProfileStore deeb = getLinkedStore(e.getMember());
-						report.setFooter("Posted at " + df.format(date), "https://minotar.net/helm/"+deeb.getRealName()+"/100.png");
+						report.setFooter("Posted at " + df.format(date), DiscordBot.getIconURL(deeb.getId()));
 					} else {
 						report.setFooter("Posted at " + df.format(date), e.getMember().getUser().getAvatarUrl());
 					}
@@ -104,12 +104,12 @@ public class DiscordCommandReport extends DiscordCommand {
 						
 						if (isLinked(e.getMember().getIdLong())) {
 							final ProfileStore deeb = getLinkedStore(e.getMember());
-							report.setFooter("Posted at " + df.format(date), "https://minotar.net/helm/"+deeb.getRealName()+"/100.jpeg");
+							report.setFooter("Posted at " + df.format(date), DiscordBot.getIconURL(deeb.getId()));
 						} else {
 							report.setFooter("Posted at " + df.format(date), e.getMember().getUser().getAvatarUrl());
 						}
 						
-						report.setThumbnail("https://minotar.net/helm/"+target.getRealName()+"/100.jpeg");
+						report.setThumbnail(DiscordBot.getIconURL(target.getId()));
 						
 						getBot().getTextChannelById(getDiscord().getPlayerReportChatId()).sendMessageEmbeds(report.build()).queue((message) -> {
 							message.addReaction("U+1F3C1").queue(); // Solved

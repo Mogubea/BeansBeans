@@ -81,12 +81,12 @@ public class BeanGuiRegionMembers extends BeanGuiRegion {
                 	if (ps == null) {
                 		p.sendActionBar(Component.text("\u00a7cCouldn't find player '" + strings[0] + "'!"));
                 		throw new RuntimeException();
-                	} else if (getRegion().isMember(ps.getDBID())) {
+                	} else if (getRegion().isMember(ps.getId())) {
                 		p.sendActionBar(ps.getColouredName().append(Component.text("\u00a7c is already part of this region!")));
                 		throw new RuntimeException();
                 	}
                 	
-                	getRegion().addMember(ps.getDBID(), toAddLevel);
+                	getRegion().addMember(ps.getId(), toAddLevel);
                 	refreshRegionViewers();
                 	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.4F, 0.8F);
                 } catch (RuntimeException ex) {
@@ -106,7 +106,7 @@ public class BeanGuiRegionMembers extends BeanGuiRegion {
 				final boolean canPromote = index -1 > -1 && visibleLevels.get(index-1).lowerThan(myLevel);
 				final boolean canDemote = visibleLevels.get(index).lowerThan(myLevel);
 				final boolean isKick = e.isShiftClick() || visibleLevels.get(index) == MemberLevel.VISITOR;
-				final int id = ProfileStore.from(((TextComponent)e.getInventory().getItem(slot).getItemMeta().displayName()).content(), false).getDBID();
+				final int id = ProfileStore.from(((TextComponent)e.getInventory().getItem(slot).getItemMeta().displayName()).content(), false).getId();
 				if (id < 1) return;
 				
 				if (canPromote && e.isLeftClick()) {

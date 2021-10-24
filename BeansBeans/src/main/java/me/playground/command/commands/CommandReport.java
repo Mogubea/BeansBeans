@@ -15,11 +15,13 @@ import org.bukkit.entity.Player;
 
 import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
+import me.playground.discord.DiscordBot;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileStore;
 import me.playground.utils.TabCompleter;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.User;
 import net.kyori.adventure.text.Component;
 
 public class CommandReport extends BeanCommand {
@@ -46,7 +48,7 @@ public class CommandReport extends BeanCommand {
 			final EmbedBuilder report = new EmbedBuilder();
 			report.setColor(0xff367a);
 			report.setTitle("**Bug Report**");
-			report.addField("Reporter", isPlayer(sender) && getDiscord().isLinked(profile.getId()) ? getDiscord().bot().getUserById(getDiscord().linkedAccounts.get(profile.getId())).getAsMention() : sender.getName(), true);
+			report.addField("Reporter", getReporterString(sender, profile), true);
 			report.addField("Platform", "Minecraft Server", true);
 			report.addField("Status", "New", true);
 			report.addField("Last Updated", "<t:"+System.currentTimeMillis()/1000+":R>", false);
@@ -65,7 +67,7 @@ public class CommandReport extends BeanCommand {
 			if (!isPlayer(sender))
 				report.setFooter("Posted at " + df.format(date));
 			else
-				report.setFooter("Posted at " + df.format(date), "https://minotar.net/helm/"+profile.getRealName()+"/100.png");
+				report.setFooter("Posted at " + df.format(date), DiscordBot.getIconURL(profile.getId()));
 			
 			getDiscord().bot().getTextChannelById(getDiscord().getBugReportChatId()).sendMessageEmbeds(report.build()).queue((message) -> {
 				message.addReaction("U+1F3C1").queue(); // Fixed on Live
@@ -94,7 +96,7 @@ public class CommandReport extends BeanCommand {
 			final EmbedBuilder report = new EmbedBuilder();
 			report.setColor(0xff4222);
 			report.setTitle("**Player Report for \"" + target.getRealName() + "\"**");
-			report.addField("Reporter", isPlayer(sender) && getDiscord().isLinked(profile.getId()) ? getDiscord().bot().getUserById(getDiscord().linkedAccounts.get(profile.getId())).getAsMention() : sender.getName(), true);
+			report.addField("Reporter", getReporterString(sender, profile), true);
 			report.addField("Platform", "Minecraft Server", true);
 			report.addField("Status", "New", true);
 			report.addField("Last Updated", "<t:"+System.currentTimeMillis()/1000+":R>", false);
@@ -104,15 +106,12 @@ public class CommandReport extends BeanCommand {
 			final SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyy HH:mm:ss");
 			final Date date = new Date();
 			
-			if (!isPlayer(sender)) {
+			if (!isPlayer(sender))
 				report.setFooter("Posted at " + df.format(date));
-			} else if (getDiscord().isLinked(profile.getId())) {
-				report.setFooter("Posted at " + df.format(date), "https://minotar.net/helm/"+profile.getRealName()+"/100.png");
-			} else {
-				report.setFooter("Posted at " + df.format(date), getDiscord().bot().getUserById(getDiscord().linkedAccounts.get(profile.getId())).getAvatarUrl());
-			}
+			else
+				report.setFooter("Posted at " + df.format(date), DiscordBot.getIconURL(profile.getId()));
 			
-			report.setThumbnail("https://minotar.net/helm/"+target.getRealName()+"/100.jpeg");
+			report.setThumbnail(DiscordBot.getIconURL(target.getId()));
 			
 			getDiscord().bot().getTextChannelById(getDiscord().getPlayerReportChatId()).sendMessageEmbeds(report.build()).queue((message) -> {
 				message.addReaction("U+1F3C1").queue(); // Solved
@@ -124,6 +123,18 @@ public class CommandReport extends BeanCommand {
 			throw new CommandException(sender, "Invalid report category (player / bug).");
 		}
 		return true;
+	}
+	
+	private String getReporterString(CommandSender sender, PlayerProfile profile) {
+		String reporter = sender.getName();
+		if (isPlayer(sender) && getDiscord().isLinked(profile.getId())) {
+			User user = getDiscord().bot().getUserById(getDiscord().linkedAccounts.get(profile.getId()));
+			if (user == null)
+				user = getDiscord().bot().retrieveUserById(getDiscord().linkedAccounts.get(profile.getId())).complete();
+			if (user != null)
+				reporter = user.getAsMention();
+		}
+		return reporter;
 	}
 
 	@Override

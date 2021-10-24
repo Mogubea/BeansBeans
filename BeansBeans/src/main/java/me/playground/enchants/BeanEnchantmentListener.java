@@ -4,13 +4,31 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.player.PlayerFishEvent;
+import org.bukkit.event.player.PlayerFishEvent.State;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
 public class BeanEnchantmentListener implements Listener {
+	
+	@EventHandler(priority = EventPriority.NORMAL)
+	public void onFishMob(PlayerFishEvent e) {
+		if (e.getState() != State.CAUGHT_ENTITY) return;
+		
+		Player p = e.getPlayer();
+		ItemStack rod = p.getEquipment().getItemInMainHand();
+		if (rod.getType() != Material.FISHING_ROD)
+			rod = p.getEquipment().getItemInOffHand();
+		
+		if (!rod.containsEnchantment(BeanEnchantment.SEARING)) return;
+		
+		if (e.getCaught().getFireTicks() < 60)
+			e.getCaught().setFireTicks(60);
+	}
 	
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent e) {

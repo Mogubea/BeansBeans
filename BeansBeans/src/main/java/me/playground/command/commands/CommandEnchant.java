@@ -41,8 +41,10 @@ public class CommandEnchant extends BeanCommand {
 			throw new CommandException(sender, "You cannot enchant your hand!");
 		
 		final boolean canUnsafeEnchant = profile.isOwner();
-		final Enchantment e = Enchantment.getByKey(NamespacedKey.minecraft(args[0]));
+		Enchantment e = Enchantment.getByKey(NamespacedKey.minecraft(args[0]));
 		
+		if (e == null)
+			e = Enchantment.getByKey(Main.key(args[0]));
 		if (e == null)
 			throw new CommandException(sender, "Unknown enchantment '"+args[0]+"'");
 		

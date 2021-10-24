@@ -1,37 +1,36 @@
 package me.playground.gui;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 
-import me.playground.loot.LootEnchantEntry;
-import me.playground.loot.LootEntry;
 import me.playground.loot.LootTable;
 import me.playground.playerprofile.stats.StatType;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
 
 public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 	
 	// TODO: move all skulls to a class that holds them in non-static references maybe?
 	private final static LinkedHashMap<EntityType, ItemStack> creatureHeads = new LinkedHashMap<EntityType, ItemStack>();
 	private final static EntityType[] creatures;
-	private final static ItemStack notUnlocked = Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjM3MGNhNDdiNjE3M2FiNThlNmE4MDE4NDg2ZTJmOGJhYTgzOTdhYjYxNGFlMmU2OTY4NDkxOTZiYWE3YyJ9fX0=");
-	private final static ItemStack missingKill = newItem(notUnlocked, "\u00a7c???", "\u00a78Find and kill this mob to", "\u00a78add it to your Bestiary!");
-	private final static ItemStack missingLoot = newItem(notUnlocked, "\u00a7c???", "\u00a78Unlock information about this unknown", "\u00a78piece of loot by earning it first!");
-	private final static ItemStack blank2 = newItem(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), "");
+	private final ItemStack missingKill = newItem(notUnlocked, "\u00a7c???", "\u00a78Find and kill this mob to", "\u00a78add it to your Bestiary!");
+	protected final ItemStack whatIsThis = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("What is the Bestiary?", BeanColor.BESTIARY), "", 
+			"\u00a77The \u00a72Bestiary\u00a77 is an interface where",
+			"\u00a77you can view information about various",
+			"\u00a77mobs you've encountered on your adventure!",
+			"",
+			"\u00a77When viewing loot information, your \u00a7aLuck Level",
+			"\u00a77and \u00a7bLooting Enchantments\u00a77 will affect what's shown!",
+			"\u00a77 * \u00a7aLuck Level\u00a77 affects the \u00a7fChances\u00a77.",
+			"\u00a77 * \u00a7bLooting\u00a77 affects the \u00a7eMaximum Quantity\u00a77.");
 	
 	static {
 		creatureHeads.put(EntityType.BLAZE, Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjc4ZWYyZTRjZjJjNDFhMmQxNGJmZGU5Y2FmZjEwMjE5ZjViMWJmNWIzNWE0OWViNTFjNjQ2Nzg4MmNiNWYwIn19fQ=="));
@@ -71,7 +70,7 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 				blank2,null,null,null,null,null,null,null,blank2,
 				blank2,null,null,null,null,null,null,null,blank2,
 				blank2,blank2,blank2,blank2,blank2,blank2,blank2,blank2,blank2,
-				blank,blank,blank,blank,goBack,blank,blank,blank,blank
+				blank,blank,blank,whatIsThis,goBack,blank,blank,blank,blank
 		};
 	}
 
@@ -80,26 +79,13 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 
 	@Override
 	public void onInventoryClicked(InventoryClickEvent e) {
-		final ItemStack item = e.getClickedInventory().getItem(e.getSlot());
-		if (item == null) return;
-		
 		if (getEntityType() != null) {
-			if (p.hasPermission("bean.loot")) {
-				if (slotToLootId.containsKey(e.getRawSlot())) {
-					LootEntry entry = slotToLootId.get(e.getRawSlot());
-					if (entry == null) return; // The odds of a LootEntry vanishing while you're looking at it is unlikely, but not zero.
-					p.getInventory().addItem(entry.generateReward(p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS), pp.getLuck()));
-					p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.4F, 0.8F);
-				}
-			}
+			super.onInventoryClicked(e);
 		} else {
 			if (e.getRawSlot() >= creatures.length) return;
 			setEntityType(creatures[e.getRawSlot()]);
 		}
 	}
-	
-	// Purely for clicking to generate the loot lol, could maybe be done better but I think hashing slots -> lootEntry would be easier than doing wacky math every click.
-	private HashMap<Integer, LootEntry> slotToLootId = new HashMap<Integer, LootEntry>();
 	
 	@Override
 	public void onInventoryOpened() {
@@ -107,88 +93,8 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 		
 		// XXX: Statistics and information about the entity in question.
 		if (getEntityType() != null) {
-			slotToLootId.clear();
+			showLoot(contents, getPlugin().lootManager().getLootTable(getEntityType()), false, 2, 7);
 			contents[4] = newItem(creatureHeads.get(getEntityType()), Component.translatable(getEntityType().translationKey()).color(BeanColor.BESTIARY));
-			
-			LootTable table = getPlugin().lootManager().getLootTable(getEntityType());
-			if (table != null) {
-				int loots = table.getEntries().size();
-				int offset = (loots > 1) ? 21 : 22;
-				offset = 21 - (Math.floorDiv(loots-1, 4) * 1);
-				
-				float luckLevel = pp.getLuck();
-				
-				for (int e = -1; ++e < loots;) {
-					ItemStack entryDisplay;
-					ArrayList<Component> lore = new ArrayList<Component>();
-					int displaySlot = (e%7) + (Math.floorDiv(e, 7)*9) + offset;
-					int obtained = getStats().getStat(StatType.LOOT_EARNED, table.getEntries().get(e).getId()+"");
-					LootEntry entry = table.getEntries().get(e);
-					slotToLootId.put(displaySlot, entry);
-					
-					if (obtained > 0) {
-						int maxStack = entry.getMaxStackSize();
-						int lootingMax = (entry.allowsLooting() ? maxStack + p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS) : maxStack);
-						
-						entryDisplay = entry.getDisplayStack().clone();
-						
-						float chance = (float)entry.getChance()/10000;
-						float luckChance = (float)entry.getChance(entry.allowsLuck() ? luckLevel : 0)/10000;
-						float diff = luckChance-chance;
-						
-						lore.add(Component.text("\u00a77Chance: \u00a7f" + oneDec.format(luckChance) + "% " + (diff != 0 ? (diff > 0 ? "\u00a7a(+"+diff+")" : "\u00a7c(-"+diff+")") : "")));
-						
-						if (entry.hasTableRedirect()) {
-							lore.add(Component.text("\u00a77One of \u00a7f" + entry.getTableRedirect().getEntries().size() + "\u00a77 items."));
-						} else {
-							lore.add(Component.text("\u00a77Quantity: \u00a7e" + entry.getMinStackSize() + "\u00a77 - \u00a7e" + lootingMax
-									+ (lootingMax > maxStack ? " \u00a7r(+"+(lootingMax-maxStack)+")" : "")).decoration(TextDecoration.ITALIC, false).colorIfAbsent(BeanColor.ENCHANT));
-							
-							if (entryDisplay.getType().getMaxDurability() > 0) {
-								if (entry.getMinDurability() > 0) {
-									if (entry.hasDurabilityRange()) // Has a set range of durability in the loot entry
-										lore.add(Component.text("\u00a77Durability: \u00a7c" + entry.getMinDurability() + "\u00a77 - \u00a7a" + entry.getMaxDurability()));
-									else // Has a set durability in the loot entry
-										lore.add(Component.text("\u00a77Durability: \u00a7f" + entry.getMinDurability()));
-								}
-							}
-							
-							if (entry.hasPossibleEnchants()) {
-								int size = entry.getPossibleEnchants().size();
-								lore.add(Component.text("\u00a77Enchants: "));
-								for (int a = -1; ++a < size;) {
-									LootEnchantEntry ench = entry.getPossibleEnchants().get(a);
-									lore.add(Component.text("\u00a77 * ").append(Component.translatable(ench.getEnchantment().translationKey(), BeanColor.ENCHANT).decoration(TextDecoration.ITALIC, false)).append(Component.text(" \u00a77(\u00a7f"+oneDec.format(ench.getChance(luckLevel))+"%\u00a77)")));
-									
-									Component hell = Component.text("\u00a77  Levels: ");
-									
-									// TODO: update
-									for (int lvl = -1; ++lvl < ench.getEnchantment().getMaxLevel();)
-										hell = hell.append(Component.text("\u00a77[\u00a7r" + Utils.toRoman(lvl+1) + " \u00a77(\u00a7f" + oneDec.format(ench.getChanceOfLvl(lvl+1, luckLevel)) + "%\u00a77]").decoration(TextDecoration.ITALIC, false).color(BeanColor.ENCHANT));
-									lore.add(hell);
-								}
-							}
-						}
-						
-						lore.add(Component.text(""));
-						lore.add(Component.text("\u00a78\u00a7oObtained " + obtained + " times."));
-					} else {
-						entryDisplay = missingLoot;
-						if (entry.requiresChargedCreeper() || entry.requiresSkeletonShot()) // Only bother with the slow .clone() method if there's a reason for it.
-							entryDisplay = missingLoot.clone();
-						lore.addAll(missingLoot.lore());
-					}
-					
-					if (entry.requiresChargedCreeper())
-						lore.add(0, Component.text("\u00a77Requires a \u00a7bCharged Creeper"));
-					else if (entry.requiresSkeletonShot())
-						lore.add(0, Component.text("\u00a77Requries a \u00a7fSkeleton Arrow"));
-					
-					entryDisplay.lore(lore);
-					contents[displaySlot] = entryDisplay;
-				}
-			}
-			
 		// XXX: A list of the entities available to examine in the Beastiary.
 		} else {
 			int size = creatures.length;
@@ -207,7 +113,7 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 					ItemStack displayItem = newItem(creatureHeads.getOrDefault(creatures[x], notUnlocked), Component.translatable(creatures[x].translationKey(), BeanColor.BESTIARY), "",
 							"\u00a77Kills: \u00a7a" + df.format(getStats().getStat(StatType.KILLS, creatures[x].name())),
 							"\u00a77Loot Found: " + "\u00a7a" + obtained + "\u00a77/\u00a72" + loots,
-							Utils.getProgressBar('-', 16, obtained, loots, ChatColor.DARK_GRAY, ChatColor.GREEN) +  (obtained>=loots ? "\u00a76 " : "\u00a7a ") + oneDec.format((((float)obtained/(float)loots) * 100F)) + "%");
+							Utils.getProgressBar('-', 16, obtained, loots, ChatColor.DARK_GRAY, ChatColor.GREEN) +  (obtained>=loots ? "\u00a76 " : "\u00a7a ") + dec.format((((float)obtained/(float)loots) * 100F)) + "%");
 					contents[x] = displayItem;
 				} else { // Not
 					ItemStack displayItem = missingKill;
@@ -215,16 +121,6 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 				}
 			}
 		}
-		
-		contents[48] = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("What is the Bestiary?", BeanColor.BESTIARY), "", 
-				"\u00a77The \u00a72Bestiary\u00a77 is an interface where",
-				"\u00a77you can view information about various",
-				"\u00a77things you've encountered in your adventure!",
-				"",
-				"\u00a77When viewing loot information, your \u00a7aLuck Level",
-				"\u00a77and \u00a7bLooting Enchantments\u00a77 will affect what's shown!",
-				"\u00a77 * \u00a7aLuck Level\u00a77 affects the \u00a7fChances\u00a77.",
-				"\u00a77 * \u00a7bLooting\u00a77 affects the \u00a7eMaximum Quantity\u00a77.");
 		
 		i.setContents(contents);
 	}
@@ -240,27 +136,16 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 	
 	@Override
 	public boolean preInventoryClick(InventoryClickEvent e) {
-		e.setCancelled(true);
-		final ItemStack i = e.getClickedInventory().getItem(e.getSlot());
-		if (i != null) {
-			if (pp.onCdElseAdd("guiClick", 300))
-				return true;
-			
-			if (i.isSimilar(goBack)) {
-				if (getEntityType() != null)
-					setEntityType(null);
-				else
-					new BeanGuiMainMenu(p).openInventory();
-				return true;
-			} else if (i.isSimilar(nextPage)) {
-				pageUp();
-				return true;
-			} else if (i.isSimilar(prevPage)) {
-				pageDown();
-				return true;
-			}
+		if (e.getRawSlot() == 49 && !pp.onCdElseAdd("guiClick", 300)) {
+			e.setCancelled(true);
+			if (getEntityType() != null)
+				setEntityType(null);
+			else
+				new BeanGuiBestiary(p).openInventory();
+			return true;
 		}
-		return false;
+		
+		return super.preInventoryClick(e);
 	}
 	
 }

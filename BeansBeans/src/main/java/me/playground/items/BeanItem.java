@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -141,7 +142,7 @@ public class BeanItem {
 	private final static ArrayList<Integer> usedNumerics = new ArrayList<Integer>();
 	private static BeanItem[] items;
 	
-	public final static BeanItem FORMATTING_WAND = new BeanItem(2000000, "FORMATTING_WAND", "Formatting Wand", Material.GOLDEN_AXE, ItemRarity.UNTOUCHABLE, 1, 500) {
+	public final static BeanItem FORMATTING_WAND = new BItemDurable(2000000, "FORMATTING_WAND", "Formatting Wand", Material.GOLDEN_AXE, ItemRarity.UNTOUCHABLE, 1, 500) {
 		public ArrayList<Component> getCustomLore(ItemStack item) {
 			item.getItemMeta().setUnbreakable(true);
 			
@@ -172,7 +173,7 @@ public class BeanItem {
 		}
 	};
 	
-	public final static BeanItem DEFORMATTING_WAND = new BeanItem(2000001, "DEFORMATTING_WAND", "Deformatting Wand", Material.NETHERITE_AXE, ItemRarity.UNTOUCHABLE, 1, 500) {
+	public final static BeanItem DEFORMATTING_WAND = new BItemDurable(2000001, "DEFORMATTING_WAND", "Deformatting Wand", Material.NETHERITE_AXE, ItemRarity.UNTOUCHABLE, 1, 500) {
 		public ArrayList<Component> getCustomLore(ItemStack item) {
 			item.getItemMeta().setUnbreakable(true);
 			
@@ -221,7 +222,7 @@ public class BeanItem {
 	
 	public final static BeanItem SHOP_STAND = new BItemShopStand(0, "SHOP_STAND", "Shopping Stand", ItemRarity.RARE);
 	
-	public final static BeanItem TALARIANS = new BeanItem(3, "TALARIANS", "Lesser Talarians", Utils.getDyedLeather(Material.LEATHER_BOOTS, 0xFF8833), ItemRarity.RARE, 1, 176)
+	public final static BeanItem TALARIANS = new BItemDurable(3, "TALARIANS", "Lesser Talarians", Utils.getDyedLeather(Material.LEATHER_BOOTS, 0xFF8833), ItemRarity.RARE, 1, 176)
 			.setDefaultLore(
 					Component.text("While sprinting, slowly gather momentum", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false),
 					Component.text("up to a maximum bonus of ", NamedTextColor.GRAY).append(Component.text("+25% Movement", NamedTextColor.WHITE)).decoration(TextDecoration.ITALIC, false),
@@ -229,8 +230,19 @@ public class BeanItem {
 			.addAttribute(Attribute.GENERIC_ARMOR, 1, EquipmentSlot.FEET)
 			.addAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0.004, EquipmentSlot.FEET);
 	
+	public final static BeanItem CATS_PAW = new BItemFishingRodCatsPaw(500, "CATS_PAW", "Cat's Paw", ItemRarity.UNCOMMON, 1, 90);
+	
+	
 	public final static BeanItemHeirloom HL_MOCHI 			= new BItemHeirloomMochi(10000, "HL_MOCHI", "Mochi", ItemRarity.RARE);
 	public final static BeanItemHeirloom HL_ANCIENT_SKULL 	= new BItemHeirloomAncientSkull(10001, "HL_ANCIENT_SKULL", "Ancient Skull", ItemRarity.RARE);
+	
+	public final static BeanItem WOODEN_CRATE = new BItemPackage(19500, "WOODEN_CRATE", "Wooden Crate", ItemRarity.UNCOMMON, "crate_oak", 3, Material.OAK_PLANKS, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjYyMDUxOWI3NDUzNmMxZjg1YjdjN2U1ZTExY2U1YzA1OWMyZmY3NTljYjhkZjI1NGZjN2Y5Y2U3ODFkMjkifX19");
+	public final static BeanItem DEEP_OCEAN_CRATE = new BItemPackage(19501, "DEEP_OCEAN_CRATE", "Deep Ocean Crate", ItemRarity.RARE, "crate_deep", 4, Material.DARK_OAK_PLANKS, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTcxMTQwNjVhM2M5NWM1ZDIyNTE4OGFkN2JmZGFhOWI4YjA4NDVkZjRlMzZjMjRiNDUzNDdmZDc0NzBhNyJ9fX0=");
+	public final static BeanItem IRON_CRATE = new BItemPackage(19502, "METAL_CRATE", "Metal Crate", ItemRarity.RARE, "crate_iron", 3, Material.IRON_BLOCK, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzFhODE0NWFhY2Y1YzRjNjNmMmQwMjM4OGJmNDcxNGJiMDk2MWRjYjVhZjdlMTU4MTk5YjI1MTgzZWQ4NDFmZCJ9fX0=");
+	
+	//public final static BeanItem BIRCH_CRATE = new BItemPackage(19502, "BIRCH_CRATE", "Birch Crate", ItemRarity.UNCOMMON, "crate_birch", 3, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2I0ZTQ3OGMxMWNjZGZhNDUzMjk4NzQ3MjQ1ZTA0MjVlYzQyNTFlMTdmYjNlNjdkYmVjMTQxNzZjNjQ3MTcifX19");
+	//public final static BeanItem JUNGLE_CRATE = new BItemPackage(19503, "JUNGLE_CRATE", "Jungle Crate", ItemRarity.UNCOMMON, "crate_jungle", 3, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmNmNWIxY2ZlZDFjMjdkZDRjM2JlZjZiOTg0NDk5NDczOTg1MWU0NmIzZmM3ZmRhMWNiYzI1YjgwYWIzYiJ9fX0=");
+	//public final static BeanItem DARK_OAK_CRATE = new BItemPackage(19504, "DARK_OAK_CRATE", "Dark Oak Crate", ItemRarity.UNCOMMON, "crate_dark_oak", 3, "");
 	
 	public final static BeanItem SPIDER_HEAD = new BeanItem(20000, "SPIDER_HEAD", "Spider Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzg3YTk2YThjMjNiODNiMzJhNzNkZjA1MWY2Yjg0YzJlZjI0ZDI1YmE0MTkwZGJlNzRmMTExMzg2MjliNWFlZiJ9fX0=", ItemRarity.UNCOMMON);
 	public final static BeanItem BLAZE_HEAD = new BeanItem(20001, "BLAZE_HEAD", "Blaze Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjc4ZWYyZTRjZjJjNDFhMmQxNGJmZGU5Y2FmZjEwMjE5ZjViMWJmNWIzNWE0OWViNTFjNjQ2Nzg4MmNiNWYwIn19fQ==", ItemRarity.RARE);
@@ -244,7 +256,7 @@ public class BeanItem {
 	public final static BeanItem ENDERMAN_HEAD = new BeanItem(20009, "ENDERMAN_HEAD", "Enderman Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTZjMGIzNmQ1M2ZmZjY5YTQ5YzdkNmYzOTMyZjJiMGZlOTQ4ZTAzMjIyNmQ1ZTgwNDVlYzU4NDA4YTM2ZTk1MSJ9fX0=", ItemRarity.UNCOMMON);
 	
 	static {
-		items = itemsByName.values().toArray(new BeanItem[17]);
+		items = itemsByName.values().toArray(new BeanItem[0]);
 	}
 	
 	protected final byte[]		    bytes;
@@ -260,6 +272,7 @@ public class BeanItem {
 	protected final int				maxDurability;
 	protected final Multimap<Attribute, AttributeModifier> baseAttributes = HashMultimap.create();
 	protected final ArrayList<Component> baseLore = new ArrayList<Component>();
+	protected final Random		    random = Main.getInstance().getRandom();
 	
 	protected boolean 				enabled = true;
 	
@@ -416,7 +429,8 @@ public class BeanItem {
 		meta.getPersistentDataContainer().set(KEY_DURABILITY, PersistentDataType.INTEGER, newDura);
 		
 		lore.remove(lore.size() - 1);
-		lore.add(Component.text("\u00a77Durability: \u00a7f" + (newDura) + "\u00a77/\u00a7f" + (maxDura)));
+		lore.add(Component.text("Durability: ", NamedTextColor.GRAY).append(Component.text(""+newDura, NamedTextColor.WHITE).append(Component.text("/", NamedTextColor.GRAY)
+				.append(Component.text(""+maxDura, NamedTextColor.WHITE)))).decoration(TextDecoration.ITALIC, false));
 		meta.lore(lore);
 		Damageable metad = (Damageable) meta;
 		int newDmg = (int) (newDura == 0 ? base_maxDura : (base_maxDura - (((float)newDura/(float)maxDura) * base_maxDura)));
@@ -470,8 +484,8 @@ public class BeanItem {
 		
 		if (item.getType() == Material.ENCHANTED_BOOK) {
 			EnchantmentStorageMeta bmeta = (EnchantmentStorageMeta) meta;
-			rarity = EnchantmentInfo.rarityOf(bmeta.getStoredEnchants());
 			enchants = bmeta.getStoredEnchants();
+			rarity = EnchantmentInfo.rarityOf(enchants);
 		} else {
 			enchants = item.getEnchantments();
 		}
@@ -503,7 +517,7 @@ public class BeanItem {
 			meta.setAttributeModifiers(custom.getAttributes());
 		
 		ItemAttributes ia = ItemAttributes.fromItem(item);
-		final boolean att1 = ia != ItemAttributes.NIL;
+		final boolean att1 = ia != ItemAttributes.NIL && ia != ItemAttributes.FISHING_ROD;
 		final boolean att2 = meta.hasAttributeModifiers();
 		if (att1 || att2) {
 			final LinkedHashMap<String, Double> modifiers = new LinkedHashMap<String, Double>();
@@ -618,11 +632,17 @@ public class BeanItem {
 		return item;
 	}
 	
-	private static Component getRarityString(ItemRarity rarity, ItemStack item) {
+	protected static Component getRarityString(ItemRarity rarity, ItemStack item) {
 		final Material m = item.getType();
+		final BeanItem bi = BeanItem.from(item);
 		
-		if (BeanItemHeirloom.from(item) != null)
-			return rarity.toComponent().append(Component.text(" Heirloom"));
+		if (bi != null) {
+			if (bi instanceof BeanItemHeirloom)
+				return rarity.toComponent().append(Component.text(" Heirloom"));
+			if (bi instanceof BItemPackage)
+				return rarity.toComponent().append(Component.text(" Crate"));
+		}
+			
 		if (m.toString().endsWith("PICKAXE"))
 			return rarity.toComponent().append(Component.text(" Pickaxe"));
 		if (m.toString().endsWith("SWORD"))
@@ -735,6 +755,10 @@ public class BeanItem {
 	@Nonnull
 	public ItemStack getItemStack() {
 		return originalStack.clone();
+	}
+	
+	public Random getRandom() {
+		return this.random;
 	}
 	
 	private static NamespacedKey key(String key) {

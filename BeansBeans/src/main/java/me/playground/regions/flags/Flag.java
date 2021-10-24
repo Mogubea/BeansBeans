@@ -78,8 +78,11 @@ public abstract class Flag<T> {
 		return (F) this;
 	}
 	
+	/**
+	 * @return "bean.region.flag." + {@link #getName()}.
+	 */
 	public String getPermission() {
-		return getName();
+		return "bean.region.flag." + getName();
 	}
 	
 	public boolean needsPermission() {

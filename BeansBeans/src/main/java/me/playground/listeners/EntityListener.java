@@ -48,7 +48,9 @@ import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import me.playground.enchants.EnchantmentInfo;
 import me.playground.items.BeanItem;
 import me.playground.items.ItemRarity;
+import me.playground.loot.LootRetriever;
 import me.playground.loot.LootTable;
+import me.playground.loot.RetrieveMethod;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.stats.StatType;
@@ -244,6 +246,9 @@ public class EntityListener extends EventListener {
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onEntityDeath(EntityDeathEvent e) {
+		// Baby Animals don't drop anything.
+		if (e.getEntity() instanceof Animals && !((Animals)e.getEntity()).isAdult()) return;
+		
 		final LootTable lootTable = getPlugin().lootManager().getLootTable(e.getEntityType());
 		boolean chargedKill = false, skeletonKill = false, nerfDrops = true, isMonster = e.getEntity() instanceof Monster;
 		Player p = null;
@@ -311,7 +316,15 @@ public class EntityListener extends EventListener {
 			// Custom Loot
 			if (lootTable != null) {
 				e.getDrops().clear();
-				e.getDrops().addAll(lootTable.getRewardsFromSystem2(p, p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS), pp.getLuck(), skeletonKill, chargedKill));
+				e.getDrops().addAll(LootRetriever.from(lootTable, RetrieveMethod.INDIVIDUAL_CHANCE, p)
+						.looting(p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS))
+						.biome(e.getEntity().getLocation().getBlock().getBiome())
+						.burn(e.getEntity().getFireTicks() > 0)
+						.skeleton(skeletonKill)
+						.entity(e.getEntity())
+						.creeper(chargedKill)
+						.luck(pp.getLuck())
+						.getLoot());
 			}
 		}
 		// Vanilla Drops otherwise.
@@ -341,12 +354,14 @@ public class EntityListener extends EventListener {
 		e.getEntity().setItemStack(BeanItem.formatItem(item));
 	}
 	
-	@EventHandler
+	@EventHandler()
 	public void onEntityItemPickup(EntityPickupItemEvent e) {
 		if (e.getEntity() instanceof Player) {
 			PlayerProfile pp = PlayerProfile.from(((Player)e.getEntity()));
 			if (!pp.canPickupItem(e.getItem()))
 				e.setCancelled(true);
+		} else if (e.getEntity() instanceof Monster) { // Cancel hostile item pickups for now.
+			e.setCancelled(true);
 		}
 	}
 	

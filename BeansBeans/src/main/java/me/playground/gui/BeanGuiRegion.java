@@ -1,5 +1,6 @@
 package me.playground.gui;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.bukkit.Material;
@@ -36,7 +37,8 @@ public abstract class BeanGuiRegion extends BeanGui {
 		super(p);
 		
 		this.rm = Main.getRegionManager();
-		this.localRegions = (List<Region>) rm.getRegions(p.getLocation());
+		this.localRegions = rm.getRegions(p.getLocation());
+		Collections.sort(localRegions);
 		if (p.hasPermission("bean.region.override"))
 			this.localRegions.add(rm.getWorldRegion(p.getWorld()));
 		this.regionIdx = 0;

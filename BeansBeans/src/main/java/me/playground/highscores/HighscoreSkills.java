@@ -6,11 +6,11 @@ import java.util.Collections;
 import me.playground.data.Datasource;
 import me.playground.playerprofile.skills.SkillType;
 
-public class SkillHighscore extends Highscore {
+public class HighscoreSkills extends Highscore {
 
 	private final SkillType skill;
 	
-	public SkillHighscore(SkillType skill) {
+	public HighscoreSkills(SkillType skill) {
 		super(skill.name() + "_xp");
 		this.skill = skill;
 	}

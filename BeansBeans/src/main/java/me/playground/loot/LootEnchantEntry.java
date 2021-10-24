@@ -29,7 +29,7 @@ public class LootEnchantEntry {
 	 * @return level -1 if the chances fail.
 	 */
 	public int getEnchantmentLevel(float luck) {
-		if (nextFloat(101) > getChance(luck)) return -1;
+		if (getChance(luck) <= nextFloat(100)) return -1;
 		
 		float levelRand = nextFloat(generateCumulativeChance(luck));
 		final int size = levelChances.length;
@@ -141,6 +141,7 @@ public class LootEnchantEntry {
 	 * For slightly better accuracy than doing a nextInt((int) float).
 	 */
 	private float nextFloat(float bound) {
+		if (bound <= 0) return 0f;
 		return (float)entry.getRandom().nextInt((int)(bound * 100F)) / 100F;
 	}
 	

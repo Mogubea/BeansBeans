@@ -24,6 +24,7 @@ import me.playground.enchants.BeanEnchantment;
 import me.playground.gui.BeanGui;
 import me.playground.gui.BeanGuiBeanItems;
 import me.playground.gui.BeanGuiShop;
+import me.playground.gui.debug.BeanGuiDebug;
 import me.playground.items.BeanItem;
 import me.playground.main.Main;
 import me.playground.npc.NPC;
@@ -45,7 +46,7 @@ public class CommandOp extends BeanCommand {
 		description = "Operator Command.";
 	}
 
-	final String[] subCmds = { "commands", "customitems", "fixformatting", "guiprofile", "lockserver", "menuitem", "moltentouch", "openserver", "pissoff", "previewrank", "shops" };
+	final String[] subCmds = { "commands", "customitems", "debug", "fixformatting", "guiprofile", "lockserver", "menuitem", "moltentouch", "openserver", "pissoff", "previewrank", "shops" };
 	final String[] npcSubCmds = { "create", "list", "reload", "setskin", "tphere", "warpto", };
 	final String[] shopSubCmds = { "enable", "disable", "reload" };
 	final String[] shopReloadCmds = { "-f" };
@@ -59,6 +60,12 @@ public class CommandOp extends BeanCommand {
 		
 		final String cmdStr = args[0].toLowerCase();
 		final String subcmd = args.length>1 ? args[1].toLowerCase() : "";
+		
+		if ("debug".equals(cmdStr) && checkPlayer(sender)) {
+			new BeanGuiDebug(p).openInventory();
+			return true;
+		}
+			
 		
 		if ("lockserver".equals(cmdStr)) {
 			Main.setServerOpenState(1);
@@ -113,7 +120,7 @@ public class CommandOp extends BeanCommand {
 		
 		if (isPlayer(sender) && "npc".equals(cmdStr)) {
 			if (args.length==1) {
-				sender.sendMessage("\u00a7cSub-Commands: \u00a7f/op npc \u00a77create, list, warpto, reload, tphere");
+				sender.sendMessage("\u00a7cSub-Commands: \u00a7f/op npc \u00a77create, list, warpto, reload, tphere, settitle");
 				return true;
 			}
 			
@@ -165,6 +172,22 @@ public class CommandOp extends BeanCommand {
 				try {
 					npcManager.getEntityNPC(Integer.parseInt(args[2])).teleport(p.getLocation(), true);
 					sender.sendMessage("\u00a77Warped NPC to you!");
+				} catch (Exception e) { // NullPointerException and NumberFormatException
+					sender.sendMessage("\u00a7cAn NPC with the ID of '"+args[2]+"' does not exist!");
+				}
+			} else if ("settitle".equals(subcmd)) {
+				if (args.length<3) {
+					sender.sendMessage("\u00a7cUsage: \u00a7f/op npc "+subcmd+" \u00a77<id> <title>");
+					return true;
+				}
+				try {
+					Component title = args.length < 4 ? null : Component.text(args[3]);
+					NPC<?> npc = npcManager.getEntityNPC(Integer.parseInt(args[2]));
+					if (title != null)
+						npc.setTitle(title);
+					else
+						npc.removeTitle();
+					sender.sendMessage("\u00a77Title of NPC updated.");
 				} catch (Exception e) { // NullPointerException and NumberFormatException
 					sender.sendMessage("\u00a7cAn NPC with the ID of '"+args[2]+"' does not exist!");
 				}

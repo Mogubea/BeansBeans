@@ -27,7 +27,12 @@ public final class Flags {
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to access"),
 					Component.text("\u00a77containers such as chests, furnaces"),
-					Component.text("\u00a77and anvils."));
+					Component.text("\u00a77and brewing stands."));
+	public static final FlagMember 	ANVIL_ACCESS 	= register(new FlagMember("anvil-access", "Anvil Access", MemberLevel.MEMBER))
+			.setDescription(
+					Component.text("\u00a77Players equal to or above the designated"),
+					Component.text("\u00a79Membership Level\u00a77 will be able to access"),
+					Component.text("\u00a77and utilise the functionality of anvils."));
 	public static final FlagMember 	DOOR_ACCESS 		= register(new FlagMember("door-access", "Door Access", MemberLevel.VISITOR))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
@@ -92,6 +97,22 @@ public final class Flags {
 	/*
 	 * Misc
 	 */
+	public static final FlagBoolean ANVIL_DEGRADATION	= register(new FlagBoolean("anvil-degradation", "Anvil Degradation", true))
+			.setNeedsPermission()
+			.setDescription(
+					Component.text("\u00a77Anvils degrade when used by players."));
+	public static final FlagBoolean BLOCK_SPREAD		= register(new FlagBoolean("block-spread", "Block Spreading", true))
+			.setNeedsPermission()
+			.setDescription(
+					Component.text("\u00a77Blocks such as \u00a72vines\u00a77, \u00a7asugar canes"),
+					Component.text("\u00a77and \u00a7cmushrooms\u00a77 can grow and spread."));
+	public static final FlagBoolean SNOW_FORMATION		= register(new FlagBoolean("snow-form", "Form Snow Layers", true))
+			.setDescription(
+					Component.text("\u00a77Form \u00a7fSnow Layers\u00a77 when it's \u00a77Snowing\u00a77."));
+	public static final FlagBoolean ICE_FORMATION		= register(new FlagBoolean("ice-form", "Form Ice", true))
+			.setNeedsPermission()
+			.setDescription(
+					Component.text("\u00a77Automatically form \u00a7bIce Blocks\u00a77 in cold biomes."));
 	public static final FlagBoolean TNT					= register(new FlagBoolean("tnt", "Block Explosions", false))
 			.setDescription(
 					Component.text("\u00a77TNT and End Cystal Block Damage."));

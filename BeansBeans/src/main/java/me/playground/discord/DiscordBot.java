@@ -10,11 +10,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
 
 import javax.security.auth.login.LoginException;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 import club.minnced.discord.webhook.WebhookClient;
 import me.playground.data.Datasource;
@@ -53,18 +58,46 @@ public class DiscordBot extends ListenerAdapter {
 	
 	public final HashMap<Integer, Long> linkedAccounts = Datasource.grabLinkedDiscordAccounts();
 	
+	// Cache Icons for 30 minutes to reduce risk of rate limiting from source website.
+	// This may lead to skins not updating for 30 minutes, but that's not a big enough deal to worry about.
+	private static LoadingCache<Integer, Icon> iconCache = CacheBuilder.from("maximumSize=100,expireAfterAccess=30m")
+			.build(
+					new CacheLoader<Integer, Icon>() {
+						public Icon load(Integer playerId) throws Exception { // if the key doesn't exist, request it via this method
+							try {
+								InputStream image = new URL(getIconURL(playerId)).openStream();
+								return Icon.from(image);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							return null;
+						}
+					});
+	
+	/**
+	 * Grab the current {@link Icon} for the specified player from the cache.
+	 */
+	public Icon getHeadIcon(int playerId) {
+		try {
+			return iconCache.get(playerId);
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public static String getIconURL(int playerId) {
+		return "https://cravatar.eu/helmavatar/" + ProfileStore.from(playerId, false).getRealName()+"/64.png";
+	}
+	
 	public WebhookClient getWebhookClient(int playerId) {
 		if (lastId != playerId) {
 			final String name = ((TextComponent)ProfileStore.from(playerId, false).getColouredName()).content();
 			hook.getManager().setName(name);
-			InputStream image;
-			try {
-				image = new URL("https://minotar.net/helm/"+ProfileStore.from(playerId, false).getRealName()+"/100.png").openStream();
-				hook.getManager().setAvatar(Icon.from(image)).complete();
-				hook.getManager().submit();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			
+			Icon icon = getHeadIcon(playerId);
+			hook.getManager().setAvatar(icon).complete();
+			hook.getManager().submit();
 			lastId = playerId;
 		}
 		return chatClient;
@@ -258,7 +291,7 @@ public class DiscordBot extends ListenerAdapter {
 				
 				for (Player pl : Bukkit.getOnlinePlayers()) {
 					PlayerProfile ppl = PlayerProfile.from(pl);
-					if (isRank(e.getMember(), Rank.MODERATOR) || !ppl.getIgnoredPlayers().contains(ps.getDBID()))
+					if (isRank(e.getMember(), Rank.MODERATOR) || !ppl.getIgnoredPlayers().contains(ps.getId()))
 						pl.sendMessage(chat.colorIfAbsent(TextColor.color(0xabc5fa)));
 				}
 				getPlugin().getLogger().info("[DISCORD] " + name + ": " + msg);

@@ -26,7 +26,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 
-public class Region extends RegionBase implements Dirty {
+public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	
 	final protected RegionManager rm;
 	final private int creatorId;
@@ -275,6 +275,11 @@ public class Region extends RegionBase implements Dirty {
 	public boolean canModify(Player p) {
 		if (this.isWorldRegion()) return p.hasPermission("bean.region.override");
 		return p.hasPermission("bean.region.modifyothers") || getMember(p).higherThan(MemberLevel.OFFICER);
+	}
+
+	@Override
+	public int compareTo(Region otherRegion) {
+		return Integer.compare(otherRegion.getPriority(), getPriority());
 	}
 	
 }

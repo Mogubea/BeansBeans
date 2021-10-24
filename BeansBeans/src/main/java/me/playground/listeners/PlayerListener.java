@@ -18,9 +18,11 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
@@ -47,7 +49,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerFishEvent.State;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -62,12 +63,20 @@ import club.minnced.discord.webhook.WebhookClient;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import me.playground.celestia.logging.CelestiaAction;
 import me.playground.data.Datasource;
+import me.playground.enchants.BeanEnchantment;
 import me.playground.gui.BeanGui;
+import me.playground.items.BItemFishingRod;
 import me.playground.items.BeanItem;
+import me.playground.listeners.events.PlayerInteractNPCEvent;
+import me.playground.listeners.events.PlayerRightClickHarvestEvent;
+import me.playground.loot.LootRetriever;
+import me.playground.loot.LootTable;
+import me.playground.loot.RetrieveMethod;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.settings.PlayerSetting;
 import me.playground.playerprofile.skills.BxpValues;
+import me.playground.playerprofile.skills.SkillData;
 import me.playground.playerprofile.skills.SkillType;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
@@ -88,8 +97,8 @@ public class PlayerListener extends EventListener {
 	public PlayerListener(Main plugin) {
 		super(plugin);
 		
-		advancementCoins.put(plugin.key("deepslateemeraldore"), 500);
-		advancementCoins.put(plugin.key("minerscollection"), 500);
+		advancementCoins.put(Main.key("deepslateemeraldore"), 500);
+		advancementCoins.put(Main.key("minerscollection"), 500);
 	}
 	
 	@EventHandler
@@ -127,7 +136,7 @@ public class PlayerListener extends EventListener {
 						PlayerProfile prof = PlayerProfile.from(ping);
 						pinged.add(ping.getUniqueId()); // Add player to the pinged list so we can colour the message a bit more too.
 						if (prof.isSettingEnabled(PlayerSetting.PING_SOUNDS))
-							ping.playSound(ping.getLocation(), Sound.BLOCK_AMETHYST_CLUSTER_HIT, 0.25F, 0.7F);
+							ping.playSound(ping.getLocation(), Sound.BLOCK_AMETHYST_CLUSTER_HIT, 0.3F, 0.7F);
 						newMessage = newMessage.append(Component.text("@").color(prof.getNameColour()).append(prof.getComponentName()).append(Component.text(" ")));
 					} catch (Exception ex) {
 						newMessage = newMessage.append(Component.text(word + " "));
@@ -283,7 +292,14 @@ public class PlayerListener extends EventListener {
 						if (r.getEffectiveFlag(Flags.DOOR_ACCESS).higherThan(r.getMember(p)))
 							error = "You don't have permission to open doors here.";
 					} else if (bm.name().endsWith("ANVIL")) {
-						error = "You don't have permission to use anvils here.";
+						if (r.getEffectiveFlag(Flags.ANVIL_ACCESS).higherThan(r.getMember(p))) {
+							error = "You don't have permission to use anvils here.";
+						// Handle anvil unbreakable flag by giving the Player a fake Anvil GUI.
+						} else if (!r.getEffectiveFlag(Flags.ANVIL_DEGRADATION)) {
+							e.setCancelled(true);
+							p.openAnvil(p.getLocation(), true);
+							return;
+						}
 					} else if (bm == Material.FLOWER_POT || bm.name().startsWith("POTTED")) {
 						error = "You don't have permission to decorate here.";
 					} else if (bm == Material.NOTE_BLOCK) {
@@ -335,7 +351,7 @@ public class PlayerListener extends EventListener {
 		}
 	}
 	
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onRightClick(PlayerInteractEvent e) {
 		ItemStack item = e.getItem();
 		
@@ -398,6 +414,12 @@ public class PlayerListener extends EventListener {
 						p.sendActionBar(Component.text("\u00a7cYou don't have permission to harvest crops here."));
 						return;
 					}
+					
+					PlayerRightClickHarvestEvent event = new PlayerRightClickHarvestEvent(e.getPlayer(), e.getItem(), e.getClickedBlock(), e.getBlockFace());
+					Bukkit.getServer().getPluginManager().callEvent(event);
+					
+					if (event.isCancelled())
+						return;
 					
 					for (ItemStack i : b.getDrops()) {
 						i.setAmount(Math.max(1, i.getAmount()-1));
@@ -578,25 +600,67 @@ public class PlayerListener extends EventListener {
 		}
 	}
 	
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onConsume(PlayerItemConsumeEvent e) {
 		PlayerProfile.from(e.getPlayer()).getHeirlooms().doPlayerItemConsumeEvent(e);
 	}
 	
-	/**
-	 * Protect animals and villagers from being reeled - {@link Flags#PROTECT_ANIMALS}.
-	 */
 	@EventHandler(priority = EventPriority.LOW)
 	public void onPlayerFish(PlayerFishEvent e) {
-		if (e.getState() != State.CAUGHT_ENTITY) return;
-		if (!(e.getCaught() instanceof Animals || e.getCaught() instanceof Villager)) return;
-		
 		final Player p = e.getPlayer();
-		final Region r = getRegionAt(e.getCaught().getLocation());
-		if (r.getEffectiveFlag(Flags.PROTECT_ANIMALS) && r.getMember(p).lowerThan(MemberLevel.MEMBER)) {
-			p.sendActionBar(Component.text("\u00a7cYou don't have permission to fish animals here."));
-			e.setCancelled(true);
+		
+		switch(e.getState()) {
+		case CAUGHT_ENTITY: // Protect animals and villagers from being reeled
+			if (!(e.getCaught() instanceof Animals || e.getCaught() instanceof Villager)) return;
+			
+			final Region r = getRegionAt(e.getCaught().getLocation());
+			if (r.getEffectiveFlag(Flags.PROTECT_ANIMALS) && r.getMember(p).lowerThan(MemberLevel.MEMBER)) {
+				p.sendActionBar(Component.text("\u00a7cYou don't have permission to fish animals here."));
+				e.getHook().remove();
+				e.setCancelled(true);
+			}
+			break;
+		default:
+			break;
 		}
+	}
+	
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onPlayerFishing(PlayerFishEvent e) {
+		final Player p = e.getPlayer();
+		
+		BeanItem bi = BeanItem.from(p.getInventory().getItemInMainHand());
+		if (bi instanceof BItemFishingRod)
+			((BItemFishingRod)bi).onFish(e);
+		
+		if (e.isCancelled()) return;
+		
+		switch(e.getState()) {
+		case CAUGHT_FISH: // Fishing
+			Item caught = (Item) e.getCaught();
+			final LootTable table = getPlugin().lootManager().getLootTable("fishing");
+			ItemStack rod = p.getInventory().getItemInMainHand();
+			if (rod.getType() != Material.FISHING_ROD)
+				rod = p.getInventory().getItemInOffHand();
+			
+			if (table != null)
+				caught.setItemStack(LootRetriever.from(table, RetrieveMethod.CUMULATIVE_CHANCE, p)
+						.luck(PlayerProfile.from(p).getLuck() + rod.getEnchantmentLevel(Enchantment.LUCK))
+						.biome(e.getHook().getLocation().getBlock().getBiome())
+						.burn(rod.getEnchantmentLevel(BeanEnchantment.SEARING) > 0)
+						.getLoot().get(0));
+			
+			SkillData sd = PlayerProfile.from(e.getPlayer()).getSkills();
+			sd.addXp(SkillType.FISHING, 43 * e.getExpToDrop());
+			break;
+		default:
+			break;
+		}
+	}
+	
+	@EventHandler
+	public void onNPCInteract(PlayerInteractNPCEvent e) {
+		e.getPlayer().sendMessage("That's an NPC (DBID: "+e.getNPC().getDatabaseId()+")!");
 	}
 	
 	private boolean hasGmPerm(Player p, GameMode gm) {

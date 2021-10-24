@@ -8,7 +8,10 @@ import java.util.Map.Entry;
 import org.bukkit.enchantments.Enchantment;
 
 import me.playground.items.ItemRarity;
+import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 
 public enum EnchantmentInfo {
 	
@@ -31,8 +34,8 @@ public enum EnchantmentInfo {
 	LOOT_BONUS_MOBS(Enchantment.LOOT_BONUS_MOBS, 1F, 1F),
 	LOOT_BONUS_BLOCKS(Enchantment.LOOT_BONUS_BLOCKS, 1F, 1.25F),
 	LOYALTY(Enchantment.LOYALTY, 3F, 0.5F),
-	LUCK(Enchantment.LUCK, 1F, 1F),
-	LURE(Enchantment.LURE, 1F, 1F),
+	LUCK(Enchantment.LUCK, 1F, 1.5F),
+	LURE(Enchantment.LURE, 1F, 1.5F),
 	MENDING(Enchantment.MENDING, 10F),
 	MULTISHOT(Enchantment.MULTISHOT, 4F),
 	OXYGEN(Enchantment.OXYGEN, 1F, 0.5F),
@@ -50,7 +53,8 @@ public enum EnchantmentInfo {
 	THORNS(Enchantment.THORNS, 0.3F, 0.4F),
 	WATER_WORKER(Enchantment.WATER_WORKER, 3.5F),
 	
-	MOLTEN_TOUCH(BeanEnchantment.MOLTEN_TOUCH, 10F);
+	MOLTEN_TOUCH(BeanEnchantment.MOLTEN_TOUCH, 10F),
+	SEARED(BeanEnchantment.SEARING, 3F);
 	
 	private final Enchantment enchant;
 	private final float value; // Base value for rarity calculation
@@ -72,11 +76,13 @@ public enum EnchantmentInfo {
 		for (Entry<Enchantment, Integer> ench : enchants.entrySet()) {
 			EnchantmentInfo ei = valueOf(ench.getKey());
 			totalValue += ei.getBaseValue() + (ei.getPerLevelValue() * (ench.getValue()-1));
+			if (ench.getValue() > ench.getKey().getMaxLevel())
+				totalValue *= 2;
 		}
 		
-		if (totalValue >= 30)
+		if (totalValue >= 35)
 			return ItemRarity.LEGENDARY;
-		if (totalValue >= 20)
+		if (totalValue >= 22)
 			return ItemRarity.EPIC;
 		if (totalValue >= 10)
 			return ItemRarity.RARE;
@@ -104,6 +110,10 @@ public enum EnchantmentInfo {
 	public static List<Component> loreOf(Enchantment ench, int level) {
 		if (ench.equals(BeanEnchantment.MOLTEN_TOUCH))
 			return Arrays.asList(Component.text("\u00a77 Automatically \u00a76smelt\u00a77 blocks at"), Component.text("\u00a77 the cost of \u00a7c2\u00a77 durability"));
+		if (ench.equals(BeanEnchantment.SEARING))
+			return Arrays.asList(
+					Component.text(" Automatically cooks all fish caught", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false),
+					Component.text(" and sets caught mobs on fire", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
 		if (ench.equals(Enchantment.ARROW_DAMAGE))
 			return Arrays.asList(Component.text("\u00a77 Increases arrow damage by \u00a7c"+(25+(25*level))+"%"));
 		if (ench.equals(Enchantment.ARROW_FIRE))
@@ -143,7 +153,7 @@ public enum EnchantmentInfo {
 		if (ench.equals(Enchantment.LOYALTY))
 			return Arrays.asList(Component.text("\u00a77 Will return after being thrown once"), Component.text("\u00a77 a short amount of time has passed"));
 		if (ench.equals(Enchantment.LUCK))
-			return Arrays.asList(Component.text("\u00a77 Increases the chance of finding"), Component.text("\u00a77 treasure by \u00a7a" + (2*level) + "%"));
+			return Arrays.asList(Component.text("\u00a77 Affects fishing loot similarly to "), Component.text("\u00a77 having the \u00a7aLuck " + Utils.toRoman(level) + "\u00a77 status effect"));
 		if (ench.equals(Enchantment.LURE))
 			return Arrays.asList(Component.text("\u00a77 Decreases the wait time for catching"), Component.text("\u00a77 something by \u00a7a" + (5*level) + "\u00a77 seconds"));
 		if (ench.equals(Enchantment.MENDING))

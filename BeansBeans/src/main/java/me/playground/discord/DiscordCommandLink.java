@@ -32,7 +32,7 @@ public class DiscordCommandLink extends DiscordCommand {
 			ProfileStore deeb = getLinkedStore(e.getMember());
 			eb.setColor(0x44ddff);
 			eb.appendDescription("You are currently linked to **" + deeb.getDisplayName() + "**");
-			eb.setThumbnail("https://minotar.net/helm/"+deeb.getRealName()+"/100.jpeg");
+			eb.setThumbnail(DiscordBot.getIconURL(deeb.getId()));
 		} else {
 			final String playerName = e.getOption("ign").getAsString();
 			final Player p = Utils.playerPartialMatch(playerName);

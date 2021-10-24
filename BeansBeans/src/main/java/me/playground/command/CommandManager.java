@@ -10,6 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.Plugin;
 
+import me.playground.command.commands.CommandCivilization;
 import me.playground.command.commands.CommandEnchant;
 import me.playground.command.commands.CommandEnderchest;
 import me.playground.command.commands.CommandGamemode;
@@ -37,6 +38,7 @@ import me.playground.command.commands.CommandWho;
 import me.playground.command.commands.CommandWorld;
 import me.playground.command.commands.CommandWorldSpawn;
 import me.playground.command.commands.small.CommandBestiary;
+import me.playground.command.commands.small.CommandCSpawn;
 import me.playground.command.commands.small.CommandFly;
 import me.playground.command.commands.small.CommandGod;
 import me.playground.command.commands.small.CommandHeirloom;
@@ -82,6 +84,7 @@ public class CommandManager {
 		registerCommand(new CommandFly(plugin));
 		registerCommand(new CommandGod(plugin));
 		registerCommand(new CommandSpawn(plugin));
+		registerCommand(new CommandCSpawn(plugin));
 		registerCommand(new CommandMenu(plugin));
 		registerCommand(new CommandEnderchest(plugin));
 		registerCommand(new CommandHeirloom(plugin));
@@ -106,9 +109,11 @@ public class CommandManager {
 		registerCommand(new CommandHug(plugin));
 		registerCommand(new CommandReport(plugin));
 		registerCommand(new CommandWorldSpawn(plugin));
+		registerCommand(new CommandCivilization(plugin));
 		plugin.getLogger().info("Registered " + myCommands.size() + " commands in " + (System.currentTimeMillis()-mili) + "ms");
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void registerCommand(BeanCommand cmd) {
 		String[] aliases = cmd.getAliases();
 		PluginCommand command = null;

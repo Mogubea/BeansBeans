@@ -8,18 +8,21 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.player.PlayerFishEvent;
-import org.bukkit.event.player.PlayerFishEvent.State;
 
+import me.playground.listeners.EventListener;
+import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.MaterialHelper;
 
-public class BxpListener implements Listener {
+public class BxpListener extends EventListener {
 	
-	@EventHandler(priority = EventPriority.HIGHEST)
+	public BxpListener(Main plugin) {
+		super(plugin);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onBlockPlace(BlockPlaceEvent e) {
 		if (e.isCancelled())
 			return;
@@ -28,7 +31,7 @@ public class BxpListener implements Listener {
 			sd.addXp(SkillType.BUILDING, 8); // XXX: expand
 	}
 	
-	@EventHandler(priority = EventPriority.HIGHEST)
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onMobAttack(EntityDamageByEntityEvent e) {
 		if (e.isCancelled())
 			return;
@@ -72,14 +75,6 @@ public class BxpListener implements Listener {
 		SkillData sd = PlayerProfile.from(p).getSkills();
 		sd.addXp(SkillType.COMBAT,(int)(damage * mult));
 		
-	}
-	
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerFish(PlayerFishEvent e) {
-		if (e.getState() != State.CAUGHT_FISH) return;
-		
-		SkillData sd = PlayerProfile.from(e.getPlayer()).getSkills();
-		sd.addXp(SkillType.FISHING, 43 * e.getExpToDrop());
 	}
 	
 }

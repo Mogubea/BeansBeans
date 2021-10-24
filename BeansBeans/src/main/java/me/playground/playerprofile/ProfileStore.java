@@ -68,7 +68,7 @@ public class ProfileStore {
 		return uuid;
 	}
 
-	public int getDBID() {
+	public int getId() {
 		return dbid;
 	}
 

@@ -63,7 +63,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 					return;
 				}
 			} else {
-				p.sendActionBar(Component.text("\u00a7cYou don't have enough coins to rename a region!"));
+				p.sendActionBar(Component.text("\u00a7cYou don't have permission to rename regions."));
 				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
 				return;
 			}

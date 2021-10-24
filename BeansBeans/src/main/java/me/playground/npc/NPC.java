@@ -3,12 +3,17 @@ package me.playground.npc;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.ArmorStand.LockType;
+import org.bukkit.inventory.EquipmentSlot;
 import org.json.JSONObject;
 
 import me.playground.main.IPluginRef;
 import me.playground.main.Main;
 import me.playground.utils.Utils;
+import net.kyori.adventure.text.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityHeadRotation;
@@ -22,6 +27,8 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	protected int creatorId;
 	final protected Main plugin;
 	final protected T entity;
+	
+	private ArmorStand titleEntity;
 	
 	public NPC(Main plugin, T entity, Location location) {
 		this(-1, plugin, entity, location);
@@ -152,6 +159,30 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	protected void refresh() {
 		this.hideFromAll();
 		this.showToAll();
+	}
+	
+	public void removeTitle() {
+		if (titleEntity != null) 
+			titleEntity.remove();
+	}
+	
+	public void setTitle(Component title) {
+		if (getTitleStand() != null) { titleEntity.remove(); }
+		titleEntity = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
+		titleEntity.setInvisible(true);
+		titleEntity.setInvulnerable(true);
+		titleEntity.setGravity(false);
+		titleEntity.setBasePlate(false);
+		titleEntity.addEquipmentLock(EquipmentSlot.HEAD, LockType.REMOVING_OR_CHANGING);
+		titleEntity.addEquipmentLock(EquipmentSlot.CHEST, LockType.REMOVING_OR_CHANGING);
+		titleEntity.addEquipmentLock(EquipmentSlot.LEGS, LockType.REMOVING_OR_CHANGING);
+		titleEntity.addEquipmentLock(EquipmentSlot.FEET, LockType.REMOVING_OR_CHANGING);
+		titleEntity.customName(title);
+		titleEntity.setCustomNameVisible(true);
+	}
+	
+	protected ArmorStand getTitleStand() {
+		return this.titleEntity;
 	}
 	
 	@Override

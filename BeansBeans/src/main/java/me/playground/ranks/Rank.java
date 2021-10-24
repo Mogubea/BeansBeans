@@ -1,5 +1,6 @@
 package me.playground.ranks;
 
+import me.playground.regions.flags.Flags;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -42,6 +43,7 @@ public enum Rank {
 			"bean.cmd.teleport.others",
 			"bean.cmd.home.others",
 			"bean.region.modifyothers",
+			Flags.BLOCK_SPREAD.getPermission(),
 			"bean.gm.moderator"),
 	ADMINISTRATOR(90, 0x3378FF, 500, 546771706769965070L,
 			"bean.cmd.tocoord",
@@ -57,13 +59,15 @@ public enum Rank {
 			"bean.cmd.gamemode.others",
 			"bean.cmd.i",
 			"bean.region.override",
-			"bean.region.flag.pvp",
-			"bean.region.flag.keep-inventory",
-			"bean.region.flag.mob-damage-from",
-			"bean.region.flag.mob-damage-to",
-			"bean.region.flag.mob-exp-drop-mult",
-			"bean.region.flag.mob-coin-drop-mult",
-			"bean.region.flag.mob-item-drop-mult",
+			Flags.PVP.getPermission(),
+			Flags.KEEP_INVENTORY.getPermission(),
+			Flags.MOB_DAMAGE_FROM.getPermission(),
+			Flags.MOB_DAMAGE_TO.getPermission(),
+			Flags.MOB_DROP_EXP.getPermission(),
+			Flags.MOB_DROP_COIN.getPermission(),
+			Flags.MOB_DROP_ITEM.getPermission(),
+			Flags.ANVIL_DEGRADATION.getPermission(),
+			Flags.ICE_FORMATION.getPermission(),
 			"bean.shop.override",
 			"bean.gm.spectator",
 			"bean.gm.creative"),

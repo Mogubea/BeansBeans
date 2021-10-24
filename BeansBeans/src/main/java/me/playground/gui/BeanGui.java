@@ -230,6 +230,6 @@ public abstract class BeanGui implements IPluginRef {
 	}
 	
 	protected final DecimalFormat df = new DecimalFormat("#,###");
-	protected final DecimalFormat oneDec = new DecimalFormat("#.#");
+	protected final DecimalFormat dec = new DecimalFormat("#.##");
 	
 }

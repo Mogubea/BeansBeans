@@ -131,15 +131,25 @@ public class BeanGuiSkills extends BeanGui {
 			headMeta.displayName(Component.text(skill.getDisplayName() + " Leaderboard:"));
 			
 			List<Component> scoreLore = new ArrayList<Component>();
-			final Highscore highscore = Main.getInstance().highscores.highscores[page];
+			final Highscore highscore = getPlugin().highscores.highscores[page];
+			boolean hasViewer = false;
 			scoreLore.add(Component.text(""));
-			for (Integer peep : highscore.getOrder())
+			for (int x = -1; ++x < 8;) {
+				int peep = highscore.getOrder().get(x);
+				if (peep == tpp.getId()) 
+					hasViewer = true;
 				scoreLore.add(Component.text("\u00a78" + highscore.getPositionOf(peep) + ". ").append(PlayerProfile.getDisplayName(peep).decoration(TextDecoration.ITALIC, false)).append(Component.text("\u00a78 with \u00a77" + highscore.getScoreOf(peep) + "\u00a77 xp")));
+			}
+			
+			if (!hasViewer) {
+				int peep = tpp.getId();
+				scoreLore.add(Component.text("\u00a78..."));
+				scoreLore.add(Component.text("\u00a78" + highscore.getPositionOf(peep) + ". ").append(PlayerProfile.getDisplayName(peep).decoration(TextDecoration.ITALIC, false)).append(Component.text("\u00a78 with \u00a77" + highscore.getScoreOf(peep) + "\u00a77 xp")));
+			}
 			
 			headMeta.lore(scoreLore);
 			head.setItemMeta(headMeta);
 			contents[0] = head;
-			
 			
 			// Highscore Head End
 			

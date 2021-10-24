@@ -1,6 +1,7 @@
 package me.playground.main;
 
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.UUID;
@@ -20,6 +21,7 @@ import me.playground.enchants.BeanEnchantment;
 import me.playground.highscores.Highscores;
 import me.playground.items.BeanItem;
 import me.playground.listeners.ListenerManager;
+import me.playground.listeners.protocol.ProtocolNPCListener;
 import me.playground.loot.LootManager;
 import me.playground.npc.NPCManager;
 import me.playground.playerprofile.PlayerProfile;
@@ -34,6 +36,8 @@ import me.playground.utils.SignMenuFactory;
 import me.playground.utils.Utils;
 import me.playground.warps.WarpManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
+import net.kyori.adventure.title.Title.Times;
 
 public class Main extends JavaPlugin {
 
@@ -56,8 +60,10 @@ public class Main extends JavaPlugin {
 
 	public void onEnable() {
 		instance = this;
+		registerEnchantments();
 		
 		this.signMenuFactory = new SignMenuFactory(this);
+		new ProtocolNPCListener(this);
 		
 		Datasource.init(this);
 		
@@ -84,10 +90,10 @@ public class Main extends JavaPlugin {
 		// Register Listeners
 		new ListenerManager(this);
 		
+		Datasource.loadAllCivilizations();
+		
 		// Load rando magic	
-		registerEnchantments();
 		registerProtocol();
-		recipeManager = new RecipeManager(this);
 		
 		getLogger().fine("Loaded " + BeanItem.values().length + " Custom Items");
 
@@ -95,18 +101,18 @@ public class Main extends JavaPlugin {
 		// System.out.println("TEST 1: profile id for "+testId+" is: " +
 		// PlayerProfile.from(testId).getId() + " loaded!");
 		
+		recipeManager = new RecipeManager(this);
 		discordBot = new DiscordBot(this);
 		
 		startMainServerLoop();
 	}
 
-	@SuppressWarnings("deprecation")
 	public void onDisable() {
 		for (UUID uuid : permissionManager.getRankPreviewers())
 			permissionManager.stopPreviewingRank(Bukkit.getPlayer(uuid));
 		
-		for (Player p : Bukkit.getOnlinePlayers()) {
-			p.sendTitle("\u00a7cServer is Rebooting", "", 20, 20, 20);
+		for (Player p : Bukkit.getOnlinePlayers()) { // wtf is this title method lol
+			p.showTitle(Title.title(Component.text("\u00a7cServer is Restarting..."), Component.empty(), Times.of(Duration.ofSeconds(1), Duration.ofSeconds(4), Duration.ofSeconds(1))));
 			p.closeInventory();
 			PlayerProfile.from(p).getSkills().forceHideBar();
 			permissionManager.clearPlayerPermissions(p);
@@ -202,30 +208,27 @@ public class Main extends JavaPlugin {
             Field acceptingNew = Enchantment.class.getDeclaredField("acceptingNew");
             acceptingNew.setAccessible(true);
             acceptingNew.set(null, true);
-            for (BeanEnchantment ench : BeanEnchantment.enchants)
+            for (BeanEnchantment ench : BeanEnchantment.getCustomEnchants())
             	Enchantment.registerEnchantment(ench);
-            Bukkit.getConsoleSender().sendMessage("Registered custom enchantments!");
+            getLogger().fine("Registered custom enchantments.");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void unregisterEnchantments() {
 		try {
            Field keyField = Enchantment.class.getDeclaredField("byKey");
-           keyField.setAccessible(true);
-           @SuppressWarnings("unchecked")
-           HashMap<NamespacedKey, Enchantment> byKey = (HashMap<NamespacedKey, Enchantment>) keyField.get(null);
-           for (BeanEnchantment ench : BeanEnchantment.enchants)
-        	   byKey.remove(ench.getKey());
-           
            Field nameField = Enchantment.class.getDeclaredField("byName");
+           keyField.setAccessible(true);
            nameField.setAccessible(true);
-           @SuppressWarnings("unchecked")
+           HashMap<NamespacedKey, Enchantment> byKey = (HashMap<NamespacedKey, Enchantment>) keyField.get(null);
            HashMap<String, Enchantment> byName = (HashMap<String, Enchantment>) nameField.get(null);
-           for (BeanEnchantment ench : BeanEnchantment.enchants)
+           for (BeanEnchantment ench : BeanEnchantment.getCustomEnchants()) {
+        	   byKey.remove(ench.getKey());
         	   byName.remove(ench.getName());
-           
+           }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -339,8 +342,8 @@ public class Main extends JavaPlugin {
 		}, 10L, 10L); // every 500ms
 	}
 
-	public NamespacedKey key(String key) {
-		return new NamespacedKey(this, key);
+	public static NamespacedKey key(String key) {
+		return new NamespacedKey(getInstance(), key);
 	}
 	
 	public NamespacedKey keyRecipe(String key) {

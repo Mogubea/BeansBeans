@@ -1,6 +1,6 @@
 package me.playground.enchants;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -11,16 +11,16 @@ import org.bukkit.enchantments.EnchantmentTarget;
 import org.bukkit.entity.EntityCategory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 import io.papermc.paper.enchantments.EnchantmentRarity;
+import me.playground.main.Main;
 import net.kyori.adventure.text.Component;
 
 public class BeanEnchantment extends Enchantment {
 	
-	final public static ArrayList<BeanEnchantment> enchants = new ArrayList<BeanEnchantment>();
+	private final static Set<BeanEnchantment> enchants = new HashSet<BeanEnchantment>();
 	
-	final public static BeanEnchantment MOLTEN_TOUCH = new BeanEnchantment(NamespacedKey.minecraft("molten_touch"), "Molten Touch", EnchantmentTarget.TOOL, 1, 35, false, false) {
+	final public static BeanEnchantment MOLTEN_TOUCH = new BeanEnchantment(Main.key("molten_touch"), "Molten Touch", EnchantmentTarget.TOOL, 1, 1, 40, false, false) {
 		public boolean canEnchantItem(ItemStack arg0) {
 			return false;
 		}
@@ -30,41 +30,31 @@ public class BeanEnchantment extends Enchantment {
 		}
 	};
 	
-	/*final public static BeanEnchantment SWIFT_STRIKE = new BeanEnchantment(NamespacedKey.minecraft("swiftstrike"), "Swift Strike", EnchantmentTarget.WEAPON, 5, 35, false, false) {
-		public boolean canEnchantItem(ItemStack arg0) {
-			return false;
-		}
-
+	final public static BeanEnchantment REINFORCED = new BeanEnchantment(Main.key("reinforced"), "Reinforced", EnchantmentTarget.BREAKABLE, 3, 1, 24, false, false) {
 		public boolean conflictsWith(Enchantment arg0) {
-			return arg0.equals(BeanEnchantment.HEAVY_STRIKE);
+			return arg0.equals(Enchantment.DURABILITY);
 		}
 	};
 	
-	final public static BeanEnchantment HEAVY_STRIKE = new BeanEnchantment(NamespacedKey.minecraft("heavystrike"), "Heavy Strike", EnchantmentTarget.WEAPON, 5, 35, false, false) {
-		public boolean canEnchantItem(ItemStack arg0) {
-			return false;
-		}
-
-		public boolean conflictsWith(Enchantment arg0) {
-			return arg0.equals(BeanEnchantment.SWIFT_STRIKE);
-		}
-	};*/
+	final public static BeanEnchantment SEARING = new BeanEnchantment(Main.key("searing"), "Searing", EnchantmentTarget.FISHING_ROD, 1, 1, 26, false, false);
 	
 	// XXX: Class begin
 	
 	final private String name;
 	final private EnchantmentTarget target;
 	final private int maxLevel;
-	final private int startEnchantLevel;
+	final private int minLevel;
 	final private boolean isCursed;
 	final private boolean isTreasure;
+	final private int minimumEnchantLevel;
 	
-	public BeanEnchantment(NamespacedKey key, String name, EnchantmentTarget target, int maxLevel, int startLevel, boolean isCursed, boolean isTreasure) {
+	public BeanEnchantment(NamespacedKey key, String name, EnchantmentTarget target, int maxLevel, int startLevel, int minimumEnchantLevel, boolean isCursed, boolean isTreasure) {
 		super(key);
 		this.name = name;
 		this.target = target;
 		this.maxLevel = maxLevel;
-		this.startEnchantLevel = startLevel;
+		this.minLevel = startLevel;
+		this.minimumEnchantLevel = minimumEnchantLevel;
 		this.isCursed = isCursed;
 		this.isTreasure = isTreasure;
 		enchants.add(this);
@@ -87,7 +77,7 @@ public class BeanEnchantment extends Enchantment {
 
 	@Override
 	public int getStartLevel() {
-		return startEnchantLevel;
+		return minLevel;
 	}
 
 	@Override
@@ -143,9 +133,16 @@ public class BeanEnchantment extends Enchantment {
 	}
 
 	@Override
-	public @NotNull String translationKey() {
+	public @Nonnull String translationKey() {
 		return this.name;
 	}
 	
+	public int getLevelRequirement() {
+		return this.minimumEnchantLevel;
+	}
+	
+	public static Set<BeanEnchantment> getCustomEnchants() {
+		return enchants;
+	}
 	
 }

@@ -32,6 +32,7 @@ public class CommandLoot extends BeanCommand {
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		if (args.length > 0 && sender.hasPermission("bean.loot") && args[0].equalsIgnoreCase("reload")) {
+			sender.sendMessage("\u00a77Unloading " + getPlugin().lootManager().getAllEntries().size() + " Loot Entries.");
 			getPlugin().lootManager().reload();
 			sender.sendMessage("\u00a77Loaded " + getPlugin().lootManager().getAllEntries().size() + " Loot Entries.");
 		} else if (isPlayer(sender)) {
@@ -42,7 +43,7 @@ public class CommandLoot extends BeanCommand {
 
 	@Override
 	public @Nullable List<String> runTabComplete(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
-		if (args.length == 1 && sender.hasPermission("bean.cmd.loot.reload"))
+		if (args.length == 1 && sender.hasPermission("bean.loot"))
 			return TabCompleter.completeString(args[0], this.args);
 		return Collections.emptyList();
 	}

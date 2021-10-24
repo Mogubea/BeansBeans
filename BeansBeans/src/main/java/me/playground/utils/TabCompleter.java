@@ -189,7 +189,7 @@ public class TabCompleter {
 
         for (T option : options) {
             String optionString = converter.apply(option).toLowerCase();
-            if (optionString.startsWith(argument)) {
+            if (optionString.contains(argument)) {
                 completions.add(optionString);
             }
         }
@@ -203,7 +203,7 @@ public class TabCompleter {
 
         for (T option : options) {
             String optionString = converter.apply(option).toLowerCase();
-            if (optionString.startsWith(argument)) {
+            if (optionString.contains(argument)) {
                 completions.add(optionString);
             }
         }

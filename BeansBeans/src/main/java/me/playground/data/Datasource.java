@@ -22,6 +22,7 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -34,6 +35,15 @@ import org.dynmap.markers.MarkerSet;
 import org.json.JSONObject;
 
 import me.playground.celestia.logging.CelestiaAction;
+import me.playground.civilizations.CitizenTier;
+import me.playground.civilizations.Civilization;
+import me.playground.civilizations.jobs.IFishingJob;
+import me.playground.civilizations.jobs.IHuntingJob;
+import me.playground.civilizations.jobs.IMiningJob;
+import me.playground.civilizations.jobs.Job;
+import me.playground.civilizations.structures.Structure;
+import me.playground.civilizations.structures.Structure.Status;
+import me.playground.civilizations.structures.Structures;
 import me.playground.gui.UpdateEntry;
 import me.playground.items.BeanItem;
 import me.playground.loot.LootEntry;
@@ -237,7 +247,7 @@ public class Datasource {
 		try {
 			c = getNewConnection();
 			statement = connection.prepareStatement("UPDATE " + table_profiles + " SET " + "coins = ?, ranks = ?,"
-					+ "namecolour = ?, nickname = ?, booleanSettings = ?, warpCount = ? WHERE id = ?");
+					+ "namecolour = ?, nickname = ?, booleanSettings = ?, warpCount = ?, civilization = ? WHERE id = ?");
 			byte idx = 1;
 
 			statement.setLong(idx++, pp.getBalance());
@@ -246,6 +256,7 @@ public class Datasource {
 			statement.setString(idx++, pp.getNickname());
 			statement.setLong(idx++, pp.getSettings());
 			statement.setShort(idx++, pp.getWarpCount());
+			statement.setInt(idx++, pp.getCivilizationId());
 			
 			statement.setInt(idx++, pp.getId());
 
@@ -262,7 +273,7 @@ public class Datasource {
 		savePlayerStats(pp);
 	}
 
-	public static void saveProfileColumn(PlayerProfile pp, String column, Object value) {
+	public static void saveProfileColumn(int playerId, String column, Object value) {
 		Connection c = null;
 		PreparedStatement statement = null;
 		try {
@@ -273,7 +284,7 @@ public class Datasource {
 				statement.setString(1, ((Character)value).toString());
 			else
 				statement.setObject(1, value);
-			statement.setInt(2, pp.getId());
+			statement.setInt(2, playerId);
 
 			statement.executeUpdate();
 		} catch (SQLException e) {
@@ -570,7 +581,7 @@ public class Datasource {
 		
 		try {
 			c = getNewConnection();
-			statement = c.prepareStatement("SELECT heirloomData FROM heirlooms WHERE playerId = ?");
+			statement = c.prepareStatement("SELECT heirloomData FROM player_heirlooms WHERE playerId = ?");
 			statement.setInt(1, playerId);
 			r = statement.executeQuery();
 			
@@ -648,7 +659,7 @@ public class Datasource {
 		
 		try {
 			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO heirlooms (playerId,heirloomData) VALUES (?,?) ON DUPLICATE KEY UPDATE heirloomData = VALUES(heirloomData)");
+			statement = c.prepareStatement("INSERT INTO player_heirlooms (playerId,heirloomData) VALUES (?,?) ON DUPLICATE KEY UPDATE heirloomData = VALUES(heirloomData)");
 			
 			statement.setInt(1, pp.getId());
 			statement.setString(2, pp.getHeirlooms().getJsonData().toString());
@@ -721,6 +732,39 @@ public class Datasource {
 			
 			while(rs.next())
 				map.put(rs.getInt("playerId"), rs.getLong(skill.name()+"_xp"));
+			
+			statement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
+		}
+		
+		return map;
+	}
+	
+	public static LinkedHashMap<Integer, Long> getHighscoreTotalSkillXp() {
+		Connection c = null;
+		PreparedStatement statement = null;
+		LinkedHashMap<Integer, Long> map = null;
+		
+		try {
+			c = getNewConnection();
+			
+			String st = "SELECT playerId, (";
+			SkillType[] skills = SkillType.values();
+			int size = skills.length;
+			for (int x = -1; ++x < size;)
+				st += skills[x].name().toLowerCase()+"_xp" + ((x < size-1) ? "+" : "");
+			st += ") AS totalxp FROM " + table_experience + " ORDER BY totalxp ASC";
+			
+			statement = c.prepareStatement(st);
+			ResultSet rs = statement.executeQuery();
+			
+			map = new LinkedHashMap<Integer, Long>();
+			
+			while(rs.next())
+				map.put(rs.getInt("playerId"), rs.getLong("totalxp"));
 			
 			statement.close();
 		} catch (SQLException e) {
@@ -1753,7 +1797,7 @@ public class Datasource {
 				ItemStack i = null;
 				
 				if (compressedStack != null) {
-					Utils.itemStackFromBase64(compressedStack);
+					i = Utils.itemStackFromBase64(compressedStack);
 				} else {
 					try {
 						i = new ItemStack(Material.valueOf(itemType));
@@ -1767,8 +1811,13 @@ public class Datasource {
 				}
 				
 				String s = r.getString("data");
+				Material cookedType = null;
+				try {
+					cookedType = Material.valueOf(r.getString("cookedType"));
+				} catch (Exception e) {
+				}
 				
-				table.addEntry(new LootEntry(r.getInt("id"), table, i, r.getInt("minStack"), r.getInt("maxStack"), r.getInt("chance"), s == null ? null : new JSONObject(s)).setFlags(r.getByte("flags")));
+				table.addEntry(new LootEntry(r.getInt("id"), table, i, cookedType, r.getInt("minStack"), r.getInt("maxStack"), r.getFloat("chance"), r.getFloat("chanceLuckChange"), s == null ? null : new JSONObject(s)).setFlags(r.getByte("flags")));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -1796,29 +1845,31 @@ public class Datasource {
 		
 		try {
 			c = getNewConnection();
-			statement = c.prepareStatement("UPDATE loot SET tableName = ?, chance = ?, minStack = ?, maxStack = ?, itemType = ?, flags = ?, compressedStack = ?, data = ? WHERE id = ?");
+			statement = c.prepareStatement("UPDATE loot SET tableName = ?, chance = ?, chanceLuckChange = ?, minStack = ?, maxStack = ?, itemType = ?, flags = ?, compressedStack = ?, data = ?, cookedType = ? WHERE id = ?");
 			statement.setString(1, entry.getTable().getName());
-			statement.setInt(2, entry.getChance());
-			statement.setInt(3, entry.getMinStackSize());
-			statement.setInt(4, entry.getMaxStackSize());
+			statement.setFloat(2, entry.getChance());
+			statement.setFloat(3, entry.getLuckEffectiveness());
+			statement.setInt(4, entry.getMinStackSize());
+			statement.setInt(5, entry.getMaxStackSize());
 			
 			String s = entry.getDisplayStack().getType().name();
 			BeanItem bi = BeanItem.from(entry.getDisplayStack());
 			if (bi != null)
 				s = bi.getIdentifier();
 			
-			statement.setString(5, s);
-			statement.setByte(6, entry.getFlags());
+			statement.setString(6, s);
+			statement.setByte(7, entry.getFlags());
 			
 			if (entry.shouldCompress())
-				statement.setString(7, Utils.itemStackToBase64(entry.getDisplayStack()));
+				statement.setString(8, Utils.itemStackToBase64(entry.getDisplayStack()));
 			else
-				statement.setString(7, null);
+				statement.setString(8, null);
 			
-			statement.setInt(8, entry.getId());
+			statement.setInt(9, entry.getId());
 			
 			JSONObject data = entry.getJsonData(); // Additional json information such as enchantments, levels and chances.
 			statement.setString(9, data != null ? data.toString() : null);
+			statement.setString(10, entry.getCookedMaterial().name());
 			statement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -1827,31 +1878,32 @@ public class Datasource {
 		}
 	}
 	
-	public static LootEntry registerLootEntry(LootTable table, ItemStack itemStack, int min, int max, int chance, byte flags) throws SQLException {
+	public static LootEntry registerLootEntry(LootTable table, ItemStack itemStack, int min, int max, int chance, int luckEffectiveness, byte flags) throws SQLException {
 		Connection c = null;
 		ResultSet rs = null;
 		PreparedStatement statement = null;
 		
 		try {
 			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO loot (tableName, chance, minStack, maxStack, itemType, flags) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+			statement = c.prepareStatement("INSERT INTO loot (tableName, chance, chanceLuckChange, minStack, maxStack, itemType, flags) VALUES (?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
 			statement.setString(1, table.getName());
-			statement.setInt(2, chance);
-			statement.setInt(3, min);
-			statement.setInt(4, max);
+			statement.setFloat(2, chance);
+			statement.setFloat(3, luckEffectiveness);
+			statement.setInt(4, min);
+			statement.setInt(5, max);
 			
 			String s = itemStack.getType().name();
 			BeanItem bi = BeanItem.from(itemStack);
 			if (bi != null)
 				s = bi.getIdentifier();
 			
-			statement.setString(5, s);
-			statement.setByte(6, flags);
+			statement.setString(6, s);
+			statement.setByte(7, flags);
 			
 			statement.executeUpdate();
 			rs = statement.getGeneratedKeys();
 			if (rs.next())
-				return new LootEntry(rs.getInt(1), table, itemStack, min, max, chance).setFlags(flags);
+				return new LootEntry(rs.getInt(1), table, itemStack, min, max, chance, luckEffectiveness).setFlags(flags);
 			else
 				throw new SQLException("Could not create new Loot Entry.");
 		} catch (SQLException e) {
@@ -1904,6 +1956,236 @@ public class Datasource {
 			close(c, statement);
 		}
 		return false;
+	}
+	
+	public static void loadAllCivilizations() {
+		Connection c = null;
+		PreparedStatement statement = null;
+		ResultSet r = null;
+		
+		long then = System.currentTimeMillis();
+		
+		loadStructures();
+		loadJobPayouts();
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("SELECT id,founderId,name,bank FROM civilizations");
+			r = statement.executeQuery();
+			
+			while(r.next())
+				new Civilization(r.getInt("id"), r.getInt("founderId"), r.getString("name"), r.getLong("bank"));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(r, c, statement);
+			loadCivilizationCitizens();
+			loadCivilizationStructures();
+			Main.getInstance().getLogger().info("Loaded " + Civilization.size() + " Civilizations in " + (System.currentTimeMillis()-then) + "ms");
+		}
+	}
+	
+	// XXX: Civilization and Jobs
+	public static void saveCivilization(Civilization civ) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("UPDATE civilizations SET name = ?, bank = ? WHERE id = ?");
+			byte idx = 1;
+			
+			statement.setString(idx++, civ.getName());
+			statement.setLong(idx++, civ.getTreasury());
+			//statement.setInt(idx++, civ.tie);
+			
+			statement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
+		}
+	}
+	
+	public static Civilization createCivilization(int creator, String name) throws SQLException {
+		Connection c = null;
+		ResultSet rs = null;
+		PreparedStatement statement = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("INSERT INTO civilizations (name, founderId) VALUES (?,?)", Statement.RETURN_GENERATED_KEYS);
+			byte idx = 1;
+			statement.setString(idx++, name);
+			statement.setInt(idx++, creator);
+			
+			statement.executeUpdate();
+			rs = statement.getGeneratedKeys();
+			rs.next();
+			Civilization civ = new Civilization(rs.getInt(1), creator, name, 0);
+			if (creator > 0)
+				PlayerProfile.fromIfExists(creator).setCivilization(civ);
+			return civ;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, rs, statement);
+		}
+		return null;
+	}
+	
+	public static void setCitizenship(int civId, int playerId, CitizenTier level) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("INSERT INTO civilization_citizens (civId, playerId, rank) VALUES (?,?,?) ON DUPLICATE KEY UPDATE rank = VALUES(rank)");
+			statement.setInt(1, civId);
+			statement.setInt(2, playerId);
+			statement.setInt(3, level.ordinal());
+			
+			statement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
+		}
+	}
+	
+	public static void removeCitizenship(int playerId) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("DELETE FROM civilization_citizens WHERE playerId = ?");
+			statement.setInt(1, playerId);
+			
+			statement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
+		}
+	}
+	
+	private static void loadStructures() {
+		Connection c = null;
+		PreparedStatement statement = null;
+		ResultSet r = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("SELECT * FROM structure_types");
+			r = statement.executeQuery();
+			
+			while(r.next()) {
+				String reqJson = r.getString("requirements");
+				new Structures(r.getInt("id"), r.getString("name"), r.getInt("cost"), r.getString("description"), reqJson != null ? new JSONObject(reqJson) : null);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(r, c, statement);
+		}
+	}
+	
+	private static void loadJobPayouts() {
+		Connection c = null;
+		PreparedStatement statement = null;
+		ResultSet r = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("SELECT * FROM job_payouts WHERE enabled = 1");
+			r = statement.executeQuery();
+			
+			while(r.next()) {
+				Job job = Job.getByName(r.getString("job"));
+				String object = r.getString("object");
+				int pay = r.getInt("pay");
+				if (job instanceof IMiningJob || job instanceof IFishingJob) {
+					Material m = Material.valueOf(object.toUpperCase());
+					if (m != null) {
+						if (job instanceof IMiningJob && m.isBlock()) {
+							job.addPayment(m.name(), pay);
+							continue;
+						} else if (job instanceof IFishingJob && !m.isBlock()) {
+							job.addPayment(m.name(), pay);
+							continue;
+						}
+					}
+				}
+				if (job instanceof IHuntingJob) {
+					EntityType m = EntityType.valueOf(object.toUpperCase());
+					if (m != null) {
+						job.addPayment(m.name(), pay);
+						continue;
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(r, c, statement);
+		}
+	}
+	
+	private static void loadCivilizationCitizens() {
+		Connection c = null;
+		PreparedStatement statement = null;
+		ResultSet r = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("SELECT * FROM civilization_citizens");
+			r = statement.executeQuery();
+			
+			final CitizenTier[] levels = CitizenTier.values();
+			
+			while(r.next()) {
+				final Civilization civ = Civilization.getCivilization(r.getInt("civId"));
+				civ.getCitizens().put(r.getInt("playerId"), levels[r.getInt("rank")]);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(r, c, statement);
+		}
+	}
+	
+	private static void loadCivilizationStructures() {
+		Connection c = null;
+		PreparedStatement statement = null;
+		ResultSet r = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("SELECT * FROM civilization_structures");
+			r = statement.executeQuery();
+			
+			while(r.next()) {
+				final Civilization civ = Civilization.getCivilization(r.getInt("civId"));
+				World w = Bukkit.getWorld(WorldIdToUUID.get(r.getShort("world")));
+				if (w == null)
+					w = Bukkit.getWorlds().get(0);
+				Location loc = new Location(w, r.getFloat("x"), r.getFloat("y"), r.getFloat("z"), r.getFloat("yaw"), r.getFloat("p"));
+				
+				Status status = Status.PENDING;
+				try {
+					status = Status.values()[r.getInt("status")];
+				} catch (Exception e) {}
+				
+				civ.getStructures().add(new Structure(civ, Structures.getStructure(r.getInt("structure")), loc, r.getInt("requesterId"), r.getInt("reviewerId"), r.getInt("cost"), status));
+				
+			//	civ.addCitizen(r.getInt("playerId"), levels[r.getInt("rank")]);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(r, c, statement);
+		}
 	}
 	
 }

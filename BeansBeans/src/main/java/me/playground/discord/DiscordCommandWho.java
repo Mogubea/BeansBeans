@@ -27,7 +27,7 @@ public class DiscordCommandWho extends DiscordCommand {
 				embed.setColor(pp.getHighestRank().getRankColour());
 				
 				embed.setTitle(MarkdownSanitizer.escape(pp.getDisplayName()));
-				embed.setThumbnail("https://minotar.net/helm/"+pp.getRealName()+"/100.jpeg");
+				embed.setThumbnail(DiscordBot.getIconURL(pp.getId()));
 				embed.addField("Rank", "<@&" + pp.getHighestRank().getDiscordId() + ">", true);
 				embed.addField("Status", pp.isOnline() ? "Online" : "Offline", true);
 				embed.addField("Linked", !isLinked(pp.getId()) ? "No" : "<@" + getLinkedDiscord(pp.getId()) + ">", true);

@@ -2,6 +2,7 @@ package me.playground.regions;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.bukkit.World;
 
@@ -50,8 +51,8 @@ public class RegionMap<T extends Region> {
 		return map.values();
 	}
 	
-	public Collection<T> getRegions(int x, int y, int z) {
-		Collection<T> ack = new ArrayList<T>();
+	public List<T> getRegions(int x, int y, int z) {
+		List<T> ack = new ArrayList<T>();
 		for (T r : map.get(createRegionKey(toBitLimit(x), toBitLimit(z))))
 			if (r.isInsideRegion(x, y, z))
 				ack.add(r);

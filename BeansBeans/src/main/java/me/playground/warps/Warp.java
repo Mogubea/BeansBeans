@@ -86,6 +86,10 @@ public class Warp implements Dirty {
 		if (invitedIds.contains(playerId))
 			return;
 		
+		PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
+		if (pp.isOnline())
+			pp.getPlayer().sendMessage(Component.text("\u00a77You were invited to ").append(toComponent()));
+		
 		invitedIds.add(playerId);
 		setDirty(true);
 	}
@@ -99,6 +103,12 @@ public class Warp implements Dirty {
 	}
 	
 	public boolean uninvitePlayer(int playerId) {
+		if (invitedIds.contains(playerId)) {
+			PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
+			if (pp.isOnline())
+				pp.getPlayer().sendMessage(Component.text("\u00a77You've been uninvited from ").append(toComponent()));
+		}
+		
 		return invitedIds.remove((Integer)playerId);
 	}
 	

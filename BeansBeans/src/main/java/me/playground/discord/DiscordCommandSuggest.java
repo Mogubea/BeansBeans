@@ -53,7 +53,7 @@ public class DiscordCommandSuggest extends DiscordCommand {
 //			if (e.getOption("anonymous") == null || !e.getOption("anonymous").getAsBoolean()) {
 				if (isLinked(e.getMember().getIdLong())) {
 					final ProfileStore deeb = getLinkedStore(e.getMember());
-					suggestion.setFooter("This suggestion was submitted at " + df.format(date), "https://minotar.net/helm/"+deeb.getRealName()+"/100.png");
+					suggestion.setFooter("This suggestion was submitted at " + df.format(date), DiscordBot.getIconURL(deeb.getId()));
 				} else {
 					suggestion.setFooter("This suggestion was submitted at " + df.format(date), e.getMember().getUser().getAvatarUrl());
 				}
