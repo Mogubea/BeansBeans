@@ -2,6 +2,8 @@ package me.playground.discord;
 
 import org.bukkit.Statistic;
 
+import me.playground.civilizations.CitizenTier;
+import me.playground.civilizations.jobs.Job;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.skills.SkillType;
@@ -37,6 +39,11 @@ public class DiscordCommandWho extends DiscordCommand {
 					embed.addField("Supporter Rank", "<@&" + pp.getDonorRank().getDiscordId() + ">", true);
 				if (pp.hasNickname())
 					embed.addField("Real Name", MarkdownSanitizer.escape(pp.getRealName()), true);
+				if (pp.isInCivilization()) {
+					CitizenTier tier = pp.getCivilization().getCitizen(pp.getId());
+					Job job = pp.getJob();
+					embed.addField("Civilization", tier.getNiceName() + " of " + pp.getCivilization().getName() + " (" + (job != null ? job.getNiceName() : " Unemployed") +")", false);
+				}
 				
 				int mins = pp.getOfflinePlayer().getStatistic(Statistic.PLAY_ONE_MINUTE)/20/60;
 				int hours = Math.floorDiv(mins, 60);

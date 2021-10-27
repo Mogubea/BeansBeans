@@ -19,6 +19,7 @@ import me.playground.civilizations.structures.Structure;
 import me.playground.civilizations.structures.Structures;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.skills.SkillType;
+import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.TextColor;
@@ -56,6 +57,7 @@ public abstract class Job {
 	private final Component description;
 	private final Component simpleComponent;
 	private final String name;
+	private final String niceName;
 	private TextColor color;
 	
 	protected Job(String name, int colour, Component jobHoverDetails) {
@@ -63,6 +65,7 @@ public abstract class Job {
 		this.simpleComponent = Component.text(name, color).decoration(TextDecoration.ITALIC, false);
 		this.description = jobHoverDetails;
 		this.name = name.toLowerCase();
+		this.niceName = Utils.firstCharUpper(name);
 		
 		registeredJobs.put(this.name, this);
 	}
@@ -96,6 +99,11 @@ public abstract class Job {
 	@Nonnull
 	public String getName() {
 		return this.name;
+	}
+	
+	@Nonnull
+	public String getNiceName() {
+		return this.niceName;
 	}
 	
 	public boolean canPlayerApply(Player p) {
