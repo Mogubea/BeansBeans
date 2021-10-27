@@ -79,6 +79,7 @@ public abstract class BeanGui implements IPluginRef {
 	public boolean preInventoryClick(InventoryClickEvent e) {
 		e.setCancelled(true);
 		final ItemStack i = e.getCurrentItem();
+		if (i == null) return true;
 		
 		if (pp.onCdElseAdd("guiClick", 300))
 			return true;

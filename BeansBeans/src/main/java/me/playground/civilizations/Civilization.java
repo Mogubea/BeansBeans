@@ -91,6 +91,10 @@ public class Civilization {
 		return citizens;
 	}
 	
+	public CitizenTier getCitizen(int playerId) {
+		return citizens.get(playerId);
+	}
+	
 	public void addCitizen(int playerId) {
 		addCitizen(playerId, CitizenTier.CITIZEN);
 	}
@@ -107,6 +111,8 @@ public class Civilization {
 	
 	public void kickCitizen(int playerId) {
 		PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
+		if (pp.isOnline())
+			pp.getPlayer().sendMessage(Component.text("\u00a77You were kicked from ").append(this.toComponent()).append(Component.text("\u00a77.")));
 		pp.setCivilization(null);
 		setDirty(true);
 	}

@@ -108,6 +108,8 @@ public class Main extends JavaPlugin {
 	}
 
 	public void onDisable() {
+		npcManager.hideAllNPCsFromAll();
+		
 		for (UUID uuid : permissionManager.getRankPreviewers())
 			permissionManager.stopPreviewingRank(Bukkit.getPlayer(uuid));
 		

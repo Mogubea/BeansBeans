@@ -353,8 +353,7 @@ public class ContainerListener extends EventListener {
 			}
 		}
 		
-		// No point in firing this if the item is null.
-		if (bui != null && e.getCurrentItem() != null && !bui.preInventoryClick(e))
+		if (bui != null && !bui.preInventoryClick(e))
 			bui.onInventoryClicked(e);
 	}
 	

@@ -246,6 +246,11 @@ public class EntityListener extends EventListener {
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onEntityDeath(EntityDeathEvent e) {
+		if (e.getEntity() instanceof ArmorStand && ((ArmorStand)e.getEntity()).isMarker()) {
+			e.setCancelled(true);
+			return;
+		}
+		
 		// Baby Animals don't drop anything.
 		if (e.getEntity() instanceof Animals && !((Animals)e.getEntity()).isAdult()) return;
 		

@@ -2,6 +2,7 @@ package me.playground.npc;
 
 public enum NPCType {
 	
-	HUMAN;
+	HUMAN,
+	HUMAN_EMPLOYER;
 	
 }

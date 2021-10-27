@@ -14,9 +14,11 @@ import com.comphenix.protocol.wrappers.EnumWrappers.EntityUseAction;
 import com.comphenix.protocol.wrappers.EnumWrappers.Hand;
 import com.comphenix.protocol.wrappers.WrappedEnumEntityUseAction;
 
+import me.playground.gui.BeanGuiNPCEdit;
 import me.playground.listeners.events.PlayerInteractNPCEvent;
 import me.playground.main.Main;
 import me.playground.npc.NPC;
+import me.playground.npc.NPCHuman;
 
 public class ProtocolNPCListener {
 	
@@ -38,11 +40,21 @@ public class ProtocolNPCListener {
                 
                 // These checks are stupid
                 if (action.getAction() == EntityUseAction.INTERACT_AT && action.getHand() == Hand.MAIN_HAND) {
-                	 NPC<?> npc = getMainPlugin().npcManager().getEntityNPC(id);
+                	 final NPC<?> npc = getMainPlugin().npcManager().getEntityNPC(id);
                      if (npc == null) return;
                      
                      // Call Sync from Async
-                     Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> Bukkit.getPluginManager().callEvent(new PlayerInteractNPCEvent(p, npc)));
+                     Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> {
+                    	 if (npc instanceof NPCHuman && p.isSneaking() && p.hasPermission("bean.npc.edit")) {
+                    		 new BeanGuiNPCEdit(p, (NPCHuman)npc).openInventory();
+                    		 return;
+                    	 }
+                    	 
+                    	 final PlayerInteractNPCEvent event = new PlayerInteractNPCEvent(p, npc);
+                    	 Bukkit.getPluginManager().callEvent(event);
+                    	 if (!event.isCancelled())
+                    		 npc.onInteract(p);
+                     });
                 }
             }
 		});

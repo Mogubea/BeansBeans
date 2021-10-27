@@ -19,6 +19,7 @@ import me.playground.main.Main;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.EntityPlayer;
 import net.minecraft.server.level.WorldServer;
+import net.minecraft.world.entity.EntityLiving;
 
 public class NPCManager implements IPluginRef {
 	
@@ -32,6 +33,15 @@ public class NPCManager implements IPluginRef {
 		this.plugin = plugin;
 		npcsByEntityId = new HashMap<Integer, NPC<?>>();
 		npcsByDBID = new HashMap<Integer, NPC<?>>();
+		
+		Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+			@Override
+			public void run() {
+				npcsByEntityId.values().forEach(npc -> {npc.onTick();});
+			}
+			
+		}, 10L, 10L);
+		
 	}
 	
 	public void showAllNPCs(Player p) {
@@ -126,17 +136,24 @@ public class NPCManager implements IPluginRef {
 		NPC<?> ack = null;
 		final DedicatedServer server = ((CraftServer)Bukkit.getServer()).getServer();
 		final WorldServer world = ((CraftWorld)location.getWorld()).getHandle();
+		EntityLiving entityNpc = null;
 		
-		switch(type) {
-		case HUMAN:
+		if (type.name().startsWith("HUMAN")) {
 			UUID uuid = UUID.randomUUID();
 			if (json != null && json.has("uuid"))
 				uuid = UUID.fromString(json.getString("uuid"));
 			
 			GameProfile profile = new GameProfile(uuid, name);
-			EntityPlayer humanNpc = new EntityPlayer(server, world, profile);
-			humanNpc.spawnIn(world);
-			ack = new NPCHuman(creatorId, id, getPlugin(), humanNpc, location, json);
+			entityNpc = new EntityPlayer(server, world, profile);
+			((EntityPlayer) entityNpc).spawnIn(world);
+		}
+		
+		switch(type) {
+		case HUMAN:
+			ack = new NPCHuman(creatorId, id, getPlugin(), ((EntityPlayer) entityNpc), location, json);
+			break;
+		case HUMAN_EMPLOYER:
+			ack = new NPCHumanEmployer(creatorId, id, getPlugin(), ((EntityPlayer)entityNpc), location, json);
 			break;
 		default:
 			throw new RuntimeException("Invalid NPCType provided, cannot create NPC.");

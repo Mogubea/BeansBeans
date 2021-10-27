@@ -450,11 +450,17 @@ public class Datasource {
 		try {
 			c = getNewConnection();
 			statement = connection
-					.prepareStatement("SELECT npcId,npcName,creatorId,world,xyzyp,data FROM " + table_npcs);
+					.prepareStatement("SELECT npcId,npcName,type,creatorId,world,xyzyp,data FROM " + table_npcs);
 			r = statement.executeQuery();
 			while (r.next()) {
 				int npcId = r.getInt("npcId");
 				int creatorId = r.getInt("creatorId");
+				
+				NPCType type = NPCType.HUMAN;
+				try {
+					type = NPCType.valueOf(r.getString("type"));
+				} catch (Exception e) {}
+				
 				String npcName = r.getString("npcName");
 				String json = r.getString("data");
 				String[] nls = r.getString("xyzyp").split(",");
@@ -466,8 +472,7 @@ public class Datasource {
 				if (world == null)
 					continue;
 				
-				
-				npcManager.loadNPC(creatorId, npcLoc, NPCType.HUMAN, npcName, npcId, json != null ? new JSONObject(json) : null);
+				npcManager.loadNPC(creatorId, npcLoc, type, npcName, npcId, json != null ? new JSONObject(json) : null);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -2105,24 +2110,28 @@ public class Datasource {
 				Job job = Job.getByName(r.getString("job"));
 				String object = r.getString("object");
 				int pay = r.getInt("pay");
-				if (job instanceof IMiningJob || job instanceof IFishingJob) {
-					Material m = Material.valueOf(object.toUpperCase());
-					if (m != null) {
-						if (job instanceof IMiningJob && m.isBlock()) {
-							job.addPayment(m.name(), pay);
-							continue;
-						} else if (job instanceof IFishingJob && !m.isBlock()) {
+				try {
+					if (job instanceof IMiningJob || job instanceof IFishingJob) {
+						Material m = Material.valueOf(object.toUpperCase());
+						if (m != null) {
+							if (job instanceof IMiningJob && m.isBlock()) {
+								job.addPayment(m.name(), pay);
+								continue;
+							} else if (job instanceof IFishingJob && !m.isBlock()) {
+								job.addPayment(m.name(), pay);
+								continue;
+							}
+						}
+					}
+					if (job instanceof IHuntingJob) {
+						EntityType m = EntityType.valueOf(object.toUpperCase());
+						if (m != null) {
 							job.addPayment(m.name(), pay);
 							continue;
 						}
 					}
-				}
-				if (job instanceof IHuntingJob) {
-					EntityType m = EntityType.valueOf(object.toUpperCase());
-					if (m != null) {
-						job.addPayment(m.name(), pay);
-						continue;
-					}
+				} catch (Exception e) {
+					continue;
 				}
 			}
 		} catch (SQLException e) {

@@ -98,10 +98,12 @@ public class CommandOp extends BeanCommand {
 		}
 		
 		if ("pissoff".equals(cmdStr) && checkPlayer(sender)) {
-			for (Entity e : ((Player)sender).getNearbyEntities(15, 15, 15)) {
+			int dist = args.length > 1 ? Integer.parseInt(args[1]) : 15;
+			
+			for (Entity e : ((Player)sender).getNearbyEntities(dist, dist, dist)) {
 				if (e instanceof ArmorStand) {
 					ArmorStand as = (ArmorStand) e;
-					if (as.isMarker())
+					if (as.isMarker() || as.isInvulnerable())
 						as.remove();
 				}
 			}
@@ -184,9 +186,9 @@ public class CommandOp extends BeanCommand {
 					Component title = args.length < 4 ? null : Component.text(args[3]);
 					NPC<?> npc = npcManager.getEntityNPC(Integer.parseInt(args[2]));
 					if (title != null)
-						npc.setTitle(title);
+						npc.setTitle(title, true);
 					else
-						npc.removeTitle();
+						npc.removeTitle(true);
 					sender.sendMessage("\u00a77Title of NPC updated.");
 				} catch (Exception e) { // NullPointerException and NumberFormatException
 					sender.sendMessage("\u00a7cAn NPC with the ID of '"+args[2]+"' does not exist!");

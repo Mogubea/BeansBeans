@@ -1,12 +1,16 @@
 package me.playground.npc;
 
+import java.util.Iterator;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.ArmorStand.LockType;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.ArmorStand.LockType;
 import org.bukkit.inventory.EquipmentSlot;
 import org.json.JSONObject;
 
@@ -14,7 +18,9 @@ import me.playground.main.IPluginRef;
 import me.playground.main.Main;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.PacketPlayOutEntity;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityHeadRotation;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityTeleport;
@@ -28,18 +34,24 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	final protected Main plugin;
 	final protected T entity;
 	
-	private ArmorStand titleEntity;
+	protected ArmorStand titleEntity;
 	
 	public NPC(Main plugin, T entity, Location location) {
-		this(-1, plugin, entity, location);
+		this(0, -1, plugin, entity, location, null);
 	}
 	
-	public NPC(int npcId, Main plugin, T entity, Location location) {
+	public NPC(int creatorId, int npcId, Main plugin, T entity, Location location, JSONObject json) {
+		this.creatorId = creatorId;
 		this.npcId = npcId;
 		this.plugin = plugin;
 		this.entity = entity;
 		this.location = location;
 		entity.setPositionRotation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+		if (json != null) {
+			String title = json.optString("title");
+			if (title != null && !title.isEmpty())
+				this.setTitle(Component.text(title), false);
+		}
 	}
 	
 	protected abstract void showTo(Player p);
@@ -48,7 +60,11 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	 * Obtained to save exclusive data depending on Entity, to the database. Used to load the entities.
 	 * @return Exclusive Json data based on the Entity.
 	 */
-	public abstract JSONObject getJsonData();
+	public JSONObject getJsonData() {
+		JSONObject obj = new JSONObject();
+		if (titleEntity != null) obj.put("title", ((TextComponent)titleEntity.customName()).content());
+		return obj;
+	}
 	
 	protected void showToAll() {
 		Bukkit.getOnlinePlayers().forEach((p) -> { showTo(p); });
@@ -61,6 +77,7 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	
 	protected void hideFromAll() {
 		Bukkit.getOnlinePlayers().forEach((p) -> { hideFrom(p); });
+		removeTitle(false);
 	}
 	
 	public NPC<T> teleport(Location loc, boolean dirty) {
@@ -82,6 +99,12 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 		Utils.setPacketValue(packet, "e", getFixedRot(loc.getYaw()));
 		Utils.setPacketValue(packet, "f", getFixedRot(loc.getPitch()));
 		return packet;
+	}
+	
+	protected void lookAtTarget(Entity entity) {
+		location.setDirection(entity.getLocation().subtract(location).toVector());
+		sendPacketToAll(new PacketPlayOutEntity.PacketPlayOutEntityLook(getEntityId(), getFixedRot(location.getYaw()), getFixedRot(location.getPitch()), false));
+		sendPacketToAll(new PacketPlayOutEntityHeadRotation(this.entity, getFixedRot(location.getYaw())));
 	}
 	
 	protected void sendPacketToAll(@SuppressWarnings("rawtypes") Packet pa) {
@@ -161,12 +184,14 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 		this.showToAll();
 	}
 	
-	public void removeTitle() {
+	public void removeTitle(boolean dirty) {
 		if (titleEntity != null) 
 			titleEntity.remove();
+		if (dirty) setDirty();
 	}
 	
-	public void setTitle(Component title) {
+	public void setTitle(Component title, boolean dirty) {
+		if (title == null) { removeTitle(dirty); return; }
 		if (getTitleStand() != null) { titleEntity.remove(); }
 		titleEntity = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
 		titleEntity.setInvisible(true);
@@ -179,6 +204,7 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 		titleEntity.addEquipmentLock(EquipmentSlot.FEET, LockType.REMOVING_OR_CHANGING);
 		titleEntity.customName(title);
 		titleEntity.setCustomNameVisible(true);
+		if (dirty) setDirty();
 	}
 	
 	protected ArmorStand getTitleStand() {
@@ -188,6 +214,27 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	@Override
 	public Main getPlugin() {
 		return plugin;
+	}
+	
+	public Component getName() {
+		return this.getEntity().getBukkitEntity().name();
+	}
+	
+	public void onTick() {
+		// XXX: Testing
+		Iterator<Player> ents = entity.getBukkitEntity().getWorld().getNearbyPlayers(location, 4).iterator();
+		if (!ents.hasNext()) return;
+		this.lookAtTarget(ents.next());
+	}
+	
+	/**
+	 * Fires when a player right clicks this entity.
+	 */
+	public abstract void onInteract(Player player);
+	
+	public void sendMessage(Player player, Component message) {
+		player.sendMessage(Component.text("\u00a7b[NPC] ").append(getName()).append(Component.text(" » \u00a7f")).append(message));
+		player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 0.6F, 1.4F);
 	}
 	
 }

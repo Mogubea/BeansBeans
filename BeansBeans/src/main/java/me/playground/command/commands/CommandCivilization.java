@@ -17,6 +17,7 @@ import javax.annotation.Nullable;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import me.playground.civilizations.CitizenTier;
 import me.playground.civilizations.Civilization;
@@ -37,26 +38,49 @@ public class CommandCivilization extends BeanCommand {
 		this.description = "The general civilization command.";
 	}
 	
-	@SubCommand(aliases = "debug", permission = "bean.cmd.civilization.debug", canConsole = true, minArgs = 1, subCmds = {"list", "forceciv", "forcejob"})
+	@SubCommand(canConsole = true, minArgs = 1, subCmds = {"list", "forceciv", "forcejob", "forcekick"})
 	private void debug(PlayerProfile profile, CommandSender sender, String str, String[] args) {
 		if (args[0].equalsIgnoreCase("list")) {
 			for (Civilization c : Civilization.getCivilizations())
 				sender.sendMessage(c.toComponent().append(Component.text(" ("+c.getCitizens().size()+" Members): " + c.getTreasury() + " Coins")));
+		// Force into a Civilization with a specific role
 		} else if (args[0].equalsIgnoreCase("forceciv")) {
-			if (args.length < 3) throw new CommandException(sender, "Usage: \u00a7f/"+str+" "+args[0]+"\u00a77 <player> <civilization> [tier]");
-			PlayerProfile pp = toProfile(sender, args[1]);
+			if (args.length < 3) throw new CommandException(sender, "Usage: \u00a7f/civ "+args[0]+"\u00a77 <player> <civilization> [tier]");
+			PlayerProfile target = toProfile(sender, args[1]);
 			Civilization civ = toCivilization(sender, args[2]);
-			if (pp.isInCivilization()) pp.getCivilization().kickCitizen(pp.getId());
-			civ.addCitizen(pp.getId());
-			sender.sendMessage(pp.getComponentName().append(Component.text("\u00a77's is now part of ").append(civ.toComponent()).append(Component.text("\u00a77!"))));
+			if (target.isInCivilization()) target.getCivilization().kickCitizen(target.getId());
+			CitizenTier tier = args.length > 3 ? CitizenTier.fromCmd(sender, args[3]) : CitizenTier.CITIZEN;
+			civ.addCitizen(target.getId(), tier);
+			sender.sendMessage(target.getComponentName().append(Component.text("\u00a77 is now part of ").append(civ.toComponent()).append(Component.text("\u00a77 as a "+tier.name().toLowerCase()+"!"))));
+		// Force a Job
 		} else if (args[0].equalsIgnoreCase("forcejob")) {
-			if (args.length < 3) throw new CommandException(sender, "Usage: \u00a7f/"+str+" "+args[0]+"\u00a77 <player> <job>");
-			PlayerProfile pp = toProfile(sender, args[1]);
-			if (!pp.isInCivilization()) throw new CommandException(sender, pp.getComponentName().append(Component.text("\u00a7c is not in a Civilization!")));
+			if (args.length < 3) throw new CommandException(sender, "Usage: \u00a7f/civ "+args[0]+"\u00a77 <player> <job>");
+			PlayerProfile target = toProfile(sender, args[1]);
+			if (!target.isInCivilization()) throw new CommandException(sender, target.getComponentName().append(Component.text("\u00a7c is not in a Civilization!")));
 			Job j = toJob(sender, args[2]);
-			pp.setJob(j, true);
-			sender.sendMessage(pp.getComponentName().append(Component.text("\u00a77's job has been set to ").append(j.toComponent()).append(Component.text("\u00a77!"))));
+			target.setJob(j, true);
+			sender.sendMessage(target.getComponentName().append(Component.text("\u00a77's job has been set to ").append(j.toComponent()).append(Component.text("\u00a77!"))));
+		// Force Kick
+		} else if (args[0].equalsIgnoreCase("forcekick")) {
+			if (args.length < 2) throw new CommandException(sender, "Usage: \u00a7f/civ "+args[0]+"\u00a77 <player>");
+			PlayerProfile target = toProfile(sender, args[1]);
+			if (!target.isInCivilization()) throw new CommandException(sender, target.getComponentName().append(Component.text("\u00a7c is not in a Civilization!")));
+			Civilization civ = target.getCivilization();
+			civ.kickCitizen(target.getId());
+			sender.sendMessage(target.getComponentName().append(Component.text("\u00a77 was kicked from ").append(civ.toComponent()).append(Component.text("\u00a77!"))));
 		}
+	}
+	
+	@SubCommand(requiresCitizenship = true, citizenTier = CitizenTier.OFFICER)
+	private void kick(PlayerProfile profile, CommandSender sender, String str, String[] args) {
+		if (args.length < 1) throw new CommandException(sender, Component.text("\u00a7cSpecify a citizen to kick from ").append(profile.getCivilization().toComponent()).append(Component.text("\u00a7c.")));
+		PlayerProfile target = toProfile(sender, args[0]);
+		Civilization civ = profile.getCivilization();
+		if (!target.isInCivilization() && target.getCivilization() != civ)
+			throw new CommandException(sender, target.getComponentName().append(Component.text("\u00a7c is not a citizen of ").append(civ.toComponent()).append(Component.text("\u00a7c."))));
+		if (civ.getCitizen(target.getId()).isOrAbove(civ.getCitizen(profile.getId())))
+			throw new CommandException(sender, Component.text("\u00a7cYou cannot kick ").append(target.getComponentName()).append(Component.text("\u00a7c.")));
+		civ.kickCitizen(target.getId());
 	}
 	
 	@Override
@@ -68,13 +92,20 @@ public class CommandCivilization extends BeanCommand {
 			Method cmdMethod = methods.get(x);
 			if (args[0].equalsIgnoreCase(cmdMethod.getName())) {
 				SubCommand annotation = cmdMethod.getAnnotation(SubCommand.class);
+				String name = cmdMethod.getName();
 				
-				final String permission = annotation.permission();
-				if (!permission.isEmpty() && !sender.hasPermission(permission))
-					throw new CommandException(sender, "You don't have permission to use /"+str+" "+cmdMethod.getName()+"!");
+				if (annotation.requiresPermission() && !sender.hasPermission("bean.cmd.civilization."+name))
+					throw new CommandException(sender, "You don't have permission to use /civ "+name+"!");
+				if (!(sender instanceof Player) && !annotation.canConsole())
+					throw new CommandException(sender, "You must be in-game to use /civ"+name+"!");
+				if (annotation.requiresCitizenship()) {
+					if ((!(sender instanceof Player) || !profile.isInCivilization()))
+						throw new CommandException(sender, "You must be in a civilization to use /civ"+name+"!");
+					if (profile.getCivilization().getCitizen(profile.getId()).isOrAbove(annotation.citizenTier()))
+						throw new CommandException(sender, "You must be a "+annotation.citizenTier().name().toLowerCase()+" to use /civ"+name+"!");
+				}
 				if (annotation.minArgs() > args.length-1)
-					throw new CommandException(sender, "Not enough arguments specified for /"+str+" "+cmdMethod.getName()+"!");
-				
+					throw new CommandException(sender, "Not enough arguments specified for /civ "+name+"!");
 				
 				String[] subArgs = new String[args.length-1];
 				int ysize = subArgs.length;
@@ -100,10 +131,20 @@ public class CommandCivilization extends BeanCommand {
 	public @Nullable List<String> runTabComplete(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		if (args.length == 1)
 			return TabCompleter.completeString(args[0], subCmds);
-		if (args.length == 2) {
+		if (args.length > 1) {
 			int idx = subCmds.indexOf(args[0]);
-			if (idx > -1)
-				return TabCompleter.completeString(args[1], methods.get(idx).getAnnotation(SubCommand.class).subCmds());
+			if (idx > -1) {
+				SubCommand sc = methods.get(idx).getAnnotation(SubCommand.class);
+				if (!sc.requiresPermission() || sender.hasPermission("bean.cmd.civilization."+methods.get(idx).getName())) {
+					if (args.length == 2)
+						return TabCompleter.completeString(args[1], sc.subCmds());
+					if (args.length == 3) {
+						if ("debug".equals(args[0]))
+							if ("forceciv".equals(args[1]) || "forcejob".equals(args[1]) || "forcekick".equals(args[1]))
+								return TabCompleter.completeOnlinePlayer(sender, args[2]);
+					}
+				}
+			}
 		}
 		return Collections.emptyList();
 	}
@@ -133,13 +174,13 @@ public class CommandCivilization extends BeanCommand {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
 	private @interface SubCommand {
-		String[] aliases();
 		String desc() default "";
-		String permission() default "";
 		int minArgs() default 0;
 		String[] subCmds() default {};
+		boolean requiresPermission() default false;
 		boolean canConsole() default false;
-		CitizenTier tier() default CitizenTier.CITIZEN;
+		boolean requiresCitizenship() default false;
+		CitizenTier citizenTier() default CitizenTier.CITIZEN;
 	}
 	
 	private List<Method> getMethodsAnnotatedWith(final Class<?> type, final Class<? extends Annotation> annotation) {

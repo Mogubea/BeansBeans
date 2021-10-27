@@ -775,6 +775,7 @@ public class PlayerProfile {
 	public boolean setJob(Job job, boolean force) {
 		if (!isInCivilization()) return false;
 		if (!force && !getCivilization().hasUnlocked(job)) return false;
+		if (!force && onCooldown("changeJob")) return false;
 		
 		this.job = job;
 		return true;
