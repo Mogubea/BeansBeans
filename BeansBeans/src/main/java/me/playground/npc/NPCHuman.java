@@ -46,8 +46,11 @@ public class NPCHuman extends NPC<EntityPlayer> {
 		if (invArray == null) return;
 		for (int x = -1; ++x < invSize;) {
 			JSONObject itemObj = invArray.optJSONObject(x);
-			if (itemObj == null) return;
+			if (itemObj == null) continue;
+			if (itemObj.isEmpty()) continue;
 			Map<String, Object> itemMap = itemObj.toMap();
+			if ((Integer)itemMap.getOrDefault("v", -1) < 0)
+				itemMap.put("v", 2000);
 			try {
 				inventory[x] = ItemStack.deserialize(itemMap);
 			} catch (Exception e) {}

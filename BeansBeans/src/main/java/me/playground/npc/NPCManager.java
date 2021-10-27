@@ -104,6 +104,9 @@ public class NPCManager implements IPluginRef {
 	public void reload() {
 		this.hideAllNPCsFromAll();
 		Datasource.saveDirtyNPCs();
+		this.npcsByDBID.forEach((id, npc) -> {
+			npc.getEntity().killEntity();
+		});
 		this.npcsByEntityId.clear();
 		this.npcsByDBID.clear();
 		Datasource.loadAllNPCs();
