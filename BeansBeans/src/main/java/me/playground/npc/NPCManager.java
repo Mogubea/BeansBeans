@@ -19,6 +19,7 @@ import me.playground.main.Main;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.level.EntityPlayer;
 import net.minecraft.server.level.WorldServer;
+import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.EntityLiving;
 
 public class NPCManager implements IPluginRef {
@@ -105,7 +106,7 @@ public class NPCManager implements IPluginRef {
 		this.hideAllNPCsFromAll();
 		Datasource.saveDirtyNPCs();
 		this.npcsByDBID.forEach((id, npc) -> {
-			npc.getEntity().killEntity();
+			npc.getEntity().setRemoved(RemovalReason.c);
 		});
 		this.npcsByEntityId.clear();
 		this.npcsByDBID.clear();
