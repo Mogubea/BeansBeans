@@ -84,23 +84,9 @@ public class BeanGuiRegionFlagMember extends BeanGuiRegion {
 	
 	@Override
 	public boolean preInventoryClick(InventoryClickEvent e) {
-		e.setCancelled(true);
-		final ItemStack i = e.getClickedInventory().getItem(e.getSlot());
-		if (i != null) {
-			if (pp.onCdElseAdd("guiClick", 300))
-				return true;
-			
+		if (!super.preInventoryClick(e)) {
 			if (e.getRawSlot() == 50) {
 				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
-				return true;
-			} else if (i.isSimilar(goBack)) {
-				new BeanGuiRegionFlags(p, regionIdx).openInventory();
-				return true;
-			} else if (i.isSimilar(nextPage)) {
-				pageUp();
-				return true;
-			} else if (i.isSimilar(prevPage)) {
-				pageDown();
 				return true;
 			}
 		}

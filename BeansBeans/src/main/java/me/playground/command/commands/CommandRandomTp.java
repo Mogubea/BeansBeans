@@ -39,7 +39,7 @@ public class CommandRandomTp extends BeanCommand {
 		if (w.getEnvironment() != Environment.NORMAL)
 			throw new CommandException(p, "Not very wise to do that here, chief.");
 		
-		if (!profile.isAdmin() && profile.getBalance() < 250)
+		if (!profile.hasPermission("*") && profile.getBalance() < 250)
 			throw new CommandException(p, "You need 250 coins to use this command!");
 		
 		final Location oldLoc = p.getLocation();

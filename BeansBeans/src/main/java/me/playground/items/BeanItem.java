@@ -50,6 +50,7 @@ import com.google.common.collect.Multimap;
 import me.playground.enchants.EnchantmentInfo;
 import me.playground.items.heirlooms.BItemHeirloomAncientSkull;
 import me.playground.items.heirlooms.BItemHeirloomMochi;
+import me.playground.items.heirlooms.BItemHeirloomShungite;
 import me.playground.main.Main;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
@@ -235,6 +236,7 @@ public class BeanItem {
 	
 	public final static BeanItemHeirloom HL_MOCHI 			= new BItemHeirloomMochi(10000, "HL_MOCHI", "Mochi", ItemRarity.RARE);
 	public final static BeanItemHeirloom HL_ANCIENT_SKULL 	= new BItemHeirloomAncientSkull(10001, "HL_ANCIENT_SKULL", "Ancient Skull", ItemRarity.RARE);
+	public final static BeanItemHeirloom HL_SHUNGITE 		= new BItemHeirloomShungite(10002, "HL_SHUNGITE", "Lucky Shungite", ItemRarity.UNCOMMON);
 	
 	public final static BeanItem WOODEN_CRATE = new BItemPackage(19500, "WOODEN_CRATE", "Wooden Crate", ItemRarity.UNCOMMON, "crate_oak", 3, Material.OAK_PLANKS, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjYyMDUxOWI3NDUzNmMxZjg1YjdjN2U1ZTExY2U1YzA1OWMyZmY3NTljYjhkZjI1NGZjN2Y5Y2U3ODFkMjkifX19");
 	public final static BeanItem DEEP_OCEAN_CRATE = new BItemPackage(19501, "DEEP_OCEAN_CRATE", "Deep Ocean Crate", ItemRarity.RARE, "crate_deep", 4, Material.DARK_OAK_PLANKS, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTcxMTQwNjVhM2M5NWM1ZDIyNTE4OGFkN2JmZGFhOWI4YjA4NDVkZjRlMzZjMjRiNDUzNDdmZDc0NzBhNyJ9fX0=");
@@ -548,6 +550,8 @@ public class BeanItem {
 						modifiers.put("Attack Speed", modifiers.getOrDefault("Attack Speed", 0.0) + d);
 					if (entry.getKey().equals(Attribute.GENERIC_MOVEMENT_SPEED))
 						modifiers.put("Movement Speed", modifiers.getOrDefault("Movement Speed", 0.0) + d * 1000);
+					if (entry.getKey().equals(Attribute.GENERIC_LUCK))
+						modifiers.put("Luck", modifiers.getOrDefault("Luck", 0.0) + d * 20);
 				}
 			}
 			

@@ -7,6 +7,7 @@ import me.playground.civilizations.jobs.Job;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.skills.SkillType;
+import me.playground.ranks.Rank;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -26,14 +27,14 @@ public class DiscordCommandWho extends DiscordCommand {
 			PlayerProfile pp = PlayerProfile.fromIfExists(e.getOption("ign").getAsString());
 			if (pp != null) {
 				final EmbedBuilder embed = new EmbedBuilder();
-				embed.setColor(pp.getHighestRank().getRankColour());
+				embed.setColor(pp.getHighestRank().getRankHex());
 				
 				embed.setTitle(MarkdownSanitizer.escape(pp.getDisplayName()));
 				embed.setThumbnail(DiscordBot.getIconURL(pp.getId()));
 				embed.addField("Rank", "<@&" + pp.getHighestRank().getDiscordId() + ">", true);
 				embed.addField("Status", pp.isOnline() ? "Online" : "Offline", true);
 				embed.addField("Linked", !isLinked(pp.getId()) ? "No" : "<@" + getLinkedDiscord(pp.getId()) + ">", true);
-				if (pp.isMod()) // Here since Staff Rank overrides Rank, why not show it
+				if (pp.isRank(Rank.MODERATOR)) // Here since Staff Rank overrides Rank, why not show it
 					embed.addField("Playtime Rank", "<@&" + pp.getPlaytimeRank().getDiscordId() + ">", true);
 				if (pp.getDonorRank() != null) // Here since it's cool to show
 					embed.addField("Supporter Rank", "<@&" + pp.getDonorRank().getDiscordId() + ">", true);

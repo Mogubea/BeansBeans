@@ -36,7 +36,7 @@ public enum EnchantmentInfo {
 	LOYALTY(Enchantment.LOYALTY, 3F, 0.5F),
 	LUCK(Enchantment.LUCK, 1F, 1.5F),
 	LURE(Enchantment.LURE, 1F, 1.5F),
-	MENDING(Enchantment.MENDING, 10F),
+	MENDING(Enchantment.MENDING, 22F),
 	MULTISHOT(Enchantment.MULTISHOT, 4F),
 	OXYGEN(Enchantment.OXYGEN, 1F, 0.5F),
 	PROTECTION_ENVIRONMENTAL(Enchantment.PROTECTION_ENVIRONMENTAL, 0.6F, 0.8F),
@@ -80,7 +80,7 @@ public enum EnchantmentInfo {
 				totalValue *= 2;
 		}
 		
-		if (totalValue >= 35)
+		if (totalValue >= 40)
 			return ItemRarity.LEGENDARY;
 		if (totalValue >= 22)
 			return ItemRarity.EPIC;

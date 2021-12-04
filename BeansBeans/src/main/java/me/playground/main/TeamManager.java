@@ -10,7 +10,6 @@ import me.playground.playerprofile.PlayerProfile;
 import me.playground.ranks.Rank;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
 
 public class TeamManager {
 	
@@ -35,8 +34,8 @@ public class TeamManager {
 			team = scoreboard.registerNewTeam("id"+pp.getId());
 		
 		team.color(NamedTextColor.nearestTo(pp.getNameColour()));
-		if (pp.isMod())
-			team.prefix(Component.text("\u24E2 ").color(TextColor.color(Rank.MODERATOR.getRankColour())));
+		if (pp.isRank(Rank.MODERATOR))
+			team.prefix(Component.text("\u24E2 ").color(Rank.MODERATOR.getRankColour()));
 		
 		if (!team.hasEntry(pp.getPlayer().getName()))
 			team.addEntry(pp.getPlayer().getName());

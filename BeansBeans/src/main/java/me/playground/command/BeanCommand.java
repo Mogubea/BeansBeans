@@ -97,7 +97,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 			if (isPlayer(sender)) {
 				PlayerProfile pp = PlayerProfile.from(((Player)sender));
 				if (cooldown > 0 && !sender.isOp() && pp.onCdElseAdd("cmd." + cmd.getName(), cooldown)) {
-					((Player)sender).sendActionBar(Component.text("\u00a7cPlease wait " + pp.getCooldown("cmd."+cmd.getName())/1000 + " seconds before using /"+str+" again."));
+					((Player)sender).sendActionBar(Component.text("\u00a7cPlease wait " + Utils.timeStringFromNow(pp.getCooldown("cmd."+cmd.getName())) + " before using /"+str+" again."));
 					return false;
 				}
 				
@@ -317,7 +317,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	}
 	
 	protected boolean isSafe(Location loc) {
-		if (loc.getBlock().getType() == Material.LAVA || !(loc.subtract(0,0.2,0).getBlock().isEmpty()))
+		if (loc.getBlock().getType() == Material.LAVA || (loc.subtract(0,0.2,0).getBlock().isEmpty()))
 			return false;
 		return true;
 	}
@@ -330,7 +330,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	
 	protected Component commandInfo(String cmd) {
 		final PluginCommand pc = Bukkit.getServer().getPluginCommand(cmd);
-		return Component.text("/"+cmd.toLowerCase()).hoverEvent(HoverEvent.showText(Component.text(pc.getDescription()))).clickEvent(ClickEvent.suggestCommand("/"+cmd)).color(BeanColor.WORLD);
+		return Component.text("/"+cmd.toLowerCase()).hoverEvent(HoverEvent.showText(Component.text(pc.getDescription()))).clickEvent(ClickEvent.suggestCommand("/"+cmd)).color(BeanColor.COMMAND);
 	}
 	
 	protected Component worldInfo(CommandSender sender, World world) {

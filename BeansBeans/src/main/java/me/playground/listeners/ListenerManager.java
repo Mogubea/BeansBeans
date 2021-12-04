@@ -26,6 +26,7 @@ public class ListenerManager {
 		pm.registerEvents(new BeanEnchantmentListener(), pl);
 		
 		pm.registerEvents(new CelestiaListener(), pl);
+		pm.registerEvents(new VoteListener(pl), pl);
 	}
 	
 }

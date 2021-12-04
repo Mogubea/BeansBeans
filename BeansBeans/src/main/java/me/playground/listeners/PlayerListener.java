@@ -112,8 +112,8 @@ public class PlayerListener extends EventListener {
 			return;
 		}
 		
-		TextComponent chat = pp.isMod() ? Component.empty().append(Component.text("\u24E2").color(TextColor.color(Rank.MODERATOR.getRankColour()))
-				.hoverEvent(HoverEvent.showText(Component.text("Staff Member").color(TextColor.color(Rank.MODERATOR.getRankColour())))))
+		TextComponent chat = pp.isRank(Rank.MODERATOR) ? Component.empty().append(Component.text("\u24E2").color(Rank.MODERATOR.getRankColour()))
+				.hoverEvent(HoverEvent.showText(Component.text("Staff Member").color(Rank.MODERATOR.getRankColour())))
 				.append(Component.text(" "))
 				.append(pp.getComponentName())
 				: pp.getComponentName();
@@ -153,7 +153,7 @@ public class PlayerListener extends EventListener {
 		
 		for (Player pl : Bukkit.getOnlinePlayers()) {
 			PlayerProfile ppl = PlayerProfile.from(pl);
-			if (pp.isMod() || !ppl.getIgnoredPlayers().contains(pp.getId()))
+			if (pp.isRank(Rank.MODERATOR) || !ppl.getIgnoredPlayers().contains(pp.getId()))
 				pl.sendMessage(chat.colorIfAbsent(TextColor.color(pinged.contains(pl.getUniqueId()) ? 0xffffff : 0xe8e8e8)));
 		}
 		

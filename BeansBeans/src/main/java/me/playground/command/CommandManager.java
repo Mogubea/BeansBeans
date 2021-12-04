@@ -27,6 +27,7 @@ import me.playground.command.commands.CommandRandomTp;
 import me.playground.command.commands.CommandRegion;
 import me.playground.command.commands.CommandReport;
 import me.playground.command.commands.CommandReturn;
+import me.playground.command.commands.CommandSapphire;
 import me.playground.command.commands.CommandSay;
 import me.playground.command.commands.CommandSethome;
 import me.playground.command.commands.CommandSun;
@@ -45,9 +46,11 @@ import me.playground.command.commands.small.CommandHeirloom;
 import me.playground.command.commands.small.CommandLoot;
 import me.playground.command.commands.small.CommandMenu;
 import me.playground.command.commands.small.CommandNews;
+import me.playground.command.commands.small.CommandPlebeian;
 import me.playground.command.commands.small.CommandSkills;
 import me.playground.command.commands.small.CommandSpawn;
 import me.playground.command.commands.small.CommandTpblock;
+import me.playground.command.commands.small.CommandVote;
 import me.playground.command.commands.small.CommandWardrobe;
 import me.playground.command.commands.small.CommandWarps;
 import me.playground.main.Main;
@@ -90,11 +93,14 @@ public class CommandManager {
 		registerCommand(new CommandHeirloom(plugin));
 		registerCommand(new CommandBestiary(plugin));
 		registerCommand(new CommandLoot(plugin));
+		registerCommand(new CommandVote(plugin));
+		registerCommand(new CommandPlebeian(plugin));
 		
 		// Other Commands
 		registerCommand(new CommandWho(plugin));
 		registerCommand(new CommandRegion(plugin));
 		registerCommand(new CommandMoney(plugin));
+		registerCommand(new CommandSapphire(plugin));
 		registerCommand(new CommandOp(plugin));
 		registerCommand(new CommandModify(plugin));
 		registerCommand(new CommandEnchant(plugin));

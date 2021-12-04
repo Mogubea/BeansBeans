@@ -76,14 +76,8 @@ public class JobListener extends EventListener {
 	
 	private void doJobPay(PlayerProfile pp, Job job, int pay) {
 		if (pay <= 0) return;
-		
-		//Civilization c = pp.getCivilization();
-		
-		// TODO: Apply taxations where applicable
-		
 		int newTotal = pp.getStats().addToStat(StatType.OCCUPATION, "currentPay", pay);
-		pp.getPlayer().sendActionBar(Component.text("Paycheck Test: \u00a76" + newTotal + " \u00a77(\u00a7a+"+pay+"\u00a77)"));
-		
+		pp.getPlayer().sendActionBar(job.toComponent().append(Component.text("\u00a77 Pay Cheque: \u00a76" + newTotal + " \u00a77(\u00a7a+"+pay+"\u00a77)")));
 	}
 	
 }

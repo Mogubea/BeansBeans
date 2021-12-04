@@ -14,8 +14,9 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import me.playground.currency.Currency;
+import me.playground.gui.staff.BeanGuiStaff;
 import me.playground.playerprofile.PlayerProfile;
+import me.playground.ranks.Rank;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Calendar;
 import me.playground.utils.Utils;
@@ -47,7 +48,8 @@ public class BeanGuiMainMenu extends BeanGui {
 	private static final ItemStack icon_news = newItem(new ItemStack(Material.ENCHANTED_BOOK), Component.text("Server News").color(TextColor.color(0x994411)), "\u00a77\u00a7oUpdates & Announcements");
 	private static final ItemStack icon_region = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGYxN2E2YTlhZmFhN2IwN2U0MjE4ZmU1NTVmMjgyM2IwMjg0Y2Q2OWI0OWI2OWI5N2ZhZTY3ZWIyOTc2M2IifX19"), Component.text("Region Menu").color(BeanColor.REGION), "\u00a77\u00a7oWIP");
 	private static final ItemStack icon_heirlooms = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjE3NmE0YzQ0NmI1NGQ1MGFlM2U1YmE4ZmU2ZjQxMzE3Njg5ZmY1YTc1MjMwMjgwOTdmNjExOTUzZDFkMTI5NyJ9fX0="), Component.text("Bag o' Heirlooms").color(BeanColor.HEIRLOOM), "\u00a77\u00a7oWIP");
-	private static final ItemStack icon_bestiary = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("Bestiary").color(TextColor.color(0x13bf27)), "\u00a77\u00a7oWIP");
+	private static final ItemStack icon_bestiary = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("Bestiary", BeanColor.BESTIARY), "\u00a77\u00a7oWIP");
+	private static final ItemStack icon_support = newItem(new ItemStack(Material.LIGHT_BLUE_CANDLE), Component.text("Support Us!", BeanColor.SAPPHIRE), "\u00a77\u00a7oHow to support the server..");
 	
 	private static final ItemStack icon_resetOverride = newItem(new ItemStack(Material.BARRIER), "\u00a7cReset GUI Override", "\u00a77Go back to normal!");
 	
@@ -62,7 +64,7 @@ public class BeanGuiMainMenu extends BeanGui {
 				blank,blank,null,null,null,null,null,blank,blank,
 				blank,null,null,null,null,null,null,null,blank,
 				blank,blank,blank,blank,blank,blank,blank,blank,blank,
-				blank,blank,blank,null,null,null,blank,blank,blank,
+				blank,blank,blank,null,null,null,blank,icon_support,blank,
 		};
 	}
 
@@ -86,12 +88,16 @@ public class BeanGuiMainMenu extends BeanGui {
 		if (pp.getPlayer().hasPermission("bean.cmd.fly"))
 			contents[26] = pp.getPlayer().getAllowFlight() ? skull_Fon : skull_Foff;
 		
-		contents[13] = newItem(tpp.getSkull(), tpp.getColouredName());
+		contents[13] = newItem(tpp.getSkull(), tpp.getColouredName(), 
+				Component.text("\u00a77Rank: ").append(tpp.getHighestRank().toComponent()).append(tpp.getDonorRank() != null ? Component.text("\u00a77 (").append(tpp.getDonorRank().toComponent()).append(Component.text("\u00a77)")) : Component.empty()),
+				Component.text("\u00a77Wallet: "),
+				Component.text("\u00a77 - \u00a76" + df.format(tpp.getBalance()) + " Coins"),
+				Component.text("\u00a77 - ").append(Component.text(tpp.getSapphire() + " Sapphire", BeanColor.SAPPHIRE).decoration(TextDecoration.ITALIC, false)),
+				Component.empty(),
+				Component.text("\u00a78Click to modify your profile!"));
 		
-		ItemStack wallet = icon_money;
-		ItemMeta wmeta = wallet.getItemMeta();
-		wmeta.displayName(Component.text(Utils.currencyString(Currency.COINS, tpp.getBalance()) + "\u00a77 in your wallet."));
-		wallet.setItemMeta(wmeta);
+		if (pp.isRank(Rank.MODERATOR)) // pp since it doesn't care if overriding or not
+			contents[14] = newItem(new ItemStack(Material.ANVIL), Component.text("Temp Staff Menu"));
 		
 		contents[20] = icon_skills;
 		
@@ -112,15 +118,16 @@ public class BeanGuiMainMenu extends BeanGui {
 		region.lore(regionLore);
 		
 		contents[21] = region;
-		contents[22] = wallet;
+		
 		contents[23] = icon_warps;
 		contents[24] = icon_wardrobe;
-		contents[28] = (pp.isAdmin() || isOverrideView()) ? icon_echest : null;
+		contents[28] = isOverrideView() ? icon_echest : null;
 		
 		ItemStack waa = icon_heirlooms.clone();
 		ItemMeta waameta = waa.getItemMeta();
 		TextColor aa = TextColor.color(TextColor.color(0x3d3d3d | BeanColor.HEIRLOOM.value()));
 		
+		// TODO: make better
 		waameta.lore(Arrays.asList(
 				Component.text("Using \u00a7f" + tpp.getHeirlooms().size() + "\u00a7r/\u00a77" + tpp.getHeirlooms().getMaxHeirlooms() + "\u00a7r Slots").colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false), 
 				Component.text(""),
@@ -128,6 +135,7 @@ public class BeanGuiMainMenu extends BeanGui {
 				Component.text("\u00a77\u00a7oyour Heirlooms in this magical bag."),
 				Component.text(""),
 				Component.text("Stat Modifiers:", BeanColor.HEIRLOOM).decoration(TextDecoration.ITALIC, false),
+				Component.text(tpp.getHeirlooms().getLuckBonus() == 0 ? "\u00a78\u25C8 Luck: 0" : "\u00a7r\u25C8 Luck: \u00a7f" + (tpp.getHeirlooms().getLuckBonus())).colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false),
 				Component.text(tpp.getHeirlooms().getDamageBonus() == 0 ? "\u00a78\u25C8 Damage: 0" : "\u00a7r\u25C8 Damage: \u00a7f" + (tpp.getHeirlooms().getDamageBonus())).colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false),
 				Component.text(tpp.getHeirlooms().getHealthBonus() == 0 ? "\u00a78\u25C8 Health: 0" : "\u00a7r\u25C8 Health: \u00a7f" + (tpp.getHeirlooms().getHealthBonus())).colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false),
 				Component.text(tpp.getHeirlooms().getMovementBonus() == 0 ? "\u00a78\u25C8 Movement Speed: 0" : "\u00a7r\u25C8 Movement Speed: \u00a7f" + (int)(tpp.getHeirlooms().getMovementBonus() * 1000)).colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false)));
@@ -188,6 +196,12 @@ public class BeanGuiMainMenu extends BeanGui {
 			if (p.hasPermission("bean.gm.creative"))
 				p.setGameMode(p.getGameMode() != GameMode.SURVIVAL ? GameMode.SURVIVAL : GameMode.CREATIVE);
 			break;
+		case 13: // Player Menu Button
+			new BeanGuiPlayer(p).openInventory();
+			return;
+		case 14: // TODO: TEMP STAFF MENU BUTTON
+			new BeanGuiStaff(p).openInventory();
+			return;
 		case 17: // Godmode Button
 			if (p.hasPermission("bean.cmd.god"))
 				p.setInvulnerable(!p.isInvulnerable());
@@ -238,6 +252,9 @@ public class BeanGuiMainMenu extends BeanGui {
 		case 50: // Spawnpoint Button
 			p.closeInventory();
 			p.teleport(tpp.getOfflinePlayer().getBedSpawnLocation(), TeleportCause.COMMAND);
+			return;
+		case 52: // Support Us! Button
+			new BeanGuiSupportUs(p).openInventory();
 			return;
 		default:
 			return;

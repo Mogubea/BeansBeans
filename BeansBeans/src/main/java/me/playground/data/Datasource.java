@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -54,6 +55,8 @@ import me.playground.npc.NPC;
 import me.playground.npc.NPCManager;
 import me.playground.npc.NPCType;
 import me.playground.playerprofile.PlayerProfile;
+import me.playground.playerprofile.ProfileModifyRequest;
+import me.playground.playerprofile.ProfileModifyRequest.ModifyType;
 import me.playground.playerprofile.ProfileStore;
 import me.playground.playerprofile.settings.PlayerSetting;
 import me.playground.playerprofile.skills.SkillData;
@@ -71,6 +74,7 @@ import me.playground.regions.flags.MemberLevel;
 import me.playground.shop.Shop;
 import me.playground.shop.ShopLog;
 import me.playground.utils.Utils;
+import me.playground.voting.VoteService;
 import me.playground.warps.Warp;
 import me.playground.warps.WarpType;
 import net.kyori.adventure.text.Component;
@@ -208,7 +212,7 @@ public class Datasource {
 				statement = connection.prepareStatement("INSERT INTO " + table_profiles + "(uuid,ranks,namecolour,booleanSettings) VALUES (?,?,?,?)");
 				statement.setString(1, playerUUID.toString());
 				statement.setString(2, Rank.NEWBEAN.lowerName());
-				statement.setInt(3, Rank.NEWBEAN.getRankColour());
+				statement.setInt(3, Rank.NEWBEAN.getRankHex());
 				statement.setLong(4, PlayerSetting.getDefaultSettings());
 				statement.executeUpdate();
 				return getOrMakeProfile(playerUUID);
@@ -222,7 +226,7 @@ public class Datasource {
 	}
 
 	private static PlayerProfile forgeProfileUsingResultSet(ResultSet rs) {
-		ArrayList<Rank> ranks = new ArrayList<Rank>();
+		final ArrayList<Rank> ranks = new ArrayList<Rank>();
 		String[] ranksStr;
 		try {
 			ranksStr = rs.getString("ranks").split(",");
@@ -232,9 +236,19 @@ public class Datasource {
 				} catch (IllegalArgumentException e) {
 				}
 			}
-			return new PlayerProfile(rs.getInt("id"), UUID.fromString(rs.getString("uuid")), ranks,
+			
+			final Civilization civ = Civilization.getById(rs.getInt("civilization"));
+			final Job job = Job.getByName(rs.getString("job"));
+			final Timestamp donoExpiry = rs.getTimestamp("donorRankExpiration");
+			final long donoExpiration = donoExpiry == null ? 0L : donoExpiry.getTime();
+			final PlayerProfile pp = new PlayerProfile(rs.getInt("id"), UUID.fromString(rs.getString("uuid")), ranks,
 					rs.getInt("namecolour"), rs.getString("name"), rs.getString("nickname"),
 					rs.getLong("coins"), rs.getLong("booleanSettings"), rs.getShort("warpCount"));
+			pp.setDonorExpiration(donoExpiration);
+			pp.setCivilization(civ);
+			pp.setJob(job, true);
+			
+			return pp;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -247,7 +261,7 @@ public class Datasource {
 		try {
 			c = getNewConnection();
 			statement = connection.prepareStatement("UPDATE " + table_profiles + " SET " + "coins = ?, ranks = ?,"
-					+ "namecolour = ?, nickname = ?, booleanSettings = ?, warpCount = ?, civilization = ? WHERE id = ?");
+					+ "namecolour = ?, nickname = ?, booleanSettings = ?, warpCount = ?, civilization = ?, job = ?, donorRankExpiration = ? WHERE id = ?");
 			byte idx = 1;
 
 			statement.setLong(idx++, pp.getBalance());
@@ -257,6 +271,8 @@ public class Datasource {
 			statement.setLong(idx++, pp.getSettings());
 			statement.setShort(idx++, pp.getWarpCount());
 			statement.setInt(idx++, pp.getCivilizationId());
+			statement.setString(idx++, pp.getJob() == null ? null : pp.getJob().getName());
+			statement.setTimestamp(idx++, new Timestamp(pp.getCheckDonorExpiration()));
 			
 			statement.setInt(idx++, pp.getId());
 
@@ -446,6 +462,7 @@ public class Datasource {
 		ResultSet r = null;
 		
 		final NPCManager npcManager = Main.getInstance().npcManager();
+		long then = System.currentTimeMillis();
 		
 		try {
 			c = getNewConnection();
@@ -480,7 +497,7 @@ public class Datasource {
 			close(r, c, statement);
 		}
 		
-		Main.getInstance().getLogger().info("Loaded " + npcManager.getDatabaseNPCs().size() + " NPCs!");
+		Main.getInstance().getLogger().info("Loaded " + npcManager.getDatabaseNPCs().size() + " NPCs in " + (System.currentTimeMillis()-then) + "ms");
 	}
 	
 	public static void saveDirtyNPCs() {
@@ -1313,6 +1330,9 @@ public class Datasource {
 			c = getNewConnection();
 			statement = c.prepareStatement("INSERT INTO celestia (playerId, action, world, x, y, z, data) VALUES (?,?,?,?,?,?,?)");
 			
+			if (location == null)
+				location = new Location(Bukkit.getWorlds().get(0), 0, 80, 0);
+			
 			statement.setInt(1, id);
 			statement.setInt(2, action.ordinal());
 			statement.setInt(3, WorldUUIDToId.get(location.getWorld().getUID()));
@@ -1986,6 +2006,7 @@ public class Datasource {
 			close(r, c, statement);
 			loadCivilizationCitizens();
 			loadCivilizationStructures();
+			Civilization.getCivilizations().forEach((civ) -> civ.checkUnlocks());
 			Main.getInstance().getLogger().info("Loaded " + Civilization.size() + " Civilizations in " + (System.currentTimeMillis()-then) + "ms");
 		}
 	}
@@ -2045,7 +2066,7 @@ public class Datasource {
 		
 		try {
 			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO civilization_citizens (civId, playerId, rank) VALUES (?,?,?) ON DUPLICATE KEY UPDATE rank = VALUES(rank)");
+			statement = c.prepareStatement("INSERT INTO civilization_citizens (civId, playerId, level) VALUES (?,?,?) ON DUPLICATE KEY UPDATE civId = VALUES(civId), level = VALUES(level)");
 			statement.setInt(1, civId);
 			statement.setInt(2, playerId);
 			statement.setInt(3, level.ordinal());
@@ -2078,38 +2099,38 @@ public class Datasource {
 	private static void loadStructures() {
 		Connection c = null;
 		PreparedStatement statement = null;
-		ResultSet r = null;
+		ResultSet rs = null;
 		
 		try {
 			c = getNewConnection();
 			statement = c.prepareStatement("SELECT * FROM structure_types");
-			r = statement.executeQuery();
+			rs = statement.executeQuery();
 			
-			while(r.next()) {
-				String reqJson = r.getString("requirements");
-				new Structures(r.getInt("id"), r.getString("name"), r.getInt("cost"), r.getString("description"), reqJson != null ? new JSONObject(reqJson) : null);
+			while(rs.next()) {
+				String reqJson = rs.getString("requirements");
+				new Structures(rs.getInt("id"), rs.getString("name"), rs.getInt("cost"), rs.getString("description"), reqJson != null ? new JSONObject(reqJson) : null);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			close(r, c, statement);
+			close(rs, c, statement);
 		}
 	}
 	
 	private static void loadJobPayouts() {
 		Connection c = null;
 		PreparedStatement statement = null;
-		ResultSet r = null;
+		ResultSet rs = null;
 		
 		try {
 			c = getNewConnection();
 			statement = c.prepareStatement("SELECT * FROM job_payouts WHERE enabled = 1");
-			r = statement.executeQuery();
+			rs = statement.executeQuery();
 			
-			while(r.next()) {
-				Job job = Job.getByName(r.getString("job"));
-				String object = r.getString("object");
-				int pay = r.getInt("pay");
+			while(rs.next()) {
+				Job job = Job.getByName(rs.getString("job"));
+				String object = rs.getString("object");
+				int pay = rs.getInt("pay");
 				try {
 					if (job instanceof IMiningJob || job instanceof IFishingJob) {
 						Material m = Material.valueOf(object.toUpperCase());
@@ -2137,63 +2158,165 @@ public class Datasource {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			close(r, c, statement);
+			close(rs, c, statement);
 		}
 	}
 	
 	private static void loadCivilizationCitizens() {
 		Connection c = null;
 		PreparedStatement statement = null;
-		ResultSet r = null;
+		ResultSet rs = null;
 		
 		try {
 			c = getNewConnection();
 			statement = c.prepareStatement("SELECT * FROM civilization_citizens");
-			r = statement.executeQuery();
+			rs = statement.executeQuery();
 			
 			final CitizenTier[] levels = CitizenTier.values();
 			
-			while(r.next()) {
-				final Civilization civ = Civilization.getCivilization(r.getInt("civId"));
-				civ.getCitizens().put(r.getInt("playerId"), levels[r.getInt("rank")]);
+			while(rs.next()) {
+				final Civilization civ = Civilization.getById(rs.getInt("civId"));
+				civ.getCitizens().put(rs.getInt("playerId"), levels[rs.getInt("level")]);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			close(r, c, statement);
+			close(rs, c, statement);
 		}
 	}
 	
 	private static void loadCivilizationStructures() {
 		Connection c = null;
 		PreparedStatement statement = null;
-		ResultSet r = null;
+		ResultSet rs = null;
 		
 		try {
 			c = getNewConnection();
 			statement = c.prepareStatement("SELECT * FROM civilization_structures");
-			r = statement.executeQuery();
+			rs = statement.executeQuery();
 			
-			while(r.next()) {
-				final Civilization civ = Civilization.getCivilization(r.getInt("civId"));
-				World w = Bukkit.getWorld(WorldIdToUUID.get(r.getShort("world")));
+			while(rs.next()) {
+				final Civilization civ = Civilization.getById(rs.getInt("civId"));
+				World w = Bukkit.getWorld(WorldIdToUUID.get(rs.getShort("world")));
 				if (w == null)
 					w = Bukkit.getWorlds().get(0);
-				Location loc = new Location(w, r.getFloat("x"), r.getFloat("y"), r.getFloat("z"), r.getFloat("yaw"), r.getFloat("p"));
+				Location loc = new Location(w, rs.getFloat("x"), rs.getFloat("y"), rs.getFloat("z"), rs.getFloat("yaw"), rs.getFloat("p"));
 				
 				Status status = Status.PENDING;
 				try {
-					status = Status.values()[r.getInt("status")];
+					status = Status.values()[rs.getInt("status")];
 				} catch (Exception e) {}
 				
-				civ.getStructures().add(new Structure(civ, Structures.getStructure(r.getInt("structure")), loc, r.getInt("requesterId"), r.getInt("reviewerId"), r.getInt("cost"), status));
+				civ.getStructures().add(new Structure(civ, Structures.getStructure(rs.getInt("structure")), loc, rs.getInt("requesterId"), rs.getInt("reviewerId"), rs.getInt("cost"), status));
 				
 			//	civ.addCitizen(r.getInt("playerId"), levels[r.getInt("rank")]);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			close(r, c, statement);
+			close(rs, c, statement);
+		}
+	}
+	
+	public static HashMap<String, VoteService> getValidVoteServices() {
+		Connection c = null;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		
+		HashMap<String, VoteService> services = new LinkedHashMap<String, VoteService>();
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("SELECT service,displayName,sapphireOut,coinsOut FROM valid_vote_services WHERE enabled = 1");
+			rs = statement.executeQuery();
+			
+			while(rs.next()) {
+				String service = rs.getString("service");
+				services.put(service, new VoteService(service, rs.getString("displayName"), rs.getInt("sapphireOut"), rs.getInt("coinsOut")));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(rs, c, statement);
+		}
+		return services;
+	}
+	
+	// XXX: Modify Requests
+	
+	public static ArrayList<ProfileModifyRequest> loadPendingModifyRequests() {
+		Connection c = null;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		
+		ArrayList<ProfileModifyRequest> requests = new ArrayList<ProfileModifyRequest>();
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("SELECT * FROM player_modify_requests WHERE status = 0 ORDER BY requestDate DESC"); // order from oldest to newest
+			rs = statement.executeQuery();
+			
+			while(rs.next()) {
+				int id = rs.getInt("id");
+				ModifyType type = null;
+				try {
+					type = ModifyType.valueOf(rs.getString("requestType"));
+				} catch (Exception e) {
+					continue;
+				}
+				
+				requests.add(new ProfileModifyRequest(id, rs.getInt("playerId"), rs.getTimestamp("requestDate").getTime(), rs.getString("data"), type));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(rs, c, statement);
+		}
+		return requests;
+	}
+	
+	public static ProfileModifyRequest createModifyRequest(int playerId, ModifyType type, String newData) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("INSERT INTO player_modify_requests (playerId, requestType, data) VALUES (?,?,?)", Statement.RETURN_GENERATED_KEYS);
+			statement.setInt(1, playerId);
+			statement.setString(2, type.name());
+			statement.setString(3, newData);
+			
+			statement.executeUpdate();
+			rs = statement.getGeneratedKeys();
+			rs.next();
+			
+			return new ProfileModifyRequest(rs.getInt(1), playerId, System.currentTimeMillis(), newData, type);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(rs, c, statement);
+		}
+		return null;
+	}
+	
+	public static void reviewModifyRequest(ProfileModifyRequest request) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("UPDATE player_modify_requests SET status = ?, reviewerId = ?, reviewDate = ? WHERE id = ?");
+			statement.setInt(1, request.getStatus().ordinal());
+			statement.setInt(2, request.getReviewerId());
+			statement.setTimestamp(3, new Timestamp(request.getReviewTime()));
+			
+			statement.setInt(4, request.getId());
+			statement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
 		}
 	}
 	

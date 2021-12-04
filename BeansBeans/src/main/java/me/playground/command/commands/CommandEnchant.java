@@ -40,7 +40,7 @@ public class CommandEnchant extends BeanCommand {
 		if (i.getType() == Material.AIR)
 			throw new CommandException(sender, "You cannot enchant your hand!");
 		
-		final boolean canUnsafeEnchant = profile.isOwner();
+		final boolean canUnsafeEnchant = profile.hasPermission("bean.cmd.enchant.unsafe");
 		Enchantment e = Enchantment.getByKey(NamespacedKey.minecraft(args[0]));
 		
 		if (e == null)

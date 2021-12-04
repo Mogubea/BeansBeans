@@ -23,11 +23,11 @@ public class BeanGuiSettings extends BeanGui {
 		this.name = "Settings";
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
+				bBlank,bBlank,bBlank,bBlank,null,bBlank,bBlank,bBlank,bBlank,
+				bBlank,null,null,null,null,null,null,null,bBlank,
+				bBlank,null,null,null,null,null,null,null,bBlank,
+				bBlank,null,null,null,null,null,null,null,bBlank,
+				bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,
 				blank,blank,blank,blank,goBack,blank,blank,blank,blank
 		};
 	}

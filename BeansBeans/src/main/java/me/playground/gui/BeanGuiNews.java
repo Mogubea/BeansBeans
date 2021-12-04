@@ -33,10 +33,6 @@ public class BeanGuiNews extends BeanGui {
 	@Override
 	public void onInventoryClicked(InventoryClickEvent e) {
 		final int slot = e.getRawSlot();
-		final ItemStack item = e.getClickedInventory().getItem(e.getSlot());
-		
-		if (item == null)
-			return;
 		
 		if (slot < 54 - 9) {
 			close();

@@ -1,5 +1,6 @@
 package me.playground.utils;
 
+import me.playground.ranks.Rank;
 import net.kyori.adventure.text.format.TextColor;
 
 public class BeanColor implements TextColor {
@@ -17,6 +18,9 @@ public class BeanColor implements TextColor {
 	public static final BeanColor BESTIARY		= new BeanColor(0x23df37);
 	public static final BeanColor CIVILIZATION  = new BeanColor(0x45ffaa);
 	public static final BeanColor STRUCTURE		= new BeanColor(0x88ffcc);
+	public static final BeanColor NPC			= new BeanColor(0x77aaff);
+	public static final BeanColor SAPPHIRE		= new BeanColor(0x0f42df);
+	public static final BeanColor STAFF			= new BeanColor(Rank.MODERATOR.getRankHex());
 	
 	final int val;
 	BeanColor(int val) {

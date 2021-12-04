@@ -1,6 +1,6 @@
 package me.playground.gui;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -17,9 +17,9 @@ public abstract class BeanGuiConfirm extends BeanGui {
 	protected static final ItemStack confirm = newItem(new ItemStack(Material.LIME_STAINED_GLASS_PANE, 1), "\u00a7aConfirm Action");
 	protected static final ItemStack cancel = newItem(new ItemStack(Material.RED_STAINED_GLASS_PANE, 1), "\u00a7cCancel Action");
 	
-	protected final String[] confirmationInfo;
+	protected final List<Component> confirmationInfo;
 	
-	public BeanGuiConfirm(Player p, String...confirmationInfo) {
+	public BeanGuiConfirm(Player p, List<Component> confirmationInfo) {
 		super(p);
 		
 		this.confirmationInfo = confirmationInfo;
@@ -60,16 +60,23 @@ public abstract class BeanGuiConfirm extends BeanGui {
 		ItemStack book = new ItemStack(Material.WRITABLE_BOOK);
 		ItemMeta meta = book.getItemMeta();
 		meta.displayName(Component.text("\u00a7fInformation"));
-		ArrayList<Component> lore = new ArrayList<Component>();
-		for (String s : confirmationInfo)
-			lore.add(Component.text(s));
-		meta.lore(lore);
+		meta.lore(confirmationInfo);
 		book.setItemMeta(meta);
 		
 		contents[4] = newItem(pp.getSkull(), pp.getColouredName());
 		contents[13] = book;
 		
 		i.setContents(contents);
+	}
+	
+	@Override
+	public void openInventory() {
+		if (confirmationInfo != null) {
+			super.openInventory();
+		} else {
+			p.sendActionBar(Component.text("\u00a7cThere was a problem opening the confirmation screen! Report this!"));
+			onDecline();
+		}
 	}
 	
 	public abstract void onAccept();

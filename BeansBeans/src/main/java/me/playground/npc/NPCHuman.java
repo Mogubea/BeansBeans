@@ -150,6 +150,7 @@ public class NPCHuman extends NPC<EntityPlayer> {
 	@Override
 	public void onInteract(Player player) {
 		this.lookAtTarget(player);
+		super.onInteract(player);
 	}
 	
 }

@@ -45,7 +45,7 @@ public class CommandMoney extends BeanCommand {
 				target.addToBalance(amt, "Given to by an Admin ("+sender.getName()+")");
 				sender.sendMessage(Component.text("\u00a77Given \u00a76" + df.format(amt) + " Coins\u00a77 to ").append(target.getComponentName()).append(Component.text("\u00a77.")));
 			} else if (subCmd.equals("take")) {
-				target.addToBalance(amt, "Taken from by an Admin ("+sender.getName()+")");
+				target.addToBalance(-amt, "Taken from by an Admin ("+sender.getName()+")");
 				sender.sendMessage(Component.text("\u00a77Taken \u00a76" + df.format(amt) + " Coins\u00a77 from ").append(target.getComponentName()).append(Component.text("\u00a77.")));
 			} else if (subCmd.equals("set")) {
 				target.setBalance(amt, "Set by an Admin ("+sender.getName()+")");
@@ -57,7 +57,7 @@ public class CommandMoney extends BeanCommand {
 			if (profile == null || profile.getId() == target.getId())
 				sender.sendMessage(Component.text("\u00a77You have \u00a76" + df.format(target.getBalance()) + " Coins\u00a77."));
 			else
-				sender.sendMessage(target.getComponentName().append(Component.text("\u00a77has \u00a76" + df.format(target.getBalance()) + " Coins\u00a77.")));
+				sender.sendMessage(target.getComponentName().append(Component.text("\u00a77 has \u00a76" + df.format(target.getBalance()) + " Coins\u00a77.")));
 		}
 		return true;
 	}

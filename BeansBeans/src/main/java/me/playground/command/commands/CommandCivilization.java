@@ -51,7 +51,7 @@ public class CommandCivilization extends BeanCommand {
 			if (target.isInCivilization()) target.getCivilization().kickCitizen(target.getId());
 			CitizenTier tier = args.length > 3 ? CitizenTier.fromCmd(sender, args[3]) : CitizenTier.CITIZEN;
 			civ.addCitizen(target.getId(), tier);
-			sender.sendMessage(target.getComponentName().append(Component.text("\u00a77 is now part of ").append(civ.toComponent()).append(Component.text("\u00a77 as a "+tier.name().toLowerCase()+"!"))));
+			sender.sendMessage(target.getComponentName().append(Component.text("\u00a77 is now part of ").append(civ.toComponent()).append(Component.text("\u00a77 as a "+tier.getNiceName()+"!"))));
 		// Force a Job
 		} else if (args[0].equalsIgnoreCase("forcejob")) {
 			if (args.length < 3) throw new CommandException(sender, "Usage: \u00a7f/civ "+args[0]+"\u00a77 <player> <job>");
@@ -100,9 +100,9 @@ public class CommandCivilization extends BeanCommand {
 					throw new CommandException(sender, "You must be in-game to use /civ"+name+"!");
 				if (annotation.requiresCitizenship()) {
 					if ((!(sender instanceof Player) || !profile.isInCivilization()))
-						throw new CommandException(sender, "You must be in a civilization to use /civ"+name+"!");
+						throw new CommandException(sender, "You must be in a civilization to use /civ "+name+"!");
 					if (profile.getCivilization().getCitizen(profile.getId()).isOrAbove(annotation.citizenTier()))
-						throw new CommandException(sender, "You must be a "+annotation.citizenTier().name().toLowerCase()+" to use /civ"+name+"!");
+						throw new CommandException(sender, "You must be a "+annotation.citizenTier().name().toLowerCase()+" to use /civ "+name+"!");
 				}
 				if (annotation.minArgs() > args.length-1)
 					throw new CommandException(sender, "Not enough arguments specified for /civ "+name+"!");

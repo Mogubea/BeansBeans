@@ -103,31 +103,31 @@ public abstract class BeanGuiRegion extends BeanGui {
 	@Override
 	public boolean preInventoryClick(InventoryClickEvent e) {
 		e.setCancelled(true);
-		final ItemStack i = e.getClickedInventory().getItem(e.getSlot());
-		if (i != null) {
-			if (pp.onCdElseAdd("guiClick", 300))
-				return true;
+		final ItemStack i = e.getCurrentItem();
+		if (i == null) return true;
+		
+		if (pp.onCdElseAdd("guiClick", 300))
+			return true;
 			
-			if (e.getRawSlot() == 50) {
-				if (getRegions().size() <= 1) return true;
-				regionIdx = (++regionIdx >= getRegions().size() ? 0 : regionIdx);
-				p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.35F, 1.0F);
-				setPage(0);
-				onInventoryOpened();
-				return true;
-			} else if (i.isSimilar(goBack)) {
-				if (this instanceof BeanGuiRegionMain)
-					new BeanGuiMainMenu(p).openInventory();
-				else
-					new BeanGuiRegionMain(p, regionIdx).openInventory();
-				return true;
-			} else if (i.isSimilar(nextPage)) {
-				pageUp();
-				return true;
-			} else if (i.isSimilar(prevPage)) {
-				pageDown();
-				return true;
-			}
+		if (e.getRawSlot() == 50) {
+			if (getRegions().size() <= 1) return true;
+			regionIdx = (++regionIdx >= getRegions().size() ? 0 : regionIdx);
+			p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.35F, 1.0F);
+			setPage(0);
+			onInventoryOpened();
+			return true;
+		} else if (i.isSimilar(goBack)) {
+			if (this instanceof BeanGuiRegionMain)
+				new BeanGuiMainMenu(p).openInventory();
+			else
+				new BeanGuiRegionMain(p, regionIdx).openInventory();
+			return true;
+		} else if (i.isSimilar(nextPage)) {
+			pageUp();
+			return true;
+		} else if (i.isSimilar(prevPage)) {
+			pageDown();
+			return true;
 		}
 		return false;
 	}

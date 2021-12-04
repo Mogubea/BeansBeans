@@ -34,6 +34,7 @@ import me.playground.utils.BeanColor;
 import me.playground.utils.Calendar;
 import me.playground.utils.SignMenuFactory;
 import me.playground.utils.Utils;
+import me.playground.voting.VoteManager;
 import me.playground.warps.WarpManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
@@ -43,7 +44,6 @@ public class Main extends JavaPlugin {
 
 	private static Main instance;
 	private final Random random = new Random();
-	private byte serverState = 0;
 	
 	private TeamManager teamManager;
 	private CommandManager commandManager;
@@ -57,6 +57,7 @@ public class Main extends JavaPlugin {
 	private LootManager lootManager;
 	private SignMenuFactory signMenuFactory;
 	private DiscordBot discordBot;
+	private VoteManager voteManager;
 
 	public void onEnable() {
 		instance = this;
@@ -103,6 +104,8 @@ public class Main extends JavaPlugin {
 		
 		recipeManager = new RecipeManager(this);
 		discordBot = new DiscordBot(this);
+		
+		voteManager = new VoteManager(this);
 		
 		startMainServerLoop();
 	}
@@ -187,6 +190,9 @@ public class Main extends JavaPlugin {
 	public LootManager lootManager() {
 		return lootManager;
 	}
+	public VoteManager voteManager() {
+		return voteManager;
+	}
 
 	private void registerProtocol() {
 		//ProtocolLibrary.getProtocolManager().addPacketListener(new EquipmentHider(this));
@@ -236,39 +242,6 @@ public class Main extends JavaPlugin {
         }
 	}
 	
-	/**
-	 * 0 = Open for all. 1 = Closed for all except Mods+ 2 = Closed for all except
-	 * Admins+
-	 * 
-	 * @return the current open state of the server.
-	 */
-	public static byte getServerOpenState() {
-		return Main.getInstance().serverState;
-	}
-
-	public static void setServerOpenState(int state) {
-		switch (state) {
-		case 1:
-			for (Player p : Bukkit.getOnlinePlayers()) {
-				PlayerProfile pp = PlayerProfile.from(p);
-				if (!pp.isMod())
-					p.kick(Component.text("Server is going into maintenance."));
-			}
-			break;
-		case 2:
-			for (Player p : Bukkit.getOnlinePlayers()) {
-				PlayerProfile pp = PlayerProfile.from(p);
-				if (!pp.isAdmin())
-					p.kick(Component.text("Server is going into maintenance."));
-			}
-			break;
-		default:
-			state = 0;
-			break;
-		}
-		Main.getInstance().serverState = (byte) state;
-	}
-	
 	private long lastProfilePoke;
 	private long lastHighscoreUpdate;
 	private long lastDiscordPoke;
@@ -316,7 +289,7 @@ public class Main extends JavaPlugin {
 									pp.addRank(next);
 								}
 							}
-							
+							pp.getCheckDonorExpiration();
 							pp.updateComponentName();
 							p.sendPlayerListHeaderAndFooter(
 									Component.text("\u00a77It is currently \u00a7b" + Calendar.getTimeString(Calendar.getTime(p.getWorld()), true)

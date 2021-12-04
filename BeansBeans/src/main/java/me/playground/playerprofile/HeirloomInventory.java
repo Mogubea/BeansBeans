@@ -36,7 +36,7 @@ public class HeirloomInventory {
 	private int maxSize;
 	final private PlayerProfile profile;
 	final private LinkedHashMap<String, ItemStack> heirlooms = new LinkedHashMap<String, ItemStack>();
-	final private HashMap<Attribute, Double> visualModifiers = new HashMap<Attribute, Double>(3); // Purely for show
+	final private HashMap<Attribute, Double> visualModifiers = new HashMap<Attribute, Double>(4); // Purely for show
 	
 	public HeirloomInventory(PlayerProfile owner, @Nullable JSONObject data) {
 		putDefaultValues();
@@ -189,6 +189,10 @@ public class HeirloomInventory {
 		});
 	}
 	
+	public double getLuckBonus() {
+		return visualModifiers.get(Attribute.GENERIC_LUCK);
+	}
+	
 	public double getDamageBonus() {
 		return visualModifiers.get(Attribute.GENERIC_ATTACK_DAMAGE);
 	}
@@ -230,7 +234,7 @@ public class HeirloomInventory {
 	}
 	
 	private void putDefaultValues() {
-		final Attribute[] atts = {Attribute.GENERIC_ATTACK_DAMAGE, Attribute.GENERIC_MAX_HEALTH, Attribute.GENERIC_MOVEMENT_SPEED};
+		final Attribute[] atts = {Attribute.GENERIC_LUCK, Attribute.GENERIC_ATTACK_DAMAGE, Attribute.GENERIC_MAX_HEALTH, Attribute.GENERIC_MOVEMENT_SPEED};
 		int size = atts.length;
 		for (int x = -1; ++x < size;)
 			visualModifiers.put(atts[x], 0d);

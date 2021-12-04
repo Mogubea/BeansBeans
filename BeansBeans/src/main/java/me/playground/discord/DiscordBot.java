@@ -59,7 +59,7 @@ public class DiscordBot extends ListenerAdapter {
 	public final HashMap<Integer, Long> linkedAccounts = Datasource.grabLinkedDiscordAccounts();
 	
 	// Cache Icons for 30 minutes to reduce risk of rate limiting from source website.
-	// This may lead to skins not updating for 30 minutes, but that's not a big enough deal to worry about.
+	// This may lead to skins not updating for a while, but that's not a big enough deal to worry about.
 	private static LoadingCache<Integer, Icon> iconCache = CacheBuilder.from("maximumSize=100,expireAfterAccess=30m")
 			.build(
 					new CacheLoader<Integer, Icon>() {
@@ -91,15 +91,16 @@ public class DiscordBot extends ListenerAdapter {
 	}
 	
 	public WebhookClient getWebhookClient(int playerId) {
-		if (lastId != playerId) {
-			final String name = ((TextComponent)ProfileStore.from(playerId, false).getColouredName()).content();
-			hook.getManager().setName(name);
-			
-			Icon icon = getHeadIcon(playerId);
-			hook.getManager().setAvatar(icon).complete();
-			hook.getManager().submit();
-			lastId = playerId;
+		try {
+			if (lastId != playerId) {
+				final String name = ((TextComponent)ProfileStore.from(playerId, false).getColouredName()).content();
+				Icon icon = getHeadIcon(playerId);
+				hook.getManager().setName(name).setAvatar(icon).queue();
+				lastId = playerId;
+			}
+		} catch (ErrorResponseException e) { // Just in-case there's a situation where discord doesn't respond
 		}
+		
 		return chatClient;
 	}
 	
@@ -107,7 +108,7 @@ public class DiscordBot extends ListenerAdapter {
 		chatClient.close();
 		
 		updateServerStatus(false);
-		chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(546771060415135747L)).setDeny(Permission.MESSAGE_WRITE).queue();
+		chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setDeny(Permission.MESSAGE_WRITE).queue();
 		
 		for (Webhook hook : chatChannel().retrieveWebhooks().complete())
 			hook.delete().queue();
@@ -285,7 +286,7 @@ public class DiscordBot extends ListenerAdapter {
 				
 				ProfileStore ps = isLinked(e.getMember().getIdLong()) ? ProfileStore.from(getKey(linkedAccounts, e.getMember().getIdLong()), false) : null;
 				final String name = ps == null ? e.getMember().getEffectiveName() : ps.getDisplayName();
-				TextComponent chat = isRank(e.getMember(), Rank.MODERATOR) ? Component.empty().append(Component.text("\u24E2").color(TextColor.color(Rank.MODERATOR.getRankColour())).hoverEvent(HoverEvent.showText(Component.text("Staff Member").color(TextColor.color(Rank.MODERATOR.getRankColour()))))).append(Component.text(" ")) : Component.empty();
+				TextComponent chat = isRank(e.getMember(), Rank.MODERATOR) ? Component.empty().append(Component.text("\u24E2").color(TextColor.color(Rank.MODERATOR.getRankHex())).hoverEvent(HoverEvent.showText(Component.text("Staff Member").color(TextColor.color(Rank.MODERATOR.getRankHex()))))).append(Component.text(" ")) : Component.empty();
 				chat = chat.append(Component.text(name).color(TextColor.color(0x7789ff)).hoverEvent(HoverEvent.showText(Component.text("Discord Client\n\u00a77- Tag: " + e.getAuthor().getAsTag()).color(TextColor.color(0x6779ff)))));
 				chat = chat.append(Component.text("\u00a79 » \u00a7r").append(Component.text(msg)));
 				

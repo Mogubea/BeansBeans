@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>BeansBeans</groupId>
   <artifactId>BeansBeans</artifactId>
-  <version>0.3.4-ALPHA</version>
+  <version>0.4-ALPHA</version>
   
   <properties>
     <maven.compiler.target>16</maven.compiler.target>
@@ -99,7 +99,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                        	<outputFile>../../../Bukkit Server/plugins/${project.artifactId}-${project.version}.jar</outputFile>
+                        	<outputFile>../../../Desktop/Minecraft Server/Bukkit Server/plugins/${project.artifactId}-${project.version}.jar</outputFile>
                     	</configuration>
                     </execution>
                 </executions>

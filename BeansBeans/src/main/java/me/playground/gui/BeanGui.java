@@ -26,6 +26,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 public abstract class BeanGui implements IPluginRef {
 	
 	protected static final ItemStack blank = newItem(new ItemStack(Material.WHITE_STAINED_GLASS_PANE, 1), "");
+	protected static final ItemStack bBlank = newItem(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), Component.empty());
 	protected static final ItemStack nextPage = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjgyYWQxYjljYjRkZDIxMjU5YzBkNzVhYTMxNWZmMzg5YzNjZWY3NTJiZTM5NDkzMzgxNjRiYWM4NGE5NmUifX19"), "\u00a78Next Page");
 	protected static final ItemStack prevPage = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzdhZWU5YTc1YmYwZGY3ODk3MTgzMDE1Y2NhMGIyYTdkNzU1YzYzMzg4ZmYwMTc1MmQ1ZjQ0MTlmYzY0NSJ9fX0="), "\u00a78Previous Page");
 	public static final ItemStack goBack = newItem(new ItemStack(Material.NETHER_STAR), "\u00a7cBack");
@@ -44,7 +45,13 @@ public abstract class BeanGui implements IPluginRef {
 	protected int presetSize = 27;
 	protected String name = "Error";
 	protected ItemStack[] presetInv;
+	/**
+	 * The PlayerProfile of the inventory viewer.
+	 */
 	protected PlayerProfile pp; // Real
+	/**
+	 * The previewed profile, otherwise the same as pp.
+	 */
 	protected PlayerProfile tpp; // Target
 	protected int page;
 	protected int data;
@@ -187,6 +194,16 @@ public abstract class BeanGui implements IPluginRef {
 		return i;
 	}
 	
+	final protected static ItemStack newItem(ItemStack it, Component name) {
+		ItemStack i = it.clone();
+		ItemMeta meta = i.getItemMeta();
+		meta.displayName(name.decoration(TextDecoration.ITALIC, false));
+		meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+		i.setItemMeta(meta);
+		return i;
+	}
+	
 	final protected static ItemStack newItem(ItemStack it, Component name, String... lore) {
 		ItemStack i = it.clone();
 		ItemMeta meta = i.getItemMeta();
@@ -197,6 +214,21 @@ public abstract class BeanGui implements IPluginRef {
 		if (lore != null)
 			for (String line : lore)
 				loree.add(Component.text(line));
+		meta.lore(loree);
+		i.setItemMeta(meta);
+		return i;
+	}
+	
+	final protected static ItemStack newItem(ItemStack it, Component name, Component... lore) {
+		ItemStack i = it.clone();
+		ItemMeta meta = i.getItemMeta();
+		meta.displayName(name.decoration(TextDecoration.ITALIC, false));
+		meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+		ArrayList<Component> loree = new ArrayList<Component>();
+		if (lore != null)
+			for (Component line : lore)
+				loree.add(line);
 		meta.lore(loree);
 		i.setItemMeta(meta);
 		return i;

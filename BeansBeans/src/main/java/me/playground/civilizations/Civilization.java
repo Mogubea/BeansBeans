@@ -19,6 +19,7 @@ import me.playground.civilizations.structures.Structure;
 import me.playground.civilizations.structures.Structure.Status;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.civilizations.structures.Structures;
+import me.playground.data.Datasource;
 import net.kyori.adventure.text.Component;
 
 public class Civilization {
@@ -29,7 +30,7 @@ public class Civilization {
 		return civilizations.get(name.toLowerCase());
 	}
 	
-	public static Civilization getCivilization(int id) {
+	public static Civilization getById(int id) {
 		return civilizationsById.get(id);
 	}
 	
@@ -102,11 +103,11 @@ public class Civilization {
 	public void addCitizen(int playerId, CitizenTier tier) {
 		PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
 		if (pp.isInCivilization() && pp.getCivilization() != this)
-			pp.getCivilization().kickCitizen(pp.getId());
+			pp.getCivilization().getCitizens().remove(playerId); // Avoid datasource call since the one below will handle this.
 		
 		pp.setCivilization(this);
-		citizens.put(playerId, CitizenTier.CITIZEN);
-		setDirty(true);
+		citizens.put(playerId, tier);
+		Datasource.setCitizenship(this.getId(), playerId, tier);
 	}
 	
 	public void kickCitizen(int playerId) {
@@ -114,7 +115,7 @@ public class Civilization {
 		if (pp.isOnline())
 			pp.getPlayer().sendMessage(Component.text("\u00a77You were kicked from ").append(this.toComponent()).append(Component.text("\u00a77.")));
 		pp.setCivilization(null);
-		setDirty(true);
+		Datasource.removeCitizenship(playerId);
 	}
 	
 	@Nonnull

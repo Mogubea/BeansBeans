@@ -38,10 +38,12 @@ public abstract class Job {
 		return registeredJobs.values();
 	}
 	
-	public static final JobGatherer 	GATHERER	 = new JobGatherer();
-	public static final JobMiner 		MINER		 = new JobMiner();
-	public static final JobLumberjack 	LUMBERJACK	 = new JobLumberjack();
-	public static final JobFisherman 	FISHERMAN	 = new JobFisherman();
+	static {
+		new JobGatherer();
+		new JobMiner();
+		new JobLumberjack();
+		new JobFisherman();
+	}
 	
 	// Structure Requirements to unlock the Job within a Civilization.
 	private final Set<Structures> structureRequirements = new HashSet<Structures>();

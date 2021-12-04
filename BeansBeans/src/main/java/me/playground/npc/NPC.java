@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 import org.bukkit.entity.ArmorStand;
@@ -14,11 +15,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.json.JSONObject;
 
+import me.playground.civilizations.Civilization;
+import me.playground.civilizations.jobs.Job;
 import me.playground.main.IPluginRef;
 import me.playground.main.Main;
+import me.playground.npc.interactions.NPCInteraction;
+import me.playground.playerprofile.PlayerProfile;
+import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.PacketPlayOutEntity;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
@@ -30,7 +38,13 @@ import net.minecraft.world.entity.EntityLiving;
 public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	final private int npcId;
 	private Location location;
-	protected int creatorId;
+	
+	protected int creatorId; // Can be set to 0.
+	protected Civilization civilization; // If the NPC belongs to a Civilization and not neccessarily an owning player.
+	protected Job job = Job.getByName("gatherer"); // If the NPC has a Job, for Interactions.
+	protected NPCInteraction interaction = NPCInteraction.getByName("base");
+	protected int titleCol = BeanColor.NPC.value();
+	
 	final protected Main plugin;
 	final protected T entity;
 	
@@ -48,14 +62,24 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 		this.location = location;
 		entity.setPositionRotation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
 		if (json != null) {
+			titleCol = json.optNumber("titleCol", BeanColor.NPC.value()).intValue();
 			String title = json.optString("title");
-			if (title != null && !title.isEmpty())
-				this.setTitle(Component.text(title), false);
+			if (!title.isEmpty())
+				setTitle(Component.text(title), false);
+			
+			
+			job = Job.getByName(json.optString("job", "gatherer"));
+			interaction = NPCInteraction.getByName(json.optString("interaction", "base"));
+			String strCiv = json.optString("civilization");
+			if (!strCiv.isEmpty())
+				civilization = Civilization.getByName(strCiv);
 		}
+		interaction.onInit(this);
 	}
 	
 	protected abstract void showTo(Player p);
 	protected abstract NPCType getType();
+	
 	/**
 	 * Obtained to save exclusive data depending on Entity, to the database. Used to load the entities.
 	 * @return Exclusive Json data based on the Entity.
@@ -63,6 +87,11 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	public JSONObject getJsonData() {
 		JSONObject obj = new JSONObject();
 		if (titleEntity != null) obj.put("title", ((TextComponent)titleEntity.customName()).content());
+		if (titleCol != BeanColor.NPC.value()) obj.put("titleCol", titleCol);
+		if (civilization != null) obj.put("civilization", civilization.getName());
+		
+		obj.put("job", job.getName());
+		obj.put("interaction", interaction.getName());
 		return obj;
 	}
 	
@@ -78,6 +107,10 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	protected void hideFromAll() {
 		Bukkit.getOnlinePlayers().forEach((p) -> { hideFrom(p); });
 		removeTitle(false);
+	}
+	
+	public void spawnParticle(Particle particle, double xOffset, double yOffset, double zOffset, int particles) {
+		getLocation().getWorld().spawnParticle(particle, getLocation().getX(), getLocation().getY()+entity.getHeadHeight(), getLocation().getZ(), particles, xOffset, yOffset, zOffset);
 	}
 	
 	public NPC<T> teleport(Location loc, boolean dirty) {
@@ -145,7 +178,7 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	/**
 	 * Marks the NPC as {@link #dirty}, assuming they have an entry in the database. 
 	 */
-	protected void setDirty() {
+	public void setDirty() {
 		dirty = isDatabaseNPC();
 	}
 	
@@ -161,6 +194,29 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 		return npcId;
 	}
 	
+	public boolean isOwner(Player p) {
+		return creatorId == PlayerProfile.getDBID(p);
+	}
+	
+	public boolean hasCivilization() {
+		return civilization != null;
+	}
+	
+	public Civilization getCivilization() {
+		return civilization;
+	}
+	
+	public NPC<T> setInteraction(NPCInteraction interaction) {
+		this.interaction = interaction;
+		this.interaction.onInit(this);
+		setDirty();
+		return this;
+	}
+	
+	public NPCInteraction getInteraction() {
+		return interaction;
+	}
+	
 	public int getCreatorId() {
 		return creatorId;
 	}
@@ -169,6 +225,16 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 		this.creatorId = playerId;
 		setDirty();
 		return this;
+	}
+	
+	public NPC<T> setJob(Job job) {
+		this.job = job;
+		setDirty();
+		return this;
+	}
+	
+	public Job getJob() {
+		return job;
 	}
 	
 	public Location getLocation() {
@@ -193,7 +259,8 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	public void setTitle(Component title, boolean dirty) {
 		if (title == null) { removeTitle(dirty); return; }
 		if (getTitleStand() != null) { titleEntity.remove(); }
-		titleEntity = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
+		Location loc = location.clone().add(0, 0.3, 0);
+		titleEntity = (ArmorStand) location.getWorld().spawnEntity(loc, EntityType.ARMOR_STAND);
 		titleEntity.setInvisible(true);
 		titleEntity.setInvulnerable(true);
 		titleEntity.setGravity(false);
@@ -202,9 +269,25 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 		titleEntity.addEquipmentLock(EquipmentSlot.CHEST, LockType.REMOVING_OR_CHANGING);
 		titleEntity.addEquipmentLock(EquipmentSlot.LEGS, LockType.REMOVING_OR_CHANGING);
 		titleEntity.addEquipmentLock(EquipmentSlot.FEET, LockType.REMOVING_OR_CHANGING);
-		titleEntity.customName(title);
+		titleEntity.customName(title.color(TextColor.color(titleCol)));
 		titleEntity.setCustomNameVisible(true);
 		if (dirty) setDirty();
+	}
+	
+	public void setTitleColour(int col) {
+		titleCol = col;
+		setDirty();
+		if (getTitle() != Component.empty())
+			setTitle(getTitle(), true);
+	}
+	
+	public int getTitleColour() {
+		return titleCol;
+	}
+	
+	public Component getTitle() {
+		if (titleEntity == null) return Component.empty();
+		return titleEntity.customName();
 	}
 	
 	protected ArmorStand getTitleStand() {
@@ -230,11 +313,18 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	/**
 	 * Fires when a player right clicks this entity.
 	 */
-	public abstract void onInteract(Player player);
+	public void onInteract(Player player) {
+		interaction.onInteract(this, player);
+	}
 	
 	public void sendMessage(Player player, Component message) {
-		player.sendMessage(Component.text("\u00a7b[NPC] ").append(getName()).append(Component.text(" » \u00a7f")).append(message));
-		player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 0.6F, 1.4F);
+		sendMessage(player, message, Sound.ENTITY_VILLAGER_YES);
+	}
+	
+	public void sendMessage(Player player, Component message, Sound sound) {
+		player.sendMessage(Component.text("[NPC] ").append(getName()).color(BeanColor.NPC).append(Component.text("\u00a73 »")).append(message).color(NamedTextColor.WHITE));
+		if (sound != null)
+			player.playSound(player.getLocation(), sound, 0.55F, 1.4F);
 	}
 	
 }

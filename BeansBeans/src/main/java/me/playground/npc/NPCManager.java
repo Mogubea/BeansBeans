@@ -41,7 +41,7 @@ public class NPCManager implements IPluginRef {
 				npcsByEntityId.values().forEach(npc -> {npc.onTick();});
 			}
 			
-		}, 10L, 10L);
+		}, 5L, 5L);
 		
 	}
 	
@@ -142,7 +142,8 @@ public class NPCManager implements IPluginRef {
 		final WorldServer world = ((CraftWorld)location.getWorld()).getHandle();
 		EntityLiving entityNpc = null;
 		
-		if (type.name().startsWith("HUMAN")) {
+		switch(type) {
+		case HUMAN:
 			UUID uuid = UUID.randomUUID();
 			if (json != null && json.has("uuid"))
 				uuid = UUID.fromString(json.getString("uuid"));
@@ -150,14 +151,7 @@ public class NPCManager implements IPluginRef {
 			GameProfile profile = new GameProfile(uuid, name);
 			entityNpc = new EntityPlayer(server, world, profile);
 			((EntityPlayer) entityNpc).spawnIn(world);
-		}
-		
-		switch(type) {
-		case HUMAN:
 			ack = new NPCHuman(creatorId, id, getPlugin(), ((EntityPlayer) entityNpc), location, json);
-			break;
-		case HUMAN_EMPLOYER:
-			ack = new NPCHumanEmployer(creatorId, id, getPlugin(), ((EntityPlayer)entityNpc), location, json);
 			break;
 		default:
 			throw new RuntimeException("Invalid NPCType provided, cannot create NPC.");

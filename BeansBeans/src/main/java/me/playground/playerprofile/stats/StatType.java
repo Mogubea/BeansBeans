@@ -12,6 +12,7 @@ public enum StatType {
 	DEATHS(6, "death", "deaths", "deathby"),
 	CRATES_OPENED(7, "crate", "crates", "cratesopened"),
 	OCCUPATION(8, "job", "jobs"),
+	VOTING(9, "vote", "votes"),
 	
 	
 	;

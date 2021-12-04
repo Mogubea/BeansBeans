@@ -67,7 +67,7 @@ public class CommandWarp extends BeanCommand {
 				throw new CommandException(sender, "\u00a7cYou have too many warps (\u00a7d"+profile.getWarpCount()+"\u00a7c/\u00a75"+profile.getWarpLimit()+"\u00a7c)!");
 			if (args.length < 2) 
 				throw new CommandException(sender, "Usage: \u00a7f/warp create \u00a77<warp name>");
-			if (!profile.isAdmin() && profile.getBalance() < creationCost)
+			if (!profile.hasPermission("bean.cmd.warp.*") && profile.getBalance() < creationCost)
 				throw new CommandException(sender, "\u00a7cYou need another \u00a76" + (creationCost-profile.getBalance()) + " Coins \u00a7cto do this!");
 			if (wm.doesWarpExist(warpname))
 				throw new CommandException(sender, Component.text("The warp ").append(toWarp(p, warpname).toComponent()).append(Component.text("\u00a7r already exists!")));
@@ -79,7 +79,7 @@ public class CommandWarp extends BeanCommand {
 			Warp newWarp = null;
 			try {
 				newWarp = wm.createNewWarp(profile.getId(), warpname, p.getLocation());
-				if (!profile.isAdmin())
+				if (!profile.hasPermission("bean.cmd.warp.*"))
 					profile.addToBalance(-creationCost, "Created a warp with the name '" + warpname + "'");
 				profile.upWarpCount();
 			} catch (Throwable e) {
@@ -93,10 +93,11 @@ public class CommandWarp extends BeanCommand {
 			final boolean isOwner = warp.isOwner(p);
 				
 			final BeanGuiConfirm confirmation = new BeanGuiConfirm(p,
-					"\u00a7aConfirming \u00a77will delete the warp \"\u00a7d"+warp.getName()+"\u00a77\"",
-					(isOwner ? "" : "\u00a77 (owned by "+PlayerProfile.getDisplayName(warp.getOwnerId())+"\u00a77)"),
-					"",
-					"\u00a7cThis action cannot be undone!") {
+					Arrays.asList(
+							Component.text("\u00a77Confirming will delete the warp: ").append(warp.toComponent()),
+							isOwner ? Component.text("\u00a78(Owned by You)") : Component.text("\u00a78(Owned by ").append(PlayerProfile.getDisplayName(warp.getOwnerId()).append(Component.text("\u00a78)"))),
+							Component.empty(),
+							Component.text("\u00a7cThis action cannot be undone!"))) {
 				public void onAccept() {
 					String name = warp.getName();
 					int ownerId = warp.getOwnerId();
@@ -175,7 +176,7 @@ public class CommandWarp extends BeanCommand {
 			if (args.length < 2) throw new CommandException(sender, "Usage: \u00a7f/warp relocate \u00a77<warp>");
 			canDo(sender, warp, "relocate");
 			
-			if (!profile.isAdmin() && profile.getBalance() < creationCost)
+			if (!profile.hasPermission("bean.cmd.warp.*") && profile.getBalance() < creationCost)
 				throw new CommandException(sender, "\u00a7cYou need another \u00a76" + (creationCost-profile.getBalance()) + " Coins \u00a7cto do this!");
 			if (!isSafe(p.getLocation()) || !RegionManager.getRegionAt(p.getLocation()).getEffectiveFlag(Flags.WARP_CREATION))
 				throw new CommandException(sender, "\u00a7cYou can't redesignate your warp location to here.");

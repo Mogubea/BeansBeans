@@ -1,5 +1,7 @@
 package me.playground.listeners;
 
+import java.util.ArrayList;
+
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,6 +16,9 @@ import me.playground.data.Datasource;
 import me.playground.gui.BeanGui;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
+import me.playground.playerprofile.ProfileModifyRequest;
+import me.playground.ranks.Rank;
+import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
 
 public class ConnectionListener extends EventListener {
@@ -45,13 +50,6 @@ public class ConnectionListener extends EventListener {
 		PlayerProfile pp = PlayerProfile.from(e.getUniqueId());
 		pp.updateRealName(e.getName());
 		e.getPlayerProfile().setName(pp.getDisplayName());
-		
-		if (Main.getServerOpenState() == 0)
-			e.allow();
-		if (Main.getServerOpenState() == 1 && !pp.isMod())
-			e.disallow(Result.KICK_OTHER, Component.text("\u00a7cThe server is currently under maintenance."));
-		if (Main.getServerOpenState() == 2 && !pp.isAdmin())
-			e.disallow(Result.KICK_OTHER, Component.text("\u00a7cThe server is currently under maintenance."));
 	}
 
 	@EventHandler
@@ -71,6 +69,17 @@ public class ConnectionListener extends EventListener {
 		
 		pp.getSkills().assignBarPlayer(p);
 		e.joinMessage(Component.text("\u00a7a» ").append(pp.getComponentName()).append(Component.text("\u00a7e joined the server!")));
+		
+		// Check for Donor Rank expiriry
+		pp.getCheckDonorExpiration();
+		
+		// Staff Messages
+		if (pp.isRank(Rank.MODERATOR)) {
+			ArrayList<ProfileModifyRequest> reqs = ProfileModifyRequest.getPendingRequests();
+			if (reqs.size() > 0)
+				p.sendMessage(Component.text("There are \u00a7b" + reqs.size() + " \u00a7rpending nickname requests.", BeanColor.STAFF));
+		}
+		
 		//EmbedBuilder eb = getPlugin().discord().embedBuilder(0x44ff89, "**"+pp.getDisplayName()+"** joined the server!");
 		//getPlugin().discord().chatChannel().sendMessageEmbeds(eb.build()).queue();
 	}

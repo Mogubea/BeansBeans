@@ -78,10 +78,11 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 				if (e.isShiftClick()) {
 					// If SHIFT CLICK, drop EVERYTHING on the player
 					if (e.isShiftClick()) {
-						BeanGuiConfirm confirm = new BeanGuiConfirm(p, "\u00a77This action will drop \u00a7c" + shop.getItemQuantity() + " Items\u00a77",
-								"\u00a77at your feet immediately. Make sure there",
-								"\u00a77is no one around to steal your stuff!") {
-
+						BeanGuiConfirm confirm = new BeanGuiConfirm(p, 
+								Arrays.asList(
+										Component.text("\u00a77Confirming will drop \u00a7c" + shop.getItemQuantity() + " Items"),
+										Component.text("\u00a77at your feet immediately. Make sure there"),
+										Component.text("\u00a77is no one around to steal your stuff!"))) {
 							@Override
 							public void onAccept() {
 								while (shop.getItemQuantity() > 0) {
@@ -262,14 +263,14 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 			}
 			break;
 		case 44: // Shop Delete
-			if ((pp.isAdmin() || shop.getOwnerId() == pp.getId())) {
-				BeanGuiConfirm confirm = new BeanGuiConfirm(p, "\u00a77This action will drop \u00a76" + shop.getItemQuantity() + " Shop Stock\u00a77",
-						"\u00a77at your feet immediately. Make sure there",
-						"\u00a77is no one around to steal your stuff!",
-						"",
-						"\u00a77All \u00a76Shop Bank Funds\u00a77 will be instantly",
-						(shop.getOwnerId()!=pp.getId() ? "\u00a77returned to the Owner's wallet" : "\u00a77returned to your wallet.")) {
-
+			if ((pp.hasPermission("bean.shop.override") || shop.getOwnerId() == pp.getId())) {
+				BeanGuiConfirm confirm = new BeanGuiConfirm(p, Arrays.asList(
+						Component.text("\u00a77Confirming will drop \u00a7c" + shop.getItemQuantity() + " Items"),
+						Component.text("\u00a77at your feet immediately. Make sure there"),
+						Component.text("\u00a77is no one around to steal your stuff!"),
+						Component.empty(),
+						Component.text("\u00a77All \u00a76Shop Funds\u00a77 will be instantly"),
+						Component.text((shop.getOwnerId()!=pp.getId() ? "\u00a77returned to the Owner's wallet." : "\u00a77returned to your wallet.")))) {
 					@Override
 					public void onAccept() {
 						p.closeInventory();
@@ -343,7 +344,7 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 		final boolean isSelling = shop.getSellPrice() > 0 && stock > 0;
 		final boolean isBuying = shop.getBuyPrice() > 0 && shop.getStoredMoney() >= shop.getBuyPrice() && stock < shop.getMaxItemQuantity();
 		
-		contents[8] = p.hasPermission("bean.shop.override") ? adminBtn : blank;
+		contents[8] = pp.hasPermission("bean.shop.override") ? adminBtn : blank;
 		
 		if (!isSelling) {
 			for (int x = 1; x < 4; x++)
@@ -376,7 +377,7 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 			contents[25] = i;
 		}
 		
-		if (pp.isAdmin() || pp.getId() == shop.getOwnerId())
+		if (pp.hasPermission("bean.shop.override") || pp.getId() == shop.getOwnerId())
 			contents[44] = shop_delete;
 		
 		i.setContents(contents);

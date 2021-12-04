@@ -10,6 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import me.playground.celestia.logging.Celestia;
 import me.playground.command.BeanCommand;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
@@ -29,11 +30,11 @@ import net.kyori.adventure.text.format.TextColor;
 public class CommandModify extends BeanCommand {
 
 	public CommandModify(Main plugin) {
-		super(plugin, true, Rank.ADMINISTRATOR, 2, "editplayer", "ep", "modify");
+		super(plugin, "bean.cmd.modify", true, 2, "editplayer", "ep", "modify");
 		description = "Modify the attributes of a player's profile.";
 	}
 
-	final String[] subCmds = { "name", "colour", "addgroup", "removegroup", "addcoins", "flipsetting" };
+	final String[] subCmds = { "name", "colour", "addgroup", "removegroup", "flipsetting" };
 	final String[] hexSuggestions = { "afafaf", "0x7faf7f", "0x51ef51" };
 	
 	@Override
@@ -57,17 +58,14 @@ public class CommandModify extends BeanCommand {
 		if ("removegroup".equals(cmdStr) || "rg".equals(cmdStr)) {
 			modify = 3;
 		} else
-		if ("addcoins".equals(cmdStr) || "givecoins".equals(cmdStr) || "addcoin".equals(cmdStr)) {
-			modify = 4;
-		} else
 		if ("flipsetting".equals(cmdStr)) {
-			modify = 5;
+			modify = 4;
 		}
 		
 		if (modify < 0) {
 			sender.sendMessage(
 					"\u00a7c\""+cmdStr+"\" is not a valid attribute to modify.\n" +
-					"\u00a7cAttributes: \u00a7fnickname, namecolour, addgroup, removegroup, givecoins, flipsetting");
+					"\u00a7cAttributes: \u00a7fnickname, namecolour, addgroup, removegroup, flipsetting");
 			return true;
 		}
 		
@@ -82,6 +80,7 @@ public class CommandModify extends BeanCommand {
 			case 0:
 				String old0 = pp.getDisplayName();
 				pp.setNickname(value);
+				Celestia.logModify(pp.getId(), "Changed %ID"+pp.getId()+"'s Name to " + value);
 				sender.sendMessage(pp.getColouredName().append(Component.text("\u00a77's nickname has been updated from ").append(Component.text(old0).color(pp.getNameColour()))));
 				break;
 			case 1:
@@ -140,16 +139,6 @@ public class CommandModify extends BeanCommand {
 				}
 				break;
 			case 4:
-				try {
-					int i = Integer.parseInt(value);
-					pp.addToBalance(i, "Modify");
-					sender.sendMessage("\u00a77Given " + (i<1 ? "\u00a7c" : "\u00a7a") + i + " Coins \u00a77to " + pp.getDisplayName() + " \u00a78(New: "+pp.getBalance()+")");
-				} catch (NumberFormatException e) {
-					sender.sendMessage("\u00a7cNot a valid number.");
-					return true;
-				}
-				break;
-			case 5:
 				try {
 					PlayerSetting st = PlayerSetting.valueOf(value);
 					pp.flipSetting(st);

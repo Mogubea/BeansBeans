@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import me.playground.main.Main;
+import me.playground.ranks.Permission;
 import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -57,7 +58,7 @@ public class BeanGuiCommands extends BeanGui {
 				break;
 			}
 			
-			if (!c.getPermission().isEmpty() && !p.hasPermission(c.getPermission()))
+			if (!c.getPermission().isEmpty() && !pp.hasPermission(c.getPermission()))
 				continue;
 			ItemStack test = new ItemStack(Material.FILLED_MAP);
 			ItemMeta testm = test.getItemMeta();
@@ -65,7 +66,7 @@ public class BeanGuiCommands extends BeanGui {
 			
 			ArrayList<Component> ack = new ArrayList<Component>();
 			ack.add(Component.text("\u00a78\u00a7i\"" + c.getDescription() + "\""));
-			if (pp.isOwner())
+			if (pp.hasPermission(Permission.MODIFY_PERMISSIONS))
 				ack.add(Component.text("\u00a77Permission: \u00a7f" + c.getPermission()));
 			testm.lore(ack);
 			test.setItemMeta(testm);

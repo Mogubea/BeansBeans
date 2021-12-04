@@ -281,6 +281,27 @@ public class Utils {
 		});
 	}
 	
+	public static String timeStringFromNow(long timeInMillis) {
+		long cur = System.currentTimeMillis();
+		long secs = (timeInMillis > cur ? timeInMillis - cur : cur - timeInMillis) / 1000;
+		boolean tooShort = secs < 60;
+		long mins = secs / 60;
+		secs -= mins*60;
+		long hours = mins / 60;
+		mins -= hours*60;
+		long days = hours / 24;
+		hours -= days*24;
+		
+		if (tooShort) 
+			return "a few seconds";
+		if (days > 0)
+			return days + (days > 1 ? " Days" : " Day") + (hours > 0 ? " and " + hours + (hours > 1 ? " Hours" : " Hour") : "");
+		if (hours > 0)
+			return hours + (hours > 1 ? " Hours" : " Hour") + (mins > 0 ? " and " + mins + (mins > 1 ? " Minutes" : " Minute") : "");
+		
+		return mins + (mins > 1 ? " Minutes" : " Minute");
+	}
+	
 	private final static TreeMap<Integer, String> map = new TreeMap<Integer, String>();
 
     static {

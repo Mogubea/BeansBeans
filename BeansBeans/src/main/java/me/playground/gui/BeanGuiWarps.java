@@ -144,7 +144,7 @@ public class BeanGuiWarps extends BeanGui {
 		
 		final ArrayList<Warp> warpss = new ArrayList<Warp>();
 		int[] door = {2,4,6};
-		if (pp.isAdmin())
+		if (pp.hasPermission("bean.cmd.warp.*"))
 			door = new int[]{1,3,5,7};
 		
 		for (int x = 0; x < 9; x++)

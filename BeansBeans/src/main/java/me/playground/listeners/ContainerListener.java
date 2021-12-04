@@ -18,6 +18,7 @@ import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
@@ -295,6 +296,20 @@ public class ContainerListener extends EventListener {
 				final int finalCost = (int) Math.max(1, newCost - Math.min(15, ((float)skillInfo.getLevel() / 80F)));
 				
 				Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> { inv.setMaximumRepairCost(100); inv.setRepairCost(finalCost); });
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onInventoryDrag(InventoryDragEvent e) {
+		// Cancel item drags if it drags over any part of the custom gui.
+		PlayerProfile pp = PlayerProfile.from(e.getWhoClicked());
+		if (pp.getBeanGui() != null) {
+			for (int i : e.getRawSlots()) {
+				if (i < pp.getBeanGui().getInventory().getSize()) {
+					e.setCancelled(true);
+					return;
+				}
 			}
 		}
 	}

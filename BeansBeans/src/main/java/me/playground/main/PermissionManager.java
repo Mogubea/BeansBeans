@@ -41,19 +41,22 @@ public class PermissionManager {
 		if (isPreviewing(p))
 			attachment.setPermission("bean.cmd.op", true);
 		
-		PlayerProfile pp = PlayerProfile.from(p);
-		final Rank highest = pp.getHighestRank();
-		if (highest == Rank.OWNER && p.getUniqueId().equals(UUID.fromString("158f33a1-37d7-45d1-86bf-ed7f82a716b1")))
-			p.setOp(true);
-		else
-			p.setOp(false);
+		final PlayerProfile pp = PlayerProfile.from(p);
+		final boolean isTrueOwner = pp.getHighestRank() == Rank.OWNER && p.getUniqueId().equals(UUID.fromString("158f33a1-37d7-45d1-86bf-ed7f82a716b1"));
+		p.setOp(isTrueOwner);
 		
-		for (Rank rank : Rank.values())
-			if (highest == Rank.OWNER || (highest.power() >= rank.power() && !rank.isDonorRank())) {
-				attachment.setPermission("bean.rank."+rank.lowerName(), true);
-				for (String rankPerm : rank.getPermissions())
-					attachment.setPermission(rankPerm, true);
+		for (Rank rank : Rank.values()) {
+			if (!isTrueOwner) {
+				if (rank.isDonorRank()) {
+					if (pp.getDonorRank() != null && pp.getDonorRank().power() < rank.power()) continue;
+				} else if (pp.getHighestRank().power() < rank.power()) break; // Don't bother continuing...
 			}
+			
+			attachment.setPermission("bean.rank."+rank.lowerName(), true);
+			for (String rankPerm : rank.getPermissions())
+				attachment.setPermission(rankPerm, true);
+		}
+			
 		permissions.put(p.getUniqueId(), attachment);
 	}
 	

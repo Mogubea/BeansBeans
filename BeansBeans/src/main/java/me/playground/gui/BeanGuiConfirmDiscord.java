@@ -1,12 +1,9 @@
 package me.playground.gui;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import me.playground.celestia.logging.CelestiaAction;
 import me.playground.data.Datasource;
@@ -24,41 +21,22 @@ public class BeanGuiConfirmDiscord extends BeanGuiConfirm {
 	final private Member member;
 	
 	public BeanGuiConfirmDiscord(DiscordBot manager, Player p, TextChannel channel, Member member) {
-		super(p, "\u00a77This action will link your \u00a7aMinecraft Account",
-				"\u00a77with the following \u00a79Discord Account\u00a77 on the",
-				"\u00a77Bean's Beans Server Discord:",
-				"",
-				"\u00a7e" + member.getUser().getAsTag(),
-				"",
-				"\u00a7cThis action can not currently be reversed.",
-				"\u00a7cSo please make sure that is YOUR ACCOUNT.");
+		super(p, Arrays.asList(
+				Component.text("\u00a77This action will link your \u00a7aMinecraft Account"),
+				Component.text("\u00a77with the following \u00a79Discord Account\u00a77 on the"),
+				Component.text("\u00a77Bean's Beans Server Discord:"),
+				Component.empty(),
+				Component.text("\u00a79" + member.getUser().getAsTag()),
+				Component.empty(),
+				Component.text("\u00a7cThis action can not currently be reversed."),
+				Component.text("\u00a7cSo please make sure that is YOUR ACCOUNT.")));
 		this.manager = manager;
 		this.channel = channel;
 		this.member = member;
 	}
 
 	@Override
-	public void onInventoryClosed(InventoryCloseEvent e) {
-		
-	}
-
-	@Override
-	public void onInventoryOpened() {
-		ItemStack[] contents = i.getContents();
-		ItemStack book = new ItemStack(Material.WRITABLE_BOOK);
-		ItemMeta meta = book.getItemMeta();
-		meta.displayName(Component.text("\u00a7fInformation"));
-		ArrayList<Component> lore = new ArrayList<Component>();
-		for (String s : confirmationInfo)
-			lore.add(Component.text(s));
-		meta.lore(lore);
-		book.setItemMeta(meta);
-		
-		contents[4] = newItem(pp.getSkull(), pp.getColouredName());
-		contents[13] = book;
-		
-		i.setContents(contents);
-	}
+	public void onInventoryClosed(InventoryCloseEvent e) {}
 	
 	public void onAccept() {
 		Datasource.setDiscordLink(pp.getId(), member.getIdLong());
@@ -67,7 +45,7 @@ public class BeanGuiConfirmDiscord extends BeanGuiConfirm {
 		eb.setFooter("Responding to " + member.getUser().getAsTag() + "'s /link Command", member.getUser().getEffectiveAvatarUrl());
 		eb.setColor(0x44ddff);
 		eb.appendDescription("Your Discord Account has been successfully linked to **"+p.getName()+"**.");
-		p.sendMessage(Component.text("\u00a77You are now successfully linked to \u00a79" + member.getUser().getAsTag()));
+		p.sendMessage(Component.text("\u00a7aYou are now successfully linked to \u00a79" + member.getUser().getAsTag()));
 		
 		if (!member.hasPermission(Permission.ADMINISTRATOR)) {
 			manager.updateNickname(pp);

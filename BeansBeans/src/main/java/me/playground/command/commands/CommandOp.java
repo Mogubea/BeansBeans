@@ -65,19 +65,6 @@ public class CommandOp extends BeanCommand {
 			new BeanGuiDebug(p).openInventory();
 			return true;
 		}
-			
-		
-		if ("lockserver".equals(cmdStr)) {
-			Main.setServerOpenState(1);
-			p.sendMessage(Component.text("\u00a7cThe server is no longer open for regular players."));
-			return true;
-		}
-		
-		if ("open".equals(cmdStr) || "openserver".equals(cmdStr)) {
-			Main.setServerOpenState(0);
-			p.sendMessage(Component.text("\u00a7aThe server is now open for players."));
-			return true;
-		}
 		
 		if ("previewrank".equals(cmdStr) && checkPlayer(sender)) {
 			try {

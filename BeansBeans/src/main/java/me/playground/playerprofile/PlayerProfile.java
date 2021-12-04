@@ -2,7 +2,9 @@ package me.playground.playerprofile;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
@@ -10,14 +12,17 @@ import javax.annotation.Nonnull;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.Statistic;
+import org.bukkit.advancement.AdvancementProgress;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffectType;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -37,6 +42,7 @@ import me.playground.playerprofile.skills.SkillData;
 import me.playground.playerprofile.skills.SkillType;
 import me.playground.playerprofile.stats.PlayerStats;
 import me.playground.playerprofile.stats.StatType;
+import me.playground.ranks.Permission;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
 import me.playground.utils.Utils;
@@ -45,6 +51,9 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.TextColor;
+import net.minecraft.network.protocol.game.PacketPlayOutPlayerInfo;
+import net.minecraft.network.protocol.game.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
+import net.minecraft.server.network.PlayerConnection;
 
 public class PlayerProfile {
 	
@@ -136,13 +145,14 @@ public class PlayerProfile {
 	
 	private final ArrayList<Integer> 	ignoredPlayers = new ArrayList<Integer>();
 	private final ArrayList<Rank> 		ranks = new ArrayList<Rank>();
+	private long 						donorExpirationTime = 0L;
 	
 	private final SkillData 			skillData;
 	
 	private String 						name;
 	private String 						nickname;
 	private TextComponent   			colouredName;
-	private int 						nameColour = Rank.NEWBEAN.getRankColour();
+	private int 						nameColour = Rank.NEWBEAN.getRankHex();
 	
 	private long 						coins = 500;
 	private short						warpCount;
@@ -163,6 +173,12 @@ public class PlayerProfile {
 	
 	// Not Saved
 	private int							warpLimit;
+	/**
+	 * This should always be exactly the same as the online player's permission set.
+	 * This exists to minimise or eradicate the use of {@link #isRank(Rank)}. As a 
+	 * permission based system is far more reliable.
+	 */
+	private Set<String>					permissions = new HashSet<String>(); 
 	private ArrayList<String>			recentWarps = new ArrayList<String>(10);
 	private HashMap<String, Long>  		cooldowns = new HashMap<String, Long>();
 	private BeanGui			 			currentlyViewedGUI;
@@ -239,50 +255,82 @@ public class PlayerProfile {
 			getPlayer().sendActionBar(Component.text("\u00a76" + getBalance() + " Coins \u00a77( " + (amount>-1 ? "\u00a7a+" : "\u00a7c") + amount + "\u00a77 )"));
 	}
 	
-	public boolean isMod() {
-		return ranks.contains(Rank.MODERATOR)||isAdmin()||isOwner();
+	/**
+	 * A player's Sapphire count is stored within the voting {@link #StatType}.
+	 * @return the player's Sapphire
+	 */
+	public int getSapphire() {
+		return getStat(StatType.VOTING, "sapphire");
 	}
 	
-	public boolean isAdmin() {
-		return ranks.contains(Rank.ADMINISTRATOR)||isOwner();
+	/**
+	 * A player's Sapphire count is stored within the voting {@link #StatType}.
+	 * <br>Add to a player's sapphire count.
+	 */
+	public void addToSapphire(int amount) {
+		stats.addToStat(StatType.VOTING, "sapphire", amount);
 	}
 	
-	public boolean isOwner() {
-		return ranks.contains(Rank.OWNER);
+	public void setSapphire(int amount) {
+		stats.setStat(StatType.VOTING, "sapphire", amount);
+	}
+	
+	public boolean hasPermission(String permissionString) {
+		return this.permissions.contains("*") || this.permissions.contains(permissionString);
 	}
 	
 	public boolean isRank(Rank rank) {
+		// If it's a donor rank, just check if your current donor rank is equal or higher.
+		if (rank.isDonorRank() && getDonorRank() != null && rank.power() <= getDonorRank().power())
+			return true;
+		// If it's a playtime rank, just check if your current playtime rank is equal or higher.
+		if (rank.isPlaytimeRank() && rank.power() <= getPlaytimeRank().power())
+			return true;
+		// If it's a staff rank, just check if your highest rank is equal or higher.
+		if (rank.isStaffRank() && rank.power() <= getHighestRank().power())
+			return true;
 		return ranks.contains(rank);
 	}
 	
+	/**
+	 * @return millis when their donor rank expires. Also demotes if that time has been met.
+	 */
+	public long getCheckDonorExpiration() {
+		if (this.donorExpirationTime != 0L) {
+			if (getDonorRank() != null)
+				if (System.currentTimeMillis() >= this.donorExpirationTime) {
+					if (this.isOnline())
+						this.getPlayer().sendMessage(Component.text("\u00a7eYour ").append(donorRank.toComponent()).append(Component.text("\u00a7e rank has expired!")));
+					this.removeRank(Rank.PLEBEIAN, Rank.PATRICIAN, Rank.SENATOR);
+				}
+		}
+		return this.donorExpirationTime;
+	}
+	
+	public void setDonorExpiration(long milli) {
+		this.donorExpirationTime = milli;
+	}
+	
+	public void addToDonorExpiration(long milli) {
+		if (donorExpirationTime < System.currentTimeMillis())
+			setDonorExpiration(System.currentTimeMillis() + milli);
+		else
+			this.donorExpirationTime += milli;
+	}
+	
+	private Rank highestRank;
 	public Rank getHighestRank() {
-		Rank r = Rank.NEWBEAN;
-		for (Rank rr : ranks) {
-			if (rr.power()>r.power())
-				r = rr;
-		}
-		return r;
+		return highestRank;
 	}
 	
+	private Rank donorRank = null;
 	public Rank getDonorRank() {
-		Rank r = null;
-		for (Rank rr : ranks) {
-			if (rr.isDonorRank() && (r != null ? rr.power()>r.power() : true))
-				r = rr;
-		}
-		return r;
+		return donorRank;
 	}
 	
+	private Rank playtimeRank;
 	public Rank getPlaytimeRank() {
-		Rank r = Rank.NEWBEAN;
-		for (Rank rr : ranks) {
-			if (rr.isDonorRank() || rr.isStaffRank())
-				continue;
-			
-			if (rr.power() > r.power())
-				r = rr;
-		}
-		return r;
+		return playtimeRank;
 	}
 	
 	public ArrayList<Rank> getRanks() {
@@ -302,26 +350,34 @@ public class PlayerProfile {
 	
 	public PlayerProfile addRank(Rank rank) {
 		if (!ranks.contains(rank)) {
-			boolean colourIsRank = this.nameColour == getHighestRank().getRankColour();
+			boolean colourIsRank = this.nameColour == getHighestRank().getRankHex();
 			ranks.add(rank);
-			updateAll();
+			updateRanksPerms();
 			if (colourIsRank)
-				this.nameColour = getHighestRank().getRankColour();
+				this.nameColour = getHighestRank().getRankHex();
 			
 			Main.getInstance().discord().updateRoles(this);
 		}
 		return this;
 	}
 	
-	public PlayerProfile removeRank(Rank rank) {
-		if (ranks.contains(rank)) {
-			boolean colourIsRank = this.nameColour == getHighestRank().getRankColour();
-			ranks.remove(rank);
-			updateAll();
-			if (colourIsRank)
-				this.nameColour = getHighestRank().getRankColour();
+	public PlayerProfile removeRank(Rank... rankz) {
+		boolean update = false;
+		for (Rank rank : rankz) {
+			if (ranks.contains(rank)) {
+				update = true;
+				ranks.remove(rank);
+				boolean colourIsRank = this.nameColour == rank.getRankHex();
+				if (colourIsRank)
+					this.nameColour = getHighestRank().getRankHex();
+			}
+		}
+		
+		if (update) {
+			updateRanksPerms();
 			Main.getInstance().discord().updateRoles(this);
 		}
+		
 		return this;
 	}
 	
@@ -333,28 +389,49 @@ public class PlayerProfile {
 	public void setRanks(List<Rank> ranks) {
 		this.ranks.clear();
 		ranks.forEach((rank) -> { this.ranks.add(rank); });
-		updateAll();
+		updateRanksPerms();
 	}
 	
 	/**
-	 * Organise the current rank list into the correct order, calculate the current {@link #getWarpLimit()}, 
-	 * update the player's names with {@link #updateShownNames()} and then update permissions based on current Ranks.
+	 * Organise the current rank list into the correct order, stores the highest of each rank category,
+	 * calculates the current {@link #getWarpLimit()}, update the player's names with {@link #updateShownNames()} 
+	 * and then update permissions based on current Ranks.
 	 */
-	private void updateAll() {
+	private void updateRanksPerms() {
 		// Order the Ranks and do Warp Limit
 		List<Rank> rankz = new ArrayList<Rank>(ranks);
 		this.warpLimit = 0;
 		this.ranks.clear();
+		this.permissions.clear();
+		
+		Rank rNewHigh = Rank.NEWBEAN;
+		Rank rNewDonor = null;
+		Rank rNewPlaytime = Rank.NEWBEAN;
+		
 		for (Rank rank : Rank.values())
 			if (rankz.contains(rank)) {
+				
+				if (rank.isDonorRank())
+					rNewDonor = rank;
+				if (rank.isPlaytimeRank())
+					rNewPlaytime = rank;
+				
+				rNewHigh = rank;
+				
 				ranks.add(rank);
+				permissions.addAll(rank.getPermissions());
 				warpLimit += rank.getWarpBonus();
 			}
+		
+		// Update store.
+		this.highestRank = rNewHigh;
+		this.playtimeRank = rNewPlaytime;
+		this.donorRank = rNewDonor;
 		
 		updateShownNames();
 		
 		// Update perms
-		if (isOnline() && Main.getInstance().isEnabled())
+		if (isOnline() && Main.getInstance().isEnabled()) // TODO: possibly find a less static method of handling this..?
 			Main.getPermissionManager().updatePlayerPermissions(getPlayer());
 	}
 	
@@ -484,6 +561,12 @@ public class PlayerProfile {
 	public void updateShownNames() {
 		this.colouredName = Component.text(nickname==null?name:nickname).color(TextColor.color(getNameColour()));
 			if (getPlayer() != null) {
+				Bukkit.getOnlinePlayers().forEach((p) -> { 
+					PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
+					//connection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.d, ((CraftPlayer)p).getHandle())); // d updates player's display name
+					connection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.e, ((CraftPlayer)p).getHandle()));
+					connection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.a, ((CraftPlayer)p).getHandle()));
+				});
 				//getPlayer().getPlayerProfile().setName(getDisplayName()); // overhead and commands
 				getPlayer().displayName(getColouredName()); // ??
 				getPlayer().playerListName(getColouredName()); // player list
@@ -503,10 +586,25 @@ public class PlayerProfile {
 		if (hasNickname())
 			hoverComponents = hoverComponents.append(Component.text("\n\u00a78\u00a7oReal Name: \u00a7r\u00a7o" + getRealName()).colorIfAbsent(getNameColour()));
 		
+		// Test Badges
+		/*Component badges = Component.empty();
+		if (this.isOwner())
+			badges = badges.append(Component.text("\u24E2", BeanColor.REGION));
+		if (this.isMod())
+			badges = badges.append(Component.text("\u24E2", BeanColor.STAFF));
+		if (this.getStat(StatType.VOTING, "votes") >= 500)
+			badges = badges.append(Component.text("\u272A", BeanColor.SAPPHIRE));
+		if (this.getStat(StatType.GENERIC, "bugsReported") >= 1)
+			badges = badges.append(Component.text("\u00a7c\u2622"));
+		
+		if (badges != Component.empty())
+			hoverComponents = hoverComponents.append(Component.text("\n").append(badges));*/
+		//
+		
 		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Rank: ").append(getHighestRank().toComponent()));
 		
 		int mins = getOfflinePlayer().getStatistic(Statistic.PLAY_ONE_MINUTE)/20/60;
-		int hours = Math.floorDiv(mins, 60);
+		int hours = mins / 60;
 		mins -= hours*60;
 		
 		if (isInCivilization() && hasJob())
@@ -514,7 +612,7 @@ public class PlayerProfile {
 		
 		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Playtime: \u00a7f" + (hours > 0 ? hours + " Hours and " : "") + mins + " Minutes"));
 		
-		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- DBID: \u00a7a" + getId()));
+//		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- DBID: \u00a7a" + getId()));
 		
 		this.chatLine = Component.empty().append(chatLine.hoverEvent(HoverEvent.showText(hoverComponents)));
 	}
@@ -591,7 +689,7 @@ public class PlayerProfile {
 	}
 	
 	public boolean isOverridingProfile() {
-		return this.isAdmin() && !this.profileOverride.equals(this.getUniqueId());
+		return hasPermission(Permission.PROFILE_OVERRIDE) && !this.profileOverride.equals(this.getUniqueId());
 	}
 	
 	/**
@@ -609,7 +707,11 @@ public class PlayerProfile {
 	 * @param advancementKey - The exact directory and key.
 	 */
 	public void grantAdvancement(@Nonnull String advancementKey) {
-		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "advancement grant " + getDisplayName() + " only " + advancementKey); // cheeky
+		if (!isOnline()) return;
+		AdvancementProgress progress = getPlayer().getAdvancementProgress(Bukkit.getAdvancement(NamespacedKey.fromString(advancementKey)));
+		progress.getRemainingCriteria().forEach((c) -> progress.awardCriteria(c));
+		
+	//	Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "advancement grant " + getDisplayName() + " only " + advancementKey); // cheeky
 	}
 	
 	/**
@@ -617,7 +719,10 @@ public class PlayerProfile {
 	 * @param advancementKey - The exact directory and key.
 	 */
 	public void revokeAdvancement(@Nonnull String advancementKey) {
-		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "advancement revoke " + getDisplayName() + " only " + advancementKey); // cheeky
+		if (!isOnline()) return;
+		AdvancementProgress progress = getPlayer().getAdvancementProgress(Bukkit.getAdvancement(NamespacedKey.fromString(advancementKey)));
+		progress.getAwardedCriteria().forEach((c) -> progress.revokeCriteria(c));
+	//	Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "advancement revoke " + getDisplayName() + " only " + advancementKey); // cheeky
 	}
 	
 	public HeirloomInventory getHeirlooms() {
@@ -668,6 +773,9 @@ public class PlayerProfile {
 	}
 	
 	public boolean onCooldown(String id) {
+		if (hasPermission(Permission.BYPASS_COOLDOWNS))
+			return false;
+		
 		final long dura = this.cooldowns.getOrDefault(id, 0L);
 		final boolean isCd = System.currentTimeMillis() < dura;
 		if (dura > 0 && !isCd)
@@ -683,22 +791,18 @@ public class PlayerProfile {
 	}
 	
 	public float getLuck() {
-		float luck = 0.0F;
-		if (isOnline()) {
-			Player p = getPlayer();
-			luck += p.hasPotionEffect(PotionEffectType.LUCK) ? p.getPotionEffect(PotionEffectType.LUCK).getAmplifier()+1 : 0;
-			luck -= p.hasPotionEffect(PotionEffectType.UNLUCK) ? p.getPotionEffect(PotionEffectType.UNLUCK).getAmplifier()+1 : 0;
-		}
-		return luck;
+		if (isOnline())
+			return (float) getPlayer().getAttribute(Attribute.GENERIC_LUCK).getValue();
+		return 0.0F;
 	}
 	
 	/**
 	 * Pretty much only used in {@link BeanCommand#onCommand()}
 	 * @param id Cooldown identifier
-	 * @return the amount of milliseconds left in the cooldown
+	 * @return the time when this cooldown expires.
 	 */
 	public long getCooldown(String id) {
-		return this.cooldowns.getOrDefault(id, 0L) - System.currentTimeMillis();
+		return this.cooldowns.getOrDefault(id, 0L);
 	}
 	
 	public ArrayList<String> recentWarps() {
@@ -773,9 +877,11 @@ public class PlayerProfile {
 	 * @return if the job change was successful.
 	 */
 	public boolean setJob(Job job, boolean force) {
-		if (!isInCivilization()) return false;
-		if (!force && !getCivilization().hasUnlocked(job)) return false;
-		if (!force && onCooldown("changeJob")) return false;
+		if (job != null) {
+			if (!isInCivilization()) return false;
+			if (!force && !getCivilization().hasUnlocked(job)) return false;
+			if (!force && onCooldown("changeJob")) return false;
+		}
 		
 		this.job = job;
 		return true;

@@ -12,7 +12,10 @@ public enum PlayerSetting {
 	PING_SOUNDS("@Ping Sounds", true, "\u00a77When enabled, you will hear a soft", "\u00a7dsound of amethyst\u00a77 when pinged."),
 	DISCORD("Discord Linking", false, "\u00a77Only enable this when trying to \u00a7b/link\u00a77", "\u00a77your \u00a79Discord Account\u00a77 from within", "\u00a77the \u00a79Discord Server\u00a77."),
 	SHOW_ACHIEVEMENTS("Achievements in Chat", true, "\u00a77Display whenever a player gets an \u00a76Achievement\u00a77."),
-	SHOW_DEATH_MESSAGES("Death Messages in Chat", true, "\u00a77Display whenever a player kicks the bucket.");
+	SHOW_DEATH_MESSAGES("Death Messages in Chat", true, "\u00a77Display whenever a player kicks the bucket."),
+	SHOW_JOB_MESSAGES("Job Messages in Chat", true, "\u00a77Display whenever a player changes their job."),
+	
+	;
 	
 	final private static long defaultSetting;
 	static {

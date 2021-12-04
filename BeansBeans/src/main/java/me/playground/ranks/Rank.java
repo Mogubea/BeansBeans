@@ -1,10 +1,15 @@
 package me.playground.ranks;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import me.playground.regions.flags.Flags;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 
 /**
  * MOVE INTO DATABASE
@@ -13,9 +18,12 @@ import net.kyori.adventure.text.format.TextColor;
 public enum Rank {
 	
 	// Donor Ranks
-	PLEB(1, 0xf19fd1, 50, 873535964423794709L,
+	PLEBEIAN(1, 0xf19fd1, 50, 873535964423794709L,
 			"bean.cmd.enderchest"),
-	NOBLE(2, 0xaa22aa, 100, 873916287682756668L),
+	PATRICIAN(2, 0xd64dd6, 100, 873916287682756668L,
+			Permission.NICKNAME_APPLY),
+	SENATOR(3, 0xaa32da, 100, 914921526158041089L,
+			Permission.NAMECOLOUR_CUSTOM),
 	
 	// Playtime Ranks
 	NEWBEAN(5, 0x2faf2f, 10, 546771060415135747L, 0,
@@ -35,6 +43,7 @@ public enum Rank {
 	
 	// Staff Ranks
 	MODERATOR(70, 0x55CAFF, 0, 546771449365528604L,
+			Permission.NICKNAME_OVERRIDE,
 			"bean.cmd.say",
 			"bean.cmd.gamemode",
 			"bean.cmd.world",
@@ -46,6 +55,15 @@ public enum Rank {
 			Flags.BLOCK_SPREAD.getPermission(),
 			"bean.gm.moderator"),
 	ADMINISTRATOR(90, 0x3378FF, 500, 546771706769965070L,
+			"minecraft.command.playsound",
+			"minecraft.command.save-all",
+			"minecraft.command.seed",
+			"minecraft.command.summon",
+			"minecraft.command.weather",
+			"minecraft.command.xp",
+			Permission.BYPASS_COOLDOWNS,
+			Permission.NAMECOLOUR_RANKS,
+			Permission.NAMECOLOUR_CUSTOM,
 			"bean.cmd.tocoord",
 			"bean.cmd.perform",
 			"bean.cmd.enderchest",
@@ -77,19 +95,26 @@ public enum Rank {
 	final short rankLevel;
 	final short warpBonus;
 	final int col;
-	final String[] permissions;
+	final Set<String> permissions;
 	final long discordRankID;
 	final int playtimeReq;
 	final TextComponent component;
+	final TextColor textCol;
 	
 	Rank(int rankLevel, int rgbColour, int warpLimit, long discordRankID, int playtimeReq, String...permissions) {
 		this.rankLevel = (short) rankLevel;
 		this.col = rgbColour;
+		this.textCol = TextColor.color(rgbColour);
 		this.warpBonus = (short) warpLimit;
-		this.permissions = permissions;
+		
+		Set<String> perms = new HashSet<String>();
+		for (String perm : permissions)
+			perms.add(perm);
+		
+		this.permissions = Collections.unmodifiableSet(perms);
 		this.discordRankID = discordRankID;
 		this.playtimeReq = playtimeReq;
-		this.component = Component.text(Utils.firstCharUpper(this.toString())).color(TextColor.color(col));
+		this.component = Component.text(Utils.firstCharUpper(this.toString())).color(TextColor.color(col)).decoration(TextDecoration.ITALIC, false);
 	}
 	
 	Rank(int rankLevel, int rgbColour, int warpLimit, long discordRankID, String...permissions) {
@@ -100,12 +125,24 @@ public enum Rank {
 		return rankLevel;
 	}
 	
-	public String[] getPermissions() {
+	/**
+	 * TODO: Allow for rank permission modification live in future by moving things to database.
+	 * @return immutable set of permissions for this rank.
+	 */
+	public Set<String> getPermissions() {
 		return permissions;
 	}
 	
-	public int getRankColour() {
+	public boolean hasPermission(String permissionString) {
+		return permissions.contains(permissionString);
+	}
+	
+	public int getRankHex() {
 		return col;
+	}
+	
+	public TextColor getRankColour() {
+		return textCol;
 	}
 	
 	public TextComponent toComponent() {

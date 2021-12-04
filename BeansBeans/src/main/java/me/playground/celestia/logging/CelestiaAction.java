@@ -12,6 +12,11 @@ public enum CelestiaAction {
 	ITEM_PICKUP,
 	INV_TRANSACTION,
 	LINK_DISCORD,
-	REGION_CHANGE;
+	REGION_CHANGE,
+	VOTE,
+	MODIFY,
+	
+	
+	;
 	
 }
