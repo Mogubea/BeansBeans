@@ -145,6 +145,7 @@ public class PlayerProfile {
 	
 	private final ArrayList<Integer> 	ignoredPlayers = new ArrayList<Integer>();
 	private final ArrayList<Rank> 		ranks = new ArrayList<Rank>();
+	private final Set<String>			privatePermissions;
 	private long 						donorExpirationTime = 0L;
 	
 	private final SkillData 			skillData;
@@ -189,7 +190,7 @@ public class PlayerProfile {
 	// Admin
 	public UUID profileOverride;
 	
-	public PlayerProfile(int id, UUID uuid, ArrayList<Rank> ranks, int nameColour, String name, String nickname, long coins, long settings, short warpCount) {
+	public PlayerProfile(int id, UUID uuid, ArrayList<Rank> ranks, Set<String> perms, int nameColour, String name, String nickname, long coins, long settings, short warpCount) {
 		this.playerId = id;
 		this.profileOverride = uuid; // XXX: TEMP
 		this.playerUUID = uuid;
@@ -198,6 +199,8 @@ public class PlayerProfile {
 		this.name = name;
 		if (!name.equals(nickname))
 			this.nickname = nickname;
+		
+		this.privatePermissions = perms;
 		
 		this.coins = coins;
 		this.warpCount = warpCount;
@@ -277,6 +280,14 @@ public class PlayerProfile {
 	
 	public boolean hasPermission(String permissionString) {
 		return this.permissions.contains("*") || this.permissions.contains(permissionString);
+	}
+	
+	public Set<String> getPrivatePermissions() {
+		return this.privatePermissions;
+	}
+	
+	public Set<String> getPermissions() {
+		return permissions;
 	}
 	
 	public boolean isRank(Rank rank) {
@@ -408,20 +419,33 @@ public class PlayerProfile {
 		Rank rNewDonor = null;
 		Rank rNewPlaytime = Rank.NEWBEAN;
 		
+		// Sort out the highest ranks of each category.
+		for (Rank rank : Rank.values()) {
+			if (!rankz.contains(rank)) continue;
+			
+			if (rank.isDonorRank())
+				rNewDonor = rank;
+			if (rank.isPlaytimeRank())
+				rNewPlaytime = rank;
+				
+			rNewHigh = rank;
+				
+			ranks.add(rank);
+			warpLimit += rank.getWarpBonus();
+		}
+		
+		// Add permissions.
 		for (Rank rank : Rank.values())
-			if (rankz.contains(rank)) {
-				
-				if (rank.isDonorRank())
-					rNewDonor = rank;
-				if (rank.isPlaytimeRank())
-					rNewPlaytime = rank;
-				
-				rNewHigh = rank;
-				
-				ranks.add(rank);
+			if (this.isRank(rank))
 				permissions.addAll(rank.getPermissions());
-				warpLimit += rank.getWarpBonus();
-			}
+		
+		// For example; the permission -bean.cmd.op would REMOVE that permission, even if the player was a rank that inherited that permission.
+		for (String perm : getPrivatePermissions()) {
+			if (perm.startsWith("-"))
+				permissions.remove(perm.substring(1));
+			else
+				permissions.add(perm);
+		}
 		
 		// Update store.
 		this.highestRank = rNewHigh;

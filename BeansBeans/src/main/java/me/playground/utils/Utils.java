@@ -7,6 +7,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
@@ -47,7 +48,17 @@ public class Utils {
 		return newString;
 	}
 
-	public static String toString(ArrayList<?> arraylist, boolean forceLower, String seperator) {
+	public static String toString(List<?> arraylist, boolean forceLower, String seperator) {
+		String newString = "";
+		int remaining = arraylist.size();
+		for (Object o : arraylist) {
+			newString += (forceLower ? o.toString().toLowerCase() : o.toString()) + (remaining != 1 ? seperator : "");
+			remaining--;
+		}
+		return newString;
+	}
+	
+	public static String toString(Set<?> arraylist, boolean forceLower, String seperator) {
 		String newString = "";
 		int remaining = arraylist.size();
 		for (Object o : arraylist) {

@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -226,9 +227,12 @@ public class Datasource {
 	}
 
 	private static PlayerProfile forgeProfileUsingResultSet(ResultSet rs) {
-		final ArrayList<Rank> ranks = new ArrayList<Rank>();
-		String[] ranksStr;
 		try {
+			final ArrayList<Rank> ranks = new ArrayList<Rank>();
+			final HashSet<String> perms = new HashSet<String>();
+			
+			String[] permsStr;
+			String[] ranksStr;
 			ranksStr = rs.getString("ranks").split(",");
 			for (String rankStr : ranksStr) {
 				try {
@@ -237,11 +241,16 @@ public class Datasource {
 				}
 			}
 			
+			// Load perms
+			permsStr = rs.getString("permissions").split(",");
+			for (String permStr : permsStr)
+				perms.add(permStr);
+			
 			final Civilization civ = Civilization.getById(rs.getInt("civilization"));
 			final Job job = Job.getByName(rs.getString("job"));
 			final Timestamp donoExpiry = rs.getTimestamp("donorRankExpiration");
 			final long donoExpiration = donoExpiry == null ? 0L : donoExpiry.getTime();
-			final PlayerProfile pp = new PlayerProfile(rs.getInt("id"), UUID.fromString(rs.getString("uuid")), ranks,
+			final PlayerProfile pp = new PlayerProfile(rs.getInt("id"), UUID.fromString(rs.getString("uuid")), ranks, perms,
 					rs.getInt("namecolour"), rs.getString("name"), rs.getString("nickname"),
 					rs.getLong("coins"), rs.getLong("booleanSettings"), rs.getShort("warpCount"));
 			pp.setDonorExpiration(donoExpiration);
@@ -260,12 +269,13 @@ public class Datasource {
 		PreparedStatement statement = null;
 		try {
 			c = getNewConnection();
-			statement = connection.prepareStatement("UPDATE " + table_profiles + " SET " + "coins = ?, ranks = ?,"
+			statement = connection.prepareStatement("UPDATE " + table_profiles + " SET " + "coins = ?, ranks = ?, permissions = ?,"
 					+ "namecolour = ?, nickname = ?, booleanSettings = ?, warpCount = ?, civilization = ?, job = ?, donorRankExpiration = ? WHERE id = ?");
 			byte idx = 1;
 
 			statement.setLong(idx++, pp.getBalance());
 			statement.setString(idx++, Utils.toString(pp.getRanks(), true, ","));
+			statement.setString(idx++, Utils.toString(pp.getPrivatePermissions(), true, ","));
 			statement.setInt(idx++, pp.getNameColour().value());
 			statement.setString(idx++, pp.getNickname());
 			statement.setLong(idx++, pp.getSettings());
