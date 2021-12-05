@@ -52,6 +52,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
@@ -267,12 +268,22 @@ public class PlayerListener extends EventListener {
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onInteractDumb(PlayerInteractEvent e) {
+		// Cancel mob destruction of farmland.
 		if (e.getAction() == Action.PHYSICAL && e.getClickedBlock().getType() == Material.FARMLAND) {
 			e.setCancelled(true);
 			return;
 		}
 		
+		// Stop here if unnecessary to check
 		if (e.getHand() != EquipmentSlot.HAND || e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_AIR) return;
+		
+		// Cancel the cleansing of custom leather items
+		if (e.getItem() != null && e.getItem().getItemMeta() instanceof LeatherArmorMeta && BeanItem.from(e.getItem()) != null) {
+			e.setCancelled(true);
+			return;
+		}
+		
+		// Perform region permission checklist
 		Region r = getRegionAt(e.getClickedBlock().getLocation());
 		final Player p = e.getPlayer();
 		
@@ -355,22 +366,19 @@ public class PlayerListener extends EventListener {
 	public void onRightClick(PlayerInteractEvent e) {
 		ItemStack item = e.getItem();
 		
-		if (item != null) {
-			if (e.useItemInHand() != Result.DENY) {
-				// Prevent being able to change spawner types with Spawn Eggs.
-				if (item.getType().name().endsWith("_SPAWN_EGG") && e.getClickedBlock() != null && e.getClickedBlock().getType() == Material.SPAWNER) {
-					e.setCancelled(true);
-					return;
-				}
-				
-				BeanItem custom = BeanItem.from(item);
-				if (custom != null)
-					custom.onInteract(e);
-			}
-		}
+		if (e.useInteractedBlock() == Result.DENY) return;
 		
-		if (e.useInteractedBlock() == Result.DENY)
-			return;
+		if (item != null) {
+			// Prevent being able to change spawner types with Spawn Eggs.
+			if (item.getType().name().endsWith("_SPAWN_EGG") && e.getClickedBlock() != null && e.getClickedBlock().getType() == Material.SPAWNER) {
+				e.setCancelled(true);
+				return;
+			}
+			
+			BeanItem custom = BeanItem.from(item);
+			if (custom != null)
+				custom.onInteract(e);
+		}
 		
 		if (e.getHand() == EquipmentSlot.HAND && e.getAction() == Action.RIGHT_CLICK_BLOCK) {
 			final Block b = e.getClickedBlock();

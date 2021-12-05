@@ -37,6 +37,7 @@ import org.bukkit.inventory.meta.CompassMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.TropicalFishBucketMeta;
@@ -88,9 +89,6 @@ public class BeanItem {
 		put(Material.CHAINMAIL_LEGGINGS, ItemRarity.UNCOMMON);
 		put(Material.CHAINMAIL_BOOTS, ItemRarity.UNCOMMON);
 		
-		put(Material.EMERALD_ORE, ItemRarity.UNCOMMON);
-		put(Material.DEEPSLATE_DIAMOND_ORE, ItemRarity.UNCOMMON);
-		
 		put(Material.SHULKER_BOX, ItemRarity.RARE);
 		put(Material.BLACK_SHULKER_BOX, ItemRarity.RARE);
 		put(Material.BLUE_SHULKER_BOX, ItemRarity.RARE);
@@ -124,9 +122,10 @@ public class BeanItem {
 		put(Material.ELYTRA, ItemRarity.RARE);
 		put(Material.DRAGON_HEAD, ItemRarity.RARE);
 		put(Material.BEACON, ItemRarity.RARE);
+		put(Material.DEEPSLATE_COAL_ORE, ItemRarity.RARE);
+		put(Material.DEEPSLATE_EMERALD_ORE, ItemRarity.RARE);
 		
 		put(Material.DRAGON_EGG, ItemRarity.EPIC);
-		put(Material.DEEPSLATE_EMERALD_ORE, ItemRarity.EPIC);
 		put(Material.TOTEM_OF_UNDYING, ItemRarity.EPIC);
 		
 		put(Material.END_PORTAL_FRAME, ItemRarity.UNTOUCHABLE);
@@ -588,6 +587,9 @@ public class BeanItem {
 		}
 		
 		// Hide stuff
+		if (meta instanceof LeatherArmorMeta)
+			meta.addItemFlags(ItemFlag.HIDE_DYE);
+		
 		if (enchants.size() > 0 || shouldFormatNameRarity)
 			meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_UNBREAKABLE);
 		

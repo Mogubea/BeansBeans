@@ -30,6 +30,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.SmithingInventory;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.Repairable;
 import org.jetbrains.annotations.Nullable;
 
@@ -109,8 +110,15 @@ public class ContainerListener extends EventListener {
 		
 		ItemStack i = e.getInventory().getResult();
 		
-		if (i != null)
+		if (i != null) {
+			// Prevent dyeing custom items.
+			if (BeanItem.from(i) != null && i.getItemMeta() instanceof LeatherArmorMeta) {
+				e.getInventory().setResult(null);
+				return;
+			}
+			
 			e.getInventory().setResult(BeanItem.formatItem(i));
+		}
 	}
 	
 	// TODO: Create a proper custom enchantment method.
