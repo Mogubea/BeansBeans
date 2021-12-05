@@ -83,6 +83,7 @@ public class BeanGuiPlayerNameColour extends BeanGui {
                 	if (!pp.isOverridingProfile() && pp.hasPermission(Permission.BYPASS_COOLDOWNS)) {
                 		tpp.setNameColour(col);
     					Celestia.logModify(pp.getId(), "Changed %ID"+tpp.getId()+"'s Name Colour to " + Long.toHexString(tpp.getNameColour().value()));
+    					Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiPlayerNameColour(p).openInventory(), 1L);
                 	} else {
                 		Bukkit.getScheduler().runTaskLater(plugin, () -> showConfirmation(col), 1L);
                 	}
@@ -107,6 +108,7 @@ public class BeanGuiPlayerNameColour extends BeanGui {
         	if (!pp.isOverridingProfile() && pp.hasPermission(Permission.BYPASS_COOLDOWNS)) {
         		tpp.setNameColour(meta.getColor().asRGB());
         		Celestia.logModify(pp.getId(), "Changed %ID"+tpp.getId()+"'s Name Colour to " + Long.toHexString(tpp.getNameColour().value()));
+        		refresh();
         	} else {
         		showConfirmation(meta.getColor().asRGB());
         	}
