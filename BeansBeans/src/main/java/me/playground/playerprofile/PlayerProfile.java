@@ -434,6 +434,11 @@ public class PlayerProfile {
 			warpLimit += rank.getWarpBonus();
 		}
 		
+		// Update store.
+		this.highestRank = rNewHigh;
+		this.playtimeRank = rNewPlaytime;
+		this.donorRank = rNewDonor;
+		
 		// Add permissions.
 		for (Rank rank : Rank.values())
 			if (this.isRank(rank))
@@ -446,11 +451,6 @@ public class PlayerProfile {
 			else
 				permissions.add(perm);
 		}
-		
-		// Update store.
-		this.highestRank = rNewHigh;
-		this.playtimeRank = rNewPlaytime;
-		this.donorRank = rNewDonor;
 		
 		updateShownNames();
 		
