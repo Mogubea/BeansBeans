@@ -3,9 +3,8 @@ package me.playground.discord;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +26,7 @@ import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileStore;
 import me.playground.ranks.Rank;
+import me.playground.utils.Calendar;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -304,9 +304,7 @@ public class DiscordBot extends ListenerAdapter {
 		int count = Bukkit.getOnlinePlayers().size();
 		String playerList = "no one";
 		
-		SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyy HH:mm:ss");
 		EmbedBuilder test = new EmbedBuilder();
-		Date date = new Date();
 		
 		test.setTitle(statusMessageTitle, "http://beansbeans.net:8015");
 		test.setColor(online ? 0x44ffaa : 0xee3567);
@@ -316,19 +314,37 @@ public class DiscordBot extends ListenerAdapter {
 		else
 			test.addField("Shutdown Time", "<t:"+System.currentTimeMillis()/1000+":R>", true);
 		
+		int igtime = Calendar.getTime(Bukkit.getWorlds().get(0));
+		
 		test.addField("Server Plugin Version", plugin.getDescription().getVersion(), true);
+		test.addField("Overworld Time", Calendar.getTimeString(igtime, true), true);
+		test.addField("Minecraft Version", Bukkit.getBukkitVersion(), true);
 		if (online) {
 			playerList = "";
 			int x = 0;
 			for (Player p : Bukkit.getOnlinePlayers())
 				playerList += p.getName() + (++x < count ? ", " : "");
 			test.addField("Online Players ("+count+"/"+Bukkit.getServer().getMaxPlayers()+")", playerList, false);
+			
+			int hour = Calendar.getHour(igtime);
+			
+			if (hour > 18 || hour < 6) { // Night
+				test.setImage("https://i.imgur.com/f4Z0gGV.png");
+			} else if (hour >= 6 && hour <= 8) { // Dawn
+				test.setImage("https://i.imgur.com/dggMO9T.png");
+			} else if (hour > 8 && hour < 17) { // Day
+				test.setImage("https://i.imgur.com/ROCQYbe.png");
+			} else { // Dusk
+				test.setImage("https://i.imgur.com/DwOruz2.png");
+			}
+		} else {
+			test.setImage("https://i.imgur.com/CPMkKYg.png");
 		}
 		test.addField("Random Statistics", "There are **" + plugin.shopManager().countShops() + "** Shops\n"
 				+ "There are **"+plugin.regionManager().countRegions()+"** Regions\n"
 				+ "There are **"+plugin.warpManager().countWarps()+"** Warps", false);
-		test.setFooter("Last updated " + df.format(date));
-		test.setImage(online ? "https://i.imgur.com/1Kh54Ys.png" : "https://i.imgur.com/Tg0GPIC.png");
+		test.setFooter("Last updated ");
+		test.setTimestamp(Instant.now());
 		
 		discordBot.getTextChannelById(statusChatId).retrieveMessageById(statusMessageId).queue((message) -> {
 			message.editMessageEmbeds(test.build()).queue();
