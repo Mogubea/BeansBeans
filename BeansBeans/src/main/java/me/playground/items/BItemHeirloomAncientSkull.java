@@ -1,10 +1,8 @@
-package me.playground.items.heirlooms;
+package me.playground.items;
 
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
-import me.playground.items.BeanItemHeirloom;
-import me.playground.items.ItemRarity;
 import me.playground.playerprofile.HeirloomInventory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

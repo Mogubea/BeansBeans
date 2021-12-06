@@ -1,10 +1,8 @@
-package me.playground.items.heirlooms;
+package me.playground.items;
 
 import org.bukkit.attribute.Attribute;
 import org.bukkit.inventory.EquipmentSlot;
 
-import me.playground.items.BeanItemHeirloom;
-import me.playground.items.ItemRarity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;

@@ -1,6 +1,7 @@
 package me.playground.items;
 
 import java.nio.ByteBuffer;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,9 +50,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import me.playground.enchants.EnchantmentInfo;
-import me.playground.items.heirlooms.BItemHeirloomAncientSkull;
-import me.playground.items.heirlooms.BItemHeirloomMochi;
-import me.playground.items.heirlooms.BItemHeirloomShungite;
 import me.playground.main.Main;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
@@ -62,6 +60,7 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 
 public class BeanItem {
+	private final static DecimalFormat df = new DecimalFormat("0.###");
 	private final static HashMap<Material, ItemRarity> baseItemRarities = new HashMap<Material, ItemRarity>() {
 		private static final long serialVersionUID = 1018055300807913156L;
 	{
@@ -117,7 +116,6 @@ public class BeanItem {
 		put(Material.NETHERITE_LEGGINGS, ItemRarity.RARE);
 		put(Material.NETHERITE_BOOTS, ItemRarity.RARE);
 		
-		put(Material.ENCHANTED_GOLDEN_APPLE, ItemRarity.RARE);
 		put(Material.TRIDENT, ItemRarity.RARE);
 		put(Material.ELYTRA, ItemRarity.RARE);
 		put(Material.DRAGON_HEAD, ItemRarity.RARE);
@@ -127,6 +125,7 @@ public class BeanItem {
 		
 		put(Material.DRAGON_EGG, ItemRarity.EPIC);
 		put(Material.TOTEM_OF_UNDYING, ItemRarity.EPIC);
+		put(Material.ENCHANTED_GOLDEN_APPLE, ItemRarity.EPIC);
 		
 		put(Material.END_PORTAL_FRAME, ItemRarity.UNTOUCHABLE);
 		put(Material.COMMAND_BLOCK, ItemRarity.UNTOUCHABLE);
@@ -229,6 +228,11 @@ public class BeanItem {
 					Component.text("Speed", NamedTextColor.WHITE).append(Component.text(", at the cost of some durability!", NamedTextColor.GRAY)).decoration(TextDecoration.ITALIC, false))
 			.addAttribute(Attribute.GENERIC_ARMOR, 1, EquipmentSlot.FEET)
 			.addAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0.004, EquipmentSlot.FEET);
+	
+	public final static BeanItem ROSE_GOLD_HELMET = new BItemHelmetRoseGold(4, 1);
+	public final static BeanItem ROSE_GOLD_CHESTPLATE = new BItemChestplateRoseGold(5, 1);
+	public final static BeanItem ROSE_GOLD_LEGGINGS = new BItemLeggingsRoseGold(6, 1);
+	public final static BeanItem ROSE_GOLD_BOOTS = new BItemBootsRoseGold(7, 2);
 	
 	public final static BeanItem CATS_PAW = new BItemFishingRodCatsPaw(500, "CATS_PAW", "Cat's Paw", ItemRarity.UNCOMMON, 1, 90);
 	
@@ -543,6 +547,8 @@ public class BeanItem {
 					Double d = am.getAmount();
 					if (entry.getKey().equals(Attribute.GENERIC_ARMOR))
 						modifiers.put("Defense", modifiers.getOrDefault("Defense", 0.0) + d);
+					if (entry.getKey().equals(Attribute.GENERIC_MAX_HEALTH))
+						modifiers.put("Health", modifiers.getOrDefault("Health", 0.0) + d);
 					if (entry.getKey().equals(Attribute.GENERIC_ATTACK_DAMAGE))
 						modifiers.put("Damage", modifiers.getOrDefault("Damage", 0.0) + d);
 					if (entry.getKey().equals(Attribute.GENERIC_ATTACK_SPEED))
@@ -575,11 +581,10 @@ public class BeanItem {
 			// Write it
 			for (Entry<String, Double> modifier : modifiers.entrySet()) {
 				final double val = modifier.getValue();
-				final boolean isInt = (int)val == val;
 				
 				if (modifier.getValue() != 0)
 					lore.add(Component.text("\u25C8 "+modifier.getKey()+": ").color(rarity.getAttributeColour())
-							.append(Component.text(isInt ? (int)val : val).color(NamedTextColor.WHITE))
+							.append(Component.text(df.format(val)).color(NamedTextColor.WHITE))
 							.append(modsuffix.getOrDefault(modifier.getKey(), Component.text("")))
 							.decoration(TextDecoration.ITALIC, false));
 			}

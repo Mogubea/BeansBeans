@@ -1,4 +1,4 @@
-package me.playground.items.heirlooms;
+package me.playground.items;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,8 +15,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import me.playground.items.BeanItemHeirloom;
-import me.playground.items.ItemRarity;
 import me.playground.main.Main;
 import me.playground.playerprofile.HeirloomInventory;
 import net.kyori.adventure.text.Component;
