@@ -16,6 +16,7 @@ public class RecipeManager {
 	 */
 	public RecipeManager(Main plugin) {
 		new RecipesShaped(plugin, this);
+		new RecipesSmithing(plugin, this);
 		
 		// Register all the recipes after they're done.
 		recipes.forEach(recipe -> Bukkit.addRecipe(recipe));

@@ -592,8 +592,11 @@ public class BeanItem {
 		}
 		
 		// Hide stuff
-		if (meta instanceof LeatherArmorMeta)
+		if (meta instanceof LeatherArmorMeta) {
+			if (custom.getOriginalStack() != null)
+				((LeatherArmorMeta)meta).setColor(((LeatherArmorMeta)custom.getOriginalStack().getItemMeta()).getColor());
 			meta.addItemFlags(ItemFlag.HIDE_DYE);
+		}
 		
 		if (enchants.size() > 0 || shouldFormatNameRarity)
 			meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_UNBREAKABLE);
@@ -701,6 +704,14 @@ public class BeanItem {
 	
 	public static BeanItem from(String string) {
 		return string == null ? null : itemsByName.getOrDefault(string.toUpperCase(), null);
+	}
+	
+	public static ItemStack convert(ItemStack item, BeanItem bitem) {
+		ItemMeta meta = item.getItemMeta();
+		PersistentDataContainer container = meta.getPersistentDataContainer();
+		container.set(KEY_ID, PersistentDataType.STRING, bitem.getIdentifier());
+		item.setItemMeta(meta);
+		return formatItem(item);
 	}
 	
 	public static boolean is(ItemStack item, BeanItem bitem) {

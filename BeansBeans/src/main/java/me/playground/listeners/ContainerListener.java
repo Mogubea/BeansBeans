@@ -28,6 +28,7 @@ import org.bukkit.inventory.GrindstoneInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.SmithingInventory;
+import org.bukkit.inventory.SmithingRecipe;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
@@ -75,20 +76,31 @@ public class ContainerListener extends EventListener {
 			return;
 		}
 		
-		final Material type = i.getType();
+		SmithingRecipe sr = ((SmithingRecipe)((SmithingInventory)inv).getRecipe());
 		
-		if (type.getMaxDurability() > 1) {
-			float duraPerc = ((float)type.getMaxDurability() - (float)((Damageable)i.getItemMeta()).getDamage()) / (float)type.getMaxDurability();
+		if (sr.willCopyNbt()) {
+			// Dumb that I gotta do this. willCopyNbt is necessary but removes nbt from the result before overriding, so we need to force a "merge" of nbt.
+			BeanItem bi = BeanItem.from(sr.getResult());
+			if (bi != null && bi != BeanItem.from(i))
+				i = BeanItem.convert(i, bi);
+			
+			final Material type = i.getType();
+			
 			ItemStack original = inv.getContents()[0];
 			// If tool's name is base item name, update it to new item name - Only smithing
 			if (original != null && original.getType() != i.getType()) {
 				if (original.hasItemMeta() && original.getItemMeta().hasDisplayName() && ((TextComponent)original.getItemMeta().displayName()).content().equals(original.getI18NDisplayName())) {
 					ItemMeta meta = i.getItemMeta();
-					meta.displayName(Component.text(i.getI18NDisplayName()));
+					meta.displayName(bi != null ? bi.getDisplayName() : Component.text(i.getI18NDisplayName()));
 					i.setItemMeta(meta);
 				}
 			}
-			BeanItem.setDurability(i, (int) (duraPerc * ((float)type.getMaxDurability())), type.getMaxDurability());
+			
+			if (type.getMaxDurability() > 1) {
+				int maxDura = BeanItem.getMaxDurability(i);
+				float duraPerc = (float)BeanItem.getDurability(original) / (float)BeanItem.getMaxDurability(original);
+				BeanItem.setDurability(i, (int)((float)maxDura * duraPerc), maxDura);
+			}
 		}
 		
 		BeanItem.formatItem(i);

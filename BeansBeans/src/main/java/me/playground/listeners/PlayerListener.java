@@ -278,7 +278,8 @@ public class PlayerListener extends EventListener {
 		if (e.getHand() != EquipmentSlot.HAND || e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_AIR) return;
 		
 		// Cancel the cleansing of custom leather items
-		if (e.getItem() != null && e.getItem().getItemMeta() instanceof LeatherArmorMeta && BeanItem.from(e.getItem()) != null) {
+		if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock().getType() == Material.WATER_CAULDRON && e.getItem() != null && 
+				e.getItem().getItemMeta() instanceof LeatherArmorMeta && BeanItem.from(e.getItem()) != null) {
 			e.setCancelled(true);
 			return;
 		}
