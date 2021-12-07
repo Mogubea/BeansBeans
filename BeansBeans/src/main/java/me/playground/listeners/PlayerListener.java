@@ -113,8 +113,8 @@ public class PlayerListener extends EventListener {
 			return;
 		}
 		
-		TextComponent chat = pp.isRank(Rank.MODERATOR) ? Component.empty().append(Component.text("\u24E2").color(Rank.MODERATOR.getRankColour()))
-				.hoverEvent(HoverEvent.showText(Component.text("Staff Member").color(Rank.MODERATOR.getRankColour())))
+		TextComponent chat = pp.isRank(Rank.MODERATOR) ? Component.empty().append(Component.text("\u24E2", BeanColor.STAFF)
+				.hoverEvent(HoverEvent.showText(Component.text("Staff Member", BeanColor.STAFF))))
 				.append(Component.text(" "))
 				.append(pp.getComponentName())
 				: pp.getComponentName();
