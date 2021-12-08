@@ -19,8 +19,9 @@ public enum Rank {
 	
 	// Donor Ranks
 	PLEBEIAN(1, 0xf19fd1, 50, 873535964423794709L,
-			"bean.cmd.enderchest"),
+			"bean.cmd.workbench"),
 	PATRICIAN(2, 0xd64dd6, 100, 873916287682756668L,
+			"bean.cmd.anvil",
 			Permission.NICKNAME_APPLY),
 	SENATOR(3, 0xaa32da, 100, 914921526158041089L,
 			Permission.NAMECOLOUR_CUSTOM),
@@ -66,6 +67,8 @@ public enum Rank {
 			Permission.NAMECOLOUR_CUSTOM,
 			"bean.cmd.tocoord",
 			"bean.cmd.perform",
+			"bean.cmd.workbench",
+			"bean.cmd.anvil",
 			"bean.cmd.enderchest",
 			"bean.cmd.enderchest.others",
 			"bean.cmd.fly",
