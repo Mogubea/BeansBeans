@@ -24,7 +24,7 @@ public class CommandWorkbench extends BeanCommand {
 	
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
-		((Player)sender).openWorkbench(((Player)sender).getLocation(), false);
+		((Player)sender).openWorkbench(((Player)sender).getLocation(), true);
 		return true;
 	}
 

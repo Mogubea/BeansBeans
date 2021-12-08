@@ -24,7 +24,7 @@ public class CommandAnvil extends BeanCommand {
 	
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
-		((Player)sender).openAnvil(((Player)sender).getLocation(), false);
+		((Player)sender).openAnvil(((Player)sender).getLocation(), true);
 		return true;
 	}
 

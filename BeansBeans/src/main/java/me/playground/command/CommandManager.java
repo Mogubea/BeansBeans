@@ -10,6 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.Plugin;
 
+import me.playground.command.commands.CommandAnvil;
 import me.playground.command.commands.CommandCivilization;
 import me.playground.command.commands.CommandEnchant;
 import me.playground.command.commands.CommandEnderchest;
@@ -36,6 +37,7 @@ import me.playground.command.commands.CommandToCoord;
 import me.playground.command.commands.CommandWarp;
 import me.playground.command.commands.CommandWhisper;
 import me.playground.command.commands.CommandWho;
+import me.playground.command.commands.CommandWorkbench;
 import me.playground.command.commands.CommandWorld;
 import me.playground.command.commands.CommandWorldSpawn;
 import me.playground.command.commands.small.CommandBestiary;
@@ -94,7 +96,6 @@ public class CommandManager {
 		registerCommand(new CommandBestiary(plugin));
 		registerCommand(new CommandLoot(plugin));
 		registerCommand(new CommandVote(plugin));
-		registerCommand(new CommandPlebeian(plugin));
 		
 		// Other Commands
 		registerCommand(new CommandWho(plugin));
@@ -116,6 +117,9 @@ public class CommandManager {
 		registerCommand(new CommandReport(plugin));
 		registerCommand(new CommandWorldSpawn(plugin));
 		registerCommand(new CommandCivilization(plugin));
+		registerCommand(new CommandPlebeian(plugin));
+		registerCommand(new CommandWorkbench(plugin));
+		registerCommand(new CommandAnvil(plugin));
 		plugin.getLogger().info("Registered " + myCommands.size() + " commands in " + (System.currentTimeMillis()-mili) + "ms");
 	}
 	
