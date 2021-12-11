@@ -190,7 +190,7 @@ public class HeirloomInventory {
 	}
 	
 	public double getLuckBonus() {
-		return visualModifiers.get(Attribute.GENERIC_LUCK);
+		return visualModifiers.get(Attribute.GENERIC_LUCK) * 20;
 	}
 	
 	public double getDamageBonus() {

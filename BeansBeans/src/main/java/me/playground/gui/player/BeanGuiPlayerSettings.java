@@ -1,4 +1,4 @@
-package me.playground.gui;
+package me.playground.gui.player;
 
 import java.util.ArrayList;
 
@@ -13,11 +13,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import me.playground.playerprofile.settings.PlayerSetting;
 import net.kyori.adventure.text.Component;
 
-public class BeanGuiSettings extends BeanGui {
+public class BeanGuiPlayerSettings extends BeanGuiPlayer {
 	
-	protected static final ItemStack blank = newItem(new ItemStack(Material.RED_STAINED_GLASS_PANE, 1), "");
-	
-	public BeanGuiSettings(Player p) {
+	public BeanGuiPlayerSettings(Player p) {
 		super(p);
 		
 		this.name = "Settings";
@@ -40,10 +38,6 @@ public class BeanGuiSettings extends BeanGui {
 	@Override
 	public void onInventoryClicked(InventoryClickEvent e) {
 		final int slot = e.getRawSlot();
-		e.setCancelled(true);
-		
-		if (slot < 0 || slot >= e.getInventory().getSize() || e.getInventory().getItem(slot) == null)
-			return;
 		
 		if (slot - 10 > PlayerSetting.values().length)
 			return;
@@ -56,6 +50,8 @@ public class BeanGuiSettings extends BeanGui {
 	@Override
 	public void onInventoryOpened() {
 		ItemStack[] contents = i.getContents();
+		contents[4] = newItem(tpp.getSkull(), tpp.getColouredName());
+		
 		PlayerSetting[] settings = PlayerSetting.values();
 		
 		for (int x = 0; x < settings.length; x++) {

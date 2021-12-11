@@ -1,4 +1,4 @@
-package me.playground.gui;
+package me.playground.gui.player;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,9 +25,11 @@ import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 
-public class BeanGuiPlayer extends BeanGui {
+public class BeanGuiPlayerMain extends BeanGuiPlayer {
 	
-	public BeanGuiPlayer(Player p) {
+	private static final ItemStack icon_settings = newItem(new ItemStack(Material.REDSTONE_TORCH), "\u00a7cYour Settings", "", "\u00a78Click to update your settings.");
+	
+	public BeanGuiPlayerMain(Player p) {
 		super(p);
 		
 		this.name = pp.isOverridingProfile() ? p.getName() + "'s Menu" : "Your Menu";
@@ -96,7 +98,7 @@ public class BeanGuiPlayer extends BeanGui {
                 	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
                 }
             	
-                Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiPlayer(p).openInventory(), 1L);
+                Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiPlayerMain(p).openInventory(), 1L);
                 return true;
             });
 			menu.open(p);
@@ -145,10 +147,13 @@ public class BeanGuiPlayer extends BeanGui {
                 	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
                 }
             	
-                Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiPlayer(p).openInventory(), 1L);
+                Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiPlayerMain(p).openInventory(), 1L);
                 return true;
             });
 			menuu.open(p);
+			return;
+		case 34:
+			new BeanGuiPlayerSettings(p).openInventory();
 			return;
 		}
 	}
@@ -182,6 +187,8 @@ public class BeanGuiPlayer extends BeanGui {
 		chestCol.setItemMeta(meta);
 		
 		contents[21] = chestCol;
+		
+		contents[34] = icon_settings;
 		
 		i.setContents(contents);
 	}

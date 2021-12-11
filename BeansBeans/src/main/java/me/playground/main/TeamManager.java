@@ -14,7 +14,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 public class TeamManager {
 	
 	public static TeamManager instance;
-	public Scoreboard scoreboard;
+	private final Scoreboard scoreboard;
 	
 	public TeamManager() {
 		this.scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();

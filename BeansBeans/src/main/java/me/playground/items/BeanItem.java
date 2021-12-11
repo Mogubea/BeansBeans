@@ -554,7 +554,7 @@ public class BeanItem {
 					if (entry.getKey().equals(Attribute.GENERIC_ATTACK_SPEED))
 						modifiers.put("Attack Speed", modifiers.getOrDefault("Attack Speed", 0.0) + d);
 					if (entry.getKey().equals(Attribute.GENERIC_MOVEMENT_SPEED))
-						modifiers.put("Movement Speed", modifiers.getOrDefault("Movement Speed", 0.0) + d * 1000);
+						modifiers.put("Speed", modifiers.getOrDefault("Speed", 0.0) + d * 1000);
 					if (entry.getKey().equals(Attribute.GENERIC_LUCK))
 						modifiers.put("Luck", modifiers.getOrDefault("Luck", 0.0) + d * 20);
 				}
@@ -593,7 +593,7 @@ public class BeanItem {
 		
 		// Hide stuff
 		if (meta instanceof LeatherArmorMeta) {
-			if (custom.getOriginalStack() != null)
+			if (custom != null && custom.getOriginalStack() != null)
 				((LeatherArmorMeta)meta).setColor(((LeatherArmorMeta)custom.getOriginalStack().getItemMeta()).getColor());
 			meta.addItemFlags(ItemFlag.HIDE_DYE);
 		}

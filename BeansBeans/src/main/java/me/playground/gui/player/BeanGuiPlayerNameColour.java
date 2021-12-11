@@ -1,4 +1,4 @@
-package me.playground.gui;
+package me.playground.gui.player;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 import me.playground.celestia.logging.Celestia;
+import me.playground.gui.BeanGuiConfirm;
 import me.playground.ranks.Permission;
 import me.playground.ranks.Rank;
 import me.playground.utils.SignMenuFactory;
@@ -24,10 +25,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 
-public class BeanGuiPlayerNameColour extends BeanGui {
+public class BeanGuiPlayerNameColour extends BeanGuiPlayer {
 	
 	final private int lockedCol = 0x323233;
-	protected static final ItemStack blankbl = newItem(new ItemStack(Material.BLACK_STAINED_GLASS_PANE, 1), "");
 	
 	public BeanGuiPlayerNameColour(Player p) {
 		super(p);
@@ -35,11 +35,11 @@ public class BeanGuiPlayerNameColour extends BeanGui {
 		this.name = pp.isOverridingProfile() ? p.getName() + "'s Name Colour" : "Your Name Colour";
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
-				blankbl,blankbl,blankbl,blankbl,null,blankbl,blankbl,blankbl,blankbl,
-				blankbl,null,null,null,null,null,null,null,blankbl,
-				blankbl,null,null,null,null,null,null,null,blankbl,
-				blankbl,null,null,null,null,null,null,null,blankbl,
-				blankbl,blankbl,blankbl,blankbl,null,blankbl,blankbl,blankbl,blankbl,
+				bBlank,bBlank,bBlank,bBlank,null,bBlank,bBlank,bBlank,bBlank,
+				bBlank,null,null,null,null,null,null,null,bBlank,
+				bBlank,null,null,null,null,null,null,null,bBlank,
+				bBlank,null,null,null,null,null,null,null,bBlank,
+				bBlank,bBlank,bBlank,bBlank,null,bBlank,bBlank,bBlank,bBlank,
 				blank,blank,blank,blank,goBack,blank,blank,blank,blank
 		};
 	}
@@ -83,6 +83,7 @@ public class BeanGuiPlayerNameColour extends BeanGui {
                 	if (!pp.isOverridingProfile() && pp.hasPermission(Permission.BYPASS_COOLDOWNS)) {
                 		tpp.setNameColour(col);
     					Celestia.logModify(pp.getId(), "Changed %ID"+tpp.getId()+"'s Name Colour to " + Long.toHexString(tpp.getNameColour().value()));
+    					p.playSound(p.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 0.2F, 0.8F);
     					Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiPlayerNameColour(p).openInventory(), 1L);
                 	} else {
                 		Bukkit.getScheduler().runTaskLater(plugin, () -> showConfirmation(col), 1L);
@@ -108,6 +109,7 @@ public class BeanGuiPlayerNameColour extends BeanGui {
         	if (!pp.isOverridingProfile() && pp.hasPermission(Permission.BYPASS_COOLDOWNS)) {
         		tpp.setNameColour(meta.getColor().asRGB());
         		Celestia.logModify(pp.getId(), "Changed %ID"+tpp.getId()+"'s Name Colour to " + Long.toHexString(tpp.getNameColour().value()));
+        		p.playSound(p.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 0.2F, 0.8F);
         		refresh();
         	} else {
         		showConfirmation(meta.getColor().asRGB());
@@ -244,28 +246,6 @@ public class BeanGuiPlayerNameColour extends BeanGui {
 		contents[34] = chestCol;
 		
 		i.setContents(contents);
-	}
-	
-	@Override
-	public boolean preInventoryClick(InventoryClickEvent e) {
-		e.setCancelled(true);
-		final ItemStack i = e.getCurrentItem();
-		if (i == null) return true;
-		
-		if (pp.onCdElseAdd("guiClick", 300))
-			return true;
-			
-		if (i.isSimilar(goBack)) {
-			new BeanGuiPlayer(p).openInventory();
-			return true;
-		} else if (i.isSimilar(nextPage)) {
-			pageUp();
-			return true;
-		} else if (i.isSimilar(prevPage)) {
-			pageDown();
-			return true;
-		}
-		return false;
 	}
 	
 }
