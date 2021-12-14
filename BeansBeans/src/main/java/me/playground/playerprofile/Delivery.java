@@ -18,20 +18,24 @@ public class Delivery implements Dirty {
 	private long openDate; // Date this instance was opened by the recipient
 	private long expiryDate; // Date this instance expires and is no longer accessible by the recipient
 	
+	private final String title; // Display title
 	private final String msg; // Display message
 	private final List<DeliveryContent> content = new ArrayList<DeliveryContent>(); // Content of Delivery
+	private final DeliveryType type; // Pretty much just a visual thing for gui
 	
 	private boolean dirty; // Dirty flag - When dirty, update the database entry on profile save.
 	private boolean toRemove; // toRemove flag - Remove from player's delivery list on profile save.
 	private int contentClaimed; // Simple counter, incremented by DeliveryContent classes, to save scanning through the list every time.
 	
-	public Delivery(int id, int recipientId, int senderId, long dateReceived, long openDate, long expiryDate, String msg, JSONObject content) {
+	public Delivery(int id, int recipientId, int senderId, long dateReceived, long openDate, long expiryDate, DeliveryType type, String title, String msg, JSONObject content) {
 		this.id = id;
 		this.recipientId = recipientId;
 		this.senderId = senderId;
 		this.dateReceived = dateReceived;
 		this.openDate = openDate;
 		this.expiryDate = expiryDate;
+		this.type = type;
+		this.title = title;
 		this.msg = msg;
 		
 		if (content == null || content.isEmpty()) return;
@@ -98,6 +102,10 @@ public class Delivery implements Dirty {
 		setDirty(true);
 	}
 	
+	public String getTitle() {
+		return title;
+	}
+	
 	public String getMessage() {
 		return msg;
 	}
@@ -122,11 +130,11 @@ public class Delivery implements Dirty {
 	
 	public boolean isContentClaimed() {
 		boolean has = contentClaimed >= content.size();
-		if (has) flagRemoval(); // To let the Datasource know to remove this delivery from the live server.
+		if (has && canExpire()) flagRemoval(); // To let the Datasource know to remove this delivery from the live server.
 		return has;
 	}
 	
-	private void flagRemoval() {
+	public void flagRemoval() {
 		this.dirty = true;
 		this.toRemove = true;
 	}
@@ -148,6 +156,10 @@ public class Delivery implements Dirty {
 	protected void performClaim() {
 		setDirty(true); // To save the time when package contents were claimed
 		this.contentClaimed++;
+	}
+	
+	public DeliveryType getDeliveryType() {
+		return type;
 	}
 	
 	public JSONObject getJson() {

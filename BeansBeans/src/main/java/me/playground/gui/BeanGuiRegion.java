@@ -28,7 +28,7 @@ public abstract class BeanGuiRegion extends BeanGui {
 			"\u00a77various attributes about the \u00a79Region\u00a77 such as;",
 			"\u00a77name, priority, flags and members from this menu.");
 	
-	protected ItemStack blank;
+	protected ItemStack rBlank;
 	protected final RegionManager rm;
 	protected int regionIdx;
 	final protected List<Region> localRegions;
@@ -44,6 +44,7 @@ public abstract class BeanGuiRegion extends BeanGui {
 		this.regionIdx = 0;
 		this.name = "Regions";
 		this.presetSize = 54;
+		this.rBlank = newItem(new ItemStack(Material.BLUE_STAINED_GLASS_PANE, 1), getRegion().getColouredName());
 	}
 	
 	protected BeanGuiRegion(Player p, int regionIdx) {
@@ -65,10 +66,10 @@ public abstract class BeanGuiRegion extends BeanGui {
 		
 		contents[48] = whatIsThis;
 		
-		this.blank = newItem(new ItemStack(Material.BLUE_STAINED_GLASS_PANE, 1), getRegion().getColouredName());
+		this.rBlank = newItem(new ItemStack(Material.BLUE_STAINED_GLASS_PANE, 1), getRegion().getColouredName());
 		for (int x = presetSize-9; x < presetSize; x++) {
 			if (x == 48 || x == 49 || x == 50) continue;
-			contents[x] = blank;
+			contents[x] = rBlank;
 		}
 		
 		if (getRegions().size() > 1) {

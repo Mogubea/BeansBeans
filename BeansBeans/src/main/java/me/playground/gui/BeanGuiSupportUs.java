@@ -22,11 +22,11 @@ public class BeanGuiSupportUs extends BeanGui {
 		this.name = "Support the Server!";
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
-				blank,blank,blank,blank,newItem(tpp.getSkull(), tpp.getColouredName()),blank,blank,blank,blank,
+				blankbl,blankbl,blank,blank,newItem(tpp.getSkull(), tpp.getColouredName()),blank,blank,blankbl,blankbl,
+				blankbl,null,null,null,null,null,null,null,blankbl,
 				blank,null,null,null,null,null,null,null,blank,
 				blank,null,null,null,null,null,null,null,blank,
 				blank,null,null,null,null,null,null,null,blank,
-				blank,blank,blank,blank,null,blank,blank,blank,blank,
 				blankbl,blankbl,blankbl,blankbl,goBack,blankbl,blankbl,blankbl,blankbl
 		};
 	}
@@ -51,9 +51,9 @@ public class BeanGuiSupportUs extends BeanGui {
 			return;
 		case 29: // Helping Users - Nothing
 			return;
-		case 31: // Following Rules - Show Rules later
-			return;
 		case 33: // Reporting Bugs - Nothing
+			return;
+		case 40: // Following Rules - Show Rules later
 			return;
 		default:
 			return;
@@ -95,20 +95,20 @@ public class BeanGuiSupportUs extends BeanGui {
 				Component.text("\u00a77please don't hesitate to let us know! We may"),
 				Component.text("\u00a77have something for you to build!"));
 		
-		contents[31] = newItem(new ItemStack(Material.ANVIL), Component.text("Following the Rules", BeanColor.SAPPHIRE), 
-				Component.text("\u00a77We thank you for following the rules and"),
-				Component.text("\u00a77for whenever you're able to discourage"),
-				Component.text("\u00a77others from breaking them!"),
-				Component.empty(),
-				Component.text("\u00a77Report players with \u00a7b/report player <name>\u00a77."));
-		
 		contents[33] = newItem(new ItemStack(Material.CAKE), Component.text("Reporting Bugs", BeanColor.SAPPHIRE), 
 				Component.text("\u00a77Reporting bugs, glitches and exploits help"),
 				Component.text("\u00a77a lot and reward you with special \u00a7ddebug cakes\u00a77!"),
 				Component.empty(),
 				Component.text("\u00a77Report bugs with \u00a7b/report bug <info>\u00a77."));
 		
-		contents[40] = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("What is this?", BeanColor.SAPPHIRE), "", 
+		contents[40] = newItem(new ItemStack(Material.ANVIL), Component.text("Following the Rules", BeanColor.SAPPHIRE), 
+				Component.text("\u00a77We thank you for following the rules and"),
+				Component.text("\u00a77for whenever you're able to discourage"),
+				Component.text("\u00a77others from breaking them!"),
+				Component.empty(),
+				Component.text("\u00a77Report players with \u00a7b/report player <name>\u00a77."));
+		
+		contents[48] = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("What is this?", BeanColor.SAPPHIRE), "", 
 				"\u00a77This menu displays various methods of",
 				"\u00a77how you can support the server and",
 				"\u00a77help it grow.");

@@ -22,7 +22,8 @@ public enum Rank {
 			"bean.cmd.workbench"),
 	PATRICIAN(2, 0xd64dd6, 100, 873916287682756668L,
 			"bean.cmd.anvil",
-			Permission.NICKNAME_APPLY),
+			Permission.NICKNAME_APPLY,
+			Permission.DELIVERY_CLAIMALL),
 	SENATOR(3, 0xaa32da, 100, 914921526158041089L,
 			Permission.NAMECOLOUR_CUSTOM),
 	

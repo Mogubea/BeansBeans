@@ -27,12 +27,12 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 		
 		this.name = "Regions";
 		this.presetInv = new ItemStack[] {
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				null,icon_name,null,icon_members,null,icon_flags,null,icon_priority,null,
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				blank,blank,blank,blank,goBack,blank,blank,blank,blank
+				rBlank,rBlank,blank,blank,null,blank,blank,rBlank,rBlank,
+				rBlank,null,null,null,null,null,null,null,rBlank,
+				blank,icon_name,null,icon_members,null,icon_flags,null,icon_priority,null,
+				blank,null,null,null,null,null,null,null,blank,
+				blank,null,null,null,null,null,null,null,blank,
+				rBlank,rBlank,rBlank,rBlank,goBack,rBlank,rBlank,rBlank,rBlank
 		};
 	}
 	

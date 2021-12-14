@@ -35,11 +35,11 @@ public class BeanGuiPlayerNameColour extends BeanGuiPlayer {
 		this.name = pp.isOverridingProfile() ? p.getName() + "'s Name Colour" : "Your Name Colour";
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
-				bBlank,bBlank,bBlank,bBlank,null,bBlank,bBlank,bBlank,bBlank,
+				blank,blank,bBlank,bBlank,null,bBlank,bBlank,blank,blank,
+				blank,null,null,null,null,null,null,null,blank,
 				bBlank,null,null,null,null,null,null,null,bBlank,
 				bBlank,null,null,null,null,null,null,null,bBlank,
 				bBlank,null,null,null,null,null,null,null,bBlank,
-				bBlank,bBlank,bBlank,bBlank,null,bBlank,bBlank,bBlank,bBlank,
 				blank,blank,blank,blank,goBack,blank,blank,blank,blank
 		};
 	}
@@ -55,7 +55,7 @@ public class BeanGuiPlayerNameColour extends BeanGuiPlayer {
 		if (!pp.isOverridingProfile() && tpp.onCooldown("nameColour")) { // Cooldown
 			p.sendActionBar(Component.text("\u00a7cYou'll confuse people if you change your name colour that fast!"));
 			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
-		} else if (e.getRawSlot() == 34) { // Custom
+		} else if (e.getRawSlot() == 40) { // Custom
 			if (!pp.hasPermission(Permission.NAMECOLOUR_CUSTOM)) { // If no access to custom colour
 				p.sendActionBar(Component.text("\u00a7cJust before you could apply the colour, your hands melt."));
 				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
@@ -200,9 +200,9 @@ public class BeanGuiPlayerNameColour extends BeanGuiPlayer {
 		
 		// Cooldown Item
 		if (!pp.hasPermission(Permission.BYPASS_COOLDOWNS))
-			contents[40] = newItem(new ItemStack(Material.CLOCK), Component.text("\u00a77There is a 30 minute cooldown"), Component.text("\u00a77between changing name colours!"));
+			contents[50] = newItem(new ItemStack(Material.CLOCK), Component.text("\u00a77There is a 30 minute cooldown"), Component.text("\u00a77between changing name colours!"));
 		else
-			contents[40] = newItem(new ItemStack(Material.CLOCK), Component.text("\u00a77You don't have a cooldown"), Component.text("\u00a77when changing name colours!"));
+			contents[50] = newItem(new ItemStack(Material.CLOCK), Component.text("\u00a77You don't have a cooldown"), Component.text("\u00a77when changing name colours!"));
 		
 		// Custom Colour
 		final boolean isUnlocked = pOverride || pp.hasPermission(Permission.NAMECOLOUR_CUSTOM);
@@ -243,7 +243,7 @@ public class BeanGuiPlayerNameColour extends BeanGuiPlayer {
 		
 		chestCol.setItemMeta(meta);
 		
-		contents[34] = chestCol;
+		contents[40] = chestCol;
 		
 		i.setContents(contents);
 	}

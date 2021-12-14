@@ -56,6 +56,7 @@ import me.playground.npc.NPC;
 import me.playground.npc.NPCManager;
 import me.playground.npc.NPCType;
 import me.playground.playerprofile.Delivery;
+import me.playground.playerprofile.DeliveryType;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileModifyRequest;
 import me.playground.playerprofile.ProfileModifyRequest.ModifyType;
@@ -2339,7 +2340,7 @@ public class Datasource {
 	
 	// XXX: Delivery shit
 	
-	public static boolean registerDelivery(int playerId, int senderId, long expiryTime, String message, JSONObject content) {
+	public static boolean registerDelivery(int playerId, int senderId, long expiryTime, DeliveryType type, String title, String message, JSONObject content) {
 		if (content == null || content.isEmpty()) return false;
 		
 		Connection c = null;
@@ -2348,12 +2349,14 @@ public class Datasource {
 		
 		try {
 			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO player_inbox (playerId, senderId, expiryDate, message, content) VALUES (?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+			statement = c.prepareStatement("INSERT INTO player_inbox (playerId, senderId, expiryDate, type, title, message, content) VALUES (?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
 			statement.setInt(1, playerId);
 			statement.setInt(2, senderId);
 			statement.setTimestamp(3, expiryTime <= 0L ? null : new Timestamp(expiryTime));
-			statement.setString(4, message);
-			statement.setString(5, content.toString());
+			statement.setString(4, type.name());
+			statement.setString(5, title);
+			statement.setString(6, message);
+			statement.setString(7, content.toString());
 			
 			statement.executeUpdate();
 			rs = statement.getGeneratedKeys();
@@ -2363,7 +2366,7 @@ public class Datasource {
 				PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
 				Timestamp tsOne = rs.getTimestamp(4);
 				
-				pp.getInbox().add(new Delivery(rs.getInt(1), playerId, senderId, tsOne == null ? 0L : tsOne.getTime(), 0L, expiryTime, message, content));
+				pp.getInbox().add(new Delivery(rs.getInt(1), playerId, senderId, tsOne == null ? 0L : tsOne.getTime(), 0L, expiryTime, type, title, message, content));
 			}
 			
 			return true;
@@ -2375,7 +2378,7 @@ public class Datasource {
 		return false;
 	}
 	
-	private static void updateDelivery(Delivery delivery) {
+	public static void updateDelivery(Delivery delivery) {
 		Connection c = null;
 		PreparedStatement statement = null;
 		
@@ -2389,6 +2392,7 @@ public class Datasource {
 			statement.setInt(5, delivery.getId());
 			
 			statement.executeUpdate();
+			delivery.setDirty(false);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
@@ -2404,7 +2408,7 @@ public class Datasource {
 		
 		try {
 			c = getNewConnection();
-			statement = c.prepareStatement("SELECT * FROM player_inbox WHERE playerId = ? AND deleted = 0 ORDER BY creationDate ASC LIMIT 28");
+			statement = c.prepareStatement("SELECT * FROM player_inbox WHERE playerId = ? AND deleted = 0 ORDER BY creationDate DESC");
 			statement.setInt(1, profile.getId());
 			
 			r = statement.executeQuery();
@@ -2414,8 +2418,13 @@ public class Datasource {
 				Timestamp tsTwo = r.getTimestamp("openDate");
 				Timestamp tsThree = r.getTimestamp("expiryDate");
 				String content = r.getString("content");
-				deliveries.add(new Delivery(r.getInt("id"), r.getInt("playerId"), r.getInt("senderId"), tsOne == null ? 0L : tsOne.getTime(), 
-						tsTwo == null ? 0L : tsTwo.getTime(), tsThree == null ? 0L : tsThree.getTime(), r.getString("message"), content == null ? null : new JSONObject(content)));
+				DeliveryType type = DeliveryType.PACKAGE;
+				try {
+					type = DeliveryType.valueOf(r.getString("type"));
+				} catch (Exception e) {}
+				
+				deliveries.add(new Delivery(r.getInt("id"), r.getInt("playerId"), r.getInt("senderId"), tsOne == null ? 0L : tsOne.getTime(), tsTwo == null ? 0L : tsTwo.getTime(), 
+						tsThree == null ? 0L : tsThree.getTime(), type, r.getString("title"), r.getString("message"), content == null ? null : new JSONObject(content)));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

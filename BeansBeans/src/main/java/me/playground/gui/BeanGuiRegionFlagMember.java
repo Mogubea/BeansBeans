@@ -34,12 +34,12 @@ public class BeanGuiRegionFlagMember extends BeanGuiRegion {
 		
 		this.name = "Flags -> " + flag.getDisplayName();
 		this.presetInv = new ItemStack[] {
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				null,null,iOwner,iOfficer,iTrusted,iMember,iVisitor,null,null,
-				null,null,null,null,iNone,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				blank,blank,blank,blank,goBack,blank,blank,blank,blank
+				rBlank,rBlank,blank,blank,null,blank,blank,rBlank,rBlank,
+				rBlank,null,null,null,null,null,null,null,rBlank,
+				blank,null,iOwner,iOfficer,iTrusted,iMember,iVisitor,null,blank,
+				blank,null,null,null,iNone,null,null,null,blank,
+				blank,null,null,null,null,null,null,null,blank,
+				rBlank,rBlank,rBlank,rBlank,goBack,rBlank,rBlank,rBlank,rBlank
 		};
 		this.regionIdx = regionIdx;
 		this.flag = flag;

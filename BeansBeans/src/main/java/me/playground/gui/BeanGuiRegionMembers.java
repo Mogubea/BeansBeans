@@ -40,7 +40,7 @@ public class BeanGuiRegionMembers extends BeanGuiRegion {
 				null,null,null,null,null,null,null,null,null,
 				null,null,null,null,null,null,null,null,null,
 				null,null,null,null,null,null,null,null,null,
-				blank,blank,blank,blank,goBack,blank,blank,blank,blank
+				rBlank,rBlank,rBlank,rBlank,goBack,rBlank,rBlank,rBlank,rBlank
 		};
 	}
 	

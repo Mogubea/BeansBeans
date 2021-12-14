@@ -2,6 +2,7 @@ package me.playground.gui.staff;
 
 import java.util.ArrayList;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -9,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 
 import me.playground.playerprofile.ProfileModifyRequest;
 import me.playground.playerprofile.ProfileStore;
+import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 
@@ -22,8 +24,8 @@ public class BeanGuiStaffModifyRequests extends BeanGuiStaff {
 		this.name = "Staff Menu";
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
-				bBlank,bBlank,bBlank,bBlank,null,bBlank,bBlank,bBlank,bBlank,
-				bBlank,null,null,null,null,null,null,null,bBlank,
+				blank,blank,bBlank,bBlank,null,bBlank,bBlank,blank,blank,
+				blank,null,null,null,null,null,null,null,blank,
 				bBlank,null,null,null,null,null,null,null,bBlank,
 				bBlank,null,null,null,null,null,null,null,bBlank,
 				bBlank,bBlank,bBlank,bBlank,null,bBlank,bBlank,bBlank,bBlank,
@@ -50,7 +52,7 @@ public class BeanGuiStaffModifyRequests extends BeanGuiStaff {
 	@Override
 	public void onInventoryOpened() {
 		final ItemStack[] contents = presetInv.clone();
-		contents[4] = newItem(pp.getSkull(), pp.getHighestRank().toComponent().append(Component.text("\u00a7b Menu")), Component.text("\u00a77Nickname Requests"));
+		contents[4] = newItem(new ItemStack(Material.ANVIL), Component.text("Staff Menu", BeanColor.STAFF), "\u00a77Modify Requests");
 		ArrayList<ProfileModifyRequest> reqs = ProfileModifyRequest.getPendingRequests();
 		int len = Math.min(reqs.size() - (page * AMT), AMT); 
 		

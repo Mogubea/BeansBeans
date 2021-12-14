@@ -35,8 +35,8 @@ public class BeanGuiPlayerLoginMessage extends BeanGuiPlayer {
 		this.name = pp.isOverridingProfile() ? p.getName() + "'s Name Colour" : "Your Name Colour";
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
-				bBlank,bBlank,bBlank,bBlank,null,bBlank,bBlank,bBlank,bBlank,
-				bBlank,null,null,null,null,null,null,null,bBlank,
+				blank,blank,bBlank,bBlank,null,bBlank,bBlank,blank,blank,
+				blank,null,null,null,null,null,null,null,blank,
 				bBlank,null,null,null,null,null,null,null,bBlank,
 				bBlank,null,null,null,null,null,null,null,bBlank,
 				bBlank,bBlank,bBlank,bBlank,null,bBlank,bBlank,bBlank,bBlank,
