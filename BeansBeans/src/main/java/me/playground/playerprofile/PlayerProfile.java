@@ -57,7 +57,7 @@ import net.minecraft.server.network.PlayerConnection;
 
 public class PlayerProfile {
 	
-	public static LoadingCache<UUID, PlayerProfile> profileCache = CacheBuilder.from("maximumSize=500,expireAfterAccess=2m")
+	public static LoadingCache<UUID, PlayerProfile> profileCache = CacheBuilder.from("maximumSize=500,expireAfterAccess=15m")
 			.build(
 					new CacheLoader<UUID, PlayerProfile>() {
 						public PlayerProfile load(UUID playerUUID) throws Exception { // if the key doesn't exist, request it via this method
@@ -164,7 +164,8 @@ public class PlayerProfile {
 	private ItemStack[] 				armourWardrobe;
 	private final HeirloomInventory		heirloomInventory;
 	private final PlayerStats			stats;
-	private ArrayList<String> 			pickupBlacklist = new ArrayList<String>();
+	private List<String> 				pickupBlacklist = new ArrayList<String>();
+	private List<Delivery>				inbox = new ArrayList<Delivery>();
 	
 	private long 						booleanSettings = PlayerSetting.getDefaultSettings();
 	
@@ -215,6 +216,7 @@ public class PlayerProfile {
 		this.stats = Datasource.loadPlayerStats(this);
 		
 		setRanks(ranks);
+		refreshInbox();
 		//Bukkit.getConsoleSender().sendMessage(Component.text("Profile was loaded for " + (hasNickname() ? getNickname() + " ("+getRealName()+")" : getRealName())));
 	}
 	
@@ -761,7 +763,7 @@ public class PlayerProfile {
 		return getStats().getStat(type, name);
 	}
 	
-	public ArrayList<String> getPickupBlacklist() {
+	public List<String> getPickupBlacklist() {
 		return this.pickupBlacklist;
 	}
 	
@@ -909,6 +911,20 @@ public class PlayerProfile {
 		
 		this.job = job;
 		return true;
+	}
+	
+	public List<Delivery> getInbox() {
+		return inbox;
+	}
+	
+	private long lastInboxUpdate;
+	public void refreshInbox() {
+		Datasource.refreshPlayerInbox(this);
+		lastInboxUpdate = System.currentTimeMillis();
+	}
+	
+	public long getLastInboxUpdate() {
+		return lastInboxUpdate;
 	}
 	
 }

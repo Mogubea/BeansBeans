@@ -55,6 +55,7 @@ import me.playground.main.Main;
 import me.playground.npc.NPC;
 import me.playground.npc.NPCManager;
 import me.playground.npc.NPCType;
+import me.playground.playerprofile.Delivery;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileModifyRequest;
 import me.playground.playerprofile.ProfileModifyRequest.ModifyType;
@@ -297,6 +298,7 @@ public class Datasource {
 		savePickupBlacklist(pp.getId());
 		savePlayerHeirlooms(pp);
 		savePlayerStats(pp);
+		refreshPlayerInbox(pp);
 	}
 
 	public static void saveProfileColumn(int playerId, String column, Object value) {
@@ -417,14 +419,19 @@ public class Datasource {
 		try {
 			c = getNewConnection();
 			statement = connection.prepareStatement("INSERT INTO " + table_npcs
-					+ " (npcName,creatorId,creationTime,world,xyzyp) VALUES (?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
-			statement.setString(1, npcName);
-			statement.setInt(2, playerId);
-			statement.setLong(3, System.currentTimeMillis() / 1000);
-			statement.setShort(4, WorldUUIDToId.get(npcLoc.getWorld().getUID()));
-
-			statement.setString(5, npcLoc.getX() + "," + npcLoc.getY() + "," + npcLoc.getZ() + "," + npcLoc.getYaw()
-					+ "," + npcLoc.getPitch());
+					+ " (npcName,creatorId,creationTime,world,x,y,z,yaw,p) VALUES (?,?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+			int idx = 1;
+			
+			statement.setString(idx++, npcName);
+			statement.setInt(idx++, playerId);
+			statement.setTimestamp(idx++, new Timestamp(System.currentTimeMillis()));
+			statement.setShort(idx++, WorldUUIDToId.get(npcLoc.getWorld().getUID()));
+			
+			statement.setFloat(idx++, (float) npcLoc.getX());
+			statement.setFloat(idx++, (float) npcLoc.getY());
+			statement.setFloat(idx++, (float) npcLoc.getZ());
+			statement.setInt(idx++, (int) npcLoc.getYaw()); // No real need for the depth of floats
+			statement.setInt(idx++, (int) npcLoc.getPitch());
 
 			statement.executeUpdate();
 			rs = statement.getGeneratedKeys();
@@ -443,18 +450,20 @@ public class Datasource {
 		PreparedStatement statement = null;
 		try {
 			c = getNewConnection();
-			statement = c.prepareStatement("UPDATE " + table_npcs + " SET npcName = ?,creatorId = ?,world = ?,xyzyp = ?, data = ? WHERE npcId = ?");
-			statement.setString(1, npc.getEntity().getName());
-			
+			statement = c.prepareStatement("UPDATE " + table_npcs + " SET npcName = ?,creatorId = ?,world = ?,x = ?, y = ?, z = ?, yaw = ?, p = ?, data = ? WHERE npcId = ?");
 			Location npcLoc = npc.getLocation();
+			int idx = 1;
 			
-			statement.setInt(2, npc.getCreatorId());
-			statement.setShort(3, WorldUUIDToId.get(npcLoc.getWorld().getUID()));
-			statement.setString(4, npcLoc.getX() + "," + npcLoc.getY() + "," + npcLoc.getZ() + "," + npcLoc.getYaw()
-			+ "," + npcLoc.getPitch());
+			statement.setString(idx++, npc.getEntity().getName());
+			statement.setInt(idx++, npc.getCreatorId());
+			statement.setShort(idx++, WorldUUIDToId.get(npcLoc.getWorld().getUID()));
+			statement.setFloat(idx++, (float) npcLoc.getX());
+			statement.setFloat(idx++, (float) npcLoc.getY());
+			statement.setFloat(idx++, (float) npcLoc.getZ());
+			statement.setInt(idx++, (int) npcLoc.getYaw()); // No real need for the depth of floats
+			statement.setInt(idx++, (int) npcLoc.getPitch());
 			
 			JSONObject cunt = npc.getJsonData();
-			
 			
 			statement.setString(5, cunt == null ? null : cunt.toString());
 			statement.setInt(6, npc.getDatabaseId());
@@ -477,7 +486,7 @@ public class Datasource {
 		try {
 			c = getNewConnection();
 			statement = connection
-					.prepareStatement("SELECT npcId,npcName,type,creatorId,world,xyzyp,data FROM " + table_npcs);
+					.prepareStatement("SELECT npcId,npcName,type,creatorId,world,x,y,z,yaw,p,data FROM " + table_npcs);
 			r = statement.executeQuery();
 			while (r.next()) {
 				int npcId = r.getInt("npcId");
@@ -490,10 +499,8 @@ public class Datasource {
 				
 				String npcName = r.getString("npcName");
 				String json = r.getString("data");
-				String[] nls = r.getString("xyzyp").split(",");
 				Location npcLoc = new Location(Bukkit.getWorld(WorldIdToUUID.get(r.getShort("world"))),
-						Double.parseDouble(nls[0]), Double.parseDouble(nls[1]), Double.parseDouble(nls[2]),
-						Float.parseFloat(nls[3]), Float.parseFloat(nls[4]));
+						r.getFloat("x"), r.getFloat("y"), r.getFloat("z"), r.getInt("yaw"), r.getInt("p"));
 				
 				World world = npcLoc.getWorld();
 				if (world == null)
@@ -1149,7 +1156,7 @@ public class Datasource {
 			
 			statement.setInt(1, shop.getMaxItemQuantity());
 			statement.setInt(2, shop.getItemQuantity());
-			statement.setString(3, shop.getItemStack() == null ? null : Utils.itemStackToBase64(shop.getItemStack()));
+			statement.setString(3, shop.getItemStack() == null ? null : Utils.toBase64(shop.getItemStack()));
 			statement.setInt(4, shop.getStoredMoney());
 			statement.setInt(5, shop.getTotalMoneyEarned());
 			statement.setInt(6, shop.getTotalMoneyTaxed());
@@ -1514,7 +1521,7 @@ public class Datasource {
 		
 		Location l = s.getLocation();
 		
-		shopset.createMarker("shop."+s.getShopId(), "Player Shop", true, l.getWorld().getName(), l.getX(), l.getY()+1, l.getZ(), dynmap.getMarkerAPI().getMarkerIcon("diamond"), false);
+		shopset.createMarker("shop."+s.getShopId(), "Player Shop", false, l.getWorld().getName(), l.getX(), l.getY()+1, l.getZ(), dynmap.getMarkerAPI().getMarkerIcon("diamond"), false);
 	}
 	
 	public static void unmarkShop(Shop s) {
@@ -1896,7 +1903,7 @@ public class Datasource {
 			statement.setByte(7, entry.getFlags());
 			
 			if (entry.shouldCompress())
-				statement.setString(8, Utils.itemStackToBase64(entry.getDisplayStack()));
+				statement.setString(8, Utils.toBase64(entry.getDisplayStack()));
 			else
 				statement.setString(8, null);
 			
@@ -2328,6 +2335,110 @@ public class Datasource {
 		} finally {
 			close(c, statement);
 		}
+	}
+	
+	// XXX: Delivery shit
+	
+	public static boolean registerDelivery(int playerId, int senderId, long expiryTime, String message, JSONObject content) {
+		if (content == null || content.isEmpty()) return false;
+		
+		Connection c = null;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("INSERT INTO player_inbox (playerId, senderId, expiryDate, message, content) VALUES (?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+			statement.setInt(1, playerId);
+			statement.setInt(2, senderId);
+			statement.setTimestamp(3, expiryTime <= 0L ? null : new Timestamp(expiryTime));
+			statement.setString(4, message);
+			statement.setString(5, content.toString());
+			
+			statement.executeUpdate();
+			rs = statement.getGeneratedKeys();
+			rs.next();
+			
+			if (ProfileStore.from(playerId, true) != null && ProfileStore.from(playerId).isOnline()) {
+				PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
+				Timestamp tsOne = rs.getTimestamp(4);
+				
+				pp.getInbox().add(new Delivery(rs.getInt(1), playerId, senderId, tsOne == null ? 0L : tsOne.getTime(), 0L, expiryTime, message, content));
+			}
+			
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
+		}
+		return false;
+	}
+	
+	private static void updateDelivery(Delivery delivery) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("UPDATE player_inbox SET expiryDate = ?, openDate = ?, content = ?, deleted = ? WHERE id = ?");
+			statement.setTimestamp(1, delivery.getExpiryDate() <= 0L ? null : new Timestamp(delivery.getExpiryDate()));
+			statement.setTimestamp(2, delivery.getOpenDate() <= 0L ? null : new Timestamp(delivery.getOpenDate()));
+			statement.setString(3, delivery.getJson().toString());
+			statement.setBoolean(4, delivery.toBeRemoved());
+			statement.setInt(5, delivery.getId());
+			
+			statement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
+		}
+	}
+	
+	private static List<Delivery> loadPlayerInbox(PlayerProfile profile) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		ResultSet r = null;
+		final List<Delivery> deliveries = new ArrayList<Delivery>();
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("SELECT * FROM player_inbox WHERE playerId = ? AND deleted = 0 ORDER BY creationDate ASC LIMIT 28");
+			statement.setInt(1, profile.getId());
+			
+			r = statement.executeQuery();
+			
+			while(r.next()) {
+				Timestamp tsOne = r.getTimestamp("creationDate");
+				Timestamp tsTwo = r.getTimestamp("openDate");
+				Timestamp tsThree = r.getTimestamp("expiryDate");
+				String content = r.getString("content");
+				deliveries.add(new Delivery(r.getInt("id"), r.getInt("playerId"), r.getInt("senderId"), tsOne == null ? 0L : tsOne.getTime(), 
+						tsTwo == null ? 0L : tsTwo.getTime(), tsThree == null ? 0L : tsThree.getTime(), r.getString("message"), content == null ? null : new JSONObject(content)));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(r, c, statement);
+		}
+		return deliveries;
+	}
+	
+	public static void savePlayerDirtyInbox(PlayerProfile profile) {
+		List<Delivery> deliveries = profile.getInbox();
+		int size = deliveries.size();
+		for (int x = -1; ++x < size;) {
+			Delivery delivery = deliveries.get(x);
+			if (delivery.isDirty())
+				updateDelivery(delivery);
+		}
+	}
+	
+	public static void refreshPlayerInbox(PlayerProfile profile) {
+		savePlayerDirtyInbox(profile);
+		profile.getInbox().clear();
+		profile.getInbox().addAll(loadPlayerInbox(profile));
 	}
 	
 }

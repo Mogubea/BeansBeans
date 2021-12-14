@@ -2,7 +2,6 @@ package me.playground.npc;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -12,7 +11,6 @@ import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.mojang.authlib.GameProfile;
@@ -20,6 +18,7 @@ import com.mojang.authlib.properties.Property;
 import com.mojang.datafixers.util.Pair;
 
 import me.playground.main.Main;
+import me.playground.utils.Utils;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityEquipment;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityHeadRotation;
 import net.minecraft.network.protocol.game.PacketPlayOutNamedEntitySpawn;
@@ -42,19 +41,9 @@ public class NPCHuman extends NPC<EntityPlayer> {
 		if (json.has("texValue") && json.has("texSig"))
 			getGameProfile().getProperties().put("textures", new Property("textures", json.getString("texValue"), json.getString("texSig")));
 		
-		JSONArray invArray = json.optJSONArray("inventory");
-		if (invArray == null) return;
-		for (int x = -1; ++x < invSize;) {
-			JSONObject itemObj = invArray.optJSONObject(x);
-			if (itemObj == null) continue;
-			if (itemObj.isEmpty()) continue;
-			Map<String, Object> itemMap = itemObj.toMap();
-			if ((Integer)itemMap.getOrDefault("v", -1) < 0)
-				itemMap.put("v", 2000);
-			try {
-				inventory[x] = ItemStack.deserialize(itemMap);
-			} catch (Exception e) {}
-		}
+		String invArray = json.optString("inventory");
+		if (!(invArray == null || invArray.isEmpty()))
+			inventory = Utils.itemStackArrayFromBase64(invArray);
 		for (int x = -1; ++x < invSize;)
 			nmsInventory.add(new Pair<EnumItemSlot,net.minecraft.world.item.ItemStack>(EnumItemSlot.values()[x], CraftItemStack.asNMSCopy(inventory[x])));
 	}
@@ -123,18 +112,7 @@ public class NPCHuman extends NPC<EntityPlayer> {
 	public JSONObject getJsonData() {
 		JSONObject obj = super.getJsonData();
 		
-		JSONArray invArray = new JSONArray();
-		for (int x = -1; ++x < invSize;) {
-			JSONObject itemObj = new JSONObject();
-			if (inventory[x] != null) {
-				Map<String, Object> itemMap = inventory[x].serialize();
-				itemMap.forEach((string, object) -> {
-					itemObj.put(string, object);
-				});
-			}
-			invArray.put(x, itemObj);
-		}
-		obj.put("inventory", invArray);
+		obj.put("inventory", Utils.itemStackArrayToBase64(inventory));
 		
 		Object[] textures = getGameProfile().getProperties().get("textures").toArray();
 		if (textures == null || textures.length < 1)

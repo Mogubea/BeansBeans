@@ -71,10 +71,13 @@ public class BeanGuiNPCEdit extends BeanGui {
 					int aSlot = 8 + (x * 9);
 					if ((x < 4 ? mat.endsWith(slotChecks[x]) : true) && i.getItem(aSlot) == null) {
 						i.setItem(aSlot, item); // Duplicate the item by shift clicking, only admins can get into this gui anyway
+						p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.6F, 1);
 						return;
 					}
 				}
 			} else {
+				if (e.getCurrentItem() != null)
+					p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.6F, 1);
 				e.setCancelled(false);
 			}
 		// Equipment Slots
@@ -127,7 +130,7 @@ public class BeanGuiNPCEdit extends BeanGui {
                 	}
                 	Bukkit.getScheduler().runTaskLater(plugin, () -> npc.setInteraction(interaction), 1L);
                 	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
-                } catch (RuntimeException ex) {
+                } catch (Exception ex) {
                 	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
                 }
             	
@@ -154,7 +157,7 @@ public class BeanGuiNPCEdit extends BeanGui {
                 try {
                 	Bukkit.getScheduler().runTaskLater(plugin, () -> npc.setTitleColour(Integer.parseInt(strings[0])), 1L);
                 	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
-                } catch (RuntimeException ex) {
+                } catch (Exception ex) {
                 	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
                 }
             	

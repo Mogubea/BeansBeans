@@ -1,6 +1,6 @@
 package me.playground.gui;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -63,7 +63,7 @@ public class BeanGuiPickupfilter extends BeanGui {
 	public void onInventoryOpened() {
 		// Update Contents
 		final ItemStack[] contents = presetInv.clone();
-		final ArrayList<String> blacklist = tpp.getPickupBlacklist();
+		final List<String> blacklist = tpp.getPickupBlacklist();
 		// 0 - 44
 		for (int x = 0 + (page * 45); x < Math.min(45 + (page * 45), blacklist.size()); x++) {
 			ItemStack item = toItem(blacklist.get(x));

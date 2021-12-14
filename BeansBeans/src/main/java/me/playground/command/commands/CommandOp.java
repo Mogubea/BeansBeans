@@ -97,13 +97,8 @@ public class CommandOp extends BeanCommand {
 			return true;
 		}
 		
-		if ("serialize".equals(cmdStr) && checkPlayer(sender)) {
-			getPlugin().getLogger().info("Serialized ItemStack Request: " + p.getInventory().getItemInMainHand().serializeAsBytes());
-			return true;
-		}
-		
 		if ("base64".equals(cmdStr) && checkPlayer(sender)) {
-			getPlugin().getLogger().info("Base64 ItemStack Request: " + Utils.itemStackToBase64(p.getInventory().getItemInMainHand()));
+			getPlugin().getLogger().info("Base64 ItemStack Request: " + Utils.toBase64(p.getInventory().getItemInMainHand()));
 			return true;
 		}
 		

@@ -32,10 +32,7 @@ public class BeanGuiWardrobe extends BeanGui {
 	public void onInventoryClicked(InventoryClickEvent e) {
 		final int slot = e.getRawSlot();
 		
-		e.setCancelled(true);
-		
-		if (slot < 0 || slot >= e.getInventory().getSize() || e.getInventory().getItem(slot) == null)
-			return;
+		if (slot < 0 || slot >= e.getInventory().getSize()) return;
 		
 		final Material mat = e.getInventory().getItem(slot).getType();
 		

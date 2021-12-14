@@ -127,20 +127,6 @@ public class Utils {
         }
 	}
 	
-	public static String itemStackToBase64(ItemStack itemStack) {
-		try {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
-            
-            dataOutput.writeObject(itemStack);
-            dataOutput.close();
-            
-            return Base64Coder.encodeLines(outputStream.toByteArray());
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to compress itemstack.", e);
-        }
-	}
-	
 	public static String itemStackArrayToBase64(ItemStack[] items) throws IllegalStateException {
     	try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
