@@ -6,8 +6,8 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -66,15 +66,15 @@ public class NPCHuman extends NPC<EntityPlayer> {
 	
 	protected void showEquipment(Player p) {
 		PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
-		connection.sendPacket(new PacketPlayOutEntityEquipment(getEntityId(), nmsInventory));
+		connection.a(new PacketPlayOutEntityEquipment(getEntityId(), nmsInventory));
 	}
 	
 	public GameProfile getGameProfile() {
-		return entity.getProfile();
+		return entity.fp();
 	}
 	
 	public UUID getUniqueId() {
-		return entity.getUniqueID();
+		return entity.cm();
 	}
 	
 	public NPCHuman setSkin(String value, String signature) {
@@ -92,13 +92,13 @@ public class NPCHuman extends NPC<EntityPlayer> {
 	@Override
 	protected void showTo(Player p) {
 		PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
-		connection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.a, entity)); // add npc to existence
-		connection.sendPacket(new PacketPlayOutNamedEntitySpawn(entity)); // spawn entity
-		connection.sendPacket(new PacketPlayOutEntityHeadRotation(entity, getFixedRot(getLocation().getYaw())));
-		connection.sendPacket(new PacketPlayOutEntityEquipment(getEntityId(), nmsInventory));
+		connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.a, entity)); // add npc to existence
+		connection.a(new PacketPlayOutNamedEntitySpawn(entity)); // spawn entity
+		connection.a(new PacketPlayOutEntityHeadRotation(entity, getFixedRot(getLocation().getYaw())));
+		connection.a(new PacketPlayOutEntityEquipment(getEntityId(), nmsInventory));
 		new BukkitRunnable() {
 			public void run() {
-				connection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.e, getEntity())); // remove from tab
+				connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.e, getEntity())); // remove from tab
 			}
 		}.runTaskAsynchronously(getPlugin());
 	}

@@ -38,9 +38,9 @@ public class CommandToCoord extends BeanCommand {
 			
 		final Location toLoc = new Location(
 				w,
-				toIntOrDefault(args[0], p.getLocation().getBlockX()),
-				toIntOrDefault(args[1], p.getLocation().getBlockY()),
-				toIntOrDefault(args[2], p.getLocation().getBlockZ()));
+				toIntDef(args[0], p.getLocation().getBlockX()),
+				toIntDef(args[1], p.getLocation().getBlockY()),
+				toIntDef(args[2], p.getLocation().getBlockZ()));
 		if (!w.getWorldBorder().isInside(toLoc))
 			throw new CommandException(p, Component.text("\u00a7cX: "+toLoc.getX()+", Y: "+toLoc.getY()+", Z: "+toLoc.getZ()+" is outside of ").append(worldInfo(p, w)).append(Component.text("\u00a7c's borders!")));
 		

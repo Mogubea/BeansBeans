@@ -63,6 +63,10 @@ public class SkillInfo {
 		return (long)calc;
 	}
 	
+	public long getNLXPReq() {
+		return xpRequiredToLevelUp(level);
+	}
+	
 	public double getPercentageDone() {
 		if (curLvlXp < 0)
 			calculateLevel();

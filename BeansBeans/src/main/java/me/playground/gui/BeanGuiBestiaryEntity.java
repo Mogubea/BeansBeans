@@ -2,7 +2,6 @@ package me.playground.gui;
 
 import java.util.LinkedHashMap;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -113,7 +112,7 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 					ItemStack displayItem = newItem(creatureHeads.getOrDefault(creatures[x], notUnlocked), Component.translatable(creatures[x].translationKey(), BeanColor.BESTIARY), "",
 							"\u00a77Kills: \u00a7a" + df.format(getStats().getStat(StatType.KILLS, creatures[x].name())),
 							"\u00a77Loot Found: " + "\u00a7a" + obtained + "\u00a77/\u00a72" + loots,
-							Utils.getProgressBar('-', 16, obtained, loots, ChatColor.DARK_GRAY, ChatColor.GREEN) +  (obtained>=loots ? "\u00a76 " : "\u00a7a ") + dec.format((((float)obtained/(float)loots) * 100F)) + "%");
+							Utils.getProgressBar('-', 16, obtained, loots, 0x444444, 0x55ffff) +  (obtained>=loots ? "\u00a76 " : "\u00a7a ") + dec.format((((float)obtained/(float)loots) * 100F)) + "%");
 					contents[x] = displayItem;
 				} else { // Not
 					ItemStack displayItem = missingKill;

@@ -1,11 +1,8 @@
-package me.playground.gui.skills;
+package me.playground.gui;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -14,7 +11,6 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import me.playground.gui.BeanGui;
 import me.playground.highscores.Highscore;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
@@ -23,24 +19,22 @@ import me.playground.playerprofile.skills.SkillType;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
-// TODO: new skills
-public class BeanGuiSkillsMain extends BeanGui {
+
+@Deprecated
+public class BeanGuiSkillsOLD extends BeanGui {
 	
-final private static DecimalFormat df = new DecimalFormat("#.##");
-	protected static final ItemStack blank = newItem(new ItemStack(Material.BLACK_STAINED_GLASS_PANE, 1), "");
-	
-	public BeanGuiSkillsMain(Player p) {
+	public BeanGuiSkillsOLD(Player p) {
 		super(p);
 		
 		this.name = "Skills";
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				blank,blank,blank,blank,goBack,blank,blank,blank,blank
+				null,blank,null,null,null,null,null,null,null,
+				blank,blank,null,null,null,null,null,null,null,
+				prevPage,blank,null,null,null,null,null,null,null,
+				nextPage,blank,null,null,null,null,null,null,null,
+				blank,blank,blank,blank,blank,blank,blank,blank,blank,
+				null,null,null,null,null,null,null,null,null
 		};
 	}
 
@@ -60,18 +54,17 @@ final private static DecimalFormat df = new DecimalFormat("#.##");
 			final long xp = info.getXp();
 			final int xpCur = (int) info.getCurrentLevelXp();
 			final int xpNeed = (int) info.xpRequiredToLevelUp(level);
-			final float percent = (float) (info.getPercentageDone() * 100F);
 				
 			final Highscore highscore = Main.getInstance().highscores.highscores[x];
 				
-			ItemStack skillStack = new ItemStack(skill.getIconStack().getType());
+			ItemStack skillStack = new ItemStack(skill.getDisplayStack().getType());
 			ItemMeta skillMeta = skillStack.getItemMeta();
-			skillMeta.displayName(Component.text(skill.getDisplayName()));
+			skillMeta.displayName(skill.getDisplayName());
 			
 			final ArrayList<Component> loreComp = new ArrayList<Component>();
 			loreComp.add(Component.text("\u00a77Level: \u00a7b" + level));
 			loreComp.add(Component.text("\u00a77Experience: \u00a72" + xpCur + "\u00a77/\u00a7a" + xpNeed));
-			loreComp.add(Component.text(Utils.getProgressBar('-', 20, xpCur, xpNeed, ChatColor.DARK_GRAY, skill.getColour()) + skill.getColour() + " " + df.format(percent) + "%"));
+			loreComp.add(Utils.getProgressBar('-', 20, xpCur, xpNeed, 0x444444, skill.getColour().value()));
 			loreComp.add(Component.empty());
 			loreComp.add(Component.text("\u00a77Total XP: \u00a72" + xp + " XP"));
 			loreComp.add(Component.text("\u00a78Leaderboard Position: \u00a7e#" + highscore.getPositionOf(pp.getUniqueId()) + "\u00a78 of \u00a76" + highscore.getSize() + " \u00a78Players!"));

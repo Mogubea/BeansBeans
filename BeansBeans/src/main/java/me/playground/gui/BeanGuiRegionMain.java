@@ -18,8 +18,8 @@ import net.kyori.adventure.text.Component;
 public class BeanGuiRegionMain extends BeanGuiRegion {
 	
 	protected static final ItemStack icon_name = newItem(new ItemStack(Material.WARPED_SIGN), Component.text("Name", BeanColor.REGION));
-	protected static final ItemStack icon_members = newItem(new ItemStack(Material.ACACIA_DOOR), Component.text("Members", BeanColor.REGION), "\u00a77\u00a7oMembers of the Region");
-	protected static final ItemStack icon_flags = newItem(new ItemStack(Material.LIGHT_BLUE_BANNER), Component.text("Flags", BeanColor.REGION), "\u00a77\u00a7oView the Region Flags");
+	protected static final ItemStack icon_members = newItem(new ItemStack(Material.ACACIA_DOOR), Component.text("Members", BeanColor.REGION), "\u00a77Members of the Region");
+	protected static final ItemStack icon_flags = newItem(new ItemStack(Material.LIGHT_BLUE_BANNER), Component.text("Flags", BeanColor.REGION), "\u00a77View the Region Flags");
 	protected static final ItemStack icon_priority = newItem(new ItemStack(Material.CRIMSON_SIGN), Component.text("Priority", BeanColor.REGION));
 	
 	public BeanGuiRegionMain(Player p) {
@@ -27,11 +27,11 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 		
 		this.name = "Regions";
 		this.presetInv = new ItemStack[] {
-				rBlank,rBlank,blank,blank,null,blank,blank,rBlank,rBlank,
+				rBlank,rBlank,bBlank,bBlank,null,bBlank,bBlank,rBlank,rBlank,
 				rBlank,null,null,null,null,null,null,null,rBlank,
-				blank,icon_name,null,icon_members,null,icon_flags,null,icon_priority,null,
-				blank,null,null,null,null,null,null,null,blank,
-				blank,null,null,null,null,null,null,null,blank,
+				bBlank,icon_name,null,icon_members,null,icon_flags,null,icon_priority,bBlank,
+				bBlank,null,null,null,null,null,null,null,bBlank,
+				bBlank,null,null,null,null,null,null,null,bBlank,
 				rBlank,rBlank,rBlank,rBlank,goBack,rBlank,rBlank,rBlank,rBlank
 		};
 	}

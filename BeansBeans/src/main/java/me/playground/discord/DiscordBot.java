@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 
-import javax.security.auth.login.LoginException;
-
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -90,21 +88,30 @@ public class DiscordBot extends ListenerAdapter {
 		return "https://cravatar.eu/helmavatar/" + ProfileStore.from(playerId, false).getRealName()+"/64.png";
 	}
 	
-	public WebhookClient getWebhookClient(int playerId) {
+	public void sendWebhookMessage(int playerId, String message) {
 		try {
 			if (lastId != playerId) {
 				final String name = ((TextComponent)ProfileStore.from(playerId, false).getColouredName()).content();
 				Icon icon = getHeadIcon(playerId);
-				hook.getManager().setName(name).setAvatar(icon).queue();
+				hook.getManager().setName(name).setAvatar(icon).queue(woo -> {
+					chatClient.send(message);
+				});
 				lastId = playerId;
+			} else {
+				chatClient.send(message);
 			}
 		} catch (ErrorResponseException e) { // Just in-case there's a situation where discord doesn't respond
 		}
+	}
+	
+	public WebhookClient getWebhookClient(int playerId) {
+		
 		
 		return chatClient;
 	}
 	
 	public void shutdown() {
+		if (!isOnline()) return;
 		chatClient.close();
 		
 		updateServerStatus(false);
@@ -151,14 +158,19 @@ public class DiscordBot extends ListenerAdapter {
 		this.statusMessageId = plugin.getConfig().getLong("discord.statusMessage");
 		this.isDebug = plugin.getConfig().getBoolean("debug", false);
 		this.discordBot = buildBot();
-		this.ingameChat = discordBot.getTextChannelById(ingameChatId);
-		
-		discordBot.addEventListener(this);
-		chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setAllow(Permission.MESSAGE_WRITE).queue();
-		registerCommands();
-		
-		this.hook = chatChannel().createWebhook("Chat Webhook").complete();
-		this.chatClient = WebhookClient.withId(hook.getIdLong(), hook.getToken());
+		if (discordBot != null) {
+			this.ingameChat = discordBot.getTextChannelById(ingameChatId);
+			discordBot.addEventListener(this);
+			chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setAllow(Permission.MESSAGE_WRITE).queue();
+			registerCommands();
+			
+			this.hook = chatChannel().createWebhook("Chat Webhook").complete();
+			this.chatClient = WebhookClient.withId(hook.getIdLong(), hook.getToken());
+		} else {
+			this.ingameChat = null;
+			this.chatClient = null;
+			this.hook = null;
+		}
 	}
 	
 	private JDA buildBot() {
@@ -167,10 +179,15 @@ public class DiscordBot extends ListenerAdapter {
 		try {
 			bot = builder.build();
 			bot.awaitReady();
-		} catch (LoginException | InterruptedException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
+			getPlugin().getLog4JLogger().error("There was a problem connecting to Discord. Continuing on without the Discord Bot...");
 		}
 		return bot;
+	}
+	
+	public boolean isOnline() {
+		return discordBot != null;
 	}
 	
 	public JDA bot() {
@@ -301,62 +318,65 @@ public class DiscordBot extends ListenerAdapter {
 	}
 	
 	public void updateServerStatus(boolean online) {
-		int count = Bukkit.getOnlinePlayers().size();
-		String playerList = "no one";
-		
-		EmbedBuilder test = new EmbedBuilder();
-		
-		test.setTitle(statusMessageTitle, "http://beansbeans.net:8015");
-		test.setColor(online ? 0x44ffaa : 0xee3567);
-		test.addField("Status", online ? "Online" : "Offline", true);
-		if (online)
-			test.addField("Last Boot", "<t:"+bootTime+":R>", true);
-		else
-			test.addField("Shutdown Time", "<t:"+System.currentTimeMillis()/1000+":R>", true);
-		
-		int igtime = Calendar.getTime(Bukkit.getWorlds().get(0));
-		
-		test.addField("Server Plugin Version", plugin.getDescription().getVersion(), true);
-		test.addField("Overworld Time", Calendar.getTimeString(igtime, true), true);
-		test.addField("Minecraft Version", Bukkit.getBukkitVersion(), true);
-		if (online) {
-			playerList = "";
-			int x = 0;
-			for (Player p : Bukkit.getOnlinePlayers())
-				playerList += p.getName() + (++x < count ? ", " : "");
-			test.addField("Online Players ("+count+"/"+Bukkit.getServer().getMaxPlayers()+")", playerList, false);
+		if (!isOnline()) return;
+		try {
+			int count = Bukkit.getOnlinePlayers().size();
+			String playerList = "no one";
 			
-			int hour = Calendar.getHour(igtime);
+			EmbedBuilder test = new EmbedBuilder();
 			
-			if (hour > 18 || hour < 6) { // Night
-				test.setImage("https://i.imgur.com/f4Z0gGV.png");
-			} else if (hour >= 6 && hour <= 8) { // Dawn
-				test.setImage("https://i.imgur.com/dggMO9T.png");
-			} else if (hour > 8 && hour < 17) { // Day
-				test.setImage("https://i.imgur.com/ROCQYbe.png");
-			} else { // Dusk
-				test.setImage("https://i.imgur.com/DwOruz2.png");
+			test.setTitle(statusMessageTitle, "http://beansbeans.net:8015");
+			test.setColor(online ? 0x44ffaa : 0xee3567);
+			test.addField("Status", online ? "Online" : "Offline", true);
+			if (online)
+				test.addField("Last Boot", "<t:"+bootTime+":R>", true);
+			else
+				test.addField("Shutdown Time", "<t:"+System.currentTimeMillis()/1000+":R>", true);
+			
+			int igtime = Calendar.getTime(Bukkit.getWorlds().get(0));
+			
+			test.addField("Server Plugin Version", plugin.getDescription().getVersion(), true);
+			test.addField("Overworld Time", Calendar.getTimeString(igtime, true), true);
+			test.addField("Minecraft Version", Bukkit.getBukkitVersion(), true);
+			if (online) {
+				playerList = "";
+				int x = 0;
+				for (Player p : Bukkit.getOnlinePlayers())
+					playerList += p.getName() + (++x < count ? ", " : "");
+				test.addField("Online Players ("+count+"/"+Bukkit.getServer().getMaxPlayers()+")", playerList, false);
+				
+				int hour = Calendar.getHour(igtime);
+				
+				if (hour > 18 || hour < 6) { // Night
+					test.setImage("https://i.imgur.com/f4Z0gGV.png");
+				} else if (hour >= 6 && hour <= 8) { // Dawn
+					test.setImage("https://i.imgur.com/dggMO9T.png");
+				} else if (hour > 8 && hour < 17) { // Day
+					test.setImage("https://i.imgur.com/ROCQYbe.png");
+				} else { // Dusk
+					test.setImage("https://i.imgur.com/DwOruz2.png");
+				}
+			} else {
+				test.setImage("https://i.imgur.com/CPMkKYg.png");
 			}
-		} else {
-			test.setImage("https://i.imgur.com/CPMkKYg.png");
-		}
-		test.addField("Random Statistics", "There are **" + plugin.shopManager().countShops() + "** Shops\n"
-				+ "There are **"+plugin.regionManager().countRegions()+"** Regions\n"
-				+ "There are **"+plugin.warpManager().countWarps()+"** Warps", false);
-		test.setFooter("Last updated ");
-		test.setTimestamp(Instant.now());
-		
-		discordBot.getTextChannelById(statusChatId).retrieveMessageById(statusMessageId).queue((message) -> {
-			message.editMessageEmbeds(test.build()).queue();
-		});
-		
-		String pString1 = (count > 0 ? count + (count > 1 ? " Players" : " Player") : "no one");
-		discordBot.getPresence().setActivity(Activity.playing("Bean's Beans (" + count + "/50 Players)"));
-		
-		if (online)
-			chatChannel().getManager().setTopic("Have a chat with the players currently on the server!\n\nThere is currently **"+pString1+"** online;\n" + playerList).queue();
-		else
-			chatChannel().getManager().setTopic("Have a chat with the players that would be on the server.. If it was open!!").queue();
+			test.addField("Random Statistics", "There are **" + plugin.shopManager().countShops() + "** Shops\n"
+					+ "There are **"+plugin.regionManager().countRegions()+"** Regions\n"
+					+ "There are **"+plugin.warpManager().countWarps()+"** Warps", false);
+			test.setFooter("Last updated ");
+			test.setTimestamp(Instant.now());
+			
+			discordBot.getTextChannelById(statusChatId).retrieveMessageById(statusMessageId).queue((message) -> {
+				message.editMessageEmbeds(test.build()).queue();
+			});
+			
+			String pString1 = (count > 0 ? count + (count > 1 ? " Players" : " Player") : "no one");
+			discordBot.getPresence().setActivity(Activity.playing("Bean's Beans (" + count + "/50 Players)"));
+			
+			if (online)
+				chatChannel().getManager().setTopic("Have a chat with the players currently on the server!\n\nThere is currently **"+pString1+"** online;\n" + playerList).queue();
+			else
+				chatChannel().getManager().setTopic("Have a chat with the players that would be on the server.. If it was open!!").queue();
+		} catch (ErrorResponseException e) {}
 	}
 	
 	/**
@@ -364,7 +384,7 @@ public class DiscordBot extends ListenerAdapter {
 	 * @param pp The player's profile
 	 */
 	public void updateNickname(PlayerProfile pp) {
-		if (isDebug()) return;
+		if (isDebug() || !isOnline()) return;
 		Guild g = chatChannel().getGuild();
 		try {
 			Member member = g.retrieveMemberById(linkedAccounts.getOrDefault(pp.getId(), 0L)).complete();
@@ -377,7 +397,7 @@ public class DiscordBot extends ListenerAdapter {
 	 * @param pp The player's profile
 	 */
 	public void updateRoles(PlayerProfile pp) {
-		if (isDebug()) return;
+		if (isDebug() || !isOnline()) return;
 		Guild g = chatChannel().getGuild();
 		try {
 			Member member = g.retrieveMemberById(linkedAccounts.getOrDefault(pp.getId(), 0L)).complete();

@@ -6,8 +6,8 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_17_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_18_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_18_R1.CraftWorld;
 import org.bukkit.entity.Player;
 import org.json.JSONObject;
 
@@ -106,7 +106,7 @@ public class NPCManager implements IPluginRef {
 		this.hideAllNPCsFromAll();
 		Datasource.saveDirtyNPCs();
 		this.npcsByDBID.forEach((id, npc) -> {
-			npc.getEntity().setRemoved(RemovalReason.c);
+			npc.getEntity().a(RemovalReason.c);
 		});
 		this.npcsByEntityId.clear();
 		this.npcsByDBID.clear();

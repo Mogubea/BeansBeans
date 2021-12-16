@@ -185,11 +185,11 @@ public class BeanGuiPlayerNameColour extends BeanGuiPlayer {
 			if (isUnlocked) {
 				meta.setColor(Color.fromRGB(rank.getRankHex()));
 				lore.add(Component.empty());
-				lore.add(Component.text(isColour ? "\u00a7aCurrently Selected!" : "\u00a78Click to Change Colour"));
+				lore.add(Component.text(isColour ? "\u00a72» \u00a7aCurrently selected!" : "\u00a76» \u00a7eClick to change colour!"));
 			} else {
 				meta.setColor(Color.fromRGB(lockedCol));
 				lore.add(Component.empty());
-				lore.add(Component.text("\u00a78\u00a7oRequires the " + rank.lowerName() + " rank"));
+				lore.add(Component.text("\u00a78» Requires the " + rank.lowerName() + " rank."));
 			}
 			
 			meta.lore(lore);
@@ -225,7 +225,7 @@ public class BeanGuiPlayerNameColour extends BeanGuiPlayer {
 			lore.add(Component.text("\u00a77Current Colour: #")
 					.append(Component.text(Long.toHexString(tpp.getNameColour().value()), tpp.getNameColour()).decoration(TextDecoration.ITALIC, false)));
 			lore.add(Component.empty());
-			lore.add(Component.text("\u00a78Click to Change"));
+			lore.add(Component.text("\u00a76» \u00a7eClick to update!"));
 			meta.setColor(Color.fromRGB(tpp.getNameColour().value()));
 			meta.addEnchant(Enchantment.DURABILITY, 1, false);
 		} else { // Unlocked but not used

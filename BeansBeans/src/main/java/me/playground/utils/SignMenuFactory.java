@@ -21,10 +21,10 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.nbt.NbtCompound;
+import com.comphenix.protocol.wrappers.nbt.NbtFactory;
 
 public final class SignMenuFactory {
 
-    private static final int ACTION_INDEX = 9;
     private static final int SIGN_LINES = 4;
 
     private static final String NBT_FORMAT = "{\"text\":\"%s\"}";
@@ -113,16 +113,16 @@ public final class SignMenuFactory {
                 return;
             }
             Location location = player.getLocation();
-            this.position = new BlockPosition(location.getBlockX(), location.getBlockY() + (255 - location.getBlockY()), location.getBlockZ());
+            this.position = new BlockPosition(location.getBlockX(), location.getBlockY() + (319 - location.getBlockY()), location.getBlockZ());
 
             player.sendBlockChange(this.position.toLocation(location.getWorld()), signMat.createBlockData());
 
             PacketContainer openSign = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.OPEN_SIGN_EDITOR);
             PacketContainer signData = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.TILE_ENTITY_DATA);
-
+            
             openSign.getBlockPositionModifier().write(0, this.position);
 
-            NbtCompound signNBT = (NbtCompound) signData.getNbtModifier().read(0);
+            NbtCompound signNBT = NbtFactory.ofCompound("");
 
             for (int line = 0; line < SIGN_LINES; line++) {
                 signNBT.put("Text" + (line + 1), this.text.size() > line ? String.format(NBT_FORMAT, color(this.text.get(line))) : "");
@@ -134,7 +134,6 @@ public final class SignMenuFactory {
             signNBT.put("id", NBT_BLOCK_ID);
 
             signData.getBlockPositionModifier().write(0, this.position);
-            signData.getIntegers().write(0, ACTION_INDEX);
             signData.getNbtModifier().write(0, signNBT);
 
             try {

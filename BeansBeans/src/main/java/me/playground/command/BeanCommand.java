@@ -197,7 +197,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 		return displayName.hoverEvent(item.asHoverEvent());
 	}
 	
-	protected int toIntOrDefault(String s, int def) {
+	protected int toIntDef(String s, int def) {
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException numberformatexception) {

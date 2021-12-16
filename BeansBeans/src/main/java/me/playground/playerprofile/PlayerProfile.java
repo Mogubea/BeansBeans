@@ -18,7 +18,7 @@ import org.bukkit.Sound;
 import org.bukkit.Statistic;
 import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftPlayer;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -590,8 +590,8 @@ public class PlayerProfile {
 				Bukkit.getOnlinePlayers().forEach((p) -> { 
 					PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
 					//connection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.d, ((CraftPlayer)p).getHandle())); // d updates player's display name
-					connection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.e, ((CraftPlayer)p).getHandle()));
-					connection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.a, ((CraftPlayer)p).getHandle()));
+					connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.e, ((CraftPlayer)p).getHandle()));
+					connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.a, ((CraftPlayer)p).getHandle()));
 				});
 				//getPlayer().getPlayerProfile().setName(getDisplayName()); // overhead and commands
 				getPlayer().displayName(getColouredName()); // ??

@@ -60,7 +60,6 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent.SlotType;
 
-import club.minnced.discord.webhook.WebhookClient;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import me.playground.celestia.logging.CelestiaAction;
 import me.playground.data.Datasource;
@@ -161,8 +160,7 @@ public class PlayerListener extends EventListener {
 		getPlugin().getLogger().info("[CHAT] " + pp.getDisplayName() + ": " + content);
 		Datasource.logCelestia(CelestiaAction.CHAT, e.getPlayer(), e.getPlayer().getLocation(), content);
 		
-		WebhookClient client = getPlugin().discord().getWebhookClient(pp.getId());
-		client.send(content);
+		getPlugin().discord().sendWebhookMessage(pp.getId(), content);
 	}
 	
 	private Component toCommand(String cmd) {

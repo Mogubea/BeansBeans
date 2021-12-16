@@ -48,6 +48,10 @@ public class ConnectionListener extends EventListener {
 		
 		// If a player profile doesn't exist, this is where it's created.
 		PlayerProfile pp = PlayerProfile.from(e.getUniqueId());
+		if (pp == null) { // If there was a problem loading it, just kick them.
+			e.disallow(Result.KICK_OTHER, Component.text("\u00a7cThere was a problem loading your profile.\n\u00a77Please contact a member of Staff via the Server's Discord."));
+			return;
+		}
 		pp.updateRealName(e.getName());
 		e.getPlayerProfile().setName(pp.getDisplayName());
 	}

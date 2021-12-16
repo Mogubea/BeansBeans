@@ -1,6 +1,6 @@
 name: BeansBeans
-version: 0.4
-api-version: 1.17
+version: 0.4.1
+api-version: 1.18
 main: me.playground.main.Main
 softdepend: [WorldEdit, dynmap, ProtocolLib]
 author: Mogubean

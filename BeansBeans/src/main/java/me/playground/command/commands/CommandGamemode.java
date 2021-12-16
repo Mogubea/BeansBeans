@@ -41,7 +41,7 @@ public class CommandGamemode extends BeanCommand {
 		
 		// Allow the usage of /gm <number> instead of the traditional /gamemode <gamemode>.
 		String gm = args[0].toLowerCase();
-		final int intAlt = toIntOrDefault(args[0], -1);
+		final int intAlt = toIntDef(args[0], -1);
 		if (intAlt > -1 && intAlt < gamemodes.length)
 			gm = gamemodes[intAlt];
 		

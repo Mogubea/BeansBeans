@@ -6,7 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftPlayer;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.ArmorStand.LockType;
 import org.bukkit.entity.Entity;
@@ -60,7 +60,7 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 		this.plugin = plugin;
 		this.entity = entity;
 		this.location = location;
-		entity.setPositionRotation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+		entity.a(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
 		if (json != null) {
 			titleCol = json.optNumber("titleCol", BeanColor.NPC.value()).intValue();
 			String title = json.optString("title");
@@ -101,7 +101,7 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	
 	protected void hideFrom(Player p) {
 		PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
-		connection.sendPacket(new PacketPlayOutEntityDestroy(getEntityId()));
+		connection.a(new PacketPlayOutEntityDestroy(getEntityId()));
 	}
 	
 	protected void hideFromAll() {
@@ -110,12 +110,12 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	}
 	
 	public void spawnParticle(Particle particle, double xOffset, double yOffset, double zOffset, int particles) {
-		getLocation().getWorld().spawnParticle(particle, getLocation().getX(), getLocation().getY()+entity.getHeadHeight(), getLocation().getZ(), particles, xOffset, yOffset, zOffset);
+		getLocation().getWorld().spawnParticle(particle, getLocation().getX(), getLocation().getY()+entity.getBukkitEntity().getHeight(), getLocation().getZ(), particles, xOffset, yOffset, zOffset);
 	}
 	
 	public NPC<T> teleport(Location loc, boolean dirty) {
 		location = loc;
-		entity.setPositionRotation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
+		entity.a(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
 		sendPacketToAll(makeTeleportPacket(loc));
 		sendPacketToAll(new PacketPlayOutEntityHeadRotation(entity, getFixedRot(loc.getYaw())));
 		if (dirty)
@@ -143,7 +143,7 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	protected void sendPacketToAll(@SuppressWarnings("rawtypes") Packet pa) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
-			connection.sendPacket(pa);
+			connection.a(pa);
 		}
 	}
 	
@@ -152,7 +152,7 @@ public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	}
 	
 	public int getEntityId() {
-		return entity.getId();
+		return entity.getBukkitEntity().getEntityId();
 	}
 	
 	public boolean isHuman() {

@@ -398,9 +398,13 @@ public class LootEntry {
 				final String biomeStr = biomes.optString(x);
 				if (biomeStr == null || biomeStr.isEmpty()) continue;
 				
-				Biome biome = Biome.valueOf(biomeStr.toUpperCase());
-				if (biome != null)
+				try {
+					Biome biome = Biome.valueOf(biomeStr.toUpperCase());
 					this.requiredBiome.add(biome);
+				} catch(Exception e) {
+					getTable().getManager().getPlugin().getLogger().warning("Invalid biome type Biome.\""+biomeStr+"\" for LootEntry: " + this.getId() +
+							", skipping this Biome entriely. If this LootEntry gets flagged as dirty, previous database JSON will be completely overwritten.");
+				}
 			}
 		}
 		

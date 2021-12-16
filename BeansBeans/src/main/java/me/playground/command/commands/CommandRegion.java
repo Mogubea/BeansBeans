@@ -248,7 +248,7 @@ public class CommandRegion extends BeanCommand {
 				e.notifySender();
 			}
 		} else if (subcmd.equals("list")) {
-			int page = args.length > 1 ? toIntOrDefault(args[1], 0) : 0;
+			int page = args.length > 1 ? toIntDef(args[1], 0) : 0;
 			ArrayList<Region> regions = rm.getAllRegions();
 			if (page*10 > regions.size())
 				throw new CommandException(p, "There's only " + (Math.floorDiv(regions.size(), 10)+1) + " pages of regions!");

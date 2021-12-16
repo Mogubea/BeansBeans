@@ -42,7 +42,7 @@ public class SkillData {
 		
 		xpBar.setColor(skill.getBarColour());
 		xpBar.setProgress(Math.min(1, info.getPercentageDone()));
-		xpBar.setTitle(skill.getDisplayName() + "\u00a78 ("+skill.getColour()+"Level "+info.getLevel()+"\u00a78)\u00a78 - " + skill.getColour() + ((int)(info.getPercentageDone()*100)) + "%");
+		xpBar.setTitle(skill.getChatColour() + skill.getPlainName() + "\u00a78 ("+skill.getChatColour()+"Level "+info.getLevel()+"\u00a78)\u00a78 - " + skill.getChatColour() + ((int)(info.getPercentageDone()*100)) + "%");
 	}
 	
 	public void forceHideBar() {

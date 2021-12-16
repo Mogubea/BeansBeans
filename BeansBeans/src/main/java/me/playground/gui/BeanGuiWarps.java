@@ -209,7 +209,7 @@ public class BeanGuiWarps extends BeanGui {
 					(typeFilter == WarpType.PLAYER) ? "\u00a7f > " + typeFilter.getName() : "\u00a78> Player Warp", 
 					(typeFilter == WarpType.SHOP) ? "\u00a7f > " + typeFilter.getName() : "\u00a78> Shop Warp", 
 					(typeFilter == WarpType.SERVER) ? "\u00a7f > " + typeFilter.getName() : "\u00a78> Server Warp", 
-					"\u00a78\u00a7oClick to Cycle through Warp Types");
+					"\u00a78Click to Cycle through Warp Types");
 			contents[50].addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
 		} else {
 			contents[50] = wF_Filter;
@@ -245,9 +245,9 @@ public class BeanGuiWarps extends BeanGui {
 				lore.add(Component.empty());
 				if (data == 3)
 					lore.add(Component.text(w.isPublic() ? "\u00a7aWarp is public!" : "\u00a7cWarp is private!"));
-				lore.add(Component.text("\u00a77Click to warp!"));
+				lore.add(Component.text("\u00a76» \u00a7eClick to warp!"));
 			} else {
-				lore.add(Component.text("\u00a7cObstructed."));
+				lore.add(Component.text("\u00a78Warp is Obstructed"));
 			}
 			
 			meta.lore(lore);

@@ -233,7 +233,6 @@ public class Datasource {
 			final ArrayList<Rank> ranks = new ArrayList<Rank>();
 			final HashSet<String> perms = new HashSet<String>();
 			
-			String[] permsStr;
 			String[] ranksStr;
 			ranksStr = rs.getString("ranks").split(",");
 			for (String rankStr : ranksStr) {
@@ -244,9 +243,12 @@ public class Datasource {
 			}
 			
 			// Load perms
-			permsStr = rs.getString("permissions").split(",");
-			for (String permStr : permsStr)
-				perms.add(permStr);
+			String permz = rs.getString("permissions");
+			if (permz != null) {
+				String[] permsStr = permz.split(",");
+				for (String permStr : permsStr)
+					perms.add(permStr);
+			}
 			
 			final Civilization civ = Civilization.getById(rs.getInt("civilization"));
 			final Job job = Job.getByName(rs.getString("job"));
@@ -455,7 +457,7 @@ public class Datasource {
 			Location npcLoc = npc.getLocation();
 			int idx = 1;
 			
-			statement.setString(idx++, npc.getEntity().getName());
+			statement.setString(idx++, npc.getEntity().getBukkitEntity().getName());
 			statement.setInt(idx++, npc.getCreatorId());
 			statement.setShort(idx++, WorldUUIDToId.get(npcLoc.getWorld().getUID()));
 			statement.setFloat(idx++, (float) npcLoc.getX());

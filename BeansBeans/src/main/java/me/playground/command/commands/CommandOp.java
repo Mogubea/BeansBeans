@@ -126,7 +126,7 @@ public class CommandOp extends BeanCommand {
 				StringBuilder sb = new StringBuilder();
 				sb.append(ChatColor.GRAY + "There's a total of " + ChatColor.GREEN + npcManager.getAllNPCs().size() + " NPCs" + ChatColor.GRAY + " currently loaded:\n");
 				for (NPC<?> npc : npcManager.getAllNPCs())
-					sb.append(ChatColor.DARK_GRAY + "" + npc.getEntityId() + ChatColor.GRAY + " - " + ChatColor.AQUA + npc.getEntity().getName() + "\n");
+					sb.append(ChatColor.DARK_GRAY + "" + npc.getEntityId() + ChatColor.GRAY + " - " + ChatColor.AQUA + npc.getEntity().getBukkitEntity().getName() + "\n");
 				sender.sendMessage(sb.toString());
 			}
 			else if ("setskin".equals(subcmd)) {

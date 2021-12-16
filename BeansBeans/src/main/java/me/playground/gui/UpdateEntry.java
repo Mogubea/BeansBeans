@@ -39,6 +39,9 @@ public class UpdateEntry {
 		lore.add(Component.text("\u00a78\u00a7o" + format.format(stamp)));
 		for (String s : description.split("`"))
 			lore.add(Component.text("\u00a77"+s));
+		
+		lore.add(Component.empty());
+		lore.add(Component.text("\u00a76» \u00a7eClick to read!"));
 		//lore.add(Component.text("\u00a77\u00a7iWritten by ").append(NameCache.getDisplayName(writtenBy)));
 		meta.lore(lore);
 		

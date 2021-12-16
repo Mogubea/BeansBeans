@@ -40,12 +40,12 @@ public class BeanGuiMainMenu extends BeanGui {
 	private static final ItemStack icon_home = newItem(new ItemStack(Material.DARK_OAK_DOOR), "\u00a7bWarp Home", "\u00a77Teleport to your /sethome!", "", "\u00a76» \u00a7eClick to warp!");
 	private static final ItemStack icon_nohome = newItem(new ItemStack(Material.IRON_DOOR), "\u00a7cWarp Home", "\u00a77You haven't used /sethome yet!", "", "\u00a78» Cannot warp.");
 	private static final ItemStack icon_shome = newItem(new ItemStack(Material.RED_BED), "\u00a7bWarp to Spawnpoint", "\u00a77Teleport to your natural spawn point!", "", "\u00a76» \u00a7eClick to warp!");
-	private static final ItemStack icon_warps = newItem(new ItemStack(Material.PURPLE_CARPET), Component.text("Warps", BeanColor.WARP), "\u00a77\u00a7oStill kinda WIP warps", "", "\u00a76» \u00a7eClick to open!");
+	private static final ItemStack icon_warps = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7ImlkIjoiMTkwM2NhNWE3MjgzNDExODk5NjMwYTY5OTM3MTY3NmMiLCJ0eXBlIjoiU0tJTiIsInVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmM5MTVkYjNmYzQwYTc5YjYzYzJjNDUzZjBjNDkwOTgxZTUyMjdjNTAyNzUwMTI4MzI3MjEzODUzM2RlYTUxOSIsInByb2ZpbGVJZCI6IjgwMThhYjAwYjJhZTQ0Y2FhYzliZjYwZWY5MGY0NWU1IiwidGV4dHVyZUlkIjoiMmM5MTVkYjNmYzQwYTc5YjYzYzJjNDUzZjBjNDkwOTgxZTUyMjdjNTAyNzUwMTI4MzI3MjEzODUzM2RlYTUxOSJ9fSwic2tpbiI6eyJpZCI6IjE5MDNjYTVhNzI4MzQxMTg5OTYzMGE2OTkzNzE2NzZjIiwidHlwZSI6IlNLSU4iLCJ1cmwiOiJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzJjOTE1ZGIzZmM0MGE3OWI2M2MyYzQ1M2YwYzQ5MDk4MWU1MjI3YzUwMjc1MDEyODMyNzIxMzg1MzNkZWE1MTkiLCJwcm9maWxlSWQiOiI4MDE4YWIwMGIyYWU0NGNhYWM5YmY2MGVmOTBmNDVlNSIsInRleHR1cmVJZCI6IjJjOTE1ZGIzZmM0MGE3OWI2M2MyYzQ1M2YwYzQ5MDk4MWU1MjI3YzUwMjc1MDEyODMyNzIxMzg1MzNkZWE1MTkifSwiY2FwZSI6bnVsbH0="), Component.text("Warps", BeanColor.WARP), "\u00a77\u00a7oStill kinda WIP warps", "", "\u00a76» \u00a7eClick to open!");
 	private static final ItemStack icon_commands = newItem(new ItemStack(Material.WRITABLE_BOOK), Component.text("Server Commands", BeanColor.COMMAND), "\u00a77A list of commands you can use!", "", "\u00a76» \u00a7eClick to open!");
 	private static final ItemStack icon_news = newItem(new ItemStack(Material.ENCHANTED_BOOK), Component.text("Server News", TextColor.color(0x994411)), "\u00a77Updates & Announcements", "", "\u00a76» \u00a7eClick to open!");
 	private static final ItemStack icon_region = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGYxN2E2YTlhZmFhN2IwN2U0MjE4ZmU1NTVmMjgyM2IwMjg0Y2Q2OWI0OWI2OWI5N2ZhZTY3ZWIyOTc2M2IifX19"), Component.text("Region Menu").color(BeanColor.REGION), "\u00a77\u00a7oWIP");
 	private static final ItemStack icon_heirlooms = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjE3NmE0YzQ0NmI1NGQ1MGFlM2U1YmE4ZmU2ZjQxMzE3Njg5ZmY1YTc1MjMwMjgwOTdmNjExOTUzZDFkMTI5NyJ9fX0="), Component.text("Bag o' Heirlooms").color(BeanColor.HEIRLOOM), "\u00a77\u00a7oWIP");
-	private static final ItemStack icon_bestiary = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("Bestiary", BeanColor.BESTIARY), "\u00a77\u00a7oWIP", "", "\u00a76» \u00a7eClick to open!");
+	private static final ItemStack icon_bestiary = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("Bestiary", BeanColor.BESTIARY), "\u00a77\u00a7oWIP", "", "\u00a78» Disabled.");
 	private static final ItemStack icon_support = newItem(new ItemStack(Material.CAKE), Component.text("Support Us!", BeanColor.SAPPHIRE), "\u00a77Ways of supporting the server!", "", "\u00a76» \u00a7eClick to open!");
 	
 	private static final ItemStack icon_resetOverride = newItem(new ItemStack(Material.BARRIER), "\u00a7cReset GUI Override", "\u00a77Go back to normal!");
@@ -137,17 +137,17 @@ public class BeanGuiMainMenu extends BeanGui {
 		ItemStack region = icon_region.clone();
 		TextColor regionCol = TextColor.color(TextColor.color(0x3d3d3d | BeanColor.REGION.value()));
 		ArrayList<Component> regionLore = new ArrayList<Component>();
-		boolean regionCanOpen = getPlugin().regionManager().getRegions(p.getLocation()).size() < 1;
+		boolean regionCanOpen = !getPlugin().regionManager().getRegion(p.getLocation()).isWorldRegion() || pp.hasPermission("bean.region.override");
 		
-		if (regionCanOpen)
-			regionLore.add(Component.text("\u00a7cNo region nearby.."));
+		if (!regionCanOpen)
+			regionLore.add(Component.text("\u00a77No region found.", regionCol));
 		else
-			regionLore.add(Component.text("Region: \u00a79" + getPlugin().regionManager().getRegion(p.getLocation()).getName()).colorIfAbsent(regionCol).decoration(TextDecoration.ITALIC, false));
+			regionLore.add(Component.text("Region: ", regionCol).append(getPlugin().regionManager().getRegion(p.getLocation()).getColouredName()).decoration(TextDecoration.ITALIC, false));
 		
 		regionLore.addAll(Arrays.asList(
 				Component.empty(), 
-				Component.text("\u00a77\u00a7oView and/or Edit attributes"), 
-				Component.text("\u00a77\u00a7oabout nearby Regions."),
+				Component.text("\u00a77View information about the"), 
+				Component.text("\u00a77region you're currently in!"),
 				Component.empty(),
 				Component.text(regionCanOpen ? "\u00a76» \u00a7eClick to open!" : "\u00a78» Cannot open.")));
 		
@@ -201,8 +201,9 @@ public class BeanGuiMainMenu extends BeanGui {
 		case 1: // Support Us!
 			new BeanGuiSupportUs(p).openInventory();
 			return;
-		case 2: // TODO: TEMP STAFF MENU BUTTON
-			new BeanGuiStaff(p).openInventory();
+		case 2: // Staff Menu
+			if (pp.isRank(Rank.MODERATOR))
+				new BeanGuiStaff(p).openInventory();
 			return;
 		case 6: // Gamemode Button
 			if (p.hasPermission("bean.gm.creative"))
@@ -224,7 +225,7 @@ public class BeanGuiMainMenu extends BeanGui {
 			new BeanGuiPlayerMain(p).openInventory();
 			return;
 		case 20: // Bestiary Button
-			new BeanGuiBestiaryEntity(p).openInventory();
+		//	new BeanGuiBestiaryEntity(p).openInventory();
 			return;
 		case 21: // Skills Button
 			new BeanGuiSkills(p).openInventory();

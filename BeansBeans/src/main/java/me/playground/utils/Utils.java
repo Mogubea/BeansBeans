@@ -12,7 +12,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -33,6 +32,8 @@ import com.destroystokyo.paper.profile.ProfileProperty;
 import me.playground.currency.Currency;
 import me.playground.ranks.Rank;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 
 public class Utils {
 
@@ -230,12 +231,20 @@ public class Utils {
 		}
 	}
 	
-	public static String getProgressBar(char symbol, int amount, int value, int maxvalue, ChatColor baseColor, ChatColor filledColor) {
-		StringBuilder sb = new StringBuilder();
-		int coloured = (int)(((float)value/(float)maxvalue) * (float)amount);
-		for (int x = 0; x < amount; x++)
-			sb.append((x<=coloured ? filledColor : baseColor) + "" + symbol);
-		return sb.toString();
+	public static Component getProgressBar(char symbol, int amount, long value, long maxvalue, int baseColor, int filledColor) {
+		Component component = Component.empty();
+		int todo = (int)(((float)value/(float)maxvalue) * (float)amount);
+		
+		for (int c = -1; ++c < 2;) {
+			String sb = "";
+			
+			for (int x = -1; ++x < todo;)
+				sb += symbol;
+			component = component.append(Component.text(sb, TextColor.color(c == 0 ? filledColor : baseColor)));
+			todo = amount - todo;
+		}
+		
+		return component.decoration(TextDecoration.ITALIC, false);
 	}
 	
 	/**

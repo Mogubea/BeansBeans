@@ -22,4 +22,8 @@ public class Highscores {
 		}
 	}
 	
+	public Highscore getHighscore(int id) {
+		return highscores[id];
+	}
+	
 }

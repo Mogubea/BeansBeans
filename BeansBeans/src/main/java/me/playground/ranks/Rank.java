@@ -76,6 +76,8 @@ public enum Rank {
 			"bean.cmd.fly.others",
 			"bean.cmd.god",
 			"bean.cmd.god.others",
+			"bean.cmd.heal",
+			"bean.cmd.heal.others",
 			"bean.cmd.warp.*",
 			"bean.cmd.region.*",
 			"bean.cmd.gamemode.others",

@@ -27,7 +27,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 
 public class BeanGuiPlayerMain extends BeanGuiPlayer {
 	
-	private static final ItemStack icon_settings = newItem(new ItemStack(Material.REDSTONE_TORCH), "\u00a7cYour Settings", "", "\u00a78Click to update your settings.");
+	private static final ItemStack icon_settings = newItem(new ItemStack(Material.REDSTONE_TORCH), "\u00a7cYour Settings", "", "\u00a76» \u00a7eClick to modify!");
 	
 	public BeanGuiPlayerMain(Player p) {
 		super(p);
@@ -169,10 +169,10 @@ public class BeanGuiPlayerMain extends BeanGuiPlayer {
 				Component.text(tpp.hasNickname() ? "\u00a77Current Nickname: \u00a7f"+tpp.getNickname() : "\u00a77No nickname..."),
 				Component.empty(),
 				canNick ? 
-						(!tpp.onCooldown("nicknameRequest") ? Component.text(pp.isOverridingProfile() || tpp.hasPermission(Permission.NICKNAME_OVERRIDE) ? "\u00a78Click to update your username!" 
-								: "\u00a78Click to apply for a nickname!") 
+						(!tpp.onCooldown("nicknameRequest") ? Component.text(pp.isOverridingProfile() || tpp.hasPermission(Permission.NICKNAME_OVERRIDE) ? "\u00a76» \u00a7eClick to modify!" 
+								: "\u00a76» \u00a7eClick to apply!") 
 								: Component.text("\u00a7cCooldown: " + Utils.timeStringFromNow(tpp.getCooldown("nicknameRequest")))) 
-						: Component.text("\u00a7cOnly ").append(Rank.PATRICIAN.toComponent()).append(Component.text("\u00a7c's can apply for nicknames.")));
+						: Component.text("\u00a7c» Only ").append(Rank.PATRICIAN.toComponent()).append(Component.text("\u00a7c's can apply for nicknames.")));
 		
 		ItemStack chestCol = new ItemStack(Material.LEATHER_CHESTPLATE);
 		LeatherArmorMeta meta = (LeatherArmorMeta) chestCol.getItemMeta();
@@ -180,7 +180,7 @@ public class BeanGuiPlayerMain extends BeanGuiPlayer {
 		ArrayList<Component> lore = new ArrayList<Component>();
 		lore.add(Component.text("\u00a77Current Colour: #").append(Component.text(Long.toHexString(tpp.getNameColour().value()), tpp.getNameColour()).decoration(TextDecoration.ITALIC, false)));
 		lore.add(Component.empty());
-		lore.add(Component.text("\u00a78Click to update your name colour!"));
+		lore.add(Component.text("\u00a76» \u00a7eClick to modify!"));
 		meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES,ItemFlag.HIDE_DYE);
 		meta.lore(lore);
 		meta.setColor(Color.fromRGB(tpp.getNameColour().value()));

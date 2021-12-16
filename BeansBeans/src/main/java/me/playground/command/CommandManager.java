@@ -15,6 +15,7 @@ import me.playground.command.commands.CommandCivilization;
 import me.playground.command.commands.CommandEnchant;
 import me.playground.command.commands.CommandEnderchest;
 import me.playground.command.commands.CommandGamemode;
+import me.playground.command.commands.CommandHeal;
 import me.playground.command.commands.CommandHome;
 import me.playground.command.commands.CommandHug;
 import me.playground.command.commands.CommandI;
@@ -40,7 +41,6 @@ import me.playground.command.commands.CommandWho;
 import me.playground.command.commands.CommandWorkbench;
 import me.playground.command.commands.CommandWorld;
 import me.playground.command.commands.CommandWorldSpawn;
-import me.playground.command.commands.small.CommandBestiary;
 import me.playground.command.commands.small.CommandCSpawn;
 import me.playground.command.commands.small.CommandFly;
 import me.playground.command.commands.small.CommandGod;
@@ -93,7 +93,7 @@ public class CommandManager {
 		registerCommand(new CommandMenu(plugin));
 		registerCommand(new CommandEnderchest(plugin));
 		registerCommand(new CommandHeirloom(plugin));
-		registerCommand(new CommandBestiary(plugin));
+//		registerCommand(new CommandBestiary(plugin));
 		registerCommand(new CommandLoot(plugin));
 		registerCommand(new CommandVote(plugin));
 		
@@ -120,6 +120,7 @@ public class CommandManager {
 		registerCommand(new CommandPlebeian(plugin));
 		registerCommand(new CommandWorkbench(plugin));
 		registerCommand(new CommandAnvil(plugin));
+		registerCommand(new CommandHeal(plugin));
 		plugin.getLogger().info("Registered " + myCommands.size() + " commands in " + (System.currentTimeMillis()-mili) + "ms");
 	}
 	
