@@ -1545,6 +1545,12 @@ public class Datasource {
 			m.deleteMarker();
 	}
 	
+	private static void unmarkRegion(Region r) {
+		if (markerset == null) return;
+		AreaMarker m = markerset.findAreaMarker("region."+r.getName());
+		if (m != null) m.deleteMarker();
+	}
+	
 	private static void markRegion(Region r) {
 		if (markerset == null)
 			return;
@@ -1558,7 +1564,7 @@ public class Datasource {
 			am.setRangeY(min.getY(), max.getY()+1);
 			am.setDescription("Region: " + r.getName());
 			am.setFillStyle(1, 0x5755bf54);
-			am.setLineStyle(1, 2.2, 0x5755bf84);
+			am.setLineStyle(1, 4, 0x5755bf84);
 		}
 	}
 	
@@ -1629,7 +1635,9 @@ public class Datasource {
 			}
 			
 			if (region.isDirty()) {
+				unmarkRegion(region);
 				saveRegion(region.getRegionId(), region.getPriority(), region.getParentId(), region.getName(), region.getWorld(), region.getMinimumPoint(), region.getMaximumPoint());
+				markRegion(region);
 				region.setDirty(false);
 			}
 		}
@@ -1726,6 +1734,33 @@ public class Datasource {
 			statement.setInt(2, playerId);
 			
 			statement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
+		}
+	}
+	
+	public static void deleteRegion(Region region) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("DELETE FROM regions WHERE id = ?");
+			statement.setInt(1, region.getRegionId());
+			statement.executeUpdate();
+			close(c, statement);
+			c = getNewConnection();
+			statement = c.prepareStatement("DELETE FROM region_members WHERE id = ?");
+			statement.setInt(1, region.getRegionId());
+			statement.executeUpdate();
+			close(c, statement);
+			c = getNewConnection();
+			statement = c.prepareStatement("DELETE FROM region_flags WHERE id = ?");
+			statement.setInt(1, region.getRegionId());
+			statement.executeUpdate();
+			unmarkRegion(region);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {

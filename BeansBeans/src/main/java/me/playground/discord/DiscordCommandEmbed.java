@@ -1,7 +1,6 @@
 package me.playground.discord;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
 
 import me.playground.main.Main;
 import me.playground.playerprofile.ProfileStore;
@@ -48,14 +47,13 @@ public class DiscordCommandEmbed extends DiscordCommand {
 				suggestion.setThumbnail(e.getOption("thumbnail").getAsString());
 			
 			if (e.getOption("footerdate") != null && e.getOption("footerdate").getAsBoolean()) {
-				final SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyy HH:mm:ss");
-				final Date date = new Date();
+				suggestion.setTimestamp(Instant.now());
 				
 				if (isLinked(e.getMember().getIdLong())) {
 					final ProfileStore deeb = getLinkedStore(e.getMember());
-					suggestion.setFooter("Posted at " + df.format(date), DiscordBot.getIconURL(deeb.getId()));
+					suggestion.setFooter("Posted by " + e.getMember().getAsMention(), DiscordBot.getIconURL(deeb.getId()));
 				} else {
-					suggestion.setFooter("Posted at " + df.format(date), e.getMember().getUser().getAvatarUrl());
+					suggestion.setFooter("Posted by " + e.getMember().getAsMention(), e.getMember().getUser().getAvatarUrl());
 				}
 			} else {
 				if (e.getOption("footer") != null)

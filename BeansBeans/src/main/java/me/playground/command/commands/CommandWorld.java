@@ -54,6 +54,7 @@ public class CommandWorld extends BeanCommand {
 					w.setGameRule(GameRule.DISABLE_RAIDS, true);
 					w.setGameRule(GameRule.KEEP_INVENTORY, true);
 					w.setGameRule(GameRule.MOB_GRIEFING, true);
+					w.getWorldBorder().setSize(args.length > 4 ? Integer.parseInt(args[4]) : 20000);
 					
 					Datasource.registerWorld(w);
 					sender.sendMessage(Component.text("\u00a77Created and registered ").append(worldInfo(sender, w)).append(Component.text("\u00a77 to the database.")));
@@ -118,6 +119,8 @@ public class CommandWorld extends BeanCommand {
 				return TabCompleter.completeEnum(args[2], WorldType.class);
 			if (args.length == 4)
 				return TabCompleter.completeEnum(args[3], Environment.class);
+			if (args.length == 5)
+				return TabCompleter.completeIntegerBetween(args[4], 1, 100000);
 		}
 			
 		

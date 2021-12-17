@@ -272,6 +272,11 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 		return this;
 	}
 	
+	public void delete() {
+		if (this.isWorldRegion()) return; // Precaution.
+		rm.removeRegion(this);
+	}
+	
 	public boolean canModify(Player p) {
 		if (this.isWorldRegion()) return p.hasPermission("bean.region.override");
 		return p.hasPermission("bean.region.modifyothers") || getMember(p).higherThan(MemberLevel.OFFICER);

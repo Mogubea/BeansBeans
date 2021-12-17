@@ -75,6 +75,13 @@ public class RegionManager {
 		allRegionsByName.put(newName.toLowerCase(), r);
 	}
 	
+	protected void removeRegion(Region region) {
+		getRegionMap(region.getWorld()).remove(region);
+		allRegionsByName.remove(region.getName().toLowerCase());
+		allRegionsById.remove(region.getRegionId());
+		Datasource.deleteRegion(region);
+	}
+	
 	public Region getWorldRegion(World world) {
 		return worldRegions.get(world.getUID());
 	}

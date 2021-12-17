@@ -28,6 +28,8 @@ import net.kyori.adventure.text.format.TextDecoration;
 
 public class BeanGuiMainMenu extends BeanGui {
 	
+	// TODO: Add the ability to disable guis 
+	
 	private static final ItemStack skull_S = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2VkOWQ5NmMzOTNlMzhhMzZiNjFhYTNjODU5ZWRlNWViNzQ0ZWYxZTg0NmQ0ZjdkMGVjYmQ2NTg4YTAyMSJ9fX0="), "\u00a7aGamemode: \u00a72Survival", "\u00a77\u00a7oChange Gamemode to Creative!");
 	private static final ItemStack skull_C = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTI2ZmIxNjlkM2Q3Yjg0OWYwYmI5YTcwZWI3YjQ4MWQ2ZjcxZTk3YzhlY2IxMzU0NmVjOTcyMzgxNDkxNyJ9fX0="), "\u00a7aGamemode: \u00a79Creative", "\u00a77\u00a7oChange Gamemode to Survival!");
 	private static final ItemStack skull_Goff = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNThjMzM2ZGVkZmUxOTdiNDM0YjVhYjY3OTg4Y2JlOWMyYzlmMjg1ZWMxODcxZmRkMWJhNDM0ODU1YiJ9fX0="), "\u00a7eGod Mode: \u00a7cDisabled");

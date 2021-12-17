@@ -337,7 +337,7 @@ public class DiscordBot extends ListenerAdapter {
 			
 			test.addField("Server Plugin Version", plugin.getDescription().getVersion(), true);
 			test.addField("Overworld Time", Calendar.getTimeString(igtime, true), true);
-			test.addField("Minecraft Version", Bukkit.getBukkitVersion(), true);
+			test.addField("Minecraft Version", Bukkit.getMinecraftVersion(), true);
 			if (online) {
 				playerList = "";
 				int x = 0;

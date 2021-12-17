@@ -6,6 +6,8 @@ import org.bukkit.event.Event;
 
 public abstract class Skill {
 	
+	// TODO: Add the ability to disable skills
+	
 	public static final Skill MINING = new SkillMining("Mining", 'b', BarColor.BLUE, Material.NETHERITE_PICKAXE, Material.LIGHT_BLUE_STAINED_GLASS_PANE);
 	
 	protected final String displayName;

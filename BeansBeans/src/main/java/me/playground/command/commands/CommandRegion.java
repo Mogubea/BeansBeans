@@ -23,10 +23,12 @@ import com.sk89q.worldedit.extension.platform.permission.ActorSelectorLimits;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.RegionSelector;
 
+import me.playground.celestia.logging.Celestia;
 import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
 import me.playground.data.Datasource;
 import me.playground.gui.BeanGui;
+import me.playground.gui.BeanGuiConfirm;
 import me.playground.gui.BeanGuiRegion;
 import me.playground.gui.BeanGuiRegionMain;
 import me.playground.main.Main;
@@ -52,7 +54,7 @@ public class CommandRegion extends BeanCommand {
 		this.description = "The general region command.";
 	}
 	
-	final List<String> subCmds = Arrays.asList("addmember", "define", "list", "info", "priority", "redefine", "reload", "removemember", "rename", "select", "setflag", "warpto");
+	final List<String> subCmds = Arrays.asList("addmember", "define", "delete", "list", "info", "priority", "redefine", "reload", "removemember", "rename", "select", "setflag", "warpto");
 	final String[] para2 = { "~" };
 	
 	@Override
@@ -143,7 +145,28 @@ public class CommandRegion extends BeanCommand {
 				e.printStackTrace();
 				throw new CommandException(p, "An error occured while trying to create the region.");
 			}
+		} else if (subcmd.equals("delete")) {
+			if (args.length < 2)
+				throw new CommandException(p, "Specify a region to delete!");
+			if (region.isWorldRegion())
+				throw new CommandException(p, "You cannot delete a world region.");
 			
+			final Region reg = region;
+			
+			new BeanGuiConfirm(p,Arrays.asList(Component.text("\u00a77Confirming will delete the region:"), region.toComponent(), Component.empty(), 
+					Component.text("\u00a7cThis cannot be undone."))) {
+
+				@Override
+				public void onAccept() {
+					reg.delete();
+					Celestia.logRegionChange(p, "Deleted region #" + reg.getRegionId());
+					p.sendMessage(Component.text("\u00a7cDeleted the region ").append(reg.toComponent()));
+				}
+
+				@Override
+				public void onDecline() {
+				}
+			}.openInventory();
 		} else if (subcmd.equals("redefine")) {
 			if (args.length < 2)
 				throw new CommandException(p, "Specify a region to redefine the boundaries of!");
