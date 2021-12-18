@@ -7,10 +7,12 @@ public class BxpValues {
 	
 	public static int getFarmingValue(Material m) {
 		switch (m) {
+		case MOSS: return 3;
 		case BAMBOO: return 6;
 		case CHORUS_PLANT: return 7;
 		case SUGAR_CANE: return 9;
 		case COCOA: return 12;
+		case CAVE_VINES_PLANT: return 12;
 		case SWEET_BERRY_BUSH: return 12;
 		case GLOW_LICHEN: return 16;
 		case CACTUS: return 16;
@@ -35,6 +37,7 @@ public class BxpValues {
 		case GRASS_BLOCK: case SAND: case GRAVEL: case SOUL_SAND: case SOUL_SOIL: return 11;
 		case PODZOL: return 13;
 		case CRIMSON_NYLIUM: case WARPED_NYLIUM: return 16;
+		case CLAY: return 21;
 		case MYCELIUM: return 25;
 		default:
 			return 0;

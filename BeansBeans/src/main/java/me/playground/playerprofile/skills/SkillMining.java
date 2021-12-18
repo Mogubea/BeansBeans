@@ -37,7 +37,7 @@ public class SkillMining extends Skill {
 		case NETHERRACK: return 1;
 		case STONE: return 4;
 		case DEEPSLATE: return 6;
-		case SANDSTONE: case TUFF: case DIORITE: case ANDESITE: case GRANITE: case BASALT: case BLACKSTONE: case CALCITE: return 7;
+		case SANDSTONE: case TUFF: case DIORITE: case ANDESITE: case GRANITE: case BASALT: case SMOOTH_BASALT: case BLACKSTONE: case CALCITE: return 7;
 		case DRIPSTONE_BLOCK: case END_STONE: return 11;
 		case AMETHYST_BLOCK: return 14;
 		case MOSSY_COBBLESTONE: return 20;

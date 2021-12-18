@@ -29,6 +29,7 @@ import me.playground.playerprofile.skills.BxpValues;
 import me.playground.playerprofile.skills.Skill;
 import me.playground.playerprofile.skills.SkillData;
 import me.playground.playerprofile.skills.SkillType;
+import me.playground.playerprofile.stats.StatType;
 import me.playground.regions.Region;
 import me.playground.regions.flags.Flags;
 import me.playground.utils.MaterialHelper;
@@ -51,11 +52,14 @@ public class BlockListener extends EventListener {
 			return;
 		}
 		
+		String blockName = e.getBlock().getType().name();
+		
 		// Handle custom skulls.
 		if (e.getItemInHand().getType() == Material.PLAYER_HEAD) {
 			if (BeanItem.from(e.getItemInHand()) != null) {
 				Skull skull = (Skull) e.getBlock().getState();
-				skull.getPersistentDataContainer().set(BeanItem.KEY_ID, PersistentDataType.STRING, e.getItemInHand().getItemMeta().getPersistentDataContainer().get(BeanItem.KEY_ID, PersistentDataType.STRING));
+				blockName = e.getItemInHand().getItemMeta().getPersistentDataContainer().get(BeanItem.KEY_ID, PersistentDataType.STRING);
+				skull.getPersistentDataContainer().set(BeanItem.KEY_ID, PersistentDataType.STRING, blockName);
 				skull.update();
 			}
 		}
@@ -77,9 +81,16 @@ public class BlockListener extends EventListener {
 		}
 		
 		// To prevent placing a crop and not being able to obtain experience from it after harvesting it later on the same reset cycle.
-		else if (!(e.getBlock().getBlockData() instanceof Ageable))
+		else if (!(e.getBlock().getBlockData() instanceof Ageable)) {
 			e.getBlock().setMetadata("placed", new FixedMetadataValue(getPlugin(), true));
+		}
 		
+		if (e.getPlayer().getGameMode() == GameMode.CREATIVE) return;
+		
+		PlayerProfile pp = PlayerProfile.from(e.getPlayer());
+		
+		pp.getStats().addToStat(StatType.BLOCK_PLACE, blockName, 1);
+		pp.getStats().addToStat(StatType.BLOCK_PLACE, "total", 1);
 	}
 	
 	@EventHandler(priority=EventPriority.LOW)
@@ -91,6 +102,7 @@ public class BlockListener extends EventListener {
 		
 		final Region r = getRegionAt(e.getBlock().getLocation());
 		final Player p = e.getPlayer();
+		String blockName = e.getBlock().getType().name();
 		
 		if (r.getEffectiveFlag(Flags.BUILD_ACCESS).higherThan(r.getMember(p))) { // XXX: BREAKING
 			e.setCancelled(true);
@@ -110,12 +122,12 @@ public class BlockListener extends EventListener {
 			String id = ((Skull)e.getBlock().getState()).getPersistentDataContainer().getOrDefault(BeanItem.KEY_ID, PersistentDataType.STRING, null);
 			if (id != null) {
 				e.setDropItems(false);
+				blockName = id;
 				e.getBlock().getWorld().dropItem(e.getBlock().getLocation(), BeanItem.from(id).getItemStack());
 			}
 		}
 		
-		if (p.getGameMode() != GameMode.SURVIVAL)
-			return;
+		if (p.getGameMode() == GameMode.CREATIVE) return;
 		
 		// Stop placing and breaking a block for xp.
 		if (e.getBlock().hasMetadata("placed")) {
@@ -123,7 +135,11 @@ public class BlockListener extends EventListener {
 			return;
 		}
 		
-		final SkillData sd = PlayerProfile.from(p).getSkills();
+		PlayerProfile pp = PlayerProfile.from(p);
+		pp.getStats().addToStat(StatType.BLOCK_BREAK, blockName, 1);
+		pp.getStats().addToStat(StatType.BLOCK_BREAK, "total", 1);
+		
+		final SkillData sd = pp.getSkills();
 		
 		if (Skill.MINING.doSkillEvent(sd, e)) 
 			return;
@@ -132,7 +148,7 @@ public class BlockListener extends EventListener {
 		int xpInt = 0;
 		
 		if (MaterialHelper.isLog(m, false)) {
-			sd.addXp(SkillType.LOGCUTTING, 37);
+			sd.addXp(SkillType.LOGCUTTING, 40);
 		} else if ((xpInt = BxpValues.getDiggingValue(m)) > 0) {
 			sd.addXp(SkillType.EXCAVATION, xpInt);
 		} else if (m == Material.MELON || m == Material.PUMPKIN || m == Material.SUGAR_CANE || m == Material.BAMBOO) {

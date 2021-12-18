@@ -84,7 +84,6 @@ import me.playground.regions.flags.Flags;
 import me.playground.regions.flags.MemberLevel;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
-import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TextReplacementConfig;
@@ -413,7 +412,7 @@ public class PlayerListener extends EventListener {
 					
 					if (crop.getAge() < crop.getMaximumAge())
 						return;
-					if (m == Material.SWEET_BERRY_BUSH || m == Material.BAMBOO || m.name().endsWith("STEM"))
+					if (m == Material.SWEET_BERRY_BUSH || m == Material.BAMBOO || m.name().endsWith("STEM") || m == Material.CAVE_VINES_PLANT)
 						return;
 					
 					final boolean canHarvest = r.getEffectiveFlag(Flags.BUILD_ACCESS).lowerOrEqTo(r.getMember(p)) || r.getEffectiveFlag(Flags.CROP_ACCESS).lowerOrEqTo(r.getMember(p));
