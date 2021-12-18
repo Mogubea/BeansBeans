@@ -161,7 +161,7 @@ public class PlayerListener extends EventListener {
 		getPlugin().getLogger().info("[CHAT] " + pp.getDisplayName() + ": " + content);
 		Datasource.logCelestia(CelestiaAction.CHAT, e.getPlayer(), e.getPlayer().getLocation(), content);
 		
-		getPlugin().discord().sendWebhookMessage(pp.getId(), MarkdownSanitizer.escape(content));
+		getPlugin().discord().sendWebhookMessage(pp.getId(), content);
 	}
 	
 	private Component toCommand(String cmd) {
