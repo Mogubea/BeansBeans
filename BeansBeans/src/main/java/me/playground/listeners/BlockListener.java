@@ -117,6 +117,12 @@ public class BlockListener extends EventListener {
 		if (p.getGameMode() != GameMode.SURVIVAL)
 			return;
 		
+		// Stop placing and breaking a block for xp.
+		if (e.getBlock().hasMetadata("placed")) {
+			e.getBlock().removeMetadata("placed", getPlugin());
+			return;
+		}
+		
 		final SkillData sd = PlayerProfile.from(p).getSkills();
 		
 		if (Skill.MINING.doSkillEvent(sd, e)) 
@@ -137,15 +143,6 @@ public class BlockListener extends EventListener {
 				sd.addXp(SkillType.AGRICULTURE, BxpValues.getFarmingValue(m));
 		}
 		
-	}
-	
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onBlockBreakMeta(BlockBreakEvent e) {
-		// Remove placed metadata for this boot cycle.
-		if (e.getBlock().hasMetadata("placed")) {
-			e.getBlock().removeMetadata("placed", getPlugin());
-			return;
-		}
 	}
 	
 	@EventHandler(priority = EventPriority.HIGH)

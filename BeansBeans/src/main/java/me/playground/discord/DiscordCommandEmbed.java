@@ -51,9 +51,9 @@ public class DiscordCommandEmbed extends DiscordCommand {
 				
 				if (isLinked(e.getMember().getIdLong())) {
 					final ProfileStore deeb = getLinkedStore(e.getMember());
-					suggestion.setFooter("Posted by " + e.getMember().getAsMention(), DiscordBot.getIconURL(deeb.getId()));
+					suggestion.setFooter("Posted by " + e.getMember().getEffectiveName(), DiscordBot.getIconURL(deeb.getId()));
 				} else {
-					suggestion.setFooter("Posted by " + e.getMember().getAsMention(), e.getMember().getUser().getAvatarUrl());
+					suggestion.setFooter("Posted by " + e.getMember().getEffectiveName(), e.getMember().getUser().getAvatarUrl());
 				}
 			} else {
 				if (e.getOption("footer") != null)

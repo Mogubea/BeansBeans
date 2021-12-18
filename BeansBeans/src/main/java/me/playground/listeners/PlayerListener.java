@@ -84,6 +84,7 @@ import me.playground.regions.flags.Flags;
 import me.playground.regions.flags.MemberLevel;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
+import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TextReplacementConfig;
@@ -160,7 +161,7 @@ public class PlayerListener extends EventListener {
 		getPlugin().getLogger().info("[CHAT] " + pp.getDisplayName() + ": " + content);
 		Datasource.logCelestia(CelestiaAction.CHAT, e.getPlayer(), e.getPlayer().getLocation(), content);
 		
-		getPlugin().discord().sendWebhookMessage(pp.getId(), content);
+		getPlugin().discord().sendWebhookMessage(pp.getId(), MarkdownSanitizer.escape(content));
 	}
 	
 	private Component toCommand(String cmd) {

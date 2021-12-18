@@ -21,8 +21,10 @@ import me.playground.gui.BeanGuiWarps;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.ranks.Rank;
+import me.playground.regions.Region;
 import me.playground.regions.RegionManager;
 import me.playground.regions.flags.Flags;
+import me.playground.regions.flags.MemberLevel;
 import me.playground.utils.TabCompleter;
 import me.playground.warps.Warp;
 import me.playground.warps.WarpManager;
@@ -73,7 +75,9 @@ public class CommandWarp extends BeanCommand {
 				throw new CommandException(sender, Component.text("The warp ").append(toWarp(p, warpname).toComponent()).append(Component.text("\u00a7r already exists!")));
 			if (!StringUtils.isAlphanumeric(warpname) || warpname.length() > 32 || bannedWarpNames.contains(warpname.toLowerCase()))
 				throw new CommandException(sender, "\u00a7cCannot create a warp with the name '"+warpname+"'!");
-			if (!isSafe(p.getLocation()) || !RegionManager.getRegionAt(p.getLocation()).getEffectiveFlag(Flags.WARP_CREATION))
+			
+			final Region r = RegionManager.getRegionAt(p.getLocation());
+			if (!isSafe(p.getLocation()) || r.getEffectiveFlag(Flags.WARP_CREATION) && r.getMember(p).lowerThan(MemberLevel.MEMBER))
 				throw new CommandException(sender, "\u00a7cYou can't create a warp here!");
 			
 			Warp newWarp = null;
@@ -178,7 +182,9 @@ public class CommandWarp extends BeanCommand {
 			
 			if (!profile.hasPermission("bean.cmd.warp.*") && profile.getBalance() < creationCost)
 				throw new CommandException(sender, "\u00a7cYou need another \u00a76" + (creationCost-profile.getBalance()) + " Coins \u00a7cto do this!");
-			if (!isSafe(p.getLocation()) || !RegionManager.getRegionAt(p.getLocation()).getEffectiveFlag(Flags.WARP_CREATION))
+			
+			final Region r = RegionManager.getRegionAt(p.getLocation());
+			if (!isSafe(p.getLocation()) || r.getEffectiveFlag(Flags.WARP_CREATION) && r.getMember(p).lowerThan(MemberLevel.MEMBER))
 				throw new CommandException(sender, "\u00a7cYou can't redesignate your warp location to here.");
 			
 			warp.setLocation(p.getLocation());

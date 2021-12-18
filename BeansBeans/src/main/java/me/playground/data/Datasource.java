@@ -286,7 +286,9 @@ public class Datasource {
 			statement.setShort(idx++, pp.getWarpCount());
 			statement.setInt(idx++, pp.getCivilizationId());
 			statement.setString(idx++, pp.getJob() == null ? null : pp.getJob().getName());
-			statement.setTimestamp(idx++, new Timestamp(pp.getCheckDonorExpiration()));
+			
+			long exp = pp.getCheckDonorExpiration(); // Needed since 0 isn't allowed apparently....?
+			statement.setTimestamp(idx++, (exp > 60000 * 60 * 24) ? new Timestamp(exp) : null);
 			
 			statement.setInt(idx++, pp.getId());
 
@@ -645,7 +647,7 @@ public class Datasource {
 		
 		try {
 			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO STATS (playerId, category, stat, value) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)");
+			statement = c.prepareStatement("INSERT INTO stats (playerId, category, stat, value) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)");
 			statement.setInt(1, pp.getId());
 			
 			HashMap<StatType, HashMap<String, DirtyInteger>> map = stats.getMap();
@@ -1377,31 +1379,60 @@ public class Datasource {
 		PreparedStatement statement = null;
 		ResultSet r = null;
 		
+		List<World> toRemake = new ArrayList<World>();
+		
 		try {
 			c = getNewConnection();
-			statement = c.prepareStatement("SELECT * FROM worlds");
+			statement = c.prepareStatement("SELECT * FROM worlds WHERE enabled = 1");
 			r = statement.executeQuery();
 			
 			while(r.next()) {
 				final short id = r.getShort("id");
+				final long seed = r.getLong("seed");
 				final UUID uuid = UUID.fromString(r.getString("uuid"));
-				WorldIdToUUID.put(id, uuid);
-				WorldUUIDToId.put(uuid, id);
-				
+				final int border = r.getInt("borderSize");
 				WorldCreator wc = new WorldCreator(r.getString("name"));
 				wc.type(WorldType.valueOf(r.getString("type")));
 				wc.environment(Environment.valueOf(r.getString("environment")));
-				wc.seed(r.getLong("seed"));
+				if (seed != 0) // If 0 randomize
+					wc.seed(seed);
 				
 				final World w = wc.createWorld();
 				w.setGameRule(GameRule.DISABLE_RAIDS, true);
 				w.setGameRule(GameRule.KEEP_INVENTORY, true);
 				w.setGameRule(GameRule.MOB_GRIEFING, true);
+				w.getWorldBorder().setSize(border);
+				
+				WorldIdToUUID.put(id, w.getUID());
+				WorldUUIDToId.put(w.getUID(), id);
+				
+				if (uuid != w.getUID())
+					toRemake.add(w);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			close(r, c, statement);
+			for(World w : toRemake)
+				remakeWorldEntry(w);
+		}
+	}
+	
+	private static void remakeWorldEntry(World world) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("UPDATE worlds SET uuid = ?, creationDate = ? WHERE name = ?");
+			statement.setString(1, world.getUID().toString());
+			statement.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+			statement.setString(3, world.getName());
+			statement.executeUpdate();
+		} catch (Throwable e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
 		}
 	}
 	

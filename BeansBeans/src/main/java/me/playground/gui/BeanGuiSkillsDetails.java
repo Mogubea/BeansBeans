@@ -111,7 +111,7 @@ public class BeanGuiSkillsDetails extends BeanGui {
 		}
 		
 		head.editMeta(meta -> {
-			meta.displayName(Component.text(skill.getPlainName() + " Leaderboard", skill.getColour()));
+			meta.displayName(Component.text(skill.getPlainName() + " Leaderboard", skill.getColour()).decoration(TextDecoration.ITALIC, false));
 			meta.lore(scoreLore);
 		});
 		
