@@ -7,7 +7,10 @@ public class BxpValues {
 	
 	public static int getFarmingValue(Material m) {
 		switch (m) {
-		case MOSS: return 3;
+		case MOSS_CARPET: return 2;
+		case MOSS_BLOCK: return 3;
+		case AZALEA: return 5;
+		case FLOWERING_AZALEA: return 6;
 		case BAMBOO: return 6;
 		case CHORUS_PLANT: return 7;
 		case SUGAR_CANE: return 9;
@@ -46,6 +49,7 @@ public class BxpValues {
 	
 	public static boolean isPassiveMob(EntityType e) {
 		switch(e) {
+		case AXOLOTL:
 		case BAT:
 		case BEE:
 		case CAT:
@@ -72,6 +76,7 @@ public class BxpValues {
 		case SKELETON_HORSE:
 		case SNOWMAN:
 		case SQUID:
+		case GLOW_SQUID:
 		case TRADER_LLAMA:
 		case TROPICAL_FISH:
 		case TURTLE:
