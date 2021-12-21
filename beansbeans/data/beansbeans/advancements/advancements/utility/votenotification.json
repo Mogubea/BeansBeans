@@ -1,0 +1,32 @@
+{
+    "parent": "beansbeans:root",
+    "display": {
+        "title": {
+            "text": "Thanks for voting!",
+            "color": "blue"
+        },
+        "description": {
+            "text": "<3",
+            "color": "aqua"
+        },
+        "icon": {
+            "item": "minecraft:cake"
+        },
+        "show_toast": true,
+        "announce_to_chat": false,
+        "hidden": true
+    },
+    "criteria": {
+        "linked": {
+            "trigger": "minecraft:impossible"
+        }
+    },
+    "requirements": [
+        [
+            "linked"
+        ]
+    ],
+    "rewards": {
+        "experience": 10
+    }
+}

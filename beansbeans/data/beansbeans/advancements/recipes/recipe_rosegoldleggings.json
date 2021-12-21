@@ -1,0 +1,47 @@
+{
+    "criteria": {
+        "hasone": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [
+                    {
+                        "items": [
+                            "minecraft:golden_leggings"
+                        ]
+                    }
+                ]
+            }
+        },
+        "hastwo": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [
+                    {
+                        "items": [
+                            "minecraft:copper_ingot"
+                        ]
+                    }
+                ]
+            }
+        },
+        "has_the_recipe": {
+            "trigger": "minecraft:recipe_unlocked",
+            "conditions": {
+                "recipe": "beansbeans:recipe_rose_gold_leggings"
+            }
+        }
+  },
+    "requirements": [
+        [
+            "hasone",
+            "hastwo",
+            "has_the_recipe"
+        ]
+    ],
+    "rewards": {
+        "recipes": [
+            "beansbeans:recipe_rose_gold_leggings"
+        ]
+    },
+    "parent": "beansbeans:root"
+}
