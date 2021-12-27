@@ -6,34 +6,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.util.BlockVector;
 
-import me.playground.data.Datasource;
 import me.playground.main.Main;
 
-@SuppressWarnings("rawtypes")
 public class RegionManager {
+	private final RegionDatasource datasource;
 	
 	private final HashMap<UUID, Region> worldRegions = new HashMap<UUID, Region>();
-	private final HashMap<UUID, RegionMap> worldMaps = new HashMap<UUID, RegionMap>();
+	private final HashMap<UUID, RegionMap<Region>> worldMaps = new HashMap<UUID, RegionMap<Region>>();
 	private final HashMap<String, Region> allRegionsByName = new HashMap<String, Region>();
 	private final HashMap<Integer, Region> allRegionsById = new HashMap<Integer, Region>();
 	
-	public RegionManager() {
-		for (World w : Bukkit.getWorlds())
-			registerWorld(-Datasource.WorldUUIDToId.get(w.getUID()), w);
+	public RegionManager(Main plugin) {
+		datasource = new RegionDatasource(plugin, this);
+		datasource.loadAll();
 	}
 	
-	public void registerWorld(int negaId, World world) {
-		worldMaps.put(world.getUID(), new RegionMap(world));
-		Region nwr = new Region(this, negaId, world);
+	public void initWorldRegion(World world) {
+		worldMaps.put(world.getUID(), new RegionMap<Region>(world));
+		Region nwr = new Region(this, -datasource.getWorldManager().getWorldId(world), world);
 		worldRegions.put(world.getUID(), nwr);
 		registerRegion(nwr);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public RegionMap<Region> getRegionMap(World world) {
 		return worldMaps.get(world.getUID());
 	}
@@ -47,17 +45,22 @@ public class RegionManager {
 	}
 	
 	public void reload() {
-		Datasource.saveDirtyRegions();
+		datasource.saveAll();
 		worldRegions.clear();
 		worldMaps.clear();
 		allRegionsByName.clear();
 		allRegionsById.clear();
-		for (World w : Bukkit.getWorlds())
-			registerWorld(-Datasource.WorldUUIDToId.get(w.getUID()), w);
-		Datasource.loadAllRegions();
+		datasource.loadAll();
 	}
 	
-	public void registerRegion(Region region) {
+	/**
+	 * Create a new region.
+	 */
+	public Region createRegion(int creator, int priority, int parent, String name, World world, BlockVector min, BlockVector max) {
+		return datasource.createNewRegion(creator, priority, parent, name, world, min, max);
+	}
+	
+	protected void registerRegion(Region region) {
 		if (!region.isWorldRegion() && region.getWorld() != null)
 			getRegionMap(region.getWorld()).add(region);
 		
@@ -79,43 +82,12 @@ public class RegionManager {
 		getRegionMap(region.getWorld()).remove(region);
 		allRegionsByName.remove(region.getName().toLowerCase());
 		allRegionsById.remove(region.getRegionId());
-		Datasource.deleteRegion(region);
+		datasource.deleteRegion(region);
 	}
 	
 	public Region getWorldRegion(World world) {
 		return worldRegions.get(world.getUID());
 	}
-	
-	public static Region getWorldRegionAt(World world) {
-		return Main.getRegionManager().getWorldRegion(world);
-	}
-	
-	public static Region getRegionAt(Location location) {
-		return getRegionAt(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
-	}
-	
-	public static Region getRegionAt(World world, int x, int y, int z) {
-		return Main.getRegionManager().getRegion(world, x, y, z);
-	}
-	
-	/*public static <T extends Flag<V>, V> V getFlagAt(Location location, T flag) {
-		Region reg = getRegionAt(location);
-		V val = reg.getFlag(flag);
-		if (val == null && !reg.isWorldRegion()) // If null, go to world region setting
-			val = getWorldRegionAt(location.getWorld()).getFlag(flag);
-		if (val == null) // If null, go to default setting
-			val = flag.getDefault();
-		return val;
-	}
-	
-	public static <T extends Flag<V>, V> V getFlagAt(Region region, T flag) {
-		V val = region.getFlag(flag);
-		if (val == null && !region.isWorldRegion()) // If null, go to world region setting
-			val = getWorldRegionAt(region.getWorld()).getFlag(flag);
-		if (val == null) // If null, go to default setting
-			val = flag.getDefault();
-		return val;
-	}*/
 	
 	public Region getRegion(Location location) {
 		return getRegion(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
@@ -146,6 +118,13 @@ public class RegionManager {
 	
 	public int countRegions() {
 		return allRegionsByName.size();
+	}
+	
+	/**
+	 * @return the Datasource responsible for managing Region data.
+	 */
+	protected RegionDatasource getDatasource() {
+		return datasource;
 	}
 	
 }

@@ -2,6 +2,7 @@ package me.playground.npc;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -13,7 +14,6 @@ import org.json.JSONObject;
 
 import com.mojang.authlib.GameProfile;
 
-import me.playground.data.Datasource;
 import me.playground.main.IPluginRef;
 import me.playground.main.Main;
 import net.minecraft.server.dedicated.DedicatedServer;
@@ -23,17 +23,17 @@ import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.EntityLiving;
 
 public class NPCManager implements IPluginRef {
+	private final NPCDatasource datasource;
 	
 	private final Main plugin;
 	private boolean enabled = true;
 	
-	private final HashMap<Integer, NPC<?>> npcsByEntityId; // contains all NPC's
-	private final HashMap<Integer, NPC<?>> npcsByDBID; // Only contains NPC's that have a Database Entry.
+	private final Map<Integer, NPC<?>> npcsByEntityId = new HashMap<Integer, NPC<?>>(); // contains all NPC's
+	private final Map<Integer, NPC<?>> npcsByDBID = new HashMap<Integer, NPC<?>>(); // Only contains NPC's that have a Database Entry.
 	
 	public NPCManager(Main plugin) {
 		this.plugin = plugin;
-		npcsByEntityId = new HashMap<Integer, NPC<?>>();
-		npcsByDBID = new HashMap<Integer, NPC<?>>();
+		this.datasource = new NPCDatasource(plugin, this);
 		
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			@Override
@@ -104,14 +104,13 @@ public class NPCManager implements IPluginRef {
 	
 	public void reload() {
 		this.hideAllNPCsFromAll();
-		Datasource.saveDirtyNPCs();
+		datasource.saveAll();
 		this.npcsByDBID.forEach((id, npc) -> {
 			npc.getEntity().a(RemovalReason.c);
 		});
 		this.npcsByEntityId.clear();
 		this.npcsByDBID.clear();
-		Datasource.loadAllNPCs();
-		//this.showAllNPCsToAll();
+		datasource.loadAll();
 	}
 	
 	/**
@@ -125,7 +124,7 @@ public class NPCManager implements IPluginRef {
 	 * Create and generate a permanent NPC with a database entry.
 	 */
 	public NPC<?> createNPC(int creatorId, Location location, NPCType type, String name) {
-		int dbid = Datasource.saveNewNPC(creatorId, name, location);
+		int dbid = datasource.createNewNPC(creatorId, name, location);
 		return createNPC(creatorId, location, type, name, dbid, null);
 	}
 	

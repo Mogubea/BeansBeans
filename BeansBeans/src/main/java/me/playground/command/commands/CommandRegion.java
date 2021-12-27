@@ -26,7 +26,6 @@ import com.sk89q.worldedit.regions.RegionSelector;
 import me.playground.celestia.logging.Celestia;
 import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
-import me.playground.data.Datasource;
 import me.playground.gui.BeanGui;
 import me.playground.gui.BeanGuiConfirm;
 import me.playground.gui.BeanGuiRegion;
@@ -130,7 +129,8 @@ public class CommandRegion extends BeanCommand {
 				}
 				
 				int priority = 0, parent = 0;
-				region = Datasource.createNewRegion(profile.getId(), priority, parent, regionName, p.getWorld(), fromVector3(wer.getMinimumPoint()), fromVector3(wer.getMaximumPoint()));
+				
+				region = rm.createRegion(profile.getId(), priority, parent, regionName, p.getWorld(), fromVector3(wer.getMinimumPoint()), fromVector3(wer.getMaximumPoint()));
 				p.sendMessage(Component.text("\u00a7aYou Successfully defined the region ").append(region.toComponent()));
 				for (int ownerId : ownerIds) {
 					region.addMember(ownerId, MemberLevel.OWNER);

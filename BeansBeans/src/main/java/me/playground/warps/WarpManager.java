@@ -1,34 +1,39 @@
 package me.playground.warps;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.bukkit.Location;
 
-import me.playground.data.Datasource;
+import me.playground.main.Main;
 
 public class WarpManager {
+	private final WarpDatasource datasource;
 	
-	private HashMap<String, Warp> warpList = new HashMap<String, Warp>();
+	private final Map<String, Warp> warpList = new HashMap<String, Warp>();
 	
-	public WarpManager() {
-		warpList = Datasource.loadAllWarps();
+	public WarpManager(Main plugin) {
+		datasource = new WarpDatasource(plugin, this);
+		datasource.loadAll();
 	}
 	
-	public HashMap<String, Warp> getWarps() {
+	public Map<String, Warp> getWarps() {
 		return warpList;
 	}
 	
-	public Warp createNewWarp(int playerId, String warpName, Location location) throws Throwable {
-		return Datasource.saveNewWarp(playerId, warpName, location);
+	public Warp createWarp(int playerId, String warpName, Location location) throws Throwable {
+		return datasource.createWarp(playerId, warpName, location);
 	}
 	
 	public void addNewWarp(Warp w) {
 		warpList.put(w.getName().toLowerCase(), w);
+		datasource.updateMarker(w);
 	}
 	
 	public void renameWarp(Warp w, String newName) {
 		warpList.remove(w.getName().toLowerCase());
 		warpList.put(newName.toLowerCase(), w);
+		datasource.updateMarker(w);
 	}
 	
 	public Warp getWarp(String name) {
@@ -40,15 +45,17 @@ public class WarpManager {
 	}
 	
 	public void reload() {
-		Datasource.saveDirtyWarps();
-		warpList = Datasource.loadAllWarps();
+		datasource.saveAll();
+		warpList.clear();
+		datasource.loadAll();
 	}
 	
+	/**
+	 * Attempt to delete the specified {@link Warp}
+	 * @return whether the deletion was successful or not.
+	 */
 	public boolean deleteWarp(Warp w) {
-		boolean b = false;
-		if (b = Datasource.deleteWarp(w))
-			warpList.remove(w.getName().toLowerCase());
-		return b;
+		return datasource.deleteWarp(w) ? warpList.remove(w.getName().toLowerCase()) != null : false;
 	}
 	
 	public int countWarps() {

@@ -8,7 +8,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
-import me.playground.data.Datasource;
+import me.playground.main.Main;
 
 public class ShopLog {
 	
@@ -16,7 +16,7 @@ public class ShopLog {
 			.build(
 					new CacheLoader<Integer, ArrayList<ShopLog>>() {
 						public ArrayList<ShopLog> load(Integer shopId) throws Exception { // if the key doesn't exist, request it via this method
-							ArrayList<ShopLog> prof = Datasource.loadShopLogs(shopId);
+							ArrayList<ShopLog> prof = Main.getInstance().shopManager().getDatasource().loadShopLogs(shopId);
 							return prof;
 						}
 					});

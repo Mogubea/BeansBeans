@@ -48,7 +48,7 @@ public class BItemShopStand extends BeanItem {
 			} else {
 				try {
 					final PlayerProfile pp = PlayerProfile.from(e.getPlayer());
-					Main.getShopManager().createNewShop(pp.getId(), l);
+					Main.getShopManager().createShop(pp.getId(), l);
 					if (e.getPlayer().getGameMode() != GameMode.CREATIVE)
 						e.getItem().setAmount(e.getItem().getAmount() - 1);
 				} catch (Throwable ee) {

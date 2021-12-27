@@ -1,33 +1,38 @@
 package me.playground.shop;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.bukkit.Location;
 
-import me.playground.data.Datasource;
+import me.playground.main.Main;
 
 public class ShopManager {
+	private final ShopDatasource datasource;
 	
-	private final HashMap<Integer, Shop> shopList;
+	private final Map<Integer, Shop> shopList = new HashMap<Integer, Shop>();
 	private boolean shopsEnabled = true;
 	
-	public ShopManager() {
-		shopList = Datasource.loadAllShops();
+	public ShopManager(Main plugin) {
+		datasource = new ShopDatasource(plugin, this);
+		datasource.loadAll();
 	}
 	
-	public ArrayList<Shop> getShops() {
-		return new ArrayList<Shop>(shopList.values());
+	public Map<Integer, Shop> getShops() {
+		return shopList;
 	}
 	
 	public Shop getShop(int id) {
 		return shopList.get(id);
 	}
 	
-	public Shop createNewShop(int playerId, Location location) throws Throwable {
-		final Shop s = Datasource.createNewShop(playerId, location);
-		shopList.put(s.getShopId(), s);
-		return s;
+	public Shop createShop(int playerId, Location location) {
+		return datasource.createShop(playerId, location);
+	}
+	
+	protected void addNewShop(Shop s) {
+		this.shopList.put(s.getShopId(), s);
+		datasource.updateMarker(s);
 	}
 	
 	private void unloadShopEntities(boolean loadChunks) {
@@ -53,23 +58,25 @@ public class ShopManager {
 	 * @param loadChunks - Forceably load chunks to refresh ALL entities, not just loaded ones.
 	 */
 	public void reload(boolean loadChunks) {
-		Datasource.saveDirtyShops();
+		datasource.saveAll();
 		unloadShopEntities(loadChunks);
 		shopList.clear();
-		shopList.putAll(Datasource.loadAllShops());
+		datasource.loadAll();
 		loadShopEntities(loadChunks);
 	}
 	
-	public void deleteShop(Shop s, int deletedBy) {
-		if (Datasource.deleteShop(s)) {
+	public boolean deleteShop(Shop s, int deletedBy) {
+		boolean success = datasource.deleteShop(s);
+		if (success) {
 			s.unloadEntities();
 			this.shopList.remove(s.getShopId());
 			logAction(s.getShopId(), deletedBy, "deleted this shop", null);
 		}
+		return success;
 	}
 	
 	public void logAction(int shopId, int playerId, String comment, String data) {
-		Datasource.logShopAction(shopId, playerId, comment, data);
+		datasource.logShopAction(shopId, playerId, comment, data);
 	}
 	
 	public void disable() {
@@ -88,4 +95,7 @@ public class ShopManager {
 		return shopList.size();
 	}
 	
+	protected ShopDatasource getDatasource() {
+		return datasource;
+	}
 }

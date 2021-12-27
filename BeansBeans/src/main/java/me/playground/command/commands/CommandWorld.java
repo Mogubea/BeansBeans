@@ -18,21 +18,23 @@ import org.bukkit.entity.Player;
 
 import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
-import me.playground.data.Datasource;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
-import me.playground.regions.RegionManager;
 import me.playground.regions.flags.Flags;
 import me.playground.utils.TabCompleter;
+import me.playground.worlds.WorldManager;
 import net.kyori.adventure.text.Component;
 
 public class CommandWorld extends BeanCommand {
-
+	
+	private final WorldManager wm;
+	
 	public CommandWorld(Main plugin) {
 		super(plugin, true, "bean.cmd.world", "world");
 		description = "General world command.";
+		wm = plugin.getWorldManager();
 	}
 	
 	final String[] subCmds = { "create", "close", "dbregister", "info", "list", "open", "tpto",  };
@@ -42,21 +44,19 @@ public class CommandWorld extends BeanCommand {
 		if (args.length > 0) {
 			final String subCmd = args[0].toLowerCase();
 			
-			if (subCmd.equals("create") && sender.hasPermission("bean.cmd.world.create")) {
+			if (subCmd.equals("create") && checkSubPerm(sender, "create")) {
 				if (args.length > 1) {
 					final WorldCreator wc = new WorldCreator(args[1]);
 					wc.type(args.length > 2 ? WorldType.valueOf(args[2].toUpperCase()) : WorldType.NORMAL);
 					wc.environment(args.length > 3 ? Environment.valueOf(args[3].toUpperCase()) : Environment.NORMAL);
 					//ChunkGenerator cg = wc.generator();
-					//cg.
-					
 					final World w = wc.createWorld();
 					w.setGameRule(GameRule.DISABLE_RAIDS, true);
 					w.setGameRule(GameRule.KEEP_INVENTORY, true);
 					w.setGameRule(GameRule.MOB_GRIEFING, true);
 					w.getWorldBorder().setSize(args.length > 4 ? Integer.parseInt(args[4]) : 20000);
 					
-					Datasource.registerWorld(w);
+					wm.registerWorld(w);
 					sender.sendMessage(Component.text("\u00a77Created and registered ").append(worldInfo(sender, w)).append(Component.text("\u00a77 to the database.")));
 				}
 			} else if (subCmd.equals("close") || subCmd.equals("open")) {
@@ -70,7 +70,7 @@ public class CommandWorld extends BeanCommand {
 				else
 					throw new CommandException(sender, "Please specify a world.");
 				
-				final Region worldRegion = RegionManager.getWorldRegionAt(w);
+				final Region worldRegion = getPlugin().regionManager().getWorldRegion(w);
 				worldRegion.setFlag(Flags.TELEPORT_IN, closeIt ? false : true);
 				sender.sendMessage(worldInfo(sender,w).append(Component.text("\u00a77 is now " + (!closeIt ? "\u00a7aopen" : "\u00a7cclosed"))));
 			} else if (subCmd.equals("info")) {
@@ -98,7 +98,7 @@ public class CommandWorld extends BeanCommand {
 			} else if (subCmd.equals("dbregister") && checkRank(sender, Rank.OWNER)) {
 				if (args.length > 1) {
 					final World w = toWorld(sender, args[1]);
-					Datasource.registerWorld(w);
+					wm.registerWorld(w);
 					sender.sendMessage(Component.text("\u00a77Registered ").append(worldInfo(sender, w)).append(Component.text("\u00a77 to the database.")));
 				}
 			}

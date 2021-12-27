@@ -19,7 +19,6 @@ import org.bukkit.inventory.ItemStack;
 
 import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
-import me.playground.data.Datasource;
 import me.playground.enchants.BeanEnchantment;
 import me.playground.gui.BeanGui;
 import me.playground.gui.BeanGuiBeanItems;
@@ -189,7 +188,6 @@ public class CommandOp extends BeanCommand {
 				
 				boolean forceEntityReload = args.length > 2 && args[2].equalsIgnoreCase("-f");
 				
-				Datasource.deleteShopMarkers();
 				getPlugin().shopManager().reload(forceEntityReload);
 				sender.sendMessage("\u00a7eShop \u00a77entries" + (forceEntityReload ? " and entities" : "") + " have been reloaded.");
 			} else if ("enable".equals(subcmd)) {

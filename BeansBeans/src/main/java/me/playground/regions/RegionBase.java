@@ -15,6 +15,7 @@ import me.playground.regions.flags.Flag;
 
 public abstract class RegionBase {
 	
+	final protected RegionManager rm;
 	protected final int regionId;
 	protected final World world;
 	protected int priority;
@@ -22,7 +23,8 @@ public abstract class RegionBase {
 	protected ConcurrentMap<Flag<?>, Object> flags = new ConcurrentHashMap<>();
 	protected List<Flag<?>> dirtyFlags = new ArrayList<Flag<?>>();
 	
-	public RegionBase(int id, World world) {
+	public RegionBase(RegionManager rm, int id, World world) {
+		this.rm = rm;
 		this.regionId = id;
 		this.world = world;
 	}
@@ -49,7 +51,7 @@ public abstract class RegionBase {
 	public <T extends Flag<V>, V> V getEffectiveFlag(T flag) {
 		V val = (V) flags.get(flag);
 		if (val == null && !isWorldRegion() && flag.inheritsFromWorld())
-			val = RegionManager.getWorldRegionAt(getWorld()).getFlag(flag);
+			val = rm.getWorldRegion(getWorld()).getFlag(flag);
 		if (val == null)
 			val = flag.getDefault();
 		

@@ -16,34 +16,34 @@ public final class Flags {
 	 * 
 	 * FlagMember's do not inherit the world flag by default.
 	 */
-	public static final FlagMember 	BUILD_ACCESS 		= register(new FlagMember("build-access", "Build Access", MemberLevel.MEMBER))
+	public static final FlagMember 	BUILD_ACCESS 		= register(new FlagMember("build-access", "Build Access", MemberLevel.MEMBER, MemberLevel.NONE))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to place,"),
 					Component.text("\u00a77break and use blocks."),
 					Component.text("\u00a78(Undermines other block related flags!!!)"));
-	public static final FlagMember 	CONTAINER_ACCESS 	= register(new FlagMember("container-access", "Container Access", MemberLevel.MEMBER))
+	public static final FlagMember 	CONTAINER_ACCESS 	= register(new FlagMember("container-access", "Container Access", MemberLevel.MEMBER, MemberLevel.NONE))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to access"),
 					Component.text("\u00a77containers such as chests, furnaces"),
 					Component.text("\u00a77and brewing stands."));
-	public static final FlagMember 	ANVIL_ACCESS 	= register(new FlagMember("anvil-access", "Anvil Access", MemberLevel.MEMBER))
+	public static final FlagMember 	ANVIL_ACCESS 	= register(new FlagMember("anvil-access", "Anvil Access", MemberLevel.MEMBER, MemberLevel.NONE))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to access"),
 					Component.text("\u00a77and utilise the functionality of anvils."));
-	public static final FlagMember 	DOOR_ACCESS 		= register(new FlagMember("door-access", "Door Access", MemberLevel.VISITOR))
+	public static final FlagMember 	DOOR_ACCESS 		= register(new FlagMember("door-access", "Door Access", MemberLevel.VISITOR, MemberLevel.NONE))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to open and"),
 					Component.text("\u00a77close doors/trapdoors/fence gates."));
-	public static final FlagMember 	CROP_ACCESS 		= register(new FlagMember("crop-access", "Crop Harvesting Access", MemberLevel.MEMBER))
+	public static final FlagMember 	CROP_ACCESS 		= register(new FlagMember("crop-access", "Crop Harvesting Access", MemberLevel.MEMBER, MemberLevel.NONE))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to harvest"),
 					Component.text("\u00a77planted crops by right clicking."));
-	public static final FlagMember 	VILLAGER_ACCESS 	= register(new FlagMember("villager-access", "Villager Trade Access", MemberLevel.MEMBER))
+	public static final FlagMember 	VILLAGER_ACCESS 	= register(new FlagMember("villager-access", "Villager Trade Access", MemberLevel.MEMBER, MemberLevel.NONE))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to access and"),

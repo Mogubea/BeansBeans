@@ -16,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import me.playground.command.CommandManager;
 import me.playground.currency.Currency;
 import me.playground.data.Datasource;
+import me.playground.data.DatasourceCore;
 import me.playground.discord.DiscordBot;
 import me.playground.enchants.BeanEnchantment;
 import me.playground.highscores.Highscores;
@@ -36,6 +37,7 @@ import me.playground.utils.SignMenuFactory;
 import me.playground.utils.Utils;
 import me.playground.voting.VoteManager;
 import me.playground.warps.WarpManager;
+import me.playground.worlds.WorldManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.Title.Times;
@@ -49,6 +51,7 @@ public class Main extends JavaPlugin {
 	private CommandManager commandManager;
 	public NPCManager npcManager;
 	public Highscores highscores;
+	private WorldManager worldManager;
 	private RegionManager regionManager;
 	private WarpManager warpManager;
 	private ShopManager shopManager;
@@ -58,6 +61,8 @@ public class Main extends JavaPlugin {
 	private SignMenuFactory signMenuFactory;
 	private DiscordBot discordBot;
 	private VoteManager voteManager;
+	
+	private DatasourceCore datasource;
 
 	public void onEnable() {
 		instance = this;
@@ -66,19 +71,17 @@ public class Main extends JavaPlugin {
 		this.signMenuFactory = new SignMenuFactory(this);
 		new ProtocolNPCListener(this);
 		
+		datasource = new DatasourceCore(this);
 		Datasource.init(this);
 		
-		Datasource.loadWorlds();
-		
-		regionManager = new RegionManager();
-		Datasource.loadAllRegions();
+		worldManager = new WorldManager(this); // Important to be before everything else due to a lot of things requiring the getWorld and getWorldId methods.
+		regionManager = new RegionManager(this); // Should always be after WorldManager due to dependance.
 		
 		teamManager = new TeamManager();
 		highscores = new Highscores();
-		npcManager = new NPCManager(this);
-		Datasource.loadAllNPCs();
-		warpManager = new WarpManager();
-		shopManager = new ShopManager();
+		npcManager = new NPCManager(this); // Load all NPCs after TeamManager
+		warpManager = new WarpManager(this);
+		shopManager = new ShopManager(this);
 		permissionManager = new PermissionManager(this);
 		
 		// Register Commands
@@ -128,6 +131,10 @@ public class Main extends JavaPlugin {
 		discordBot.shutdown();
 	}
 	
+	public DatasourceCore getDatasourceCore() {
+		return datasource;
+	}
+	
 	public SignMenuFactory getSignMenuFactory() {
 		return this.signMenuFactory;
 	}
@@ -162,6 +169,9 @@ public class Main extends JavaPlugin {
 	
 	public CommandManager commandManager() {
 		return commandManager;
+	}
+	public WorldManager getWorldManager() {
+		return worldManager;
 	}
 	public RegionManager regionManager() {
 		return regionManager;

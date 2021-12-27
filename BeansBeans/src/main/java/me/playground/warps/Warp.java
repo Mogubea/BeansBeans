@@ -11,7 +11,6 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import me.playground.data.Dirty;
-import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -21,6 +20,7 @@ public class Warp implements Dirty {
 	
 	// Constant values
 	private final int warpId, creatorId;
+	private final WarpManager manager; // Warp Manager
 	
 	// Modifiable values
 	private String name; // Name of the warp (Used in commands and warping to).
@@ -37,7 +37,8 @@ public class Warp implements Dirty {
 	
 	private boolean dirty = false;
 	
-	public Warp(int warpId, int ownerId, int creatorId, String name, Material material, String desc, boolean isPublic, boolean isLocked, int useCount, List<Integer> invited, List<Integer> banned, Location location) {
+	protected Warp(WarpManager manager, int warpId, int ownerId, int creatorId, String name, Material material, String desc, boolean isPublic, boolean isLocked, int useCount, List<Integer> invited, List<Integer> banned, Location location) {
+		this.manager = manager;
 		this.warpId = warpId;
 		this.creatorId = creatorId;
 		this.ownerId = ownerId;
@@ -50,6 +51,7 @@ public class Warp implements Dirty {
 		this.invitedIds = invited;
 		this.bannedIds = banned;
 		this.location = location;
+		manager.addNewWarp(this);
 	}
 
 	public void warp(Player p) {
@@ -178,7 +180,7 @@ public class Warp implements Dirty {
 	}
 	
 	public void rename(String s) {
-		Main.getWarpManager().renameWarp(this, s);
+		manager.renameWarp(this, s);
 		name = s;
 		setDirty(true);
 	}
@@ -231,7 +233,7 @@ public class Warp implements Dirty {
 	}
 	
 	public boolean delete() {
-		return Main.getWarpManager().deleteWarp(this);
+		return manager.deleteWarp(this);
 	}
 	
 	public Component toComponent() {

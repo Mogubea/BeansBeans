@@ -2,7 +2,7 @@ package me.playground.gui;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -16,7 +16,6 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.BeanColor;
 import me.playground.utils.SignMenuFactory;
@@ -47,7 +46,7 @@ public class BeanGuiWarps extends BeanGui {
 	private final static ItemStack wF_Name = newItem(new ItemStack(Material.CRIMSON_SIGN), Component.text("\u00a77Name Filter: \u00a7fNone"), "", "\u00a78\u00a7oClick to filter warps by Name");
 	private final static ItemStack wF_Filter = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzY0YzBiYWFlYTM5NDU4NjQwNWUxNTU3ZjU3ZTUwNTlmNGQ0YjAzYmYwN2FhMmJhMGYyMDkzODQ3MWQyNzFhYiJ9fX0="), Component.text("\u00a77Type Filter: \u00a7fNone"), "", "\u00a7f > \u00a77None", "\u00a78> Player Warp", "\u00a78> Shop Warp", "\u00a78> Server Warp", "\u00a78\u00a7oClick to Cycle through Warp Types");
 	
-	final HashMap<String, Warp> warps = Main.getWarpManager().getWarps();
+	private final Map<String, Warp> warps = getPlugin().warpManager().getWarps();
 	private String nameFilter = null;
 	private WarpType typeFilter = null;
 	
@@ -233,6 +232,7 @@ public class BeanGuiWarps extends BeanGui {
 			ItemStack settingItem = w.getItem() != null ? new ItemStack(w.getItem()) : (w.getType() == WarpType.SHOP ? new ItemStack(shopSkull) : new ItemStack(warpSkull));
 			
 			ItemMeta meta = settingItem.getItemMeta();
+			meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_DYE, ItemFlag.HIDE_ENCHANTS);
 			meta.displayName(Component.text(w.getName()).color(w.getType().getColor()).decoration(TextDecoration.ITALIC, false));
 			ArrayList<Component> lore = new ArrayList<Component>();
 			if (data != 0 && w.getOwnerId() > 0)

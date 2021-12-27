@@ -63,7 +63,7 @@ public abstract class BeanGui implements IPluginRef {
 	
 	public BeanGui(Player p, int page, int data) {
 		this.p = p;
-		this.plugin = (Main) Bukkit.getPluginManager().getPlugin("BeansBeans"); // XXX: Currently undetermined if this is efficient to do or not, gotta research this more.
+		this.plugin = Main.getInstance();
 		PlayerProfile ack = PlayerProfile.from(p);
 		if (!ack.profileOverride.equals(ack.getUniqueId()))
 			tpp = PlayerProfile.from(ack.profileOverride);

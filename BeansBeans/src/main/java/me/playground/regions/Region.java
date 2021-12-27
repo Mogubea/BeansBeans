@@ -14,7 +14,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.BlockVector;
 
 import me.playground.celestia.logging.Celestia;
-import me.playground.data.Datasource;
 import me.playground.data.Dirty;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileStore;
@@ -22,19 +21,19 @@ import me.playground.regions.flags.Flags;
 import me.playground.regions.flags.MemberLevel;
 import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 
 public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	
-	final protected RegionManager rm;
 	final private int creatorId;
 	protected BlockVector min, max;
 	
 	private String name;
 	private int parentId;
 	private boolean dirty;
+	
+	private Component componentName;
 	
 	private final LinkedHashMap<Integer, MemberLevel> members = new LinkedHashMap<Integer, MemberLevel>(); // Member ID, Permission Level
 	private final List<Integer> regionKeys = new ArrayList<Integer>(); // Region Keys, to remove upon deletion
@@ -49,9 +48,9 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	}
 	
 	public Region(RegionManager rm, int id, int creator, int priority, String name, World world, BlockVector min, BlockVector max) {
-		super(id, world);
-		this.rm = rm;
+		super(rm, id, world);
 		this.name = name;
+		updateColouredName();
 		this.creatorId = creator;
 		this.priority = priority;
 		this.min = min;
@@ -62,9 +61,6 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	public Region(RegionManager rm, int id, World w) {
 		this(rm, id, 0, 0, w.getName(), w, null, null);
 		// World Region defaults
-		this.setFlag(Flags.BUILD_ACCESS, MemberLevel.NONE, false);
-		this.setFlag(Flags.CONTAINER_ACCESS, MemberLevel.NONE, false);
-		this.setFlag(Flags.DOOR_ACCESS, MemberLevel.NONE, false);
 		this.setFlag(Flags.PROTECT_ANIMALS, false, false);
 	}
 	
@@ -122,13 +118,13 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	
 	public Region addMember(int playerId, MemberLevel level, boolean save) {
 		if (save)
-			Datasource.setRegionMember(regionId, playerId, level);
+			rm.getDatasource().setRegionMember(regionId, playerId, level);
 		members.put(playerId, level);
 		return this;
 	}
 	
 	public void removeMember(int playerId) {
-		Datasource.removeRegionMember(regionId, playerId);
+		rm.getDatasource().removeRegionMember(regionId, playerId);
 		members.remove(playerId);
 	}
 	
@@ -173,6 +169,7 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 		rm.renameRegion(this.name, name);
 		Celestia.logRegionChange(p, "Renamed from " + this.name + " to " + name + ".");
 		this.name = name;
+		updateColouredName();
 		setDirty(true);
 	}
 	
@@ -180,12 +177,20 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 		return this.name;
 	}
 	
-	public TextComponent getColouredName() {
-		return Component.text(this.name).color(this.isWorldRegion() ? BeanColor.REGION_WORLD : BeanColor.REGION);
+	private final void updateColouredName() {
+		componentName = Component.text(name, getColour());
+	}
+	
+	public Component getColouredName() {
+		return componentName;
 	}
 	
 	public boolean isWorldRegion() {
 		return this.getRegionId() < 0;
+	}
+	
+	public BeanColor getColour() {
+		return this.isWorldRegion() ? BeanColor.REGION_WORLD : BeanColor.REGION;
 	}
 	
 	public boolean isDirty() {

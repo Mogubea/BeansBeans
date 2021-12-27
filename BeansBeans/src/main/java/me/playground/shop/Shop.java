@@ -17,7 +17,6 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
 
-import me.playground.data.Datasource;
 import me.playground.data.Dirty;
 import me.playground.items.BeanItem;
 import me.playground.main.Main;
@@ -25,6 +24,8 @@ import me.playground.playerprofile.PlayerProfile;
 import net.kyori.adventure.text.Component;
 
 public class Shop implements Dirty {
+	
+	private final ShopManager manager;
 	
 	private final Location location;
 	private ArmorStand stand;
@@ -46,15 +47,16 @@ public class Shop implements Dirty {
 	
 	private boolean dirty;
 	
-	public Shop(int id, int ownerId, Location location, int maxQuantity) {
-		this(id, ownerId, location, maxQuantity, 0, null, 0, 0, 0, 0, 0, true);
+	public Shop(ShopManager manager, int id, int ownerId, Location location, int maxQuantity) {
+		this(manager, id, ownerId, location, maxQuantity, 0, null, 0, 0, 0, 0, 0, true);
 	}
 	
-	public Shop(int id, int ownerId, Location location, int maxQuantity, int quantity, ItemStack item, int storedMoney, int totalMoneyEarned, int totalMoneyTaxed, int sellPrice, int buyPrice) {
-		this(id, ownerId, location, maxQuantity, quantity, item, storedMoney, totalMoneyEarned, totalMoneyTaxed, sellPrice, buyPrice, false);
+	public Shop(ShopManager manager, int id, int ownerId, Location location, int maxQuantity, int quantity, ItemStack item, int storedMoney, int totalMoneyEarned, int totalMoneyTaxed, int sellPrice, int buyPrice) {
+		this(manager, id, ownerId, location, maxQuantity, quantity, item, storedMoney, totalMoneyEarned, totalMoneyTaxed, sellPrice, buyPrice, false);
 	}
 	
-	public Shop(int id, int ownerId, Location location, int maxQuantity, int quantity, ItemStack item, int storedMoney, int totalMoneyEarned, int totalMoneyTaxed, int sellPrice, int buyPrice, boolean load) {
+	public Shop(ShopManager manager, int id, int ownerId, Location location, int maxQuantity, int quantity, ItemStack item, int storedMoney, int totalMoneyEarned, int totalMoneyTaxed, int sellPrice, int buyPrice, boolean load) {
+		this.manager = manager;
 		this.id = id;
 		this.ownerId = ownerId;
 		this.location = location;
@@ -79,9 +81,8 @@ public class Shop implements Dirty {
 		this.totalMoneyEarned = totalMoneyEarned;
 		this.totalMoneyTaxed = totalMoneyTaxed;
 		
-		if (load)
-			loadEntities();
-		Datasource.markShop(this);
+		if (load) loadEntities();
+		manager.addNewShop(this);
 	}
 	
 	
@@ -295,7 +296,7 @@ public class Shop implements Dirty {
 			PlayerProfile.fromIfExists(getOwnerId()).addToBalance(getStoredMoney(), "Removal of Shop ID: " + this.getShopId() + " by player ID: " + playerId);
 		location.add(0, 2, 0).getBlock().removeMetadata("protected", Main.getInstance());
 		location.subtract(0, 2, 0);
-		Main.getShopManager().deleteShop(this, playerId);
+		manager.deleteShop(this, playerId);
 	}
 	
 	public void setDirty(boolean dirty) {

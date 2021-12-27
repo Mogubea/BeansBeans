@@ -22,7 +22,6 @@ import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
-import me.playground.regions.RegionManager;
 import me.playground.regions.flags.Flags;
 import me.playground.regions.flags.MemberLevel;
 import me.playground.utils.TabCompleter;
@@ -76,20 +75,20 @@ public class CommandWarp extends BeanCommand {
 			if (!StringUtils.isAlphanumeric(warpname) || warpname.length() > 32 || bannedWarpNames.contains(warpname.toLowerCase()))
 				throw new CommandException(sender, "\u00a7cCannot create a warp with the name '"+warpname+"'!");
 			
-			final Region r = RegionManager.getRegionAt(p.getLocation());
+			final Region r = getPlugin().regionManager().getRegion(p.getLocation());
 			if (!isSafe(p.getLocation()) || r.getEffectiveFlag(Flags.WARP_CREATION) && r.getMember(p).lowerThan(MemberLevel.MEMBER))
 				throw new CommandException(sender, "\u00a7cYou can't create a warp here!");
 			
 			Warp newWarp = null;
 			try {
-				newWarp = wm.createNewWarp(profile.getId(), warpname, p.getLocation());
+				newWarp = wm.createWarp(profile.getId(), warpname, p.getLocation());
 				if (!profile.hasPermission("bean.cmd.warp.*"))
 					profile.addToBalance(-creationCost, "Created a warp with the name '" + warpname + "'");
 				profile.upWarpCount();
 			} catch (Throwable e) {
 				p.sendMessage("\u00a7cThere was a problem creating your warp!");
 			}
-			p.sendMessage(Component.text("\u00a77Successfully created a warp with the name ").append(newWarp.toComponent()).append(Component.text("\u00a77 (\u00a7d"+profile.getWarpCount()+"\u00a77/"+"\u00a75"+profile.getWarpLimit()+"\u00a77)!")));
+			p.sendMessage(Component.text("\u00a77Successfully created the warp: ").append(newWarp.toComponent()).append(Component.text("\u00a77 (\u00a7d"+profile.getWarpCount()+"\u00a77/"+"\u00a75"+profile.getWarpLimit()+"\u00a77)!")));
 		} else if ("delete".equals(subcmd)) {
 			if (args.length < 2) throw new CommandException(sender, "Usage: \u00a7f/warp delete \u00a77<warp>");
 			canDo(sender, warp, "delete");
@@ -183,7 +182,7 @@ public class CommandWarp extends BeanCommand {
 			if (!profile.hasPermission("bean.cmd.warp.*") && profile.getBalance() < creationCost)
 				throw new CommandException(sender, "\u00a7cYou need another \u00a76" + (creationCost-profile.getBalance()) + " Coins \u00a7cto do this!");
 			
-			final Region r = RegionManager.getRegionAt(p.getLocation());
+			final Region r = getPlugin().regionManager().getRegion(p.getLocation());
 			if (!isSafe(p.getLocation()) || r.getEffectiveFlag(Flags.WARP_CREATION) && r.getMember(p).lowerThan(MemberLevel.MEMBER))
 				throw new CommandException(sender, "\u00a7cYou can't redesignate your warp location to here.");
 			

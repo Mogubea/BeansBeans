@@ -49,7 +49,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 	public void onInventoryClicked(InventoryClickEvent e) {
 		final int slot = e.getRawSlot();
 		if (slot < 19 || slot > 25) return;
-		final boolean canEdit = getRegion().canModify(p);
+		final boolean canEdit = getRegion().canModify(p) && !getRegion().isWorldRegion();
 		
 		switch(slot) {
 		case 19: // Rename Button - Costs 500 coins, requires a permission so it's revokable if someone's a twat.
@@ -154,18 +154,24 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 		final ItemStack[] contents = presetInv.clone();
 		final boolean isOwner = getRegion().getMember(p).higherThan(MemberLevel.OFFICER);
 		
-		ItemStack iName = icon_name.clone();
-		if (isOwner)
+		ItemStack iName = newItem(new ItemStack(Material.WARPED_SIGN), getRegion().getColouredName());
+		if (isOwner && !getRegion().isWorldRegion())
 			iName.lore(Arrays.asList(Component.text("\u00a7f" + getRegion().getName()), Component.empty(), Component.text("\u00a77\u00a7oClick to change" + (p.hasPermission("bean.region.modifyothers") ? "" : " for \u00a76\u00a7o500 Coins"))));
 		else
 			iName.lore(Arrays.asList(Component.text("\u00a7f" + getRegion().getName())));
+		
 		contents[19] = iName;
 		
+		contents[21] = newItem(new ItemStack(Material.ACACIA_DOOR), Component.text("Members", getRegion().getColour()), "\u00a77Members of the Region");
+		
+		contents[23] = newItem(new ItemStack(Material.LIGHT_BLUE_BANNER), Component.text("Flags", getRegion().getColour()), "\u00a77View the Region Flags");
+		
 		ItemStack iPriority = icon_priority.clone();
-		if (isOwner)
+		if (isOwner && !getRegion().isWorldRegion())
 			iPriority.lore(Arrays.asList(Component.text("\u00a7f" + getRegion().getPriority()), Component.empty(), Component.text("\u00a77\u00a7oClick to change")));
 		else
 			iPriority.lore(Arrays.asList(Component.text("\u00a7f" + getRegion().getPriority())));
+		
 		contents[25] = iPriority;
 		
 		i.setContents(contents);

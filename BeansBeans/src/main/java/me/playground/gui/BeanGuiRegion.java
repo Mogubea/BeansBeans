@@ -10,7 +10,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 
-import me.playground.main.Main;
 import me.playground.regions.Region;
 import me.playground.regions.RegionManager;
 import me.playground.utils.BeanColor;
@@ -36,7 +35,7 @@ public abstract class BeanGuiRegion extends BeanGui {
 	public BeanGuiRegion(Player p) {
 		super(p);
 		
-		this.rm = Main.getRegionManager();
+		this.rm = getPlugin().regionManager();
 		this.localRegions = rm.getRegions(p.getLocation());
 		Collections.sort(localRegions);
 		if (p.hasPermission("bean.region.override"))

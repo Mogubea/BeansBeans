@@ -1,4 +1,4 @@
-package me.playground.world.generation;
+package me.playground.worlds.generation;
 
 import java.util.Random;
 

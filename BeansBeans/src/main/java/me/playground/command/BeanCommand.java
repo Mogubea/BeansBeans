@@ -316,6 +316,14 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 		return ra;
 	}
 	
+	protected boolean checkSubPerm(CommandSender sender, String subCmd) {
+		if (getPermissionString() == null || getPermissionString().isEmpty()) return true;
+		final boolean ra = sender.hasPermission("*") || sender.hasPermission(getPermissionString() + "." + subCmd) || sender.hasPermission(getPermissionString() + ".*");
+		if (!ra) 
+			throw new CommandException(sender, "You don't have permission to use /" + aliases[0] + " " + subCmd + ".");
+		return ra; 
+	}
+	
 	protected boolean isSafe(Location loc) {
 		if (loc.getBlock().getType() == Material.LAVA || (loc.subtract(0,0.2,0).getBlock().isEmpty()))
 			return false;
