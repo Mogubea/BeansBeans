@@ -16,10 +16,15 @@ public abstract class Flag<T> {
 	private final List<Component> description = new ArrayList<Component>();
 	private boolean needsPermission = false;
 	
-	protected Flag(@Nonnull String name, @Nonnull String displayName, boolean inheritFromWorld) {
+	protected final T def;
+	protected final T worldDef;
+	
+	protected Flag(@Nonnull String name, @Nonnull String displayName, T defaultValue, T defaultWorldValue, boolean inheritFromWorld) {
 		this.name = name;
 		this.displayName = displayName;
 		this.inheritsFromWorld = inheritFromWorld;
+		this.def = defaultValue;
+		this.worldDef = defaultWorldValue;
 	}
 	
 	/**
@@ -37,7 +42,12 @@ public abstract class Flag<T> {
 	
 	@Nullable
 	public T getDefault() {
-		return null;
+		return def;
+	}
+	
+	@Nullable
+	public T getWorldDefault() {
+		return worldDef;
 	}
 	
 	public boolean inheritsFromWorld() {

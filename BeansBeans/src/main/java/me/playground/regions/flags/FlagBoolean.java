@@ -4,20 +4,12 @@ import me.playground.command.CommandException;
 
 public class FlagBoolean extends Flag<Boolean> {
 	
-	private final boolean def;
-	
 	public FlagBoolean(String name, String displayName, boolean def) {
-		this(name, displayName, def, true);
+		this(name, displayName, def, def, true);
 	}
 	
-	public FlagBoolean(String name, String displayName, boolean def, boolean inherit) {
-		super(name, displayName, inherit);
-		this.def = def;
-	}
-	
-	@Override
-	public Boolean getDefault() {
-		return def;
+	public FlagBoolean(String name, String displayName, boolean def, boolean worldDef, boolean inherit) {
+		super(name, displayName, def, worldDef, inherit);
 	}
 
 	@Override

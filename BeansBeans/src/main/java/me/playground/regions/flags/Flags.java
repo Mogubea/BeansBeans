@@ -74,7 +74,7 @@ public final class Flags {
 			.setDescription(
 					Component.text("\u00a79Non-Members\u00a77 will be able to access \u00a7eShops"),
 					Component.text("\u00a77that are inside of the region."));
-	public static final FlagBoolean PROTECT_ANIMALS 	= register(new FlagBoolean("protect-animals", "Animal Protection", true, false))
+	public static final FlagBoolean PROTECT_ANIMALS 	= register(new FlagBoolean("protect-animals", "Animal Protection", true, false, false))
 			.setDescription(
 					Component.text("\u00a74Hostile mobs\u00a77 and \u00a79Non-Members\u00a77 will be able"),
 					Component.text("\u00a77to harm animals and villagers inside of the region."));

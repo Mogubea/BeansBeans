@@ -4,16 +4,8 @@ import me.playground.command.CommandException;
 
 public class FlagInt extends Flag<Integer> {
 	
-	private int def;
-	
 	public FlagInt(String name, String displayName, int def) {
-		super(name, displayName, true);
-		this.def = def;
-	}
-	
-	@Override
-	public Integer getDefault() {
-		return def;
+		super(name, displayName, def, def, true);
 	}
 
 	@Override

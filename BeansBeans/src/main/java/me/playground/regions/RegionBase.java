@@ -50,10 +50,11 @@ public abstract class RegionBase {
 	@SuppressWarnings("unchecked") @Nonnull
 	public <T extends Flag<V>, V> V getEffectiveFlag(T flag) {
 		V val = (V) flags.get(flag);
-		if (val == null && !isWorldRegion() && flag.inheritsFromWorld())
+		boolean world = isWorldRegion();
+		if (val == null && !world && flag.inheritsFromWorld())
 			val = rm.getWorldRegion(getWorld()).getFlag(flag);
 		if (val == null)
-			val = flag.getDefault();
+			val = world ? flag.getWorldDefault() : flag.getDefault();
 		
 		return val;
 	}

@@ -4,19 +4,12 @@ import me.playground.command.CommandException;
 
 public class FlagFloat extends Flag<Float> {
 	
-	private final float def;
 	private final float min, max;
 	
 	public FlagFloat(String name, String displayName, float def, float min, float max) {
-		super(name, displayName, true);
-		this.def = def;
+		super(name, displayName, def, def, true);
 		this.min = min;
 		this.max = max;
-	}
-	
-	@Override
-	public Float getDefault() {
-		return def;
 	}
 
 	@Override

@@ -17,7 +17,6 @@ import me.playground.celestia.logging.Celestia;
 import me.playground.data.Dirty;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileStore;
-import me.playground.regions.flags.Flags;
 import me.playground.regions.flags.MemberLevel;
 import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
@@ -60,8 +59,6 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	
 	public Region(RegionManager rm, int id, World w) {
 		this(rm, id, 0, 0, w.getName(), w, null, null);
-		// World Region defaults
-		this.setFlag(Flags.PROTECT_ANIMALS, false, false);
 	}
 	
 	public BlockVector getMinimumPoint() {

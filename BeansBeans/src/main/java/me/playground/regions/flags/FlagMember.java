@@ -4,22 +4,8 @@ import me.playground.command.CommandException;
 
 public class FlagMember extends Flag<MemberLevel> {
 	
-	private final MemberLevel worldDef;
-	private final MemberLevel def;
-	
 	public FlagMember(String name, String displayName, MemberLevel def, MemberLevel worldDef) {
-		super(name, displayName, false);
-		this.def = def;
-		this.worldDef = worldDef;
-	}
-	
-	@Override
-	public MemberLevel getDefault() {
-		return def;
-	}
-	
-	public MemberLevel getWorldDefault() {
-		return worldDef;
+		super(name, displayName, def, worldDef, false);
 	}
 
 	@Override
