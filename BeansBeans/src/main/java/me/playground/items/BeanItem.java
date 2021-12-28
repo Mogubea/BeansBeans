@@ -472,7 +472,7 @@ public class BeanItem {
 				lore.add(Component.text("\u00a77" + i.getAmount() + "x ").append(i.displayName()));
 			}
 			
-			if (x > 2)
+			if (x > 3)
 				lore.add(Component.text("\u00a77\u00a7oAnd " + (x-3) + " more..."));
 		}
 		return lore;

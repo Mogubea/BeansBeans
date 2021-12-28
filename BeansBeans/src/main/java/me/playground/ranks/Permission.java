@@ -18,5 +18,6 @@ public class Permission {
 	public final static String CONNECTMSG_APPLY = "bean.connectmsg.apply";
 	
 	public final static String DELIVERY_CLAIMALL = "bean.delivery.claimall";
+	public final static String QUICK_SHULKER_BOX = "bean.quickshulkerbox";
 	
 }

@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -43,6 +44,7 @@ public abstract class BeanGui implements IPluginRef {
 	protected final Main plugin;
 	
 	protected int presetSize = 27;
+	protected InventoryType presetType;
 	protected String name = "Error";
 	protected ItemStack[] presetInv;
 	/**
@@ -105,7 +107,10 @@ public abstract class BeanGui implements IPluginRef {
 	}
 	
 	public void openInventory() {
-		this.i = Bukkit.createInventory(p, presetSize, Component.text(name));
+		if (this.presetType != null && presetType.isCreatable())
+			this.i = Bukkit.createInventory(p, presetType, Component.text(name));
+		else
+			this.i = Bukkit.createInventory(p, presetSize, Component.text(name));
 		i.setContents(presetInv);
 		p.openInventory(i);
 		pp.setBeanGui(this);

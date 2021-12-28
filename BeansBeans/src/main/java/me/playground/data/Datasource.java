@@ -405,7 +405,7 @@ public class Datasource {
 		PlayerProfile.profileCache.asMap().values().forEach(profile -> saveProfile(profile));
 		Main.getInstance().getDatasourceCore().saveAll();
 		saveDirtyLootEntries();
-		Utils.sendActionBar(Rank.ADMINISTRATOR, Component.text("\u00a7dSaved everything in roughly \u00a7f" + (System.currentTimeMillis()-then) + "ms"));
+		Utils.sendActionBar(Rank.ADMINISTRATOR, Component.text("\u00a7dSaved everything in roughly \u00a75" + (System.currentTimeMillis()-then) + "ms"));
 	}
 
 	public static void close(Object... c) {

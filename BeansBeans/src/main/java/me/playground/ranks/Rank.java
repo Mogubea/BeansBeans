@@ -18,9 +18,10 @@ import net.kyori.adventure.text.format.TextDecoration;
 public enum Rank {
 	
 	// Donor Ranks
-	PLEBEIAN(1, 0xf19fd1, 50, 873535964423794709L,
-			"bean.cmd.workbench"),
-	PATRICIAN(2, 0xd64dd6, 100, 873916287682756668L,
+	PLEBEIAN(1, 0xf19fd1, 20, 873535964423794709L,
+			"bean.cmd.workbench",
+			Permission.QUICK_SHULKER_BOX),
+	PATRICIAN(2, 0xd64dd6, 50, 873916287682756668L,
 			"bean.cmd.anvil",
 			Permission.NICKNAME_APPLY,
 			Permission.DELIVERY_CLAIMALL),

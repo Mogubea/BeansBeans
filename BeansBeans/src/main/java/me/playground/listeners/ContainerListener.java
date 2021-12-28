@@ -19,6 +19,7 @@ import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
@@ -40,12 +41,14 @@ import com.destroystokyo.paper.event.inventory.PrepareResultEvent;
 import me.playground.enchants.BeanEnchantment;
 import me.playground.gui.BeanGui;
 import me.playground.gui.BeanGuiMainMenu;
+import me.playground.gui.BeanGuiShulker;
 import me.playground.items.BItemDurable;
 import me.playground.items.BeanItem;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.skills.SkillInfo;
 import me.playground.playerprofile.skills.SkillType;
+import me.playground.ranks.Permission;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 
@@ -365,26 +368,36 @@ public class ContainerListener extends EventListener {
 			return;
 		}
 		
-		if (e.getSlotType() != SlotType.CONTAINER && e.getSlotType() != SlotType.QUICKBAR)
-			return;
+		if (e.getSlotType() != SlotType.CONTAINER && e.getSlotType() != SlotType.QUICKBAR) return;
 		
 		final ItemStack stack = e.getCurrentItem();
-		final boolean menuItem = stack != null && (stack.equals(BeanGui.menuItem));
-		
-		if (menuItem)
-			e.setCancelled(true);
-		
 		final Player p = (Player) e.getView().getPlayer();
 		final PlayerProfile pp = PlayerProfile.from(p);
+		final BeanGui bui = pp.getBeanGui();
 		
-		BeanGui bui = pp.getBeanGui();
-		
-		if (menuItem) {
-			if (bui == null || !(bui instanceof BeanGuiMainMenu)) {
-				if (bui == null) // TODO: fix inventory desync when opening the main menu through star
-					p.closeInventory();
-				new BeanGuiMainMenu(p).openInventory();
-				return;
+		if (stack != null) {
+			// If supporter - Shulker Box open shortcut in Inventory
+			if (e.isRightClick() && (e.getCursor() == null || e.getCursor().getType() == Material.AIR)) {
+				if (e.getClickedInventory().getType() == InventoryType.PLAYER) {
+					if (stack.getType().name().endsWith("SHULKER_BOX")) {
+						if (p.hasPermission(Permission.QUICK_SHULKER_BOX)) {
+							if (bui == null || !(bui instanceof BeanGuiShulker)) {
+								e.setCancelled(true); // Schedule the task so client side doesn't end up with a ghost item.
+								Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> { new BeanGuiShulker(p, stack, e.getSlot()).openInventory(); });
+							}
+						}
+						return;
+					}
+				}
+			}
+			
+			// Main Menu Item
+			if (stack.equals(BeanGui.menuItem)) {
+				e.setCancelled(true);
+				if (bui == null || !(bui instanceof BeanGuiMainMenu)) { // Schedule the task so client side doesn't end up with a ghost item.
+					Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> { new BeanGuiMainMenu(p).openInventory(); });
+					return;
+				}
 			}
 		}
 		

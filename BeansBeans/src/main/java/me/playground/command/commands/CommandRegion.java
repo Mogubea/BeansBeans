@@ -271,15 +271,14 @@ public class CommandRegion extends BeanCommand {
 				e.notifySender();
 			}
 		} else if (subcmd.equals("list")) {
-			int page = args.length > 1 ? toIntDef(args[1], 0) : 0;
 			ArrayList<Region> regions = rm.getAllRegions();
-			if (page*10 > regions.size())
-				throw new CommandException(p, "There's only " + (Math.floorDiv(regions.size(), 10)+1) + " pages of regions!");
+			int page = args.length > 1 ? (toIntDef(args[1], 0)-1) : 0;
+			if (page*50 > regions.size()) page = regions.size()/50 + 1;
+			else if (page < 0) page = 0;
 			
-			Component text = Component.text("\u00a77Listing regions [Page: \u00a78"+(page+1)+"\u00a77](\u00a7f"+(page*10+1)+"\u00a77-\u00a7f"+Math.min(regions.size(), 10 + page*10)+"\u00a77/\u00a7f"+regions.size()+"\u00a77):");
-			
-			for (int x = page*10; x < Math.min(regions.size(), 10 + page*10); x++)
-				text = text.append(Component.text("\n\u00a78 - ").append(regions.get(x).toComponent()));
+			Component text = Component.text("\u00a77Listing all Regions [Page: \u00a7f"+(page+1)+"\u00a77](\u00a7f"+(page*50+1)+"\u00a77-\u00a7f"+Math.min(regions.size(), 50 + page*50)+"\u00a77/\u00a7f"+regions.size()+"\u00a77):\n");
+			for (int x = page*50; x < Math.min(regions.size(), 50 + page*50); x++)
+				text = text.append(regions.get(x).toComponent()).append(Component.text("\u00a78, "));
 			
 			p.sendMessage(text);
 		} else if (subcmd.equals("select")) {
