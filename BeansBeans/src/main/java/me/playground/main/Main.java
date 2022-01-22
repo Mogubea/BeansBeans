@@ -26,11 +26,14 @@ import me.playground.listeners.protocol.ProtocolNPCListener;
 import me.playground.loot.LootManager;
 import me.playground.npc.NPCManager;
 import me.playground.playerprofile.PlayerProfile;
+import me.playground.playerprofile.stats.StatType;
 import me.playground.ranks.Rank;
 import me.playground.recipes.RecipeManager;
 import me.playground.regions.Region;
 import me.playground.regions.RegionManager;
 import me.playground.shop.ShopManager;
+import me.playground.threads.StatusResponseThread;
+import me.playground.threads.WhateverChat;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Calendar;
 import me.playground.utils.SignMenuFactory;
@@ -45,6 +48,7 @@ import net.kyori.adventure.title.Title.Times;
 public class Main extends JavaPlugin {
 
 	private static Main instance;
+	public static long STARTUP_TIME;
 	private final Random random = new Random();
 	
 	private TeamManager teamManager;
@@ -59,12 +63,15 @@ public class Main extends JavaPlugin {
 	private RecipeManager recipeManager;
 	private LootManager lootManager;
 	private SignMenuFactory signMenuFactory;
+	
 	private DiscordBot discordBot;
 	private VoteManager voteManager;
+	private WhateverChat webChatServer;
 	
 	private DatasourceCore datasource;
 
 	public void onEnable() {
+		STARTUP_TIME = System.currentTimeMillis();
 		instance = this;
 		registerEnchantments();
 		
@@ -96,9 +103,6 @@ public class Main extends JavaPlugin {
 		
 		Datasource.loadAllCivilizations();
 		
-		// Load rando magic	
-		registerProtocol();
-		
 		getLogger().fine("Loaded " + BeanItem.values().length + " Custom Items");
 
 		// UUID testId = UUID.randomUUID(); // creates a test profile, IT WORKS!!!!!
@@ -108,7 +112,18 @@ public class Main extends JavaPlugin {
 		recipeManager = new RecipeManager(this);
 		discordBot = new DiscordBot(this);
 		
-		voteManager = new VoteManager(this);
+		//voteManager = new VoteManager(this);
+		
+		webChatServer = new WhateverChat(this, 8193);
+		
+		// TODO:
+		try {
+			getLog4JLogger().warn("Attempting to load status thread");
+			new StatusResponseThread(this, getServer().getIp(), 8191);
+		} catch (Exception e) {
+			getLog4JLogger().error("Failed to load status thread");
+			e.printStackTrace();
+		}
 		
 		startMainServerLoop();
 	}
@@ -129,6 +144,7 @@ public class Main extends JavaPlugin {
 		Datasource.saveAll();
 		unregisterEnchantments();
 		discordBot.shutdown();
+		webChatServer.shutdown();
 	}
 	
 	public DatasourceCore getDatasourceCore() {
@@ -188,7 +204,7 @@ public class Main extends JavaPlugin {
 	public PermissionManager permissionManager() {
 		return permissionManager;
 	}
-	public DiscordBot discord() {
+	public DiscordBot getDiscord() {
 		return discordBot;
 	}
 	public RecipeManager recipeManager() {
@@ -204,21 +220,8 @@ public class Main extends JavaPlugin {
 		return voteManager;
 	}
 
-	private void registerProtocol() {
-		//ProtocolLibrary.getProtocolManager().addPacketListener(new EquipmentHider(this));
-		/*ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Client.USE_ENTITY) {
-            /*@Override
-            public void onPacketReceiving(PacketEvent event) {
-                if (event.getPacketType() == PacketType.Play.Client.USE_ENTITY) {
-                	//event.getPlayer().sendMessage(event.getPacket().getEntityTypeModifier().getValues().get(0) + "");
-                	// TODO:
-                }
-            }
-            @Override
-            public void onPacketSending(PacketEvent event) {
-            	
-            }
-        });*/
+	public WhateverChat getWebChatServer() {
+		return webChatServer;
 	}
 	
 	private void registerEnchantments() {
@@ -263,7 +266,7 @@ public class Main extends JavaPlugin {
 				final long mili = System.currentTimeMillis();
 				//ticksDone += 20;
 				
-				if (mili-lastPreviewPoke > 1500) {
+				if (mili-lastPreviewPoke > 1000) {
 					lastPreviewPoke = mili;
 					
 					// Rank preview notification.
@@ -277,7 +280,7 @@ public class Main extends JavaPlugin {
 					
 					Bukkit.getOnlinePlayers().forEach((p) -> {
 						final PlayerProfile pp = PlayerProfile.from(p);
-						
+						pp.getStats().addToStat(StatType.GENERIC, "playtime", 1);
 						// Notify user of region
 						final Region region = regionManager().getRegion(p.getLocation());
 						final Region oldRegion = pp.getCurrentRegion();
@@ -315,7 +318,7 @@ public class Main extends JavaPlugin {
 				}
 				
 				if (mili-lastDiscordPoke > 1000 * 60) {
-					discord().updateServerStatus(true);
+					getDiscord().updateServerStatus(true);
 					lastDiscordPoke = mili;
 				}
 				

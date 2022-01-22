@@ -370,7 +370,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	}
 	
 	protected DiscordBot getDiscord() {
-		return getPlugin().discord();
+		return getPlugin().getDiscord();
 	}
 	
 	protected final DecimalFormat df = new DecimalFormat("#,###");

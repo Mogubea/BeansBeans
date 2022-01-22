@@ -10,6 +10,8 @@ import org.bukkit.OfflinePlayer;
 import me.playground.data.Datasource;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 
 /**
  * Stores all the names and ids without having to load profiles.
@@ -21,19 +23,22 @@ public class ProfileStore {
 	
 	static {
 		Datasource.loadProfileCache();
-		players.put(-1, new ProfileStore(-1, UUID.randomUUID(), "Unknown", Component.text("\u00a78Unknown")));
-		players.put(0, new ProfileStore(0, UUID.randomUUID(), "Server", Component.text("\u00a7dServer")));
+		players.put(-1, new ProfileStore(-1, UUID.randomUUID(), "Unknown", "Unknown", NamedTextColor.DARK_GRAY.value()));
+		players.put(0, new ProfileStore(0, UUID.randomUUID(), "Server", "Server", NamedTextColor.LIGHT_PURPLE.value()));
 	}
 	
 	private String realName;
 	private String nickname;
+	private TextColor nameColour;
 	private TextComponent colouredName;
 	private UUID uuid;
 	private int dbid;
 	
-	public ProfileStore(int id, UUID uuid, String realName, Component name) {
+	public ProfileStore(int id, UUID uuid, String realName, String displayName, int nameColour) {
 		this.realName = realName;
-		this.nickname = ((TextComponent)name).content();
+		this.nameColour = TextColor.color(nameColour);
+		Component name = Component.text(displayName, this.nameColour);
+		this.nickname = displayName;
 		this.colouredName = (TextComponent) name;
 		this.uuid = uuid;
 		this.dbid = id;
@@ -63,6 +68,10 @@ public class ProfileStore {
 	public void setColouredName(Component colouredName) {
 		this.colouredName = (TextComponent) colouredName;
 	}
+	
+	public TextColor getNameColour() {
+		return nameColour;
+	}
 
 	public UUID getUniqueId() {
 		return uuid;
@@ -80,8 +89,8 @@ public class ProfileStore {
 		return players.values();
 	}
 	
-	public static void updateStore(int id, UUID uuid, String realName, Component name) {
-		players.put(id, new ProfileStore(id, uuid, realName, name));
+	public static void updateStore(int id, UUID uuid, String realName, String displayName, int nameColour) {
+		players.put(id, new ProfileStore(id, uuid, realName, displayName, nameColour));
 	}
 	
 	public static ProfileStore from(int id) {

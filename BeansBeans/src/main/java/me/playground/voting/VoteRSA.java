@@ -22,7 +22,7 @@ import javax.crypto.Cipher;
  * @author Blake Beaupain
  */
 public class VoteRSA {
-
+	
 	/**
 	 * Encrypts a block of data.
 	 * 
@@ -137,6 +137,16 @@ public class VoteRSA {
 				encodedPrivateKey);
 		PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
 		return new KeyPair(publicKey, privateKey);
+	}
+	
+	public String readString(byte[] data, int offset) {
+		StringBuilder builder = new StringBuilder();
+		for (int i = offset; i < data.length; i++) {
+			if (data[i] == '\n')
+				break; // Delimiter reached.
+			builder.append((char) data[i]);
+		}
+		return builder.toString();
 	}
 
 }

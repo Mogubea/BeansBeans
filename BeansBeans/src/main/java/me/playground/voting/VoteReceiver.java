@@ -32,12 +32,8 @@ public class VoteReceiver extends Thread {
 	}
 	
 	private void initialize() throws Exception {
-		try {
-			server = new ServerSocket();
-			server.bind(new InetSocketAddress(host, port));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		server = new ServerSocket();
+		server.bind(new InetSocketAddress(host, port));
 	}
 	
 	public void shutdown() {
@@ -111,10 +107,13 @@ public class VoteReceiver extends Thread {
 				in.close();
 				socket.close();
 			} catch (SocketException e) {
+				enabled = false;
 				e.printStackTrace(); // Protocol error
 			} catch (BadPaddingException e) {
+				enabled = false;
 				e.printStackTrace(); // Likely an RSA issue
 			} catch (Exception e) {
+				enabled = false;
 				e.printStackTrace(); // General error
 			}
 		}

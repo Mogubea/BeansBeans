@@ -89,6 +89,7 @@ public class DiscordBot extends ListenerAdapter {
 	}
 	
 	public void sendWebhookMessage(int playerId, String message) {
+		if (!this.isOnline()) return;
 		try {
 			if (lastId != playerId) {
 				final String name = ((TextComponent)ProfileStore.from(playerId, false).getColouredName()).content();

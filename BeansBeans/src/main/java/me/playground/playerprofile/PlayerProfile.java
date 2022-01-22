@@ -174,6 +174,7 @@ public class PlayerProfile {
 	private Job							job;
 	
 	// Not Saved
+	private final long					loadTime; // Time when the profile was loaded.
 	private int							warpLimit;
 	/**
 	 * This should always be exactly the same as the online player's permission set.
@@ -192,6 +193,7 @@ public class PlayerProfile {
 	public UUID profileOverride;
 	
 	public PlayerProfile(int id, UUID uuid, ArrayList<Rank> ranks, Set<String> perms, int nameColour, String name, String nickname, long coins, long settings, short warpCount) {
+		this.loadTime = System.currentTimeMillis();
 		this.playerId = id;
 		this.profileOverride = uuid; // XXX: TEMP
 		this.playerUUID = uuid;
@@ -369,7 +371,7 @@ public class PlayerProfile {
 			if (colourIsRank)
 				this.nameColour = getHighestRank().getRankHex();
 			
-			Main.getInstance().discord().updateRoles(this);
+			Main.getInstance().getDiscord().updateRoles(this);
 		}
 		return this;
 	}
@@ -388,7 +390,7 @@ public class PlayerProfile {
 		
 		if (update) {
 			updateRanksPerms();
-			Main.getInstance().discord().updateRoles(this);
+			Main.getInstance().getDiscord().updateRoles(this);
 		}
 		
 		return this;
@@ -476,7 +478,7 @@ public class PlayerProfile {
 	
 	public String setNickname(String nickname) {
 		this.nickname = nickname;
-		Main.getInstance().discord().updateNickname(this);
+		Main.getInstance().getDiscord().updateNickname(this);
 		updateShownNames();
 		return nickname;
 	}
@@ -598,7 +600,7 @@ public class PlayerProfile {
 				getPlayer().playerListName(getColouredName()); // player list
 				Main.getTeamManager().updatePlayerTeam(this);
 			}
-			ProfileStore.updateStore(playerId, playerUUID, name, getColouredName());
+			ProfileStore.updateStore(playerId, playerUUID, name, getDisplayName(), nameColour);
 		updateComponentName();
 	}
 	
@@ -925,6 +927,13 @@ public class PlayerProfile {
 	
 	public long getLastInboxUpdate() {
 		return lastInboxUpdate;
+	}
+	
+	/**
+	 * @return time in millis when this profile instance was loaded.
+	 */
+	public long getLoadTime() {
+		return loadTime;
 	}
 	
 }

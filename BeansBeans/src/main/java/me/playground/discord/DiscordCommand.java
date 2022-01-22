@@ -79,7 +79,7 @@ public abstract class DiscordCommand {
 	}
 	
 	public DiscordBot getDiscord() {
-		return getPlugin().discord();
+		return getPlugin().getDiscord();
 	}
 	
 	public JDA getBot() {

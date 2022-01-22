@@ -154,7 +154,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 		final ItemStack[] contents = presetInv.clone();
 		final boolean isOwner = getRegion().getMember(p).higherThan(MemberLevel.OFFICER);
 		
-		ItemStack iName = newItem(new ItemStack(Material.WARPED_SIGN), getRegion().getColouredName());
+		ItemStack iName = newItem(new ItemStack(Material.WARPED_SIGN), Component.text("Name", getRegion().getColour()));
 		if (isOwner && !getRegion().isWorldRegion())
 			iName.lore(Arrays.asList(Component.text("\u00a7f" + getRegion().getName()), Component.empty(), Component.text("\u00a77\u00a7oClick to change" + (p.hasPermission("bean.region.modifyothers") ? "" : " for \u00a76\u00a7o500 Coins"))));
 		else

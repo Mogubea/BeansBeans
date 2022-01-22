@@ -53,7 +53,7 @@ public class DiscordCommandLink extends DiscordCommand {
 
 						@Override
 						public void run() {
-							new BeanGuiConfirmDiscord(plugin.discord(), p, channel, member).openInventory();
+							new BeanGuiConfirmDiscord(plugin.getDiscord(), p, channel, member).openInventory();
 						}
 						
 					}, 5L);

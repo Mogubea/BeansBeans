@@ -1,6 +1,7 @@
 package me.playground.data;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 import org.bukkit.World;
 
@@ -17,7 +18,7 @@ public abstract class PrivateDatasource {
 		this.dc.registerDatasource(this);
 	}
 	
-	protected Connection getNewConnection() {
+	protected Connection getNewConnection() throws SQLException {
 		return dc.getNewConnection();
 	}
 	

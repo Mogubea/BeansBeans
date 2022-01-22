@@ -78,6 +78,7 @@ import me.playground.playerprofile.settings.PlayerSetting;
 import me.playground.playerprofile.skills.BxpValues;
 import me.playground.playerprofile.skills.SkillData;
 import me.playground.playerprofile.skills.SkillType;
+import me.playground.playerprofile.stats.StatType;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
 import me.playground.regions.flags.Flags;
@@ -107,10 +108,12 @@ public class PlayerListener extends EventListener {
 		Player p = e.getPlayer();
 		PlayerProfile pp = PlayerProfile.from(p);
 		
-		if (PlayerProfile.from(p).onCdElseAdd("chat", 400)) {
+		if (pp.onCdElseAdd("chat", 400)) {
 			p.sendActionBar(Component.text("\u00a7cYou are sending messages too fast!"));
 			return;
 		}
+		
+		pp.getStats().addToStat(StatType.GENERIC, "chatMessages", 1);
 		
 		TextComponent chat = pp.isRank(Rank.MODERATOR) ? Component.empty().append(Component.text("\u24E2", BeanColor.STAFF)
 				.hoverEvent(HoverEvent.showText(Component.text("Staff Member", BeanColor.STAFF))))
@@ -157,10 +160,10 @@ public class PlayerListener extends EventListener {
 				pl.sendMessage(chat.colorIfAbsent(TextColor.color(pinged.contains(pl.getUniqueId()) ? 0xffffff : 0xe8e8e8)));
 		}
 		
-		getPlugin().getLogger().info("[CHAT] " + pp.getDisplayName() + ": " + content);
-		Datasource.logCelestia(CelestiaAction.CHAT, e.getPlayer(), e.getPlayer().getLocation(), content);
-		
-		getPlugin().discord().sendWebhookMessage(pp.getId(), content);
+		Datasource.logCelestia(CelestiaAction.CHAT, e.getPlayer(), e.getPlayer().getLocation(), content); // Logs
+		getPlugin().getLogger().info("[CHAT] " + pp.getDisplayName() + ": " + content); // Console
+		getPlugin().getDiscord().sendWebhookMessage(pp.getId(), content); // Discord Chat
+		getPlugin().getWebChatServer().sendWebMessage(pp.getId(), content); // Web Chat
 	}
 	
 	private Component toCommand(String cmd) {

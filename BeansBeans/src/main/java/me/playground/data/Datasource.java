@@ -62,11 +62,10 @@ import me.playground.voting.VoteService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.TextColor;
 import net.md_5.bungee.api.ChatColor;
 
 public class Datasource {
-
+	
 	private static Connection connection;
 	private static String host, database, username, password;
 	private static int port;
@@ -85,20 +84,13 @@ public class Datasource {
 		
 		try {
 			synchronized (pl) {
-				if (connection != null && !connection.isClosed()) {
-					return;
-				}
+				if (connection != null && !connection.isClosed()) return;
 				Class.forName("com.mysql.cj.jdbc.Driver");
 				connection = getNewConnection();
-				Main.getInstance().getLogger().info("Connection to MySQL Database was successful!");
 			}
-		} catch (SQLException e) {
-			Main.getInstance().getLogger().severe("There was an issue connecting to the MySQL Database.");
+		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-
+		} 
 	}
 	
 	public static Connection getConnection() {
@@ -112,6 +104,7 @@ public class Datasource {
 			connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false", username,
 					password);
 		} catch (SQLException e) {
+			Main.getInstance().getLog4JLogger().error("Could not establish a new MySQL Connection instance.");
 			e.printStackTrace();
 		}
 		return connection;
@@ -785,7 +778,7 @@ public class Datasource {
 				final String nick = r.getString("nickname");
 				final String name = (nick != null ? nick : r.getString("name"));
 				
-				ProfileStore.updateStore(r.getInt("id"), UUID.fromString(r.getString("uuid")), r.getString("name"), Component.text(name).color(TextColor.color(r.getInt("namecolour"))));
+				ProfileStore.updateStore(r.getInt("id"), UUID.fromString(r.getString("uuid")), r.getString("name"), name, r.getInt("namecolour"));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
