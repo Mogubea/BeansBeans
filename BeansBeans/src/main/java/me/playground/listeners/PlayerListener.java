@@ -577,7 +577,7 @@ public class PlayerListener extends EventListener {
 		Player p = e.getPlayer();
 		GameMode fromGm = p.getGameMode();
 		GameMode toGm = e.getNewGameMode();
-		if (toGm != p.getGameMode()) {
+		if (toGm != fromGm) {
 			if (hasGmPerm(p, toGm)) {
 				if (!p.hasPermission("bean.gm.spectator")) {
 					if (toGm == GameMode.SPECTATOR)

@@ -76,8 +76,10 @@ public class CommandWarp extends BeanCommand {
 				throw new CommandException(sender, "\u00a7cCannot create a warp with the name '"+warpname+"'!");
 			
 			final Region r = getPlugin().regionManager().getRegion(p.getLocation());
-			if (!isSafe(p.getLocation()) || r.getEffectiveFlag(Flags.WARP_CREATION) && r.getMember(p).lowerThan(MemberLevel.MEMBER))
+			if (!isSafe(p.getLocation()))
 				throw new CommandException(sender, "\u00a7cYou can't create a warp here!");
+			if (!r.getEffectiveFlag(Flags.WARP_CREATION) && r.getMember(p).lowerThan(MemberLevel.MEMBER))
+				throw new CommandException(sender, "\u00a7cYou don't have permission to create warps here!");
 			
 			Warp newWarp = null;
 			try {
