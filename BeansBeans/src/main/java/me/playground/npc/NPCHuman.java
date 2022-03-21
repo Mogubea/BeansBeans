@@ -6,8 +6,8 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_18_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_18_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -70,7 +70,7 @@ public class NPCHuman extends NPC<EntityPlayer> {
 	}
 	
 	public GameProfile getGameProfile() {
-		return entity.fp();
+		return entity.fq();
 	}
 	
 	public UUID getUniqueId() {

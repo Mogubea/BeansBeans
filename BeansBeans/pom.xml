@@ -13,13 +13,13 @@
   	<dependency>
   		<groupId>io.papermc.paper</groupId>
   		<artifactId>paper-api</artifactId>
-  		<version>1.18.1-R0.1-SNAPSHOT</version>
+  		<version>1.18.2-R0.1-SNAPSHOT</version>
    	    <scope>provided</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.spigotmc</groupId>
   		<artifactId>spigot</artifactId>
-  		<version>1.18.1-R0.1-SNAPSHOT</version>
+  		<version>1.18.2-R0.1-SNAPSHOT</version>
    	    <scope>provided</scope>
   	</dependency>
   	<dependency>
@@ -104,7 +104,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                        	<outputFile>../../../Desktop/Paper Spigot/plugins/${project.artifactId}-${project.version}.jar</outputFile>
+                        	<outputFile>../../../Desktop/Minecraft Server/Bukkit Server/plugins/${project.artifactId}-${project.version}.jar</outputFile>
                     	</configuration>
                     </execution>
                 </executions>

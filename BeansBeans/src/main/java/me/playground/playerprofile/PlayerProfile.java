@@ -18,7 +18,7 @@ import org.bukkit.Sound;
 import org.bukkit.Statistic;
 import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.craftbukkit.v1_18_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;

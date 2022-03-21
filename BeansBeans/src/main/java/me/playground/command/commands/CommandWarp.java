@@ -185,7 +185,7 @@ public class CommandWarp extends BeanCommand {
 				throw new CommandException(sender, "\u00a7cYou need another \u00a76" + (creationCost-profile.getBalance()) + " Coins \u00a7cto do this!");
 			
 			final Region r = getPlugin().regionManager().getRegion(p.getLocation());
-			if (!isSafe(p.getLocation()) || r.getEffectiveFlag(Flags.WARP_CREATION) && r.getMember(p).lowerThan(MemberLevel.MEMBER))
+			if (!isSafe(p.getLocation()) || (!r.getEffectiveFlag(Flags.WARP_CREATION) && r.getMember(p).lowerThan(MemberLevel.MEMBER)))
 				throw new CommandException(sender, "\u00a7cYou can't redesignate your warp location to here.");
 			
 			warp.setLocation(p.getLocation());
