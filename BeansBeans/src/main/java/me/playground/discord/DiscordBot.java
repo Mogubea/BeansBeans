@@ -425,7 +425,10 @@ public class DiscordBot extends ListenerAdapter {
 			});
 			
 			g.modifyMemberRoles(member, addRoles, remRoles).queue();
-		} catch (ErrorResponseException e) {}
+		} catch (ErrorResponseException e) {
+		} catch (HierarchyException e) {
+			plugin.getSLF4JLogger().warn("Bea cannot update " + pp.getDisplayName() + "'s roles on Discord due to Hierarchy.");
+		}
 	}
 	
 	public <K, V> K getKey(Map<K, V> map, V value) {
