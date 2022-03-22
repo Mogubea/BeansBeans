@@ -118,10 +118,10 @@ public class Main extends JavaPlugin {
 		
 		// TODO:
 		try {
-			getLog4JLogger().warn("Attempting to load status thread");
+			getSLF4JLogger().warn("Attempting to load status thread");
 			new StatusResponseThread(this, getServer().getIp(), 8191);
 		} catch (Exception e) {
-			getLog4JLogger().error("Failed to load status thread");
+			getSLF4JLogger().error("Failed to load status thread");
 			e.printStackTrace();
 		}
 		

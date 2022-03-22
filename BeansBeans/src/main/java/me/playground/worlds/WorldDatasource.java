@@ -60,7 +60,7 @@ public class WorldDatasource extends PrivateDatasource {
 			for(World w : toRemake)
 				remakeWorldEntry(w);
 		}
-		getPlugin().getLog4JLogger().info("Loaded " + manager.getWorlds().size() + " Worlds");
+		getPlugin().getSLF4JLogger().info("Loaded " + manager.getWorlds().size() + " Worlds");
 	}
 
 	@Override

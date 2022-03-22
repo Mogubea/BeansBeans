@@ -45,7 +45,7 @@ public class StatusResponseThread extends Thread {
 		
 		try {
 			server.close();
-			plugin.getLog4JLogger().error("No longer listening for Status Requests.");
+			plugin.getSLF4JLogger().error("No longer listening for Status Requests.");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

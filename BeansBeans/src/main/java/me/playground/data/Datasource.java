@@ -104,7 +104,7 @@ public class Datasource {
 			connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false", username,
 					password);
 		} catch (SQLException e) {
-			Main.getInstance().getLog4JLogger().error("Could not establish a new MySQL Connection instance.");
+			Main.getInstance().getSLF4JLogger().error("Could not establish a new MySQL Connection instance.");
 			e.printStackTrace();
 		}
 		return connection;

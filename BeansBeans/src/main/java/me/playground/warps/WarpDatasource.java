@@ -61,7 +61,7 @@ public class WarpDatasource extends DynmapDatasource<Warp> {
 				try {
 					l = new Location(getWorld(r.getShort("world")), r.getFloat("x"), r.getFloat("y"), r.getFloat("z"), r.getFloat("yaw"), r.getFloat("p"));
 				} catch (Exception e) {
-					getPlugin().getLog4JLogger().warn("There was a problem loading the warp: " + name);
+					getPlugin().getSLF4JLogger().warn("There was a problem loading the warp: " + name);
 					e.printStackTrace();
 				}
 				final Warp w = new Warp(manager,
@@ -82,7 +82,7 @@ public class WarpDatasource extends DynmapDatasource<Warp> {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		getPlugin().getLog4JLogger().info("Loaded " + manager.countWarps() + " Warps in " + (System.currentTimeMillis()-then) + "ms");
+		getPlugin().getSLF4JLogger().info("Loaded " + manager.countWarps() + " Warps in " + (System.currentTimeMillis()-then) + "ms");
 	}
 
 	/**

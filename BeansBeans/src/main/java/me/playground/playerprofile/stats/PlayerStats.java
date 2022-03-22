@@ -41,6 +41,7 @@ public class PlayerStats {
 	 * Adds the desired amount to the stat.
 	 * @return the new value
 	 */
+	@Nonnull 
 	public int addToStat(@Nonnull StatType type, @Nonnull String name, int add) {
 		HashMap<String, DirtyInteger> ack = stats.get(type);
 		
@@ -51,6 +52,7 @@ public class PlayerStats {
 		return di.getValue();
 	}
 	
+	@Nonnull
 	public HashMap<StatType, HashMap<String, DirtyInteger>> getMap() {
 		return stats;
 	}

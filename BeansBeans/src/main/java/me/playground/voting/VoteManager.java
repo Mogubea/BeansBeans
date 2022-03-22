@@ -45,13 +45,13 @@ public class VoteManager implements IPluginRef {
 		
 		if (!voteConfig.exists()) {
 			try {
-				getPlugin().getLog4JLogger().warn("Couldn't locate 'voteConfiguration.yml', creating a new one...");
+				getPlugin().getSLF4JLogger().warn("Couldn't locate 'voteConfiguration.yml', creating a new one...");
 				voteConfig.createNewFile();
 				cfg.set("host", hostAddr);
 				cfg.set("port", 8192);
 				cfg.save(voteConfig);
 			} catch (Exception e) {
-				getPlugin().getLog4JLogger().error("Failed to create a new voteConfiguration.yml.");
+				getPlugin().getSLF4JLogger().error("Failed to create a new voteConfiguration.yml.");
 				e.printStackTrace();
 			}
 		}
@@ -65,7 +65,7 @@ public class VoteManager implements IPluginRef {
 				keyPair = rsaManager.load(voteRSA);
 			}
 		} catch (Exception e) {
-			getPlugin().getLog4JLogger().error("Failure reading Configuration File or RSA Keys.");
+			getPlugin().getSLF4JLogger().error("Failure reading Configuration File or RSA Keys.");
 			e.printStackTrace();
 			return;
 		}
@@ -84,7 +84,7 @@ public class VoteManager implements IPluginRef {
 	public void shutdown() {
 		if (voteReceiver == null) return;
 		voteReceiver.shutdown();
-		getPlugin().getLog4JLogger().info("No longer listening for Votes!");
+		getPlugin().getSLF4JLogger().info("No longer listening for Votes!");
 	}
 	
 	public KeyPair getKeyPair() {

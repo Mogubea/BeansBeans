@@ -34,7 +34,7 @@ public class WhateverChat extends WebSocketServer {
 	}
 	
 	public void init() {
-		getPlugin().getLog4JLogger().info("[WEBCHAT] Attempting to initialise Web Chat.");
+		getPlugin().getSLF4JLogger().info("[WEBCHAT] Attempting to initialise Web Chat.");
 		//File voteRSA = new File(plugin.getDataFolder() + "/rsa/webChat");
 		try {
 			/*if (!voteRSA.exists()) {
@@ -49,7 +49,7 @@ public class WhateverChat extends WebSocketServer {
 			setConnectionLostTimeout(300);
 			start();
 		} catch (Exception e) {
-			getPlugin().getLog4JLogger().warn("[WEBCHAT] Failure initialising Web Chat.");
+			getPlugin().getSLF4JLogger().warn("[WEBCHAT] Failure initialising Web Chat.");
 			e.printStackTrace();
 			this.enabled = false;
 			return;
@@ -59,24 +59,24 @@ public class WhateverChat extends WebSocketServer {
 	@Override
 	public void onOpen(WebSocket conn, ClientHandshake handshake) {
 //	    openCounter++;
-	    plugin.getLog4JLogger().info("[WEBCHAT] Web Chat Client connected ("+conn.getRemoteSocketAddress()+")");
+	    plugin.getSLF4JLogger().info("[WEBCHAT] Web Chat Client connected ("+conn.getRemoteSocketAddress()+")");
 	}
 
 	@Override
 	public void onClose(WebSocket conn, int code, String reason, boolean remote) {
 //	    closeCounter++;
-	    plugin.getLog4JLogger().info("[WEBCHAT] Web Chat Client disconnected ("+conn.getRemoteSocketAddress()+").");
+	    plugin.getSLF4JLogger().info("[WEBCHAT] Web Chat Client disconnected ("+conn.getRemoteSocketAddress()+").");
 	}
 
 	@Override
 	public void onError(WebSocket conn, Exception ex) {
-		plugin.getLog4JLogger().error("[WEBCHAT] Web Chat Exception;");
+		plugin.getSLF4JLogger().error("[WEBCHAT] Web Chat Exception;");
 		ex.printStackTrace();
 	}
 
 	@Override
 	public void onStart() {
-		plugin.getLog4JLogger().info("[WEBCHAT] Web Chat Server has started.");
+		plugin.getSLF4JLogger().info("[WEBCHAT] Web Chat Server has started.");
 	}
 
 	@Override
@@ -95,7 +95,7 @@ public class WhateverChat extends WebSocketServer {
 			Bukkit.getOnlinePlayers().forEach(player -> {
 				player.sendMessage(Component.text(conn.getRemoteSocketAddress() + " [Web]: " + msg));
 			});
-			plugin.getLog4JLogger().info("[WEBCHAT] " + conn.getRemoteSocketAddress() + ": " + msg);
+			plugin.getSLF4JLogger().info("[WEBCHAT] " + conn.getRemoteSocketAddress() + ": " + msg);
 		} catch (Exception e) { // Due to RSA, not a String blob etc...
 			//conn.close("An unknown error has occured.");
 			e.printStackTrace();

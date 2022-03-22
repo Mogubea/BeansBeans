@@ -40,6 +40,7 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
@@ -182,7 +183,7 @@ public class DiscordBot extends ListenerAdapter {
 			bot.awaitReady();
 		} catch (Exception e) {
 			e.printStackTrace();
-			getPlugin().getLog4JLogger().error("There was a problem connecting to Discord. Continuing on without the Discord Bot...");
+			getPlugin().getSLF4JLogger().error("There was a problem connecting to Discord. Continuing on without the Discord Bot...");
 		}
 		return bot;
 	}
@@ -390,7 +391,10 @@ public class DiscordBot extends ListenerAdapter {
 		try {
 			Member member = g.retrieveMemberById(linkedAccounts.getOrDefault(pp.getId(), 0L)).complete();
 			g.modifyNickname(member, pp.getDisplayName()).queue();
-		} catch (ErrorResponseException e) {}
+		} catch (ErrorResponseException e) {
+		} catch (HierarchyException e) {
+			plugin.getSLF4JLogger().warn("Bea cannot update " + pp.getDisplayName() + "'s name on Discord due to Hierarchy.");
+		}
 	}
 	
 	/**

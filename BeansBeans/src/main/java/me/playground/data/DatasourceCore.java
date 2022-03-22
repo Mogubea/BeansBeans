@@ -40,7 +40,7 @@ public class DatasourceCore implements IPluginRef {
 				
 				Class.forName("com.mysql.cj.jdbc.Driver");
 				connection = getNewConnection();
-				pl.getLog4JLogger().info("Successfully established an MySQL Connection!");
+				pl.getSLF4JLogger().info("Successfully established an MySQL Connection!");
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -59,7 +59,7 @@ public class DatasourceCore implements IPluginRef {
 				connection.close();
 			connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false", username, password);
 		} catch (SQLException e) {
-			getPlugin().getLog4JLogger().error("Could not establish a new MySQL Connection instance.");
+			getPlugin().getSLF4JLogger().error("Could not establish a new MySQL Connection instance.");
 			e.printStackTrace();
 		}
 		return connection;

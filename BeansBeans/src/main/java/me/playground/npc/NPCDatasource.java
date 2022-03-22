@@ -56,7 +56,7 @@ public class NPCDatasource extends PrivateDatasource {
 			e.printStackTrace();
 		}
 		
-		getPlugin().getLog4JLogger().info("Loaded " + manager.getDatabaseNPCs().size() + " NPCs in " + (System.currentTimeMillis()-then) + "ms");
+		getPlugin().getSLF4JLogger().info("Loaded " + manager.getDatabaseNPCs().size() + " NPCs in " + (System.currentTimeMillis()-then) + "ms");
 	}
 
 	/**

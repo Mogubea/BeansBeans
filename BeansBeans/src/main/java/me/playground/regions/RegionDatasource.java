@@ -68,7 +68,7 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 				e.printStackTrace();
 			}
 		}
-		getPlugin().getLog4JLogger().info("Loaded " + count + " Regions in " + (System.currentTimeMillis()-then) + "ms");
+		getPlugin().getSLF4JLogger().info("Loaded " + count + " Regions in " + (System.currentTimeMillis()-then) + "ms");
 	}
 
 	@Override
