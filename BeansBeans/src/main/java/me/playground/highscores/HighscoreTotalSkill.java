@@ -8,7 +8,8 @@ import me.playground.data.Datasource;
 public class HighscoreTotalSkill extends Highscore {
 	
 	public HighscoreTotalSkill() {
-		super("total_xp");
+		super();
+		this.suffix = " XP";
 	}
 
 	@Override

@@ -8,12 +8,12 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Statistic;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import me.playground.command.CommandManager;
+import me.playground.command.commands.CommandCurse;
 import me.playground.currency.Currency;
 import me.playground.data.Datasource;
 import me.playground.data.DatasourceCore;
@@ -135,7 +135,7 @@ public class Main extends JavaPlugin {
 			permissionManager.stopPreviewingRank(Bukkit.getPlayer(uuid));
 		
 		for (Player p : Bukkit.getOnlinePlayers()) { // wtf is this title method lol
-			p.showTitle(Title.title(Component.text("\u00a7cServer is Restarting..."), Component.empty(), Times.of(Duration.ofSeconds(1), Duration.ofSeconds(4), Duration.ofSeconds(1))));
+			p.showTitle(Title.title(Component.text("\u00a7cServer is Restarting..."), Component.empty(), Times.times(Duration.ofSeconds(1), Duration.ofSeconds(4), Duration.ofSeconds(1))));
 			p.closeInventory();
 			PlayerProfile.from(p).getSkills().forceHideBar();
 			permissionManager.clearPlayerPermissions(p);
@@ -256,9 +256,9 @@ public class Main extends JavaPlugin {
 	}
 	
 	private long lastProfilePoke;
+	private long lastPlaytimePoke;
 	private long lastHighscoreUpdate;
 	private long lastDiscordPoke;
-	private long lastPreviewPoke;
 	
 	private void startMainServerLoop() {
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
@@ -266,8 +266,10 @@ public class Main extends JavaPlugin {
 				final long mili = System.currentTimeMillis();
 				//ticksDone += 20;
 				
-				if (mili-lastPreviewPoke > 1000) {
-					lastPreviewPoke = mili;
+				
+				// Every Second
+				if (mili-lastPlaytimePoke >= 1000) {
+					lastPlaytimePoke = mili;
 					
 					// Rank preview notification.
 					permissionManager().getRankPreviewers().forEach((uuid) -> {
@@ -280,7 +282,9 @@ public class Main extends JavaPlugin {
 					
 					Bukkit.getOnlinePlayers().forEach((p) -> {
 						final PlayerProfile pp = PlayerProfile.from(p);
-						pp.getStats().addToStat(StatType.GENERIC, "playtime", 1);
+						pp.checkAFK();
+						
+						pp.getStats().addToStat(StatType.GENERIC, pp.isAFK() ? "afktime" : "playtime", 1);
 						// Notify user of region
 						final Region region = regionManager().getRegion(p.getLocation());
 						final Region oldRegion = pp.getCurrentRegion();
@@ -292,12 +296,13 @@ public class Main extends JavaPlugin {
 							}
 						}
 						
-						if (mili-lastProfilePoke > 1500 * 8) {
+						// Every 12 Seconds
+						if (mili-lastProfilePoke >= 1000 * 12) {
 							lastProfilePoke = mili;
 							// Playtime Check - Only checks for the next rank in line, this could be a non-playtime rank (eg. Exalted -> Moderator), that's why there's a check.
 							if (!permissionManager().isPreviewing(p)) {
 								Rank next = Rank.values()[pp.getPlaytimeRank().ordinal()+1];
-								if (next.isPlaytimeRank() && (p.getStatistic(Statistic.PLAY_ONE_MINUTE)/20) >= next.getPlaytimeRequirement()) {
+								if (next.isPlaytimeRank() && pp.getStat(StatType.GENERIC, "playtime") >= next.getPlaytimeRequirement()) {
 									pp.grantAdvancement("beansbeans:advancements/ranks/"+next.lowerName());
 									pp.addRank(next);
 								}
@@ -325,6 +330,7 @@ public class Main extends JavaPlugin {
 				if (mili-lastHighscoreUpdate > Highscores.UPDATE_INTERVAL) {
 					lastHighscoreUpdate = mili;
 					highscores.updateStoredHighscores();
+					CommandCurse.performCurse();
 				}
 			}
 		}, 10L, 10L); // every 500ms

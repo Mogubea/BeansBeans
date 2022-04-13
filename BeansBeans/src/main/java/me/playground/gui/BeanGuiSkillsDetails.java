@@ -91,7 +91,7 @@ public class BeanGuiSkillsDetails extends BeanGui {
 				contents[37 + x].addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
 		}
 		
-		Highscore highscore = getPlugin().highscores.getHighscore(skill.ordinal());
+		Highscore highscore = getPlugin().highscores.getHighscore(skill.getPlainName() + " XP");
 		ItemStack head = new ItemStack(Material.CARTOGRAPHY_TABLE);
 		
 		List<Component> scoreLore = new ArrayList<Component>();

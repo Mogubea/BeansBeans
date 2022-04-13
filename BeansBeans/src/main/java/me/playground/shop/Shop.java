@@ -130,7 +130,7 @@ public class Shop implements Dirty {
 			if (meta.hasDisplayName())
 				itemName = meta.displayName();
 			else
-				itemName = Component.text(itemStack.getI18NDisplayName());
+				itemName = Component.translatable(itemStack);
 		}
 		
 		//Component holo = itemStack != null ? itemStack.displayName() : null;

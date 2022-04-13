@@ -1,6 +1,5 @@
 package me.playground.listeners;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
@@ -54,9 +53,6 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.events.PacketContainer;
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent.SlotType;
 
@@ -113,7 +109,7 @@ public class PlayerListener extends EventListener {
 			return;
 		}
 		
-		pp.getStats().addToStat(StatType.GENERIC, "chatMessages", 1);
+		pp.getStats().addToStat(StatType.GENERIC, "chatMessages", 1, true);
 		
 		TextComponent chat = pp.isRank(Rank.MODERATOR) ? Component.empty().append(Component.text("\u24E2", BeanColor.STAFF)
 				.hoverEvent(HoverEvent.showText(Component.text("Staff Member", BeanColor.STAFF))))
@@ -198,73 +194,42 @@ public class PlayerListener extends EventListener {
 	
 	@EventHandler
 	public void onBedEnter(PlayerBedEnterEvent e) {
-		final Region r = getRegionAt(e.getBed().getLocation());
 		Player p = e.getPlayer();
 		p.setStatistic(Statistic.TIME_SINCE_REST, 0);
 		
-		if (!r.getEffectiveFlag(Flags.WARP_CREATION) && !(r.getMember(p).higherThan(MemberLevel.VISITOR)))
-			e.setCancelled(true);
+		enactRegionPermission(getRegionAt(e.getBed().getLocation()), e, p, Flags.WARP_CREATION, null);
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onClickEntity(PlayerInteractEntityEvent e) {
 		Entity ent = e.getRightClicked();
-		// Villager
-		if (ent.getType() == EntityType.VILLAGER) {
-			final Region r = getRegionAt(ent.getLocation());
-			if (r.getEffectiveFlag(Flags.VILLAGER_ACCESS).higherThan(r.getMember(e.getPlayer()))) {
-				e.getPlayer().sendActionBar(Component.text("\u00a7cYou don't have permission to trade here."));
+		
+		if (ent.getType() == EntityType.VILLAGER) { // Villager
+			if (!enactRegionPermission(getRegionAt(ent.getLocation()), e, e.getPlayer(), Flags.VILLAGER_ACCESS, "trade"))
 				e.getPlayer().playSound(ent.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.7F, 1F);
-				e.setCancelled(true);
-			}
-		} else 
-		// Frames and such
-		if (ent.getType() == EntityType.GLOW_ITEM_FRAME || ent.getType() == EntityType.ITEM_FRAME || ent.getType() == EntityType.LEASH_HITCH) {
-			final Region r = getRegionAt(ent.getLocation());
-			if (r.getEffectiveFlag(Flags.BUILD_ACCESS).higherThan(r.getMember(e.getPlayer()))) {
-				e.getPlayer().sendActionBar(Component.text("\u00a7cYou don't have permission to build here."));
-				e.setCancelled(true);
-			}
+		} else if (ent.getType() == EntityType.GLOW_ITEM_FRAME || ent.getType() == EntityType.ITEM_FRAME || ent.getType() == EntityType.LEASH_HITCH) { // Frames and such
+			enactRegionPermission(getRegionAt(ent.getLocation()), e, e.getPlayer(), Flags.BUILD_ACCESS, "build");
 		}
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onArmourStand(PlayerArmorStandManipulateEvent e) {
-		final Region r = getRegionAt(e.getRightClicked().getLocation());
-		if (r.getEffectiveFlag(Flags.BUILD_ACCESS).higherThan(r.getMember(e.getPlayer()))) {
-			e.getPlayer().sendActionBar(Component.text("\u00a7cYou don't have permission to build here."));
-			e.setCancelled(true);
-		}
+		enactRegionPermission(getRegionAt(e.getRightClicked().getLocation()), e, e.getPlayer(), Flags.BUILD_ACCESS, "use stands");
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onBucket(PlayerBucketFillEvent e) {
-		Region r = getRegionAt(e.getBlockClicked().getLocation());
-		final boolean canBuild = r.getEffectiveFlag(Flags.BUILD_ACCESS).lowerOrEqTo(r.getMember(e.getPlayer()));
-		if (!canBuild) {
-			e.getPlayer().sendActionBar(Component.text("\u00a7cYou don't have permission to use buckets here."));
-			e.setCancelled(true);
-		}
+		enactRegionPermission(getRegionAt(e.getBlockClicked().getLocation()), e, e.getPlayer(), Flags.BUILD_ACCESS, "use buckets");
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onBucket(PlayerBucketEmptyEvent e) {
-		Region r = getRegionAt(e.getBlockClicked().getLocation());
-		final boolean canBuild = r.getEffectiveFlag(Flags.BUILD_ACCESS).lowerOrEqTo(r.getMember(e.getPlayer()));
-		if (!canBuild) {
-			e.getPlayer().sendActionBar(Component.text("\u00a7cYou don't have permission to use buckets here."));
-			e.setCancelled(true);
-		}
+		enactRegionPermission(getRegionAt(e.getBlockClicked().getLocation()), e, e.getPlayer(), Flags.BUILD_ACCESS, "use buckets");
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onBucket(PlayerBucketEntityEvent e) {
-		Region r = getRegionAt(e.getEntity().getLocation());
-		final boolean canBuild = r.getEffectiveFlag(Flags.BUILD_ACCESS).lowerOrEqTo(r.getMember(e.getPlayer()));
-		if (!canBuild) {
-			e.getPlayer().sendActionBar(Component.text("\u00a7cYou don't have permission to use buckets here."));
-			e.setCancelled(true);
-		}
+		enactRegionPermission(getRegionAt(e.getEntity().getLocation()), e, e.getPlayer(), Flags.BUILD_ACCESS, "use buckets");
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
@@ -289,7 +254,7 @@ public class PlayerListener extends EventListener {
 		Region r = getRegionAt(e.getClickedBlock().getLocation());
 		final Player p = e.getPlayer();
 		
-		final boolean canBuild = r.getEffectiveFlag(Flags.BUILD_ACCESS).lowerOrEqTo(r.getMember(p));
+		final boolean canBuild = checkRegionPermission(r, e, p, Flags.BUILD_ACCESS);
 		
 		if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
 			if (!p.isBlocking()) {
@@ -299,16 +264,13 @@ public class PlayerListener extends EventListener {
 					String error = null;
 					
 					if (state instanceof Container) {
-						if (r.getEffectiveFlag(Flags.CONTAINER_ACCESS).higherThan(r.getMember(p)))
-							error = "You don't have permission to open containers here.";
+						enactRegionPermission(r, e, p, Flags.CONTAINER_ACCESS, "open containers");
 					} else if (bm.name().endsWith("DOOR") || bm.name().endsWith("GATE")) {
-						if (r.getEffectiveFlag(Flags.DOOR_ACCESS).higherThan(r.getMember(p)))
-							error = "You don't have permission to open doors here.";
+						enactRegionPermission(r, e, p, Flags.DOOR_ACCESS, "open door");
 					} else if (bm.name().endsWith("ANVIL")) {
-						if (r.getEffectiveFlag(Flags.ANVIL_ACCESS).higherThan(r.getMember(p))) {
-							error = "You don't have permission to use anvils here.";
+						enactRegionPermission(r, e, p, Flags.ANVIL_ACCESS, "use anvils");
 						// Handle anvil unbreakable flag by giving the Player a fake Anvil GUI.
-						} else if (!r.getEffectiveFlag(Flags.ANVIL_DEGRADATION)) {
+						if (!r.getEffectiveFlag(Flags.ANVIL_DEGRADATION)) {
 							e.setCancelled(true);
 							p.openAnvil(p.getLocation(), true);
 							return;
@@ -324,7 +286,7 @@ public class PlayerListener extends EventListener {
 					}
 					
 					if (error != null) {
-						p.sendActionBar(Component.text("\u00a7c" + error));
+						p.sendActionBar(Component.text("\u00a74\u2716 \u00a7c" + error + " \u00a74\u2716"));
 						e.setCancelled(true);
 						return;
 					}
@@ -345,7 +307,7 @@ public class PlayerListener extends EventListener {
 				final Material bm = e.getClickedBlock().getType();
 				if (m == Material.BONE_MEAL) {
 					if (e.getClickedBlock().getBlockData() instanceof Ageable ? !r.getEffectiveFlag(Flags.CROP_ACCESS).lowerOrEqTo(r.getMember(p)) : true)
-						error = "You don't have permission to use bonemeal here.";
+						error = "You don't have permission to apply Bone Meal here.";
 				} else if (bm.name().endsWith("SIGN") && (m.name().endsWith("DYE") || m == Material.GLOW_INK_SAC)) {
 					error = "You don't have permission to dye signs here.";
 				} else if (m == Material.SHEARS && bm == Material.PUMPKIN) {
@@ -358,13 +320,13 @@ public class PlayerListener extends EventListener {
 			}
 			
 			if (error != null) {
-				p.sendActionBar(Component.text("\u00a7c" + error));
+				p.sendActionBar(Component.text("\u00a74\u2716 \u00a7c" + error + " \u00a74\u2716"));
 				e.setCancelled(true);
 			}
 		}
 	}
 	
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onRightClick(PlayerInteractEvent e) {
 		ItemStack item = e.getItem();
 		
@@ -409,40 +371,50 @@ public class PlayerListener extends EventListener {
 				
 				
 				// Farm shit
-				
 				if (b.getBlockData() instanceof Ageable) {
 					Ageable crop = (Ageable) b.getBlockData();
 					
-					if (crop.getAge() < crop.getMaximumAge())
+					// Bonemealable Sugar Cane
+					if (m == Material.SUGAR_CANE && e.getItem() != null && e.getItem().getType() == Material.BONE_MEAL) {
+						Location loc = b.getLocation().clone();
+						int height = 0;
+						while(height < 3 && loc.subtract(0, 1, 0).getBlock().getType() == Material.SUGAR_CANE) height++;
+						if (height > 2) return; else height = 0;
+						while(height < 3 && loc.add(0, 1, 0).getBlock().getType() == Material.SUGAR_CANE) height++;
+						if (height > 2 || loc.add(0, 1, 0).getBlock().getType() != Material.AIR) return;
+						
+						doArmSwing(p);
+						
+						Block highestCane = loc.subtract(0, 2, 0).getBlock();
+						crop = (Ageable) highestCane.getBlockData();
+						crop.setAge(0);
+						p.getEquipment().getItemInMainHand().subtract(1);
+						b.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, b.getLocation().add(0.5, 0.5, 0.5), 5, 0.5, 0.5, 0.5);
+						loc.add(0, 1, 0).getBlock().setType(Material.SUGAR_CANE);
 						return;
-					if (m == Material.SWEET_BERRY_BUSH || m == Material.BAMBOO || m.name().endsWith("STEM") || m == Material.CAVE_VINES_PLANT)
-						return;
+					}
+					
+					if (crop.getAge() < crop.getMaximumAge()) return;
+					if (m == Material.SWEET_BERRY_BUSH || m == Material.BAMBOO || m.name().endsWith("STEM") || m == Material.CAVE_VINES_PLANT || m == Material.SUGAR_CANE) return;
 					
 					final boolean canHarvest = r.getEffectiveFlag(Flags.BUILD_ACCESS).lowerOrEqTo(r.getMember(p)) || r.getEffectiveFlag(Flags.CROP_ACCESS).lowerOrEqTo(r.getMember(p));
 					
 					if (!canHarvest) {
-						p.sendActionBar(Component.text("\u00a7cYou don't have permission to harvest crops here."));
+						p.sendActionBar(Component.text("\u00a74\u2716 \u00a7cYou don't have permission to harvest crops here. \u00a74\u2716"));
 						return;
 					}
 					
 					PlayerRightClickHarvestEvent event = new PlayerRightClickHarvestEvent(e.getPlayer(), e.getItem(), e.getClickedBlock(), e.getBlockFace());
 					Bukkit.getServer().getPluginManager().callEvent(event);
 					
-					if (event.isCancelled())
-						return;
+					if (event.isCancelled()) return;
 					
 					for (ItemStack i : b.getDrops()) {
 						i.setAmount(Math.max(1, i.getAmount()-1));
 						e.getPlayer().getWorld().dropItemNaturally(b.getLocation(), i);
 					}
 					
-					try {
-						PacketContainer arm = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.ANIMATION);
-			            arm.getEntityModifier(p.getWorld()).write(0, p);
-			            ProtocolLibrary.getProtocolManager().sendServerPacket(p, arm);
-					} catch (InvocationTargetException e1) {
-						e1.printStackTrace();
-					}
+					doArmSwing(p);
 					
 					e.setCancelled(true);
 					crop.setAge(0);
@@ -481,6 +453,7 @@ public class PlayerListener extends EventListener {
 	public void onPlayerMove(PlayerMoveEvent e) {
 		final Player p = e.getPlayer();
 		if (e.hasExplicitlyChangedBlock()) {
+			PlayerProfile.from(p).getStats().addToStat(StatType.GENERIC, "steps", 1, true);
 			if (talarianUsers.contains(p.getUniqueId())) {
 				if (p.isSprinting() && !p.isSwimming()) {
 					boolean fast = p.getWalkSpeed() > 0.24F;
@@ -511,7 +484,7 @@ public class PlayerListener extends EventListener {
 		
 		final Region r = getRegionAt(e.getHarvestedBlock().getLocation());
 		if (!(r.getEffectiveFlag(Flags.BUILD_ACCESS).lowerOrEqTo(r.getMember(e.getPlayer())) || r.getEffectiveFlag(Flags.CROP_ACCESS).lowerOrEqTo(r.getMember(e.getPlayer())))) {
-			e.getPlayer().sendActionBar(Component.text("\u00a7cYou don't have permission to harvest crops here."));
+			e.getPlayer().sendActionBar(Component.text("\u00a74\u2716 \u00a7cYou don't have permission to harvest crops here. \u00a74\u2716"));
 			e.setCancelled(true);
 			return;
 		} else {
@@ -528,6 +501,7 @@ public class PlayerListener extends EventListener {
 				p.setHealth(10);
 				p.setSaturation(2.0F);
 				p.setFoodLevel(15);
+				PlayerProfile.from(e.getPlayer()).getStats().addToStat(StatType.GENERIC, "respawn", 1, true);
 			}
 		});
 	}
@@ -555,7 +529,9 @@ public class PlayerListener extends EventListener {
 			}
 			if (e.getCause() != TeleportCause.NETHER_PORTAL) {
 				e.getPlayer().setFallDistance(0F);
-				PlayerProfile.from(e.getPlayer()).updateLastLocation(e.getFrom(), 0);
+				PlayerProfile pp = PlayerProfile.from(e.getPlayer());
+				pp.updateLastLocation(e.getFrom(), 0);
+				pp.getStats().addToStat(StatType.GENERIC, "teleport", 1, true);
 			}
 		}
 		
@@ -565,6 +541,7 @@ public class PlayerListener extends EventListener {
 	public void onItemMend(PlayerItemMendEvent e) {
 		e.setCancelled(true);
 		BeanItem.addDurability(e.getItem(), e.getRepairAmount());
+		PlayerProfile.from(e.getPlayer()).getStats().addToStat(StatType.GENERIC, "mending", e.getRepairAmount());
 	}
 	
 	@EventHandler
@@ -598,6 +575,7 @@ public class PlayerListener extends EventListener {
 	public void onAdvancementDone(PlayerAdvancementDoneEvent e) {
 		Player p = e.getPlayer();
 		PlayerProfile pp = PlayerProfile.from(p);
+		pp.pokeAFK();
 		
 		if (advancementCoins.containsKey(e.getAdvancement().getKey()))
 			pp.addToBalance(advancementCoins.get(e.getAdvancement().getKey()), "Advancement: " + e.getAdvancement().getKey().asString());

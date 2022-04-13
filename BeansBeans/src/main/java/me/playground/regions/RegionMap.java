@@ -26,6 +26,7 @@ public class RegionMap<T extends Region> {
 		for (int x = minX; x <= maxX; x++) {
 			for (int z = minZ; z <= maxZ; z++) {
 				int key = createRegionKey(x, z);
+//				System.out.println(key);
 				map.put(key, entry);
 				entry.addRegionKey(key);
 			}
@@ -58,6 +59,15 @@ public class RegionMap<T extends Region> {
 				ack.add(r);
 		return ack;
 	}
+	
+	/*public Collection<T> getRegionsInRange(int x, int y, int z, int distance) {
+		Collection<T> ack = new HashSet<T>();
+		
+		
+		
+		
+		return ack;
+	}*/
 	
 	public boolean containsAnyRegionsAt(int x, int y, int z) {
 		return !getRegions(x, y, z).isEmpty();

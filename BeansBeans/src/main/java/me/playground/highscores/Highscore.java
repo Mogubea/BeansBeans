@@ -10,21 +10,19 @@ public abstract class Highscore {
 	
 	protected LinkedHashMap<Integer, Long> orderedScores;
 	protected List<Integer> preservedOrder;
-	
-	final protected String name;
-	
-	public Highscore(String name) {
-		this.name = name;
-	}
+	protected String suffix;
 	
 	public abstract void updateScores();
 	
 	public long getScoreOf(int playerId) {
-		return orderedScores.get(playerId);
+		return orderedScores.getOrDefault(playerId, 0L);
 	}
 	
 	public int getPositionOf(int playerId) {
-		return (preservedOrder.indexOf(playerId)+1);
+		int idx = preservedOrder.indexOf(playerId);
+		if (idx < 0) return playerId;
+		
+		return idx + 1;
 	}
 	
 	public int getPositionOf(UUID uuid) {
@@ -41,6 +39,10 @@ public abstract class Highscore {
 	
 	public List<Integer> getOrder() {
 		return preservedOrder;
+	}
+	
+	public String getSuffix() {
+		return suffix;
 	}
 	
 }

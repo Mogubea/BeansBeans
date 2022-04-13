@@ -29,16 +29,19 @@ public class TeamManager {
 		pp.getPlayer().setScoreboard(scoreboard);
 		
 		Team team = scoreboard.getTeam("id"+pp.getId());
+		Component prefix = pp.isAFK() ? Component.text("[AFK] ", NamedTextColor.GRAY) : Component.empty();
 		
 		if (team == null)
 			team = scoreboard.registerNewTeam("id"+pp.getId());
 		
 		team.color(NamedTextColor.nearestTo(pp.getNameColour()));
 		if (pp.isRank(Rank.MODERATOR))
-			team.prefix(Component.text("\u24E2 ").color(Rank.MODERATOR.getRankColour()));
+			prefix = prefix.append(Component.text("\u24E2 ", Rank.MODERATOR.getRankColour()));
 		
 		if (!team.hasEntry(pp.getPlayer().getName()))
 			team.addEntry(pp.getPlayer().getName());
+		
+		team.prefix(prefix);
 	}
 	
 	public Team getTeam(PlayerProfile pp) {

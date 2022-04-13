@@ -62,7 +62,7 @@ public class BeanGuiSkills extends BeanGui {
 		for (int x = -1; ++x < size;) {
 			SkillType skill = skills[x];
 			SkillInfo skillInfo = tpp.getSkills().getSkillInfo(skill);
-			Highscore highscore = getPlugin().highscores.getHighscore(x);
+			Highscore highscore = getPlugin().highscores.getHighscore(skill.getPlainName() + " XP");
 			int col = skill.getColour().value();
 			TextColor lighter = TextColor.color(col | 0x3d3d3d);
 			
@@ -88,7 +88,7 @@ public class BeanGuiSkills extends BeanGui {
 			mappings.put(skillSlots[x], skill);
 		}
 		
-		Highscore highscore = getPlugin().highscores.getHighscore(9);
+		Highscore highscore = getPlugin().highscores.getHighscore("Total Skill XP");
 		ItemStack head = new ItemStack(Material.CARTOGRAPHY_TABLE);
 		
 		List<Component> scoreLore = new ArrayList<Component>();

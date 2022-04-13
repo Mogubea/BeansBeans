@@ -30,10 +30,8 @@ import me.playground.playerprofile.skills.Skill;
 import me.playground.playerprofile.skills.SkillData;
 import me.playground.playerprofile.skills.SkillType;
 import me.playground.playerprofile.stats.StatType;
-import me.playground.regions.Region;
 import me.playground.regions.flags.Flags;
 import me.playground.utils.MaterialHelper;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 
 public class BlockListener extends EventListener {
@@ -44,13 +42,7 @@ public class BlockListener extends EventListener {
 	
 	@EventHandler(priority=EventPriority.LOW)
 	public void onBlockPlace(BlockPlaceEvent e) {
-		final Region r = getRegionAt(e.getBlock().getLocation());
-		
-		if (r.getEffectiveFlag(Flags.BUILD_ACCESS).higherThan(r.getMember(e.getPlayer()))) { // XXX: BUILDING
-			e.setCancelled(true);
-			e.getPlayer().sendActionBar(Component.text("\u00a7cYou don't have permission to build here."));
-			return;
-		}
+		enactRegionPermission(getRegionAt(e.getBlock().getLocation()), e, e.getPlayer(), Flags.BUILD_ACCESS, "build");
 		
 		String blockName = e.getBlock().getType().name();
 		
@@ -85,9 +77,10 @@ public class BlockListener extends EventListener {
 			e.getBlock().setMetadata("placed", new FixedMetadataValue(getPlugin(), true));
 		}
 		
-		if (e.getPlayer().getGameMode() == GameMode.CREATIVE) return;
-		
 		PlayerProfile pp = PlayerProfile.from(e.getPlayer());
+		pp.pokeAFK(); // Poke regardless of gamemode
+		
+		if (e.getPlayer().getGameMode() == GameMode.CREATIVE) return;
 		
 		pp.getStats().addToStat(StatType.BLOCK_PLACE, blockName, 1);
 		pp.getStats().addToStat(StatType.BLOCK_PLACE, "total", 1);
@@ -100,15 +93,10 @@ public class BlockListener extends EventListener {
 			return;
 		}
 		
-		final Region r = getRegionAt(e.getBlock().getLocation());
 		final Player p = e.getPlayer();
 		String blockName = e.getBlock().getType().name();
 		
-		if (r.getEffectiveFlag(Flags.BUILD_ACCESS).higherThan(r.getMember(p))) { // XXX: BREAKING
-			e.setCancelled(true);
-			p.sendActionBar(Component.text("\u00a7cYou don't have permission to break here."));
-			return;
-		}
+		enactRegionPermission(getRegionAt(e.getBlock().getLocation()), e, p, Flags.BUILD_ACCESS, "break");
 		
 		final ItemStack hand = e.getPlayer().getEquipment().getItemInMainHand();
 		if (hand != null && hand.getType() != Material.AIR) {
@@ -127,8 +115,6 @@ public class BlockListener extends EventListener {
 			}
 		}
 		
-		if (p.getGameMode() == GameMode.CREATIVE) return;
-		
 		// Stop placing and breaking a block for xp.
 		if (e.getBlock().hasMetadata("placed")) {
 			e.getBlock().removeMetadata("placed", getPlugin());
@@ -136,6 +122,10 @@ public class BlockListener extends EventListener {
 		}
 		
 		PlayerProfile pp = PlayerProfile.from(p);
+		pp.pokeAFK(); // Poke regardless of gamemode
+		
+		if (p.getGameMode() == GameMode.CREATIVE) return;
+		
 		pp.getStats().addToStat(StatType.BLOCK_BREAK, blockName, 1);
 		pp.getStats().addToStat(StatType.BLOCK_BREAK, "total", 1);
 		

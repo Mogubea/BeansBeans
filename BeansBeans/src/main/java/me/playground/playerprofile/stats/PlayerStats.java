@@ -42,6 +42,17 @@ public class PlayerStats {
 	 * @return the new value
 	 */
 	@Nonnull 
+	public int addToStat(@Nonnull StatType type, @Nonnull String name, int add, boolean pokeAFK) {
+		if (pokeAFK)
+			profile.pokeAFK();
+		return addToStat(type, name, add);
+	}
+	
+	/**
+	 * Adds the desired amount to the stat.
+	 * @return the new value
+	 */
+	@Nonnull 
 	public int addToStat(@Nonnull StatType type, @Nonnull String name, int add) {
 		HashMap<String, DirtyInteger> ack = stats.get(type);
 		

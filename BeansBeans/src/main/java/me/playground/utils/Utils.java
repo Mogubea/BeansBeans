@@ -297,15 +297,24 @@ public class Utils {
 		mins -= hours*60;
 		long days = hours / 24;
 		hours -= days*24;
+		long weeks = days / 7;
+		days -= weeks*7;
 		
 		if (tooShort) 
 			return "a few seconds";
+		if (weeks > 0)
+			return weeks + (weeks > 1 ? " Weeks" : " Week") + (days > 0 ? " and " + days + (days > 1 ? " Days" : " Day") : "");
 		if (days > 0)
 			return days + (days > 1 ? " Days" : " Day") + (hours > 0 ? " and " + hours + (hours > 1 ? " Hours" : " Hour") : "");
 		if (hours > 0)
 			return hours + (hours > 1 ? " Hours" : " Hour") + (mins > 0 ? " and " + mins + (mins > 1 ? " Minutes" : " Minute") : "");
 		
 		return mins + (mins > 1 ? " Minutes" : " Minute");
+	}
+	
+	public static String timeStringFromMillis(long timeInMillis) {
+		long cur = System.currentTimeMillis();
+		return timeStringFromNow(timeInMillis + cur);
 	}
 	
 	private final static TreeMap<Integer, String> map = new TreeMap<Integer, String>();

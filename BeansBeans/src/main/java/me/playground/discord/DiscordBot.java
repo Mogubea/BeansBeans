@@ -37,7 +37,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
@@ -59,7 +59,7 @@ public class DiscordBot extends ListenerAdapter {
 	
 	// Cache Icons for 30 minutes to reduce risk of rate limiting from source website.
 	// This may lead to skins not updating for a while, but that's not a big enough deal to worry about.
-	private static LoadingCache<Integer, Icon> iconCache = CacheBuilder.from("maximumSize=100,expireAfterAccess=30m")
+	private LoadingCache<Integer, Icon> iconCache = CacheBuilder.from("maximumSize=100,expireAfterAccess=30m")
 			.build(
 					new CacheLoader<Integer, Icon>() {
 						public Icon load(Integer playerId) throws Exception { // if the key doesn't exist, request it via this method
@@ -106,18 +106,12 @@ public class DiscordBot extends ListenerAdapter {
 		}
 	}
 	
-	public WebhookClient getWebhookClient(int playerId) {
-		
-		
-		return chatClient;
-	}
-	
 	public void shutdown() {
 		if (!isOnline()) return;
 		chatClient.close();
 		
 		updateServerStatus(false);
-		chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setDeny(Permission.MESSAGE_WRITE).queue();
+		chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setDeny(Permission.MESSAGE_SEND).queue();
 		
 		for (Webhook hook : chatChannel().retrieveWebhooks().complete())
 			hook.delete().queue();
@@ -163,7 +157,7 @@ public class DiscordBot extends ListenerAdapter {
 		if (discordBot != null) {
 			this.ingameChat = discordBot.getTextChannelById(ingameChatId);
 			discordBot.addEventListener(this);
-			chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setAllow(Permission.MESSAGE_WRITE).queue();
+			chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setAllow(Permission.MESSAGE_SEND).queue();
 			registerCommands();
 			
 			this.hook = chatChannel().createWebhook("Chat Webhook").complete();
@@ -271,6 +265,9 @@ public class DiscordBot extends ListenerAdapter {
 		cmds.add(registerCommand(new DiscordCommandSuggest(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandEmbed(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandWho(getPlugin())).getCommandData());
+		cmds.add(registerCommand(new DiscordCommandRank(getPlugin())).getCommandData());
+		cmds.add(registerCommand(new DiscordCommandHighscore(getPlugin())).getCommandData());
+		cmds.add(registerCommand(new DiscordCommandTimeout(getPlugin())).getCommandData());
 		discordBot.updateCommands().addCommands(cmds).queue();
 	}
 	
@@ -284,17 +281,21 @@ public class DiscordBot extends ListenerAdapter {
 	}
 	
 	public void onSlashCommand(SlashCommandEvent e) {
-		if (e.getMember().getUser().isBot()) 
+		if (e.getMember().getUser().isBot())
 			return;
 		
 		final DiscordCommand cmd = discordCommands.get(e.getName().toLowerCase());
 		if (cmd != null) {
-			cmd.preSlashCommand(e);
+			try {
+				cmd.preSlashCommand(e);
+			} catch (Exception ex) {
+				plugin.getSLF4JLogger().warn("There was a problem firing discord command \"/" + e.getName() + "\" ("+ex.getLocalizedMessage()+")");
+			}
 			return;
 		}
 	}
 	
-	public void onGuildMessageReceived(GuildMessageReceivedEvent e) {
+	public void onGuildMessageReceived(MessageReceivedEvent e) {
 		if (!e.getAuthor().isBot()) {
 			if (e.getChannel().getIdLong() == ingameChatId) {
 				String msg = MarkdownSanitizer.sanitize(e.getMessage().getContentStripped());

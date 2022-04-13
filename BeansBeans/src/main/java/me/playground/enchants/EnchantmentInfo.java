@@ -26,19 +26,19 @@ public enum EnchantmentInfo {
 	DAMAGE_ALL(Enchantment.DAMAGE_ALL, 1F, 0.7F),
 	DAMAGE_ARTHROPODS(Enchantment.DAMAGE_ARTHROPODS, 0.4F, 0.5F),
 	DAMAGE_UNDEAD(Enchantment.DAMAGE_UNDEAD, 1F, 0.7F),
-	DURABILITY(Enchantment.DURABILITY, 1F, 1F),
+	DURABILITY(Enchantment.DURABILITY, 2F, 1F),
 	FIRE_ASPECT(Enchantment.FIRE_ASPECT, 1F, 0.5F),
 	FROST_WALKER(Enchantment.FROST_WALKER, 2F),
 	IMPALING(Enchantment.IMPALING, 1F, 1F),
 	KNOCKBACK(Enchantment.KNOCKBACK, 0.25F, 0.5F),
-	LOOT_BONUS_MOBS(Enchantment.LOOT_BONUS_MOBS, 1F, 1F),
-	LOOT_BONUS_BLOCKS(Enchantment.LOOT_BONUS_BLOCKS, 1F, 1.25F),
+	LOOT_BONUS_MOBS(Enchantment.LOOT_BONUS_MOBS, 2F, 1F),
+	LOOT_BONUS_BLOCKS(Enchantment.LOOT_BONUS_BLOCKS, 2F, 1.25F),
 	LOYALTY(Enchantment.LOYALTY, 3F, 0.5F),
 	LUCK(Enchantment.LUCK, 1F, 1.5F),
 	LURE(Enchantment.LURE, 1F, 1.5F),
 	MENDING(Enchantment.MENDING, 22F),
 	MULTISHOT(Enchantment.MULTISHOT, 4F),
-	OXYGEN(Enchantment.OXYGEN, 1F, 0.5F),
+	OXYGEN(Enchantment.OXYGEN, 2F, 0.5F),
 	PROTECTION_ENVIRONMENTAL(Enchantment.PROTECTION_ENVIRONMENTAL, 0.6F, 0.8F),
 	PROTECTION_EXPLOSIONS(Enchantment.PROTECTION_EXPLOSIONS, 0.3F, 0.3F),
 	PROTECTION_FIRE(Enchantment.PROTECTION_FIRE, 0.3F, 0.3F),
@@ -80,7 +80,7 @@ public enum EnchantmentInfo {
 				totalValue *= 2;
 		}
 		
-		if (totalValue >= 40)
+		if (totalValue >= 45)
 			return ItemRarity.LEGENDARY;
 		if (totalValue >= 22)
 			return ItemRarity.EPIC;

@@ -1,24 +1,9 @@
 package me.playground.gui;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import me.playground.highscores.Highscore;
-import me.playground.main.Main;
-import me.playground.playerprofile.PlayerProfile;
-import me.playground.playerprofile.skills.SkillInfo;
-import me.playground.playerprofile.skills.SkillType;
-import me.playground.utils.Utils;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
 
 @Deprecated
 public class BeanGuiSkillsOLD extends BeanGui {
@@ -45,17 +30,17 @@ public class BeanGuiSkillsOLD extends BeanGui {
 	@Override
 	public void onInventoryOpened() {
 		ItemStack[] contents = i.getContents();
-		final SkillType[] skills = SkillType.values();
+//		final SkillType[] skills = SkillType.values();
 		
 		for (int x = 0; x < 9; x++) {
-			final SkillType skill = skills[x];
-			final SkillInfo info = pp.getSkills().getSkillInfo(skill);
-			final int level = info.getLevel();
-			final long xp = info.getXp();
-			final int xpCur = (int) info.getCurrentLevelXp();
-			final int xpNeed = (int) info.xpRequiredToLevelUp(level);
+//			final SkillType skill = skills[x];
+//			final SkillInfo info = pp.getSkills().getSkillInfo(skill);
+//			final int level = info.getLevel();
+//			final long xp = info.getXp();
+//			final int xpCur = (int) info.getCurrentLevelXp();
+//			final int xpNeed = (int) info.xpRequiredToLevelUp(level);
 				
-			final Highscore highscore = Main.getInstance().highscores.highscores[x];
+		/*	final Highscore highscore = Main.getInstance().highscores.highscores[x];
 				
 			ItemStack skillStack = new ItemStack(skill.getDisplayStack().getType());
 			ItemMeta skillMeta = skillStack.getItemMeta();
@@ -81,7 +66,7 @@ public class BeanGuiSkillsOLD extends BeanGui {
 			skillStack.setAmount(Math.max(1, level/10));
 			
 			contents[45 + x] = skillStack;
-				
+			*/	
 		}
 		
 		contents[18] = icon_dataU;
@@ -113,7 +98,7 @@ public class BeanGuiSkillsOLD extends BeanGui {
 		// [20],  21,  [22],  23,  [24],  25,  [26]
 		// [29], [30], [31],  32,  [33], [34], [35]
 		private void updateSkillTree() {
-			ItemStack[] contents = i.getContents();
+			/*ItemStack[] contents = i.getContents();
 			final SkillType[] skills = SkillType.values();
 			final SkillType skill = skills[page];
 			final SkillInfo skillInfo = tpp.getSkills().getSkillInfo(skill);
@@ -211,7 +196,7 @@ public class BeanGuiSkillsOLD extends BeanGui {
 					break;
 				}
 			}
-			i.setContents(contents);
+			i.setContents(contents);*/
 		}
 
 }

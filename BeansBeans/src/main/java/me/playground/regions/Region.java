@@ -17,6 +17,9 @@ import me.playground.celestia.logging.Celestia;
 import me.playground.data.Dirty;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileStore;
+import me.playground.regions.flags.Flag;
+import me.playground.regions.flags.FlagBoolean;
+import me.playground.regions.flags.FlagMember;
 import me.playground.regions.flags.MemberLevel;
 import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
@@ -123,10 +126,6 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	public void removeMember(int playerId) {
 		rm.getDatasource().removeRegionMember(regionId, playerId);
 		members.remove(playerId);
-	}
-	
-	public MemberLevel getMember(int memberId) {
-		return this.members.getOrDefault(memberId, MemberLevel.NONE);
 	}
 	
 	public MemberLevel getMember(Player p) {
@@ -287,6 +286,16 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	@Override
 	public int compareTo(Region otherRegion) {
 		return Integer.compare(otherRegion.getPriority(), getPriority());
+	}
+	
+	public boolean can(Player p, Flag<?> flag) {
+		MemberLevel level = getMember(p);
+		
+		if (flag instanceof FlagMember)
+			return getEffectiveFlag((FlagMember)flag).lowerOrEqTo(level);
+		if (flag instanceof FlagBoolean)
+			return getEffectiveFlag((FlagBoolean)flag).booleanValue() ? level.higherThan(MemberLevel.VISITOR) : true;
+		return false;
 	}
 	
 }

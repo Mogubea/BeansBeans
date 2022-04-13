@@ -20,6 +20,7 @@ import me.playground.playerprofile.ProfileModifyRequest;
 import me.playground.ranks.Rank;
 import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 public class ConnectionListener extends EventListener {
 
@@ -72,7 +73,7 @@ public class ConnectionListener extends EventListener {
 			p.getInventory().setItem(9, BeanGui.menuItem);
 		
 		pp.getSkills().assignBarPlayer(p);
-		e.joinMessage(Component.text("\u00a7a» ").append(pp.getComponentName()).append(Component.text("\u00a7e joined the server!")));
+		e.joinMessage(Component.text("» ", NamedTextColor.GREEN).append(pp.getComponentName()).append(Component.text(" joined the server!", NamedTextColor.YELLOW)));
 		
 		// Check for Donor Rank expiriry
 		pp.getCheckDonorExpiration();
@@ -96,7 +97,7 @@ public class ConnectionListener extends EventListener {
 		getPlugin().permissionManager().clearPlayerPermissions(e.getPlayer());
 		PlayerProfile pp = PlayerProfile.from(e.getPlayer());
 		pp.closeBeanGui(); // Just in case
-		e.quitMessage(Component.text("\u00a7c« ").append(pp.getComponentName()).append(Component.text("\u00a7e left the server!")));
+		e.quitMessage(Component.text("« ", NamedTextColor.RED).append(pp.getComponentName()).append(Component.text(" left the server!", NamedTextColor.YELLOW)));
 		//EmbedBuilder eb = getPlugin().discord().embedBuilder(0xff7876, "**"+pp.getDisplayName()+"** left the server!");
 		//getPlugin().discord().chatChannel().sendMessageEmbeds(eb.build()).queue();
 	}

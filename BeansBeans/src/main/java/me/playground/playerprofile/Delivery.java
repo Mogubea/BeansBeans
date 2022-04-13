@@ -3,9 +3,11 @@ package me.playground.playerprofile;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.inventory.ItemStack;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import me.playground.data.Datasource;
 import me.playground.data.Dirty;
 import me.playground.utils.Utils;
 
@@ -49,6 +51,17 @@ public class Delivery implements Dirty {
 			if (cont != null) this.content.add(cont);
 			if (cont.isClaimed()) this.contentClaimed++;
 		}
+	}
+	
+	public static Delivery createItemDelivery(int to, int from, String title, String message, ItemStack... items) {
+		if (items == null) return null;
+		
+		Delivery delivery = new Delivery(-1, to, from, System.currentTimeMillis(), 0, 0, DeliveryType.PACKAGE, title, message, null);
+		int size = items.length;
+		for (int x = -1; ++x < size;)
+			delivery.addContent(new DeliveryItem(delivery, items[x]));
+		
+		return (Datasource.registerDelivery(to, from, 0, DeliveryType.PACKAGE, title, message, delivery.getJson()) ? delivery : null);
 	}
 	
 	public int getId() {
@@ -156,6 +169,10 @@ public class Delivery implements Dirty {
 	protected void performClaim() {
 		setDirty(true); // To save the time when package contents were claimed
 		this.contentClaimed++;
+	}
+	
+	protected void addContent(DeliveryContent content) {
+		this.content.add(content);
 	}
 	
 	public DeliveryType getDeliveryType() {

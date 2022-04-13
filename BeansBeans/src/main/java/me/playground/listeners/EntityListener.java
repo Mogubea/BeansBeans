@@ -7,6 +7,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.attribute.AttributeModifier.Operation;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.ArmorStand;
@@ -45,6 +47,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 
+import io.papermc.paper.event.player.PlayerTradeEvent;
 import me.playground.enchants.EnchantmentInfo;
 import me.playground.items.BeanItem;
 import me.playground.items.ItemRarity;
@@ -301,7 +304,7 @@ public class EntityListener extends EventListener {
 			
 			// Stats
 			pp.getStats().addToStat(StatType.KILLS, e.getEntityType().name(), 1);
-			pp.getStats().addToStat(StatType.KILLS, "total", 1);
+			pp.getStats().addToStat(StatType.KILLS, "total", 1, true);
 			if (skeletonKill) 
 				pp.getStats().addToStat(StatType.KILLS, "withSkeletonShot", 1);
 			if (chargedKill) 
@@ -371,6 +374,11 @@ public class EntityListener extends EventListener {
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
+	public void onVillagerTrader(PlayerTradeEvent e) {
+		// TODO: /afsgndmdg
+	}
+	
+	@EventHandler(priority = EventPriority.LOW)
 	public void onVillagerAcquireTrade(VillagerAcquireTradeEvent e) {
 		MerchantRecipe recipe = e.getRecipe();
 		List<ItemStack> ingredients = recipe.getIngredients();
@@ -431,6 +439,10 @@ public class EntityListener extends EventListener {
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onEntitySpawn(CreatureSpawnEvent e) {
+		// XXX: 2x Wither Max Health
+		if (e.getEntityType() == EntityType.WITHER)
+			e.getEntity().getAttribute(Attribute.GENERIC_MAX_HEALTH).addModifier(new AttributeModifier("generic.max_health", 1, Operation.MULTIPLY_SCALAR_1));
+		
 		if (e.getSpawnReason() == SpawnReason.NATURAL) {
 			final Region r = getRegionAt(e.getLocation());
 			if (e.getEntity() instanceof Monster)

@@ -130,6 +130,7 @@ public class BeanItem {
 		put(Material.END_PORTAL_FRAME, ItemRarity.UNTOUCHABLE);
 		put(Material.COMMAND_BLOCK, ItemRarity.UNTOUCHABLE);
 		put(Material.COMMAND_BLOCK_MINECART, ItemRarity.UNTOUCHABLE);
+		put(Material.BEDROCK, ItemRarity.UNTOUCHABLE);
 	}};
 	
 	public final static NamespacedKey KEY_ID = key("ID"); // String
@@ -240,6 +241,8 @@ public class BeanItem {
 	public final static BeanItemHeirloom HL_MOCHI 			= new BItemHeirloomMochi(10000, "HL_MOCHI", "Mochi", ItemRarity.RARE);
 	public final static BeanItemHeirloom HL_ANCIENT_SKULL 	= new BItemHeirloomAncientSkull(10001, "HL_ANCIENT_SKULL", "Ancient Skull", ItemRarity.RARE);
 	public final static BeanItemHeirloom HL_SHUNGITE 		= new BItemHeirloomShungite(10002, "HL_SHUNGITE", "Lucky Shungite", ItemRarity.UNCOMMON);
+	
+	public final static BeanItem REGION_CAPSULE_STARTER = new BItemRegionCapsuleStarter(15000, "RC_STARTER", "Starting Region Capsule", ItemRarity.EPIC);
 	
 	public final static BeanItem WOODEN_CRATE = new BItemPackage(19500, "WOODEN_CRATE", "Wooden Crate", ItemRarity.UNCOMMON, "crate_oak", 3, Material.OAK_PLANKS, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjYyMDUxOWI3NDUzNmMxZjg1YjdjN2U1ZTExY2U1YzA1OWMyZmY3NTljYjhkZjI1NGZjN2Y5Y2U3ODFkMjkifX19");
 	public final static BeanItem DEEP_OCEAN_CRATE = new BItemPackage(19501, "DEEP_OCEAN_CRATE", "Deep Ocean Crate", ItemRarity.RARE, "crate_deep", 4, Material.DARK_OAK_PLANKS, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTcxMTQwNjVhM2M5NWM1ZDIyNTE4OGFkN2JmZGFhOWI4YjA4NDVkZjRlMzZjMjRiNDUzNDdmZDc0NzBhNyJ9fX0=");
@@ -508,13 +511,13 @@ public class BeanItem {
 					}
 				} else if (meta.displayName() instanceof TextComponent) {
 					if (!((TextComponent)meta.displayName()).content().equals(item.getI18NDisplayName())) {
-						lore.add(Component.text(item.getI18NDisplayName()).color(NamedTextColor.DARK_GRAY));
+						lore.add(Component.translatable(item, NamedTextColor.DARK_GRAY));
 					}
 				}
 			} else if (custom != null) {
 				meta.displayName(custom.getDisplayName().color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
 			} else {
-				meta.displayName(Component.text(item.getI18NDisplayName()).color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
+				meta.displayName(Component.translatable(item, rarity.getColour()).decoration(TextDecoration.ITALIC, false));
 			}
 		}
 		

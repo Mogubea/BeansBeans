@@ -192,7 +192,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 			return Component.empty();
 		
 		final ItemMeta meta = item.getItemMeta();
-		final Component displayName = meta.hasDisplayName() ? meta.displayName() : Component.text(item.getI18NDisplayName());
+		final Component displayName = meta.hasDisplayName() ? meta.displayName() : Component.translatable(item);
 		
 		return displayName.hoverEvent(item.asHoverEvent());
 	}

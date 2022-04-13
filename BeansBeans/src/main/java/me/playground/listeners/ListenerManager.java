@@ -27,6 +27,8 @@ public class ListenerManager {
 		
 		pm.registerEvents(new CelestiaListener(), pl);
 		pm.registerEvents(new VoteListener(pl), pl);
+		
+		pm.registerEvents(new PotionCauldronListener(pl), pl);
 	}
 	
 }

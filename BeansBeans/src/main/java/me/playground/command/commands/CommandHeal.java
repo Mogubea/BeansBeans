@@ -32,7 +32,7 @@ public class CommandHeal extends BeanCommand {
 		Player target = args.length > 0 && sender.hasPermission("bean.cmd.heal.others") && healValue == -1 ? toPlayer(sender, args[0], true) : (isPlayer ? ((Player)sender) : null);
 		if (target == null) throw new CommandException(sender, "Please specify a player!");
 		
-		double maxHeal = target.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+		double maxHeal = target.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() - target.getHealth();
 		boolean healHunger = false;
 		
 		if (healValue < 1 || healValue > maxHeal) {
@@ -44,7 +44,7 @@ public class CommandHeal extends BeanCommand {
 		
 		String suffix = (healHunger ? "." : " for \u00a7c"+healValue+" \u2764");
 		
-		target.setHealth(healValue);
+		target.setHealth(target.getHealth() + healValue);
 		if (target == sender) {
 			target.sendMessage(Component.text("\u00a77You healed yourself" + suffix));
 		} else {

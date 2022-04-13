@@ -4,8 +4,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import me.playground.playerprofile.PlayerProfile;
 import me.playground.regions.flags.Flags;
 import me.playground.utils.Utils;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
@@ -19,33 +22,55 @@ public enum Rank {
 	
 	// Donor Ranks
 	PLEBEIAN(1, 0xf19fd1, 20, 873535964423794709L,
+			"The simplest but most accessible **Supporter Rank**. This rank provides access to **/workbench** "
+					+ "and the ability to open Shulker Boxes from the Inventory!",
+			
 			"bean.cmd.workbench",
 			Permission.QUICK_SHULKER_BOX),
 	PATRICIAN(2, 0xd64dd6, 50, 873916287682756668L,
+			"The second tier of **Supporter Rank**. This rank provides access to custom nicknames, **/anvil**, delivery "
+					+ "claim shortcuts and everything that <@&873535964423794709> offers!",
+					
 			"bean.cmd.anvil",
 			Permission.NICKNAME_APPLY,
 			Permission.DELIVERY_CLAIMALL),
 	SENATOR(3, 0xaa32da, 100, 914921526158041089L,
+			"The final tier of **Supporter Rank**. This rank provides access to custom name colours "
+					+ "and everything that <@&873916287682756668> offers!",
+					
 			Permission.NAMECOLOUR_CUSTOM),
 	
 	// Playtime Ranks
 	NEWBEAN(5, 0x2faf2f, 10, 546771060415135747L, 0,
+			"Every single user that has ever played on Bean's Beans will be given this rank!",
+			
 			"bean.cmd.region",
 			"bean.cmd.region.info",
 			"bean.cmd.teleport",
 			"bean.cmd.return",
 			"bean.region.rename"),
-	ROOKIE(10, 0x3fdf3f, 5, 879785289642545192L, 60 * 60 * 6),
+	ROOKIE(10, 0x3fdf3f, 5, 879785289642545192L, 60 * 60 * 6,
+			"The 2nd playtime rank. Light Green name!"),
 	APPRENTICE(15, 0x5fff5f, 5, 879785586234384384L, 60 * 60 * 24,
+			"The 3rd playtime rank. Lighter Green name! Provides access to **/rtp**.",
+			
 			"bean.cmd.randomtp"),
-	FAMILIAR(20, 0xff937a, 10, 879785746364506162L, 60 * 60 * 24 * 3),
-	JOURNEYMAN(25, 0xff636a, 10, 879785828216369242L, 60 * 60 * 24 * 7),
-	VETERAN(30, 0xff3f5f, 20, 879785962668982303L, 60 * 60 * 24 * 21),
-	PRESTIGIOUS(35, 0xffca3f, 40, 879786041920327681L, 60 * 60 * 24 * 42),
-	EXALTED(40, 0xffff6a, 100, 879786137714065449L, 60 * 60 * 24 * 84),
+	FAMILIAR(20, 0xff937a, 10, 879785746364506162L, 60 * 60 * 24 * 3,
+			"The 4th playtime rank. Peach name!"),
+	JOURNEYMAN(25, 0xff636a, 10, 879785828216369242L, 60 * 60 * 24 * 7,
+			"The 5th playtime rank. Red name!"),
+	VETERAN(30, 0xff3f5f, 20, 879785962668982303L, 60 * 60 * 24 * 21,
+			"The 6th playtime rank. Fucshia name!"),
+	PRESTIGIOUS(35, 0xffca3f, 40, 879786041920327681L, 60 * 60 * 24 * 42,
+			"The 7th playtime rank. Golden name!"),
+	EXALTED(40, 0xffff6a, 100, 879786137714065449L, 60 * 60 * 24 * 84,
+			"The current final playtime rank. Yellow name!"),
 	
 	// Staff Ranks
 	MODERATOR(70, 0x55CAFF, 0, 546771449365528604L,
+			"All members of Bean's Beans Staff will possess this rank and/or its permissions. " +
+			"If you ever need assistance with anything, don't be afraid to ask a Moderator for help!",
+			
 			Permission.NICKNAME_OVERRIDE,
 			"bean.cmd.say",
 			"bean.cmd.gamemode",
@@ -58,6 +83,9 @@ public enum Rank {
 			Flags.BLOCK_SPREAD.getPermission(),
 			"bean.gm.moderator"),
 	ADMINISTRATOR(90, 0x3378FF, 500, 546771706769965070L,
+			"Administrators are in charge of managing the Moderator team, operating various systems " +
+			"and assisting with more severe issues that may arise.",
+					
 			"minecraft.command.playsound",
 			"minecraft.command.save-all",
 			"minecraft.command.seed",
@@ -97,6 +125,9 @@ public enum Rank {
 			"bean.gm.spectator",
 			"bean.gm.creative"),
 	OWNER(100, 0x6550ff, 1000, 546771982167965716L,
+			"The rank that represents Ownership of all that is Bean's Beans. There will only ever " + 
+			"be one Owner, <@170538991693725696>.",
+			
 			"*",
 			"bean.cmd.op");
 	final short rankLevel;
@@ -107,12 +138,15 @@ public enum Rank {
 	final int playtimeReq;
 	final TextComponent component;
 	final TextColor textCol;
+	final String discordInformation;
 	
-	Rank(int rankLevel, int rgbColour, int warpLimit, long discordRankID, int playtimeReq, String...permissions) {
+	Rank(int rankLevel, int rgbColour, int warpLimit, long discordRankID, int playtimeReq, String discordInfo, String...permissions) {
 		this.rankLevel = (short) rankLevel;
 		this.col = rgbColour;
 		this.textCol = TextColor.color(rgbColour);
 		this.warpBonus = (short) warpLimit;
+		
+		this.discordInformation = discordInfo;
 		
 		Set<String> perms = new HashSet<String>();
 		for (String perm : permissions)
@@ -124,8 +158,8 @@ public enum Rank {
 		this.component = Component.text(Utils.firstCharUpper(this.toString())).color(TextColor.color(col)).decoration(TextDecoration.ITALIC, false);
 	}
 	
-	Rank(int rankLevel, int rgbColour, int warpLimit, long discordRankID, String...permissions) {
-		this(rankLevel, rgbColour, warpLimit, discordRankID, -1, permissions);
+	Rank(int rankLevel, int rgbColour, int warpLimit, long discordRankID, String discordInfo, String...permissions) {
+		this(rankLevel, rgbColour, warpLimit, discordRankID, -1, discordInfo, permissions);
 	}
 	
 	public int power() {
@@ -156,6 +190,24 @@ public enum Rank {
 		return component;
 	}
 	
+	/**
+	 * A more informative version of {@link #toComponent()}.
+	 */
+	public TextComponent toComponent(PlayerProfile pp) {
+		TextComponent component = this.component;
+		Component rankType = Component.text("\n\u00a77Playtime Rank");
+		if (this.isStaffRank()) 
+			rankType = Component.text("\nStaff Rank", Rank.MODERATOR.getRankColour());
+		else if (this.isDonorRank())
+			rankType = Component.text("\nSupporter Rank", Rank.PLEBEIAN.getRankColour());
+		else if (this != Rank.NEWBEAN)
+			rankType = Component.text("\n\u00a77Playtime Rank\n\n\u00a77Playtime Requirement: \u00a7f" + Utils.timeStringFromMillis(this.getPlaytimeRequirement() * 1000L));
+		
+		component = component.hoverEvent(this.component.append(rankType));
+		
+		return component;
+	}
+	
 	public int getWarpBonus() {
 		return warpBonus;
 	}
@@ -168,6 +220,9 @@ public enum Rank {
 		return discordRankID;
 	}
 	
+	/**
+	 * @return the rank's playtime requirement in SECONDS.
+	 */
 	public int getPlaytimeRequirement() {
 		return playtimeReq;
 	}
@@ -186,5 +241,18 @@ public enum Rank {
 	
 	public static Rank fromString(String s) {
 		return Rank.valueOf(s.toUpperCase());
+	}
+	
+	public static OptionData retrieveDiscordOptionData() {
+		OptionData data = new OptionData(OptionType.STRING, "name", "The name of the Rank.", true);
+		for (Rank rank : Rank.values()) {
+			String n = Utils.firstCharUpper(rank.name());
+			data.addChoice(n, n);
+		}
+		return data;
+	}
+	
+	public String getDiscordInformation() {
+		return discordInformation;
 	}
 }

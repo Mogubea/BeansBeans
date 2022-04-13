@@ -15,7 +15,6 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
-import org.bukkit.Statistic;
 import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
@@ -356,7 +355,7 @@ public class PlayerProfile {
 		Component c = Component.text("");
 		for (int x = 0; x < getRanks().size(); x++) {
 			final Rank rank = getRanks().get(x);
-			c = c.append(rank.toComponent());
+			c = c.append(rank.toComponent(this));
 			if (x+1 < getRanks().size())
 				c = c.append(Component.text("\u00a7r, "));
 		}
@@ -595,10 +594,9 @@ public class PlayerProfile {
 					connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.e, ((CraftPlayer)p).getHandle()));
 					connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.a, ((CraftPlayer)p).getHandle()));
 				});
-				//getPlayer().getPlayerProfile().setName(getDisplayName()); // overhead and commands
-				getPlayer().displayName(getColouredName()); // ??
-				getPlayer().playerListName(getColouredName()); // player list
-				Main.getTeamManager().updatePlayerTeam(this);
+				getPlayer().displayName(getColouredName()); // Display Name
+				Main.getTeamManager().updatePlayerTeam(this); // Team
+				getPlayer().playerListName(getPlayer().teamDisplayName()); // Player List, done after the Team Update
 			}
 			ProfileStore.updateStore(playerId, playerUUID, name, getDisplayName(), nameColour);
 		updateComponentName();
@@ -631,7 +629,7 @@ public class PlayerProfile {
 		
 		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Rank: ").append(getHighestRank().toComponent()));
 		
-		int mins = getOfflinePlayer().getStatistic(Statistic.PLAY_ONE_MINUTE)/20/60;
+		int mins = getStat(StatType.GENERIC, "playtime") / 60;
 		int hours = mins / 60;
 		mins -= hours*60;
 		
@@ -640,7 +638,7 @@ public class PlayerProfile {
 		
 		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Playtime: \u00a7f" + (hours > 0 ? hours + " Hours and " : "") + mins + " Minutes"));
 		
-//		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- DBID: \u00a7a" + getId()));
+		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Id: \u00a7a" + getId()));
 		
 		this.chatLine = Component.empty().append(chatLine.hoverEvent(HoverEvent.showText(hoverComponents)));
 	}
@@ -801,9 +799,6 @@ public class PlayerProfile {
 	}
 	
 	public boolean onCooldown(String id) {
-		if (hasPermission(Permission.BYPASS_COOLDOWNS))
-			return false;
-		
 		final long dura = this.cooldowns.getOrDefault(id, 0L);
 		final boolean isCd = System.currentTimeMillis() < dura;
 		if (dura > 0 && !isCd)
@@ -812,6 +807,12 @@ public class PlayerProfile {
 	}
 	
 	public boolean onCdElseAdd(String id, int mili) {
+		return onCdElseAdd(id, mili, false);
+	}
+	
+	public boolean onCdElseAdd(String id, int mili, boolean force) {
+		if (force && hasPermission(Permission.BYPASS_COOLDOWNS))
+			return false;
 		boolean onCd = onCooldown(id);
 		if (!onCd)
 			addCooldown(id, mili);
@@ -927,6 +928,80 @@ public class PlayerProfile {
 	
 	public long getLastInboxUpdate() {
 		return lastInboxUpdate;
+	}
+	
+	/**
+	 * Inefficient ban check, make better in future.
+	 * @return whether the player is banned or not.
+	 */
+	public boolean isBanned() {
+		return Datasource.getBanEntry(this.playerUUID) != null;
+	}
+	
+	// AFK Stuff
+	private long lastAFKPoke = System.currentTimeMillis();
+	private long lastAFK = 0L; // Away from Keyboard
+	private long lastRTK = 0L; // Return to Keyboard
+	private boolean isAFK = false;
+	private String AFKReason = "Away";
+	
+	public boolean isAFK() {
+		return isAFK;
+	}
+	
+	public String getAFKReason() {
+		return AFKReason;
+	}
+	
+	/**
+	 * Set the player as AFK.
+	 */
+	public void setAFK(String reason) {
+		if (!isOnline()) return;
+		
+		this.isAFK = true;
+		this.lastAFK = System.currentTimeMillis();
+		this.AFKReason = reason;
+		this.stats.addToStat(StatType.GENERIC, "afk", 1);
+		Main.getTeamManager().updatePlayerTeam(this); // Team
+		getPlayer().playerListName(getPlayer().teamDisplayName()); // Player List, done after the Team Update
+		getPlayer().sendMessage(Component.text("\u00a77You are now AFK."));
+	}
+	
+	/**
+	 * Poke the player's AFK checking timer. This will also un-mark them from AFK.
+	 */
+	public void pokeAFK() {
+		if (!isOnline()) return;
+		
+		long millis = System.currentTimeMillis();
+		this.lastAFKPoke = millis;
+		if (!this.isAFK) return;
+		
+		this.isAFK = false;
+		this.lastRTK = millis;
+		Main.getTeamManager().updatePlayerTeam(this); // Team
+		getPlayer().playerListName(getPlayer().teamDisplayName()); // Player List, done after the Team Update
+		getPlayer().sendMessage(Component.text("\u00a77You are no longer AFK."));
+	}
+	
+	/**
+	 * Checks if the player is currently AFK. If so, mark them as AFK.
+	 */
+	public void checkAFK() {
+		if (!isOnline() || isAFK()) return;
+		
+		boolean isAFK = lastAFKPoke + 1000 * 60 * 5 < System.currentTimeMillis();
+		if (isAFK)
+			setAFK("Away");
+	}
+	
+	public long getLastRTK() {
+		return lastRTK;
+	}
+	
+	public long getLastAFK() {
+		return lastAFK;
 	}
 	
 	/**

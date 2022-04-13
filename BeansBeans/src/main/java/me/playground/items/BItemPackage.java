@@ -70,7 +70,7 @@ public class BItemPackage extends BeanItem {
 				});
 			}
 			e.getItem().subtract();
-			pp.getStats().addToStat(StatType.CRATES_OPENED, identifier, 1);
+			pp.getStats().addToStat(StatType.CRATES_OPENED, identifier, 1, true);
 		}
 	}
 	

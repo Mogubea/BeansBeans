@@ -11,8 +11,9 @@ public class HighscoreSkills extends Highscore {
 	private final SkillType skill;
 	
 	public HighscoreSkills(SkillType skill) {
-		super(skill.name() + "_xp");
+		super();
 		this.skill = skill;
+		this.suffix = " XP";
 	}
 
 	@Override

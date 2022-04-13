@@ -18,7 +18,7 @@ public class DiscordCommandWho extends DiscordCommand {
 
 	public DiscordCommandWho(Main plugin) {
 		super(plugin, null, new CommandData("who", "View information about a player on the server!")
-				.addOption(OptionType.STRING, "ign", "The content of this embed.", true));
+				.addOption(OptionType.STRING, "ign", "The in-game name of the player.", true));
 	}
 
 	@Override
@@ -32,7 +32,7 @@ public class DiscordCommandWho extends DiscordCommand {
 				embed.setTitle(MarkdownSanitizer.escape(pp.getDisplayName()));
 				embed.setThumbnail(DiscordBot.getIconURL(pp.getId()));
 				embed.addField("Rank", "<@&" + pp.getHighestRank().getDiscordId() + ">", true);
-				embed.addField("Status", pp.isOnline() ? "Online" : "Offline", true);
+				embed.addField("Status", pp.isOnline() ? (pp.isAFK() ? "Online (Away)" : "Online") : (pp.isBanned() ? "Banned" : "Offline"), true);
 				embed.addField("Linked", !isLinked(pp.getId()) ? "No" : "<@" + getLinkedDiscord(pp.getId()) + ">", true);
 				if (pp.isRank(Rank.MODERATOR)) // Here since Staff Rank overrides Rank, why not show it
 					embed.addField("Playtime Rank", "<@&" + pp.getPlaytimeRank().getDiscordId() + ">", true);

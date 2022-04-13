@@ -25,6 +25,7 @@ public class PlayerRightClickHarvestEvent extends PlayerEvent implements Cancell
 	public PlayerRightClickHarvestEvent(@Nonnull Player who, @Nullable ItemStack item, @Nullable Block clickedBlock, @Nonnull BlockFace clickedFace) {
 		super(who);
 		this.pp = PlayerProfile.from(who);
+		pp.pokeAFK();
 		this.handItem = item;
 		this.block = clickedBlock;
 	}

@@ -92,9 +92,10 @@ public class ContainerListener extends EventListener {
 			ItemStack original = inv.getContents()[0];
 			// If tool's name is base item name, update it to new item name - Only smithing
 			if (original != null && original.getType() != i.getType()) {
-				if (original.hasItemMeta() && original.getItemMeta().hasDisplayName() && ((TextComponent)original.getItemMeta().displayName()).content().equals(original.getI18NDisplayName())) {
+				if (original.hasItemMeta() && original.getItemMeta().hasDisplayName() && 
+						((TextComponent)original.getItemMeta().displayName()).content().equals(i.getI18NDisplayName())) {
 					ItemMeta meta = i.getItemMeta();
-					meta.displayName(bi != null ? bi.getDisplayName() : Component.text(i.getI18NDisplayName()));
+					meta.displayName(bi != null ? bi.getDisplayName() : Component.translatable(i));
 					i.setItemMeta(meta);
 				}
 			}

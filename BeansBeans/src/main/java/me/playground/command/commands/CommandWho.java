@@ -6,7 +6,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.bukkit.Statistic;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
@@ -14,8 +13,11 @@ import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
+import me.playground.playerprofile.stats.StatType;
 import me.playground.utils.TabCompleter;
+import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.HoverEvent;
 
 public class CommandWho extends BeanCommand {
 	
@@ -30,8 +32,17 @@ public class CommandWho extends BeanCommand {
 		if (target == null)
 			throw new CommandException(sender, "Please specify a player!");
 		
-		sender.sendMessage(Component.text("\u00a77Information about ").append(target.getComponentName()));
-		int mins = target.getOfflinePlayer().getStatistic(Statistic.PLAY_ONE_MINUTE)/20/60;
+		Component statusPrefix = Component.empty();
+		if (!target.isOnline())
+			if (target.isBanned())
+				statusPrefix = statusPrefix.append(Component.text("\u00a7f[\u00a77Offline\u00a7f]").hoverEvent(HoverEvent.showText(Component.text("\u00a77This player is offline."))));
+			else
+				statusPrefix = statusPrefix.append(Component.text("\u00a7f[\u00a7cBanned\u00a7f]").hoverEvent(HoverEvent.showText(Component.text("\u00a77This player is banned."))));
+		else if (target.isAFK())
+			statusPrefix = statusPrefix.append(Component.text("\u00a7f[\u00a77AFK\u00a7f]").hoverEvent(HoverEvent.showText(Component.text("\u00a77AFK For: \u00a7f" + Utils.timeStringFromNow(target.getLastAFK())))));
+		
+		sender.sendMessage(Component.text("\u00a77Information about ").append(target.getComponentName()).append(Component.text(" ")).append(statusPrefix));
+		int mins = target.getStat(StatType.GENERIC, "playtime") / 60;
 		int hours = Math.floorDiv(mins, 60);
 		mins -= hours*60;
 		

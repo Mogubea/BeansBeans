@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 public class DiscordCommandStatusPost extends DiscordCommand {
 
 	public DiscordCommandStatusPost(Main plugin) {
-		super(plugin, Rank.OWNER, new CommandData("statuspost", "A command for Beandon, it sets the location of the Server Status embed."));
+		super(plugin, Rank.OWNER, new CommandData("statuspost", "A command for Mogubean, it sets the location of the Server Status embed."));
 	}
 
 	@Override

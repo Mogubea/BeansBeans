@@ -621,6 +621,33 @@ public class Datasource {
 		}
 	}
 	
+	public static LinkedHashMap<Integer, Long> getStatHighscores(StatType type, String stat) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		LinkedHashMap<Integer, Long> map = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("SELECT playerId,value FROM stats WHERE category = ? AND stat = ? ORDER BY value ASC");
+			statement.setInt(1, type.getId());
+			statement.setString(2, stat);
+			ResultSet rs = statement.executeQuery();
+			
+			map = new LinkedHashMap<Integer, Long>();
+			
+			while(rs.next())
+				map.put(rs.getInt("playerId"), rs.getLong("value"));
+			
+			statement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
+		}
+		
+		return map;
+	}
+	
 	public static LinkedHashMap<Integer, Long> getSkillHighscores(SkillType skill) {
 		Connection c = null;
 		PreparedStatement statement = null;

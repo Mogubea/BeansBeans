@@ -20,29 +20,36 @@ public final class Flags {
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to place,"),
-					Component.text("\u00a77break and use blocks."),
-					Component.text("\u00a78(Undermines other block related flags!!!)"));
+					Component.text("\u00a77break and use blocks."));
 	public static final FlagMember 	CONTAINER_ACCESS 	= register(new FlagMember("container-access", "Container Access", MemberLevel.MEMBER, MemberLevel.NONE))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to access"),
 					Component.text("\u00a77containers such as chests, furnaces"),
-					Component.text("\u00a77and brewing stands."));
+					Component.text("\u00a77and brewing stands."),
+					Component.empty(),
+					Component.text("\u00a7cPlayers with Build Access ignore this flag."));
 	public static final FlagMember 	ANVIL_ACCESS 	= register(new FlagMember("anvil-access", "Anvil Access", MemberLevel.MEMBER, MemberLevel.NONE))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to access"),
-					Component.text("\u00a77and utilise the functionality of anvils."));
+					Component.text("\u00a77and utilise the functionality of anvils."),
+					Component.empty(),
+					Component.text("\u00a7cPlayers with Build Access ignore this flag."));
 	public static final FlagMember 	DOOR_ACCESS 		= register(new FlagMember("door-access", "Door Access", MemberLevel.VISITOR, MemberLevel.NONE))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to open and"),
-					Component.text("\u00a77close doors/trapdoors/fence gates."));
+					Component.text("\u00a77close doors/trapdoors/fence gates."),
+					Component.empty(),
+					Component.text("\u00a7cPlayers with Build Access ignore this flag."));
 	public static final FlagMember 	CROP_ACCESS 		= register(new FlagMember("crop-access", "Crop Harvesting Access", MemberLevel.MEMBER, MemberLevel.NONE))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to harvest"),
-					Component.text("\u00a77planted crops by right clicking."));
+					Component.text("\u00a77planted crops by right clicking."),
+					Component.empty(),
+					Component.text("\u00a7cPlayers with Build Access ignore this flag."));
 	public static final FlagMember 	VILLAGER_ACCESS 	= register(new FlagMember("villager-access", "Villager Trade Access", MemberLevel.MEMBER, MemberLevel.NONE))
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
