@@ -13,9 +13,9 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.Statistic;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.block.data.Ageable;
+import org.bukkit.block.data.Lightable;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Animals;
@@ -51,6 +51,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
@@ -206,7 +207,7 @@ public class PlayerListener extends EventListener {
 		
 		if (ent.getType() == EntityType.VILLAGER) { // Villager
 			if (!enactRegionPermission(getRegionAt(ent.getLocation()), e, e.getPlayer(), Flags.VILLAGER_ACCESS, "trade"))
-				e.getPlayer().playSound(ent.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.7F, 1F);
+				e.getPlayer().playSound(ent.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.6F, 1F);
 		} else if (ent.getType() == EntityType.GLOW_ITEM_FRAME || ent.getType() == EntityType.ITEM_FRAME || ent.getType() == EntityType.LEASH_HITCH) { // Frames and such
 			enactRegionPermission(getRegionAt(ent.getLocation()), e, e.getPlayer(), Flags.BUILD_ACCESS, "build");
 		}
@@ -234,94 +235,80 @@ public class PlayerListener extends EventListener {
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onInteractDumb(PlayerInteractEvent e) {
+		final Block block = e.getClickedBlock();
+		
 		// Cancel mob destruction of farmland.
-		if (e.getAction() == Action.PHYSICAL && e.getClickedBlock().getType() == Material.FARMLAND) {
+		if (e.getAction() == Action.PHYSICAL && block.getType() == Material.FARMLAND) {
 			e.setCancelled(true);
 			return;
 		}
 		
 		// Stop here if unnecessary to check
-		if (e.getHand() != EquipmentSlot.HAND || e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_AIR) return;
+		if (e.getHand() != EquipmentSlot.HAND || e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.LEFT_CLICK_BLOCK) return;
 		
 		// Cancel the cleansing of custom leather items
-		if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getClickedBlock().getType() == Material.WATER_CAULDRON && e.getItem() != null && 
+		if (e.getAction() == Action.RIGHT_CLICK_BLOCK && block.getType() == Material.WATER_CAULDRON && e.getItem() != null && 
 				e.getItem().getItemMeta() instanceof LeatherArmorMeta && BeanItem.from(e.getItem()) != null) {
 			e.setCancelled(true);
 			return;
 		}
 		
-		// Perform region permission checklist
-		Region r = getRegionAt(e.getClickedBlock().getLocation());
 		final Player p = e.getPlayer();
+		final Region region = getRegionAt(e.getClickedBlock().getLocation());
+		final boolean canBuild = checkRegionPermission(region, e, p, Flags.BUILD_ACCESS);
+		final Material blockMat = block.getType();
+		final ItemStack item = e.getItem();
 		
-		final boolean canBuild = checkRegionPermission(r, e, p, Flags.BUILD_ACCESS);
-		
-		if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
-			if (!p.isBlocking()) {
-				if (!canBuild) {
-					final Material bm = e.getClickedBlock().getType();
-					final BlockState state = e.getClickedBlock().getState();
-					String error = null;
-					
-					if (state instanceof Container) {
-						enactRegionPermission(r, e, p, Flags.CONTAINER_ACCESS, "open containers");
-					} else if (bm.name().endsWith("DOOR") || bm.name().endsWith("GATE")) {
-						enactRegionPermission(r, e, p, Flags.DOOR_ACCESS, "open door");
-					} else if (bm.name().endsWith("ANVIL")) {
-						enactRegionPermission(r, e, p, Flags.ANVIL_ACCESS, "use anvils");
-						// Handle anvil unbreakable flag by giving the Player a fake Anvil GUI.
-						if (!r.getEffectiveFlag(Flags.ANVIL_DEGRADATION)) {
-							e.setCancelled(true);
-							p.openAnvil(p.getLocation(), true);
-							return;
-						}
-					} else if (bm == Material.FLOWER_POT || bm.name().startsWith("POTTED")) {
-						error = "You don't have permission to decorate here.";
-					} else if (bm == Material.NOTE_BLOCK) {
-						error = "You don't have permission to tune notes here.";
-					} else if (bm == Material.JUKEBOX) {
-						error = "You don't have permission to use music disks here.";
-					} else if (bm == Material.REDSTONE_WIRE) {
-						error = "You don't have permission to alter redstone here.";
-					}
-					
-					if (error != null) {
-						p.sendActionBar(Component.text("\u00a74\u2716 \u00a7c" + error + " \u00a74\u2716"));
-						e.setCancelled(true);
-						return;
-					}
+		// Region Permission Checks - Regardless of items
+		if (e.getAction() == Action.RIGHT_CLICK_BLOCK && !p.isBlocking()) {
+			if (block.getState() instanceof Container) { // Using Containers
+				enactRegionPermission(region, e, p, Flags.CONTAINER_ACCESS, "use containers"); return;
+			} else if (blockMat.name().endsWith("DOOR") || blockMat.name().endsWith("GATE")) { // Using Doors
+				enactRegionPermission(region, e, p, Flags.DOOR_ACCESS, "open door"); return;
+			} else if (blockMat.name().endsWith("ANVIL")) { // Using Anvils
+				if (!enactRegionPermission(region, e, p, Flags.ANVIL_ACCESS, "use anvils")) return;
+				if (!region.getEffectiveFlag(Flags.ANVIL_DEGRADATION)) { // Handle anvil unbreakable flag by giving the Player a fake Anvil GUI.
+					e.setCancelled(true);
+					p.openAnvil(p.getLocation(), true);
 				}
+				return;
+			} else if (blockMat == Material.FLOWER_POT || blockMat.name().startsWith("POTTED")) { // Flower Pots
+				enactRegionPermission(canBuild, e, p, "plant flowers"); return;
+			} else if (blockMat == Material.NOTE_BLOCK) { // Tune Note Blocks
+				enactRegionPermission(canBuild, e, p, "tune notes"); return;
+			} else if (blockMat == Material.JUKEBOX) { // Mess with Music Discs
+				enactRegionPermission(canBuild, e, p, "play music"); return;
+			} else if (blockMat == Material.REDSTONE_WIRE) { // Mess with Redstone wires
+				enactRegionPermission(canBuild, e, p, "alter redstone"); return;
 			}
 		}
 		
-		final ItemStack i = e.getItem();
-		if (i == null) return;
-		final Material m = i.getType();
+		if (item == null) return;
+		final Material itemMat = item.getType();
 		
-		if (!canBuild) {
-			String error = null;
-
-			if (m.name().endsWith("_SPAWN_EGG")) {
-				error = "You don't have permission to spawn mobs here.";
-			} else if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
-				final Material bm = e.getClickedBlock().getType();
-				if (m == Material.BONE_MEAL) {
-					if (e.getClickedBlock().getBlockData() instanceof Ageable ? !r.getEffectiveFlag(Flags.CROP_ACCESS).lowerOrEqTo(r.getMember(p)) : true)
-						error = "You don't have permission to apply Bone Meal here.";
-				} else if (bm.name().endsWith("SIGN") && (m.name().endsWith("DYE") || m == Material.GLOW_INK_SAC)) {
-					error = "You don't have permission to dye signs here.";
-				} else if (m == Material.SHEARS && bm == Material.PUMPKIN) {
-					error = "You don't have permission to carve pumpkins here.";
-				} else if (m.name().endsWith("BOAT") || m.name().endsWith("MINECART")) {
-					error = "You don't have permission to place vehicles here.";
-				} else if (m == Material.END_CRYSTAL || m == Material.ARMOR_STAND || m == Material.GLOW_ITEM_FRAME || m == Material.ITEM_FRAME || m == Material.PAINTING || m == Material.LEAD) {
-					error = "You don't have permission to build here.";
+		if (itemMat.name().endsWith("_SPAWN_EGG")) { // Spawn Mobs
+			enactRegionPermission(canBuild, e, p, "spawn mobs"); return;
+		} else if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+			if (itemMat == Material.BONE_MEAL) { // Bone Meal
+				enactRegionPermission(canBuild || (block.getBlockData() instanceof Ageable ? checkRegionPermission(region, e, p, Flags.CROP_ACCESS) : canBuild), e, p, "apply Bone Meal"); return;
+			} else if (blockMat.name().endsWith("SIGN") && (itemMat.name().endsWith("DYE") || itemMat == Material.GLOW_INK_SAC)) { // Dye Signs
+				enactRegionPermission(canBuild, e, p, "dye signs"); return;
+			} else if (itemMat == Material.SHEARS && blockMat == Material.PUMPKIN) { // Carve Pumpkins 
+				enactRegionPermission(canBuild, e, p, "carve pumpkins"); return;
+			} else if (itemMat.name().endsWith("BOAT") || itemMat.name().endsWith("MINECART")) { // Placing Vehicles
+				enactRegionPermission(canBuild, e, p, "place vehicles"); return;
+			} else if (itemMat == Material.END_CRYSTAL || itemMat == Material.ARMOR_STAND || itemMat == Material.GLOW_ITEM_FRAME || itemMat == Material.ITEM_FRAME || itemMat == Material.PAINTING || itemMat == Material.LEAD) {
+				enactRegionPermission(canBuild, e, p, "build"); return;
+			} else if (item.getItemMeta().hasEnchant(Enchantment.FIRE_ASPECT) || (itemMat == Material.ENCHANTED_BOOK && ((EnchantmentStorageMeta)item).hasEnchant(Enchantment.FIRE_ASPECT))) {
+				if (blockMat.name().endsWith("CANDLE") || blockMat.name().endsWith("CANDLE_CAKE") || blockMat.name().endsWith("CAMPFIRE")) {
+					Lightable data = (Lightable) block.getBlockData();
+					if (data.isLit() || !enactRegionPermission(canBuild, e, p, "build")) return;
+					data.setLit(true);
+					block.getWorld().playSound(e.getClickedBlock().getLocation().toCenterLocation(), Sound.ITEM_FIRECHARGE_USE, 0.25F, 0.7F + getPlugin().getRandom().nextFloat()/2F);
+					block.setBlockData(data, false); // no need for physics check
+					doArmSwing(p);
+					e.setCancelled(true);
 				}
-			}
-			
-			if (error != null) {
-				p.sendActionBar(Component.text("\u00a74\u2716 \u00a7c" + error + " \u00a74\u2716"));
-				e.setCancelled(true);
 			}
 		}
 	}

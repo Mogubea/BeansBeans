@@ -135,7 +135,7 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 	
 	@Override
 	public boolean preInventoryClick(InventoryClickEvent e) {
-		if (e.getRawSlot() == 49 && !pp.onCdElseAdd("guiClick", 300)) {
+		if (e.getRawSlot() == 49 && !pp.onCdElseAdd("guiClick", 300, true)) {
 			e.setCancelled(true);
 			if (getEntityType() != null)
 				setEntityType(null);

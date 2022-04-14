@@ -65,7 +65,7 @@ public class BeanGuiShopCustomer extends BeanGuiShop {
 			}
 			break;
 		case 13: // Purchase Item
-			if (pp.onCdElseAdd("shop_purchase", 500)) {
+			if (pp.onCdElseAdd("shop_purchase", 500, true)) {
 			
 			} else if (shop.getOwnerId() == pp.getId() || shop.getSellPrice() < 1) {
 				p.sendActionBar(Component.text("\u00a7cYou can't purchase from this shop!"));
@@ -115,7 +115,7 @@ public class BeanGuiShopCustomer extends BeanGuiShop {
 				if (shop.getBuyPrice() <= 0)
 					return;
 				
-				if (shop.getItemStack() != null && isSimilar(item, shop.getItemStack()) && !tpp.onCdElseAdd("shop_sell", 500)) {
+				if (shop.getItemStack() != null && isSimilar(item, shop.getItemStack()) && !tpp.onCdElseAdd("shop_sell", 500, true)) {
 					if (shop.getBuyPrice() > shop.getStoredMoney()) {
 						pp.addCooldown("shop_sell", 3000);
 						p.sendActionBar(Component.text("\u00a7cThis shop doesn't have enough money!"));

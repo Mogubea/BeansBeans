@@ -106,7 +106,7 @@ public abstract class BeanGuiRegion extends BeanGui {
 		final ItemStack i = e.getCurrentItem();
 		if (i == null) return true;
 		
-		if (pp.onCdElseAdd("guiClick", 300))
+		if (pp.onCdElseAdd("guiClick", 300, true))
 			return true;
 			
 		if (e.getRawSlot() == 50) {

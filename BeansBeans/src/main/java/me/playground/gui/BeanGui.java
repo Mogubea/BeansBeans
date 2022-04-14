@@ -90,7 +90,7 @@ public abstract class BeanGui implements IPluginRef {
 		final ItemStack i = e.getCurrentItem();
 		if (i == null) return true;
 		
-		if (pp.onCdElseAdd("guiClick", 300))
+		if (pp.onCdElseAdd("guiClick", 300, true))
 			return true;
 			
 		if (i.isSimilar(goBack)) {

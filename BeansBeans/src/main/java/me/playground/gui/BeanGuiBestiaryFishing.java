@@ -45,7 +45,7 @@ public class BeanGuiBestiaryFishing extends BeanGuiBestiary {
 	
 	@Override
 	public boolean preInventoryClick(InventoryClickEvent e) {
-		if (e.getRawSlot() == 49 && !pp.onCdElseAdd("guiClick", 300)) {
+		if (e.getRawSlot() == 49 && !pp.onCdElseAdd("guiClick", 300, true)) {
 			new BeanGuiBestiary(p).openInventory();
 			return true;
 		}

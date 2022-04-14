@@ -83,7 +83,7 @@ public class BeanGuiWarps extends BeanGui {
 		if (slot < 0 || slot >= e.getInventory().getSize() || e.getInventory().getItem(slot) == null)
 			return;
 		
-		if (pp.onCdElseAdd("warpGUI", 500))
+		if (pp.onCdElseAdd("warpGUI", 500, true))
 			return;
 		
 		if (slot == 48) {

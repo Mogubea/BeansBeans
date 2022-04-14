@@ -42,7 +42,7 @@ public class BlockListener extends EventListener {
 	
 	@EventHandler(priority=EventPriority.LOW)
 	public void onBlockPlace(BlockPlaceEvent e) {
-		enactRegionPermission(getRegionAt(e.getBlock().getLocation()), e, e.getPlayer(), Flags.BUILD_ACCESS, "build");
+		if (!enactRegionPermission(getRegionAt(e.getBlock().getLocation()), e, e.getPlayer(), Flags.BUILD_ACCESS, "build")) return;
 		
 		String blockName = e.getBlock().getType().name();
 		
@@ -96,7 +96,7 @@ public class BlockListener extends EventListener {
 		final Player p = e.getPlayer();
 		String blockName = e.getBlock().getType().name();
 		
-		enactRegionPermission(getRegionAt(e.getBlock().getLocation()), e, p, Flags.BUILD_ACCESS, "break");
+		if (!enactRegionPermission(getRegionAt(e.getBlock().getLocation()), e, p, Flags.BUILD_ACCESS, "break"));
 		
 		final ItemStack hand = e.getPlayer().getEquipment().getItemInMainHand();
 		if (hand != null && hand.getType() != Material.AIR) {

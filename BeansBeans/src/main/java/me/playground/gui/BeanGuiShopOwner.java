@@ -72,7 +72,7 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 			}
 			break;
 		case 13: // Take out Item
-			if (pp.onCdElseAdd("shop_itemTake", 500)) {
+			if (pp.onCdElseAdd("shop_itemTake", 500, true)) {
 				p.sendActionBar(Component.text("\u00a7cPlease slow down!"));
 			} else if (shop.getItemQuantity() > 0) {
 				if (e.isShiftClick()) {
@@ -188,7 +188,7 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 			break;
 		case 32: // Shop Bank
 			final boolean shift = e.isShiftClick();
-			if (pp.onCdElseAdd("shop_moneyTransaction", 3000)) {
+			if (pp.onCdElseAdd("shop_moneyTransaction", 3000, true)) {
 				p.sendActionBar(Component.text("\u00a7cPlease slow down!"));
 				return;
 			}
@@ -298,7 +298,7 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 			if (slot >= e.getInventory().getSize()) {
 				// Add a similar item to the stock
 				if (shop.getItemStack() != null && isSimilar(item, shop.getItemStack())) {
-					if (tpp.onCdElseAdd("shop_itemAdd", 500))
+					if (tpp.onCdElseAdd("shop_itemAdd", 500, true))
 						return;
 					
 					int addAmt = Math.min(shop.getMaxItemQuantity()-shop.getItemQuantity(), item.getAmount());
@@ -317,7 +317,7 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 						p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_GOLD, 0.2F, 0.8F);
 					}
 				// Replace the current display item
-				} else if (pp.onCdElseAdd("shop_itemReplace", 2000)) {
+				} else if (pp.onCdElseAdd("shop_itemReplace", 2000, true)) {
 					p.sendActionBar(Component.text("\u00a7cPlease slow down!"));
 				} else if (shop.getItemQuantity() > 0) {
 					p.sendMessage(Component.text("\u00a7cPlease remove all of your \u00a76Shop Stock\u00a7c before replacing the \u00a7fDisplay Item\u00a7c!"));

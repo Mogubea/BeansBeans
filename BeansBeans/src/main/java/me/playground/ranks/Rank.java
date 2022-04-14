@@ -139,6 +139,7 @@ public enum Rank {
 	final TextComponent component;
 	final TextColor textCol;
 	final String discordInformation;
+	final String niceName;
 	
 	Rank(int rankLevel, int rgbColour, int warpLimit, long discordRankID, int playtimeReq, String discordInfo, String...permissions) {
 		this.rankLevel = (short) rankLevel;
@@ -155,7 +156,8 @@ public enum Rank {
 		this.permissions = Collections.unmodifiableSet(perms);
 		this.discordRankID = discordRankID;
 		this.playtimeReq = playtimeReq;
-		this.component = Component.text(Utils.firstCharUpper(this.toString())).color(TextColor.color(col)).decoration(TextDecoration.ITALIC, false);
+		this.niceName = Utils.firstCharUpper(this.toString());
+		this.component = Component.text(niceName).color(TextColor.color(col)).decoration(TextDecoration.ITALIC, false);
 	}
 	
 	Rank(int rankLevel, int rgbColour, int warpLimit, long discordRankID, String discordInfo, String...permissions) {
@@ -254,5 +256,9 @@ public enum Rank {
 	
 	public String getDiscordInformation() {
 		return discordInformation;
+	}
+	
+	public String getNiceName() {
+		return niceName;
 	}
 }

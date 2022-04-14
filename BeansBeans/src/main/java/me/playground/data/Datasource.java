@@ -831,6 +831,8 @@ public class Datasource {
 			if (loc == null)
 				loc = new Location(Bukkit.getWorlds().get(0), 0, 80, 0);
 			
+			data = data.replaceAll("[\\p{C}]", "?");
+			
 			statement.setInt(1, id);
 			statement.setInt(2, action.ordinal());
 			statement.setInt(3, getWorldId(loc.getWorld()));

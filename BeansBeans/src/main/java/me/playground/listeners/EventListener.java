@@ -61,8 +61,8 @@ public abstract class EventListener implements Listener, IPluginRef {
 	}
 	
 	/**
-	 * Check if the player has this {@link Flag} permission in the provided {@link Region}. Throws a {@link RegionPermissionException} and cancels
-	 * the {@link Cancellable} Event if the player does not have permission.
+	 * Check if the player has this {@link Flag} permission in the provided {@link Region}. Throws a {@link RegionPermissionException} 
+	 * and cancels the {@link Cancellable} Event if the player does not have permission.
 	 * @throws {@link RegionPermissionException} if no permission
 	 * @return whether the player has the flag permission
 	 */
@@ -70,9 +70,19 @@ public abstract class EventListener implements Listener, IPluginRef {
 		return enactRegionPermission(r, e, p, flag, reason, true);
 	}
 	
-	private final boolean enactRegionPermission(Region r, Cancellable e, Player p, Flag<?> flag, String reason, boolean throwException) {
+	/**
+	 * Similar to {@link #enactRegionPermission(Region, Cancellable, Player, Flag, String)} except we already have the permission provided as 
+	 * the first argument. Throws a {@link RegionPermissionException} and cancels the {@link Cancellable} Event if the player does not have permission.
+	 * @throws {@link RegionPermissionException} if no permission
+	 * @return whether the player has the flag permission
+	 */
+	protected final boolean enactRegionPermission(boolean hasPermission, Cancellable e, Player p, String reason) {
+		return enactRegionPermission(hasPermission, e, p, reason, true);
+	}
+	
+	private final boolean enactRegionPermission(boolean hasPermission, Cancellable e, Player p, String reason, boolean throwException) {
 		try {
-			if (!r.can(p, flag)) {
+			if (!hasPermission) {
 				if (throwException)
 					throw new RegionPermissionException(p, e, reason == null ? null : "You don't have permission to " + reason + " here.");
 				return false;
@@ -81,6 +91,10 @@ public abstract class EventListener implements Listener, IPluginRef {
 		} catch (RegionPermissionException ex) {
 			return false;
 		}
+	}
+	
+	private final boolean enactRegionPermission(Region r, Cancellable e, Player p, Flag<?> flag, String reason, boolean throwException) {
+		return enactRegionPermission(r.can(p, flag), e, p, reason, throwException);
 	}
 	
 }

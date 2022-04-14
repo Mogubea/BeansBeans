@@ -67,7 +67,7 @@ public class CommandOp extends BeanCommand {
 		
 		if ("previewrank".equals(cmdStr) && checkPlayer(sender)) {
 			try {
-				if (args[1].equalsIgnoreCase("stop") || args[1].equalsIgnoreCase("none")) {
+				if (args.length < 2 || args[1].equalsIgnoreCase("stop") || args[1].equalsIgnoreCase("none")) {
 					if (getPlugin().permissionManager().stopPreviewingRank(p))
 						p.sendMessage(Component.text("\u00a77You are no longer previewing a rank."));
 					else

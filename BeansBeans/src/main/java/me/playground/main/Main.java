@@ -84,7 +84,7 @@ public class Main extends JavaPlugin {
 		worldManager = new WorldManager(this); // Important to be before everything else due to a lot of things requiring the getWorld and getWorldId methods.
 		regionManager = new RegionManager(this); // Should always be after WorldManager due to dependance.
 		
-		teamManager = new TeamManager();
+		teamManager = new TeamManager(this);
 		highscores = new Highscores();
 		npcManager = new NPCManager(this); // Load all NPCs after TeamManager
 		warpManager = new WarpManager(this);
@@ -258,14 +258,15 @@ public class Main extends JavaPlugin {
 	private long lastProfilePoke;
 	private long lastPlaytimePoke;
 	private long lastHighscoreUpdate;
+	private long lastScoreboardUpdate;
 	private long lastDiscordPoke;
 	
 	private void startMainServerLoop() {
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
 				final long mili = System.currentTimeMillis();
-				//ticksDone += 20;
-				
+				boolean doScoreboardUpdate = mili-lastScoreboardUpdate >= 1000 * 5;
+				boolean doProfilePoke = mili-lastProfilePoke >= 1000 * 12;
 				
 				// Every Second
 				if (mili-lastPlaytimePoke >= 1000) {
@@ -294,10 +295,18 @@ public class Main extends JavaPlugin {
 							} else if (oldRegion != null) {
 								p.sendActionBar(Component.text("\u00a77You have left region \u00a79" + oldRegion.getName()));
 							}
+							pp.flagScoreboardUpdate();
+						}
+						
+						// Every 5 Seconds
+						if (doScoreboardUpdate) {
+							lastScoreboardUpdate = mili;
+							if (pp.needsScoreboardUpdate())
+								pp.updateScoreboard();
 						}
 						
 						// Every 12 Seconds
-						if (mili-lastProfilePoke >= 1000 * 12) {
+						if (doProfilePoke) {
 							lastProfilePoke = mili;
 							// Playtime Check - Only checks for the next rank in line, this could be a non-playtime rank (eg. Exalted -> Moderator), that's why there's a check.
 							if (!permissionManager().isPreviewing(p)) {

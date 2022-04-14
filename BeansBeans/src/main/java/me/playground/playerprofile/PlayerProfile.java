@@ -141,6 +141,7 @@ public class PlayerProfile {
 	// XXX: Class Begins
 	
 	private final int 					playerId;
+	private OfflinePlayer				player;
 	
 	private final ArrayList<Integer> 	ignoredPlayers = new ArrayList<Integer>();
 	private final ArrayList<Rank> 		ranks = new ArrayList<Rank>();
@@ -193,6 +194,7 @@ public class PlayerProfile {
 	
 	public PlayerProfile(int id, UUID uuid, ArrayList<Rank> ranks, Set<String> perms, int nameColour, String name, String nickname, long coins, long settings, short warpCount) {
 		this.loadTime = System.currentTimeMillis();
+		this.player = Bukkit.getOfflinePlayer(uuid);
 		this.playerId = id;
 		this.profileOverride = uuid; // XXX: TEMP
 		this.playerUUID = uuid;
@@ -226,11 +228,11 @@ public class PlayerProfile {
 	}
 	
 	public Player getPlayer() {
-		return Bukkit.getPlayer(playerUUID);
+		return player.getPlayer();
 	}
 	
 	public OfflinePlayer getOfflinePlayer() {
-		return Bukkit.getOfflinePlayer(playerUUID);
+		return player;
 	}
 	
 	public UUID getUniqueId() {
@@ -248,6 +250,7 @@ public class PlayerProfile {
 	public void setBalance(long amount, String log) {
 		coins = amount;
 		Datasource.logTransaction(playerId, amount, log);
+		flagScoreboardUpdate();
 	}
 	
 	public void addToBalance(long amount, String log) {
@@ -259,6 +262,7 @@ public class PlayerProfile {
 		coins+=amount;
 		if (this.isOnline())
 			getPlayer().sendActionBar(Component.text("\u00a76" + getBalance() + " Coins \u00a77( " + (amount>-1 ? "\u00a7a+" : "\u00a7c") + amount + "\u00a77 )"));
+		flagScoreboardUpdate();
 	}
 	
 	/**
@@ -275,10 +279,12 @@ public class PlayerProfile {
 	 */
 	public void addToSapphire(int amount) {
 		stats.addToStat(StatType.VOTING, "sapphire", amount);
+		flagScoreboardUpdate();
 	}
 	
 	public void setSapphire(int amount) {
 		stats.setStat(StatType.VOTING, "sapphire", amount);
+		flagScoreboardUpdate();
 	}
 	
 	public boolean hasPermission(String permissionString) {
@@ -538,8 +544,7 @@ public class PlayerProfile {
 	}
 	
 	public boolean performWardrobeSwap(int id) {
-		if (this.getPlayer() == null || !this.getPlayer().isOnline())
-			return false;
+		if (!isOnline()) return false;
 		
 		final Player p = this.getPlayer();
 		final int offset = (id-1)*4;
@@ -565,8 +570,7 @@ public class PlayerProfile {
 	}
 	
 	public void withdrawWardrobe(int id) {
-		if (this.armourWardrobe == null)
-			return;
+		if (this.armourWardrobe == null || !isOnline()) return;
 		
 		final Player p = this.getPlayer();
 		final int offset = (id-1)*4;
@@ -582,12 +586,12 @@ public class PlayerProfile {
 	}
 	
 	/**
-	 * Update the player's current names.
+	 * Update the player's current names + scoreboard
 	 * Also fires {@link #updateComponentName()}.
 	 */
 	public void updateShownNames() {
 		this.colouredName = Component.text(nickname==null?name:nickname).color(TextColor.color(getNameColour()));
-			if (getPlayer() != null) {
+			if (isOnline()) {
 				Bukkit.getOnlinePlayers().forEach((p) -> { 
 					PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
 					//connection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.d, ((CraftPlayer)p).getHandle())); // d updates player's display name
@@ -595,7 +599,8 @@ public class PlayerProfile {
 					connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.a, ((CraftPlayer)p).getHandle()));
 				});
 				getPlayer().displayName(getColouredName()); // Display Name
-				Main.getTeamManager().updatePlayerTeam(this); // Team
+				Main.getTeamManager().updatePlayerTeam(getPlayer()); // Team
+				flagScoreboardUpdate();
 				getPlayer().playerListName(getPlayer().teamDisplayName()); // Player List, done after the Team Update
 			}
 			ProfileStore.updateStore(playerId, playerUUID, name, getDisplayName(), nameColour);
@@ -963,7 +968,8 @@ public class PlayerProfile {
 		this.lastAFK = System.currentTimeMillis();
 		this.AFKReason = reason;
 		this.stats.addToStat(StatType.GENERIC, "afk", 1);
-		Main.getTeamManager().updatePlayerTeam(this); // Team
+		Main.getTeamManager().updatePlayerTeam(getPlayer()); // Team
+		flagScoreboardUpdate();
 		getPlayer().playerListName(getPlayer().teamDisplayName()); // Player List, done after the Team Update
 		getPlayer().sendMessage(Component.text("\u00a77You are now AFK."));
 	}
@@ -980,7 +986,8 @@ public class PlayerProfile {
 		
 		this.isAFK = false;
 		this.lastRTK = millis;
-		Main.getTeamManager().updatePlayerTeam(this); // Team
+		Main.getTeamManager().updatePlayerTeam(getPlayer()); // Team
+		flagScoreboardUpdate();
 		getPlayer().playerListName(getPlayer().teamDisplayName()); // Player List, done after the Team Update
 		getPlayer().sendMessage(Component.text("\u00a77You are no longer AFK."));
 	}
@@ -1009,6 +1016,21 @@ public class PlayerProfile {
 	 */
 	public long getLoadTime() {
 		return loadTime;
+	}
+	
+	public void updateScoreboard() {
+		if (!isOnline()) return;
+		Main.getTeamManager().updatePlayerScoreboard(getPlayer());
+		this.scoreboardFlag = false;
+	}
+	
+	private boolean scoreboardFlag;
+	public void flagScoreboardUpdate() {
+		this.scoreboardFlag = true;
+	}
+	
+	public boolean needsScoreboardUpdate() {
+		return this.scoreboardFlag;
 	}
 	
 }

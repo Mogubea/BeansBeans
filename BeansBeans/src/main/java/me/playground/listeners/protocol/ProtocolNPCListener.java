@@ -45,7 +45,7 @@ public class ProtocolNPCListener {
                      if (npc == null) return;
                      
                      // Call Sync from Async
-                     if (PlayerProfile.from(p).onCdElseAdd("npcInteract", 500)) return;
+                     if (PlayerProfile.from(p).onCdElseAdd("npcInteract", 500, true)) return;
                      Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> {
                     	 if (npc instanceof NPCHuman && p.isSneaking() && p.hasPermission("bean.npc.edit")) {
                     		 new BeanGuiNPCEdit(p, (NPCHuman)npc).openInventory();

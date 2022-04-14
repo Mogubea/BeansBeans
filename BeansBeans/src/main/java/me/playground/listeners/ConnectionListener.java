@@ -64,7 +64,7 @@ public class ConnectionListener extends EventListener {
 		
 		PlayerProfile pp = PlayerProfile.from(p);
 		pp.updateShownNames(); // Done here due to requiring an existing player.
-
+		getPlugin().teamManager().initScoreboard(p);
 		getPlugin().npcManager().showAllNPCs(p);
 		
 		// Check for menu item

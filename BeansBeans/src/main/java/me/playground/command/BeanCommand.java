@@ -96,7 +96,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 			
 			if (isPlayer(sender)) {
 				PlayerProfile pp = PlayerProfile.from(((Player)sender));
-				if (cooldown > 0 && !sender.isOp() && pp.onCdElseAdd("cmd." + cmd.getName(), cooldown)) {
+				if (cooldown > 0 && pp.onCdElseAdd("cmd." + cmd.getName(), cooldown)) {
 					((Player)sender).sendActionBar(Component.text("\u00a7cPlease wait " + Utils.timeStringFromNow(pp.getCooldown("cmd."+cmd.getName())) + " before using /"+str+" again."));
 					return false;
 				}

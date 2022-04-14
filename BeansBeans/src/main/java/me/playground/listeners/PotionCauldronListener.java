@@ -91,7 +91,7 @@ public class PotionCauldronListener extends EventListener {
 		/**
 		 * Handle right clicking with nothing, take a little taste.
 		 */
-		if (itemType == null) {
+		if (itemType == null && stand != null) {
 			PlayerProfile pp = PlayerProfile.from(p);
 			if (pp.onCdElseAdd("potDrink", 200, true)) return;
 			pp.getStats().addToStat(StatType.GENERIC, "cauldronSips", 1);
