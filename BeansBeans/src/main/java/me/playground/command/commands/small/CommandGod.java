@@ -35,7 +35,7 @@ public class CommandGod extends BeanCommand {
 		target.setInvulnerable(!target.isInvulnerable());
 		target.sendMessage("\u00a77You are " + (!target.isInvulnerable() ? "\u00a7cno longer" : "\u00a7anow") + "\u00a77 invulnerable.");
 		if (sender != target)
-			sender.sendMessage(PlayerProfile.from(target).getComponentName().append(Component.text(("\u00a77 is " + (!target.getAllowFlight() ? "\u00a7cno longer" : "\u00a7anow")) + "\u00a77 invulnerable.")));
+			sender.sendMessage(PlayerProfile.from(target).getComponentName().append(Component.text(("\u00a77 is " + (!target.isInvulnerable() ? "\u00a7cno longer" : "\u00a7anow")) + "\u00a77 invulnerable.")));
 		return true;
 	}
 
