@@ -3,6 +3,7 @@ package me.playground.playerprofile.settings;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import me.playground.ranks.Permission;
 import net.kyori.adventure.text.Component;
 
 public enum PlayerSetting {
@@ -14,6 +15,7 @@ public enum PlayerSetting {
 	SHOW_ACHIEVEMENTS("Achievements in Chat", true, "\u00a77Display whenever a player gets an \u00a76Achievement\u00a77."),
 	SHOW_DEATH_MESSAGES("Death Messages in Chat", true, "\u00a77Display whenever a player kicks the bucket."),
 	SHOW_JOB_MESSAGES("Job Messages in Chat", true, "\u00a77Display whenever a player changes their job."),
+	QUICK_WOOL_DYE("Quick Wool Dye (Plebeian+)", Permission.QUICK_WOOL_DYE, true, "\u00a77Right Click a Block of Wool or Carpet","\u00a77with a dye to change its colour."),
 	
 	;
 	
@@ -27,14 +29,21 @@ public enum PlayerSetting {
 		defaultSetting = ack;
 	}
 	
-	final String displayName;
-	final ArrayList<Component> description = new ArrayList<Component>();
-	final boolean enabled;
-	PlayerSetting(String displayName, boolean enabled, String...description) {
+	private final String displayName;
+	private final ArrayList<Component> description = new ArrayList<Component>();
+	private final boolean enabled;
+	private final String permString;
+	
+	PlayerSetting(String displayName, String permString, boolean enabled, String...description) {
 		this.displayName = displayName;
 		this.enabled = false;
 		for (String s : description)
 			this.description.add(Component.text(s));
+		this.permString = "";
+	}
+	
+	PlayerSetting(String displayName, boolean enabled, String...description) {
+		this(displayName, "", enabled, description);
 	}
 	
 	public String getDisplayName() {
@@ -51,6 +60,10 @@ public enum PlayerSetting {
 	
 	public static long getDefaultSettings() {
 		return defaultSetting;
+	}
+	
+	public String getPermissionString() {
+		return permString;
 	}
 	
 }

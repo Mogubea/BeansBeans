@@ -43,6 +43,8 @@ import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -156,7 +158,6 @@ public class DiscordBot extends ListenerAdapter {
 		this.discordBot = buildBot();
 		if (discordBot != null) {
 			this.ingameChat = discordBot.getTextChannelById(ingameChatId);
-			discordBot.addEventListener(this);
 			chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setAllow(Permission.MESSAGE_SEND).queue();
 			registerCommands();
 			
@@ -173,6 +174,9 @@ public class DiscordBot extends ListenerAdapter {
 		JDABuilder builder = JDABuilder.createDefault(token);
 		JDA bot = null;
 		try {
+			builder.setChunkingFilter(ChunkingFilter.NONE);
+			builder.enableIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MESSAGE_REACTIONS);
+			builder.addEventListeners(this);
 			bot = builder.build();
 			bot.awaitReady();
 		} catch (Exception e) {
@@ -203,16 +207,6 @@ public class DiscordBot extends ListenerAdapter {
 		eb.setColor(colour);
 		eb.appendDescription(description);
 		return eb;
-	}
-	
-	public void onMessageReactionAdd(MessageReactionAddEvent e) {
-		if (e.getMember().getUser().isBot())
-			return;
-		
-		if (e.getChannel().getIdLong() == getPlayerReportChatId() || e.getChannel().getIdLong() == getBugReportChatId())
-			this.getCommand("report").onMessageReactionAdd(e);
-		else if (e.getChannel().getIdLong() == getSuggestionChatId())
-			this.getCommand("suggest").onMessageReactionAdd(e);
 	}
 	
 	public boolean isDebug() {
@@ -280,45 +274,57 @@ public class DiscordBot extends ListenerAdapter {
 		return discordCommands.get(cmd.toLowerCase());
 	}
 	
+	@Override
 	public void onSlashCommand(SlashCommandEvent e) {
+		if (e.getMember().getUser().isBot()) return;
+		if (e.isAcknowledged()) { // TODO: catch this properly, this doesn't work
+			plugin.getSLF4JLogger().warn("Discord Command \"/" + e.getName() + "\" was already acknowledged."); 
+			return; 
+		}
+		
+		final DiscordCommand cmd = discordCommands.get(e.getName().toLowerCase());
+		if (cmd != null)
+			cmd.preSlashCommand(e);
+	}
+	
+	@Override
+	public void onMessageReactionAdd(MessageReactionAddEvent e) {
 		if (e.getMember().getUser().isBot())
 			return;
 		
-		final DiscordCommand cmd = discordCommands.get(e.getName().toLowerCase());
-		if (cmd != null) {
-			try {
-				cmd.preSlashCommand(e);
-			} catch (Exception ex) {
-				plugin.getSLF4JLogger().warn("There was a problem firing discord command \"/" + e.getName() + "\" ("+ex.getLocalizedMessage()+")");
-			}
-			return;
-		}
+		if (e.getChannel().getIdLong() == getPlayerReportChatId() || e.getChannel().getIdLong() == getBugReportChatId())
+			this.getCommand("report").onMessageReactionAdd(e);
+		else if (e.getChannel().getIdLong() == getSuggestionChatId())
+			this.getCommand("suggest").onMessageReactionAdd(e);
 	}
 	
-	public void onGuildMessageReceived(MessageReceivedEvent e) {
-		if (!e.getAuthor().isBot()) {
-			if (e.getChannel().getIdLong() == ingameChatId) {
-				String msg = MarkdownSanitizer.sanitize(e.getMessage().getContentStripped());
-				if (msg.isEmpty())
-					return;
-				if (msg.length() > 160)
-					msg = msg.substring(0, 160) + "...";
-				
-				ProfileStore ps = isLinked(e.getMember().getIdLong()) ? ProfileStore.from(getKey(linkedAccounts, e.getMember().getIdLong()), false) : null;
-				final String name = ps == null ? e.getMember().getEffectiveName() : ps.getDisplayName();
-				TextComponent chat = isRank(e.getMember(), Rank.MODERATOR) ? Component.empty().append(Component.text("\u24E2").color(TextColor.color(Rank.MODERATOR.getRankHex())).hoverEvent(HoverEvent.showText(Component.text("Staff Member").color(TextColor.color(Rank.MODERATOR.getRankHex()))))).append(Component.text(" ")) : Component.empty();
-				chat = chat.append(Component.text(name).color(TextColor.color(0x7789ff)).hoverEvent(HoverEvent.showText(Component.text("Discord Client\n\u00a77- Tag: " + e.getAuthor().getAsTag()).color(TextColor.color(0x6779ff)))));
-				chat = chat.append(Component.text("\u00a79 » \u00a7r").append(Component.text(msg)));
-				
-				for (Player pl : Bukkit.getOnlinePlayers()) {
-					PlayerProfile ppl = PlayerProfile.from(pl);
-					if (isRank(e.getMember(), Rank.MODERATOR) || !ppl.getIgnoredPlayers().contains(ps.getId()))
-						pl.sendMessage(chat.colorIfAbsent(TextColor.color(0xabc5fa)));
-				}
-				getPlugin().getLogger().info("[DISCORD] " + name + ": " + msg);
-			}
+	@Override
+	public void onMessageReceived(MessageReceivedEvent e) {
+		if (e.getAuthor().isBot()) return;
+		if (e.getChannel().getIdLong() != ingameChatId) return;
+		
+		String msg = MarkdownSanitizer.sanitize(e.getMessage().getContentStripped());
+		if (msg.isEmpty())
+			return;
+		if (msg.length() > 160)
+			msg = msg.substring(0, 160) + "...";
+		
+		ProfileStore ps = isLinked(e.getMember().getIdLong()) ? ProfileStore.from(getKey(linkedAccounts, e.getMember().getIdLong()), false) : null;
+		final String name = ps == null ? e.getMember().getEffectiveName() : ps.getDisplayName();
+		TextComponent chat = isRank(e.getMember(), Rank.MODERATOR) ? Component.empty().append(Component.text("\u24E2").color(TextColor.color(Rank.MODERATOR.getRankHex())).hoverEvent(HoverEvent.showText(Component.text("Staff Member").color(TextColor.color(Rank.MODERATOR.getRankHex()))))).append(Component.text(" ")) : Component.empty();
+		chat = chat.append(Component.text(name).color(TextColor.color(0x7789ff)).hoverEvent(HoverEvent.showText(Component.text("Discord Client\n\u00a77- Tag: " + e.getAuthor().getAsTag()).color(TextColor.color(0x6779ff)))));
+		chat = chat.append(Component.text("\u00a79 » \u00a7r").append(Component.text(msg)));
+		
+		for (Player pl : Bukkit.getOnlinePlayers()) {
+			PlayerProfile ppl = PlayerProfile.from(pl);
+			if (isRank(e.getMember(), Rank.MODERATOR) || !ppl.getIgnoredPlayers().contains(ps.getId()))
+				pl.sendMessage(chat.colorIfAbsent(TextColor.color(0xabc5fa)));
 		}
+		getPlugin().getLogger().info("[DISCORD] " + name + ": " + msg);
 	}
+	
+	private final int[] cols = { 0x44ffaa, 0xbfff88, 0xee3567 };
+	private final String[] statusMsg = { "Online", "Whitelisted", "Offline" };
 	
 	public void updateServerStatus(boolean online) {
 		if (!isOnline()) return;
@@ -329,8 +335,12 @@ public class DiscordBot extends ListenerAdapter {
 			EmbedBuilder test = new EmbedBuilder();
 			
 			test.setTitle(statusMessageTitle, "http://beansbeans.net:8015");
-			test.setColor(online ? 0x44ffaa : 0xee3567);
-			test.addField("Status", online ? "Online" : "Offline", true);
+			
+			int status = online ? 0 : 2;
+			if (online && getPlugin().getServer().hasWhitelist()) status++;
+			
+			test.setColor(cols[status]);
+			test.addField("Status", statusMsg[status], true);
 			if (online)
 				test.addField("Last Boot", "<t:"+bootTime+":R>", true);
 			else

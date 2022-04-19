@@ -272,20 +272,13 @@ public class Main extends JavaPlugin {
 				if (mili-lastPlaytimePoke >= 1000) {
 					lastPlaytimePoke = mili;
 					
-					// Rank preview notification.
-					permissionManager().getRankPreviewers().forEach((uuid) -> {
-						PlayerProfile pp = PlayerProfile.from(uuid);
-						if (pp.isOnline())
-							pp.getPlayer().sendActionBar(Component.text("You are currently previewing ").append(pp.getHighestRank().toComponent()));
-						else
-							permissionManager().stopPreviewingRank(pp);
-					});
-					
 					Bukkit.getOnlinePlayers().forEach((p) -> {
 						final PlayerProfile pp = PlayerProfile.from(p);
 						pp.checkAFK();
 						
 						pp.getStats().addToStat(StatType.GENERIC, pp.isAFK() ? "afktime" : "playtime", 1);
+						if (p.isInvulnerable())
+							pp.getStats().addToStat(StatType.GENERIC, "invulnerableTime", 1);
 						// Notify user of region
 						final Region region = regionManager().getRegion(p.getLocation());
 						final Region oldRegion = pp.getCurrentRegion();

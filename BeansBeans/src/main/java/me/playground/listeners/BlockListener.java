@@ -96,7 +96,7 @@ public class BlockListener extends EventListener {
 		final Player p = e.getPlayer();
 		String blockName = e.getBlock().getType().name();
 		
-		if (!enactRegionPermission(getRegionAt(e.getBlock().getLocation()), e, p, Flags.BUILD_ACCESS, "break"));
+		if (!enactRegionPermission(getRegionAt(e.getBlock().getLocation()), e, p, Flags.BUILD_ACCESS, "break")) return;
 		
 		final ItemStack hand = e.getPlayer().getEquipment().getItemInMainHand();
 		if (hand != null && hand.getType() != Material.AIR) {

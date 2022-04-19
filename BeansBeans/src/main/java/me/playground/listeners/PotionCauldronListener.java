@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.Color;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -144,13 +145,14 @@ public class PotionCauldronListener extends EventListener {
 				stand.getEquipment().setHelmet(new ItemStack(potTypeToGlass(type)));
 				stand.teleport(loc.add(0, 50, 0));
 				
-				if (e.getItem().subtract(1).getAmount() < 1) {
-					p.getInventory().setItem(EquipmentSlot.HAND, new ItemStack(Material.GLASS_BOTTLE));
-				} else {
-					HashMap<Integer, ItemStack> stacks = p.getInventory().addItem(new ItemStack(Material.GLASS_BOTTLE));
-					stacks.forEach((idx, item) -> {world.dropItem(loc, item);});
+				if (p.getGameMode() != GameMode.CREATIVE) {
+					if (e.getItem().subtract(1).getAmount() < 1) {
+						p.getInventory().setItem(EquipmentSlot.HAND, new ItemStack(Material.GLASS_BOTTLE));
+					} else {
+						HashMap<Integer, ItemStack> stacks = p.getInventory().addItem(new ItemStack(Material.GLASS_BOTTLE));
+						stacks.forEach((idx, item) -> {world.dropItem(loc, item);});
+					}
 				}
-				
 				doFinalEffect(p, b, stand, type, 1);
 			/**
 			 * Handle placing more potions into the cauldron.
@@ -171,11 +173,13 @@ public class PotionCauldronListener extends EventListener {
 					return;
 				}
 				
-				if (e.getItem().subtract(1).getAmount() < 1) {
-					p.getInventory().setItem(EquipmentSlot.HAND, new ItemStack(Material.GLASS_BOTTLE));
-				} else {
-					HashMap<Integer, ItemStack> stacks = p.getInventory().addItem(new ItemStack(Material.GLASS_BOTTLE));
-					stacks.forEach((idx, item) -> {world.dropItem(loc, item);});
+				if (p.getGameMode() != GameMode.CREATIVE) {
+					if (e.getItem().subtract(1).getAmount() < 1) {
+						p.getInventory().setItem(EquipmentSlot.HAND, new ItemStack(Material.GLASS_BOTTLE));
+					} else {
+						HashMap<Integer, ItemStack> stacks = p.getInventory().addItem(new ItemStack(Material.GLASS_BOTTLE));
+						stacks.forEach((idx, item) -> {world.dropItem(loc, item);});
+					}
 				}
 				
 				potInfo[2]++;

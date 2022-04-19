@@ -76,6 +76,7 @@ import me.playground.playerprofile.skills.BxpValues;
 import me.playground.playerprofile.skills.SkillData;
 import me.playground.playerprofile.skills.SkillType;
 import me.playground.playerprofile.stats.StatType;
+import me.playground.ranks.Permission;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
 import me.playground.regions.flags.Flags;
@@ -299,12 +300,28 @@ public class PlayerListener extends EventListener {
 				enactRegionPermission(canBuild, e, p, "place vehicles"); return;
 			} else if (itemMat == Material.END_CRYSTAL || itemMat == Material.ARMOR_STAND || itemMat == Material.GLOW_ITEM_FRAME || itemMat == Material.ITEM_FRAME || itemMat == Material.PAINTING || itemMat == Material.LEAD) {
 				enactRegionPermission(canBuild, e, p, "build"); return;
+			} else if (itemMat.name().endsWith("_DYE") && (blockMat.name().endsWith("_WOOL") || (blockMat.name().endsWith("_CARPET") && blockMat != Material.MOSS_CARPET))) { // Dye Wool and Carpets
+				PlayerProfile pp = PlayerProfile.from(p);
+				if (!(pp.isSettingEnabled(PlayerSetting.QUICK_WOOL_DYE) && pp.hasPermission(Permission.QUICK_WOOL_DYE))) return;
+				String itemMatName = itemMat.name();
+				String starter = itemMatName.substring(0, itemMatName.length() - 4);
+				if (blockMat.name().startsWith(starter)) return; // Stop it if they're the same colour
+				if (!enactRegionPermission(canBuild, e, p, "dye wool")) return;
+				
+				String ending = blockMat.name().endsWith("T") ? "_CARPET" : "_WOOL";
+				block.setType(Material.valueOf(starter + ending), false); // <dye name> + <_block name>
+				block.getWorld().spawnParticle(Particle.BLOCK_DUST, block.getLocation().add(e.getBlockFace().getModX(), e.getBlockFace().getModY(), e.getBlockFace().getModZ()), 3, block.getBlockData());
+				block.getWorld().playSound(block.getLocation().toCenterLocation(), Sound.BLOCK_SLIME_BLOCK_PLACE, 0.2F, 0.7F + getPlugin().getRandom().nextFloat()/4F);
+				if (p.getGameMode() != GameMode.CREATIVE)
+					item.subtract(1);
+				doArmSwing(p);
 			} else if (item.getItemMeta().hasEnchant(Enchantment.FIRE_ASPECT) || (itemMat == Material.ENCHANTED_BOOK && ((EnchantmentStorageMeta)item).hasEnchant(Enchantment.FIRE_ASPECT))) {
 				if (blockMat.name().endsWith("CANDLE") || blockMat.name().endsWith("CANDLE_CAKE") || blockMat.name().endsWith("CAMPFIRE")) {
 					Lightable data = (Lightable) block.getBlockData();
-					if (data.isLit() || !enactRegionPermission(canBuild, e, p, "build")) return;
+					if (data.isLit() || !enactRegionPermission(canBuild, e, p, "ignite fires")) return;
+					
 					data.setLit(true);
-					block.getWorld().playSound(e.getClickedBlock().getLocation().toCenterLocation(), Sound.ITEM_FIRECHARGE_USE, 0.25F, 0.7F + getPlugin().getRandom().nextFloat()/2F);
+					block.getWorld().playSound(block.getLocation().toCenterLocation(), Sound.ITEM_FIRECHARGE_USE, 0.25F, 0.7F + getPlugin().getRandom().nextFloat()/2F);
 					block.setBlockData(data, false); // no need for physics check
 					doArmSwing(p);
 					e.setCancelled(true);

@@ -17,7 +17,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -50,9 +49,6 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.TextColor;
-import net.minecraft.network.protocol.game.PacketPlayOutPlayerInfo;
-import net.minecraft.network.protocol.game.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
-import net.minecraft.server.network.PlayerConnection;
 
 public class PlayerProfile {
 	
@@ -592,16 +588,15 @@ public class PlayerProfile {
 	public void updateShownNames() {
 		this.colouredName = Component.text(nickname==null?name:nickname).color(TextColor.color(getNameColour()));
 			if (isOnline()) {
-				Bukkit.getOnlinePlayers().forEach((p) -> { 
-					PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
-					//connection.sendPacket(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.d, ((CraftPlayer)p).getHandle())); // d updates player's display name
-					connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.e, ((CraftPlayer)p).getHandle()));
-					connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.a, ((CraftPlayer)p).getHandle()));
-				});
-				getPlayer().displayName(getColouredName()); // Display Name
-				Main.getTeamManager().updatePlayerTeam(getPlayer()); // Team
 				flagScoreboardUpdate();
-				getPlayer().playerListName(getPlayer().teamDisplayName()); // Player List, done after the Team Update
+				getPlayer().displayName(getColouredName()); // Display Name
+				Main.getTeamManager().updateTeam(getPlayer()); // Team, Tab list etc.
+				/*Bukkit.getOnlinePlayers().forEach((p) -> {
+					PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
+					connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.d, ((CraftPlayer)p).getHandle())); // d updates player's display name
+					connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.e, ((CraftPlayer)p).getHandle()));
+					//Bukkit.getServer().getScheduler().runTask(Main.getInstance(), () -> { connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.a, ((CraftPlayer)p).getHandle())); });
+				});*/
 			}
 			ProfileStore.updateStore(playerId, playerUUID, name, getDisplayName(), nameColour);
 		updateComponentName();
@@ -968,10 +963,9 @@ public class PlayerProfile {
 		this.lastAFK = System.currentTimeMillis();
 		this.AFKReason = reason;
 		this.stats.addToStat(StatType.GENERIC, "afk", 1);
-		Main.getTeamManager().updatePlayerTeam(getPlayer()); // Team
 		flagScoreboardUpdate();
-		getPlayer().playerListName(getPlayer().teamDisplayName()); // Player List, done after the Team Update
-		getPlayer().sendMessage(Component.text("\u00a77You are now AFK."));
+		Main.getTeamManager().updateTeam(getPlayer()); // Team
+		getPlayer().sendActionBar(Component.text("\u00a77You are now AFK."));
 	}
 	
 	/**
@@ -986,17 +980,16 @@ public class PlayerProfile {
 		
 		this.isAFK = false;
 		this.lastRTK = millis;
-		Main.getTeamManager().updatePlayerTeam(getPlayer()); // Team
 		flagScoreboardUpdate();
-		getPlayer().playerListName(getPlayer().teamDisplayName()); // Player List, done after the Team Update
-		getPlayer().sendMessage(Component.text("\u00a77You are no longer AFK."));
+		Main.getTeamManager().updateTeam(getPlayer()); // Team
+		getPlayer().sendActionBar(Component.text("\u00a77You are no longer AFK."));
 	}
 	
 	/**
 	 * Checks if the player is currently AFK. If so, mark them as AFK.
 	 */
 	public void checkAFK() {
-		if (!isOnline() || isAFK()) return;
+		if (isAFK()) return;
 		
 		boolean isAFK = lastAFKPoke + 1000 * 60 * 5 < System.currentTimeMillis();
 		if (isAFK)
@@ -1020,7 +1013,7 @@ public class PlayerProfile {
 	
 	public void updateScoreboard() {
 		if (!isOnline()) return;
-		Main.getTeamManager().updatePlayerScoreboard(getPlayer());
+		Main.getTeamManager().updateSidebar(getPlayer());
 		this.scoreboardFlag = false;
 	}
 	

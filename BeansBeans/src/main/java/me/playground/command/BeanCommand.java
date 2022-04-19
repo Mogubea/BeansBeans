@@ -113,6 +113,12 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 			return runCommand(isPlayer(sender) ? PlayerProfile.from((Player)sender) : null, sender, cmd, str.toLowerCase(), args);
 		} catch (CommandException e) {
 			e.notifySender();
+			if (isPlayer(sender)) { // if an error during the command, remove the cooldown. TODO: make all of this more efficient.
+				PlayerProfile pp = PlayerProfile.from(((Player)sender));
+				if (pp.onCooldown("cmd." + cmd.getName()))
+					pp.clearCooldown("cmd." + cmd.getName());
+			}
+				
 			return false;
 		}
 	}

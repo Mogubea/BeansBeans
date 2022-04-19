@@ -26,22 +26,16 @@ public class TeamManager {
 	
 	public static TeamManager instance;
 	private final Main plugin;
-	private final Scoreboard scoreboard;
 	
 	public TeamManager(Main plugin) {
 		this.plugin = plugin;
-		this.scoreboard = plugin.getServer().getScoreboardManager().getMainScoreboard();
-		
-		if (scoreboard.getObjective("showhealth") == null) {
-			Objective o = scoreboard.registerNewObjective("showhealth", "health", Component.text("\u00a7c\u2764"));
-			o.setDisplaySlot(DisplaySlot.BELOW_NAME);
-		}
 	}
 	
 	public void initScoreboard(Player p) {
 		createScoreboard(p);
-		updatePlayerTeam(p);
-		updatePlayerScoreboard(p);
+		loadTeamsFor(p);
+		updateTeam(p);
+		updateSidebar(p);
 	}
 	
 	private Scoreboard createScoreboard(Player p) {
@@ -50,25 +44,56 @@ public class TeamManager {
 		return playerBoard;
 	}
 	
-	public void updatePlayerTeam(Player p) {
-		PlayerProfile pp = PlayerProfile.from(p);
+	/**
+	 * Send an update to all online players to update their team information about this player.
+	 */
+	public void updateTeam(Player p) {
+		final PlayerProfile pp = PlayerProfile.from(p);
+		final Component prefix = Component.empty().append(pp.isAFK() ? Component.text("[AFK] ", NamedTextColor.GRAY) : Component.empty()).append(pp.isRank(Rank.MODERATOR) ? Component.text("\u24E2 ", Rank.MODERATOR.getRankColour()) : Component.empty());
+		final Component suffix = pp.isRank(Rank.PLEBEIAN) ? Component.text(" \u272d", pp.getDonorRank().getRankColour()) : Component.empty();
+		final NamedTextColor color = NamedTextColor.nearestTo(pp.getNameColour());
 		
-		Team team = scoreboard.getTeam("id"+pp.getId());
-		Component prefix = pp.isAFK() ? Component.text("[AFK] ", NamedTextColor.GRAY) : Component.empty();
+		// This is required due to how scoreboards function per player
+		// Team colouration is exclusive per scoreboard and must be redefined for every single player's scoreboard.
+		// It is uncertain how memory intensive this can become the more players get online.. But thankfully Scoreboards are WeakReferenced.
+		plugin.getServer().getOnlinePlayers().forEach((player) -> {
+			Team team = player.getScoreboard().getTeam("id"+pp.getId());
+			if (team == null) team = player.getScoreboard().registerNewTeam("id"+pp.getId());
+			if (!team.hasEntry(p.getName()))
+				team.addEntry(p.getName());
+			
+			team.color(color);
+			team.prefix(prefix);
+			team.suffix(suffix);
+		});
 		
-		if (team == null)
-			team = scoreboard.registerNewTeam("id"+pp.getId());
-		
-		team.color(NamedTextColor.nearestTo(pp.getNameColour()));
-		if (pp.isRank(Rank.MODERATOR))
-			prefix = prefix.append(Component.text("\u24E2 ", Rank.MODERATOR.getRankColour()));
-		
-		if (!team.hasEntry(p.getName()))
-			team.addEntry(p.getName());
-		team.prefix(prefix);
+		// Cannot use p.teamDisplayName()
+		p.playerListName(prefix.append(pp.getColouredName()).append(suffix));
 	}
 	
-	public void updatePlayerScoreboard(Player p) {
+	/**
+	 * Generate a team for each of the currently online players
+	 */
+	private void loadTeamsFor(Player p) {
+		plugin.getServer().getOnlinePlayers().forEach((player) -> {
+			final PlayerProfile pp = PlayerProfile.from(player);
+			final Component prefix = Component.empty().append(pp.isAFK() ? Component.text("[AFK] ", NamedTextColor.GRAY) : Component.empty()).append(pp.isRank(Rank.MODERATOR) ? Component.text("\u24E2 ", Rank.MODERATOR.getRankColour()) : Component.empty());
+			final Component suffix = pp.isRank(Rank.PLEBEIAN) ? Component.text(" \u272d", pp.getDonorRank().getRankColour()) : Component.empty();
+			final NamedTextColor color = NamedTextColor.nearestTo(pp.getNameColour());
+			
+			Team team = p.getScoreboard().getTeam("id"+pp.getId());
+			if (team == null) team = player.getScoreboard().registerNewTeam("id"+pp.getId());
+			if (!team.hasEntry(player.getName()))
+				team.addEntry(player.getName());
+			
+			team.color(color);
+			team.prefix(prefix);
+			team.suffix(suffix);
+		});
+	}
+	
+	// TODO: micro optimize and neaten up
+	public void updateSidebar(Player p) {
 		PlayerProfile pp = PlayerProfile.from(p);
 		
 		Scoreboard playerBoard = p.getScoreboard();
@@ -118,15 +143,26 @@ public class TeamManager {
 			scores.add("\u00a7b\u25D9 \u00a7fWorld: \u00a72" + p.getWorld().getName());
 		}
 		
+		// TODO: add a toggle.
+		if (pp.isRank(Rank.ADMINISTRATOR)) {
+			scores.add("        ");
+			scores.add("\u00a78\u25D9 " + getTPS());
+		}
+		
 		int size = scores.size();
 		for (int x = -1; ++x < size;)
 			obj.getScore(scores.get(x)).setScore(size - x - 1);
 	}
 	
-	public Team getTeam(PlayerProfile pp) {
-		return scoreboard.getTeam("id"+pp.getId());
+	private String getTPS() {
+		double[] tps = plugin.getServer().getTPS();
+		String tpString = "\u00a77TPS:";
+		for (int x = -1; ++x < tps.length;)
+			tpString += (tps[x]>=19.5 ? "\u00a72" : (tps[x] >= 12 ? "\u00a76" : "\u00a74")) + " " + tpsf.format(tps[x]);
+		return tpString;
 	}
 	
 	private final DecimalFormat df = new DecimalFormat("#,###");
+	private final DecimalFormat tpsf = new DecimalFormat("#.#");
 	
 }

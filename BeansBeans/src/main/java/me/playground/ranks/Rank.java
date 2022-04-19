@@ -22,11 +22,12 @@ public enum Rank {
 	
 	// Donor Ranks
 	PLEBEIAN(1, 0xf19fd1, 20, 873535964423794709L,
-			"The simplest but most accessible **Supporter Rank**. This rank provides access to **/workbench** "
-					+ "and the ability to open Shulker Boxes from the Inventory!",
+			"The simplest but most accessible **Supporter Rank**. This rank provides access to **/workbench**, "
+					+ "right-click wool dyeing and the ability to open Shulker Boxes from the Inventory!",
 			
 			"bean.cmd.workbench",
-			Permission.QUICK_SHULKER_BOX),
+			Permission.QUICK_SHULKER_BOX,
+			Permission.QUICK_WOOL_DYE),
 	PATRICIAN(2, 0xd64dd6, 50, 873916287682756668L,
 			"The second tier of **Supporter Rank**. This rank provides access to custom nicknames, **/anvil**, delivery "
 					+ "claim shortcuts and everything that <@&873535964423794709> offers!",
@@ -95,6 +96,7 @@ public enum Rank {
 			Permission.BYPASS_COOLDOWNS,
 			Permission.NAMECOLOUR_RANKS,
 			Permission.NAMECOLOUR_CUSTOM,
+			Permission.QUICK_WOOL_DYE,
 			"bean.cmd.tocoord",
 			"bean.cmd.perform",
 			"bean.cmd.workbench",

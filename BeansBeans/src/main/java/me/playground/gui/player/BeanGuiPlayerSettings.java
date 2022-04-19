@@ -1,6 +1,8 @@
 package me.playground.gui.player;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -14,6 +16,8 @@ import me.playground.playerprofile.settings.PlayerSetting;
 import net.kyori.adventure.text.Component;
 
 public class BeanGuiPlayerSettings extends BeanGuiPlayer {
+	
+	private Map<Integer, PlayerSetting> mapping = new HashMap<Integer, PlayerSetting>();
 	
 	public BeanGuiPlayerSettings(Player p) {
 		super(p);
@@ -38,11 +42,11 @@ public class BeanGuiPlayerSettings extends BeanGuiPlayer {
 	@Override
 	public void onInventoryClicked(InventoryClickEvent e) {
 		final int slot = e.getRawSlot();
+		final PlayerSetting setting = mapping.get(slot);
 		
-		if (slot - 10 > PlayerSetting.values().length)
-			return;
+		if (setting == null) return;
 		
-		pp.flipSetting(PlayerSetting.values()[slot - 10]);
+		tpp.flipSetting(setting);
 		p.playSound(p.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 0.2F, 0.8F);
 		onInventoryOpened();
 	}
@@ -56,6 +60,8 @@ public class BeanGuiPlayerSettings extends BeanGuiPlayer {
 		
 		for (int x = 0; x < settings.length; x++) {
 			PlayerSetting setting = settings[x];
+			if (!pp.hasPermission(setting.getPermissionString())) continue;
+			
 			boolean enabled = pp.isSettingEnabled(setting);
 			ItemStack settingItem = new ItemStack(enabled ? Material.LIME_DYE : Material.GRAY_DYE);
 			ItemMeta meta = settingItem.getItemMeta();
@@ -67,7 +73,9 @@ public class BeanGuiPlayerSettings extends BeanGuiPlayer {
 			meta.lore(lore);
 			settingItem.setItemMeta(meta);
 			
-			contents[10 + (x % 7) + ((x / 7) * 9)] = settingItem;
+			int slot = 10 + (x % 7) + ((x / 7) * 9);
+			contents[slot] = settingItem;
+			mapping.put(slot, setting);
 		}
 		
 		i.setContents(contents);

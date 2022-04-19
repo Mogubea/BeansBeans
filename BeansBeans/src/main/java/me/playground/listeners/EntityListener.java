@@ -386,15 +386,15 @@ public class EntityListener extends EventListener {
 		// Nerf positive and negative effects to villager prices
 		recipe.setPriceMultiplier(recipe.getPriceMultiplier() / 2);
 		
-		// Make enchants rarer
+		// Make enchants rarer TODO: make more expensive
 		if (recipe.getResult().getType() == Material.ENCHANTED_BOOK) {
 			ItemRarity rarity = EnchantmentInfo.rarityOf(((EnchantmentStorageMeta)recipe.getResult().getItemMeta()).getStoredEnchants());
 			int max = 5;
 			switch(rarity) {
-			case LEGENDARY: max = 1; ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 30 + getPlugin().getRandom().nextInt(5))); ingredients.set(1, new ItemStack(Material.NETHER_STAR, 3)); break;
-			case EPIC: max = 1; ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 9 + getPlugin().getRandom().nextInt(5))); break;
-			case RARE: max = 2; ingredients.set(0, new ItemStack(Material.EMERALD, 48 + getPlugin().getRandom().nextInt(15))); break;
-			case UNCOMMON: max = 4; ingredients.set(0, new ItemStack(Material.EMERALD, 16 + getPlugin().getRandom().nextInt(10))); break;
+			case LEGENDARY: max = 1; ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 55 + getPlugin().getRandom().nextInt(5))); ingredients.set(1, new ItemStack(Material.NETHER_STAR, 3)); break;
+			case EPIC: max = 1; ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 23 + getPlugin().getRandom().nextInt(8))); break;
+			case RARE: max = 2; ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 7 + getPlugin().getRandom().nextInt(8))); break;
+			case UNCOMMON: max = 4; ingredients.set(0, new ItemStack(Material.EMERALD, 20 + getPlugin().getRandom().nextInt(10))); break;
 			default: max = 5; ingredients.set(0, new ItemStack(Material.EMERALD, 8 + getPlugin().getRandom().nextInt(7))); break;
 			}
 			recipe.setPriceMultiplier(0.01F); // Even harder nerf, this is mostly for the positive discounts which are INSANE in Vanilla.

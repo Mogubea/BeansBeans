@@ -33,6 +33,7 @@ import me.playground.command.commands.CommandReport;
 import me.playground.command.commands.CommandReturn;
 import me.playground.command.commands.CommandSapphire;
 import me.playground.command.commands.CommandSay;
+import me.playground.command.commands.CommandSendItem;
 import me.playground.command.commands.CommandSethome;
 import me.playground.command.commands.CommandSun;
 import me.playground.command.commands.CommandTeleport;
@@ -125,6 +126,7 @@ public class CommandManager {
 		registerCommand(new CommandHeal(plugin));
 		registerCommand(new CommandCurse(plugin));
 		registerCommand(new CommandAFK(plugin));
+		registerCommand(new CommandSendItem(plugin));
 		plugin.getLogger().info("Registered " + myCommands.size() + " commands in " + (System.currentTimeMillis()-mili) + "ms");
 	}
 	

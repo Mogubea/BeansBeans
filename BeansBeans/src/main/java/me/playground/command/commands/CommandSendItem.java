@@ -45,10 +45,11 @@ public class CommandSendItem extends BeanCommand {
 		PlayerProfile target = toProfile(sender, args[0]);
 		if (target.isOnline()) {
 			HashMap<Integer, ItemStack> remStacks = target.getPlayer().getInventory().addItem(i);
-			if (remStacks.size() < 1) return true;
-			Delivery.createItemDelivery(target.getId(), profile.getId(), "Item Package", "", remStacks.values().toArray(new ItemStack[remStacks.size()]));
-			if (target.getBeanGui() instanceof BeanGuiInbox)
-				target.getBeanGui().refresh();
+			if (remStacks.size() >= 1) {
+				Delivery.createItemDelivery(target.getId(), profile.getId(), "Item Package", "", remStacks.values().toArray(new ItemStack[remStacks.size()]));
+				if (target.getBeanGui() instanceof BeanGuiInbox)
+					target.getBeanGui().refresh();
+			}
 		} else {
 			Delivery.createItemDelivery(target.getId(), profile.getId(), "Item Package", "", i);
 		}

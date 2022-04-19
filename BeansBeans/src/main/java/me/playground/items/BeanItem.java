@@ -122,8 +122,8 @@ public class BeanItem {
 		put(Material.BEACON, ItemRarity.RARE);
 		put(Material.DEEPSLATE_COAL_ORE, ItemRarity.RARE);
 		put(Material.DEEPSLATE_EMERALD_ORE, ItemRarity.RARE);
+		put(Material.DRAGON_EGG, ItemRarity.RARE);
 		
-		put(Material.DRAGON_EGG, ItemRarity.EPIC);
 		put(Material.TOTEM_OF_UNDYING, ItemRarity.EPIC);
 		put(Material.ENCHANTED_GOLDEN_APPLE, ItemRarity.EPIC);
 		

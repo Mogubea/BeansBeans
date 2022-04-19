@@ -15,6 +15,7 @@ import me.playground.data.BanEntry;
 import me.playground.data.Datasource;
 import me.playground.gui.BeanGui;
 import me.playground.main.Main;
+import me.playground.main.PermissionManager;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileModifyRequest;
 import me.playground.ranks.Rank;
@@ -24,8 +25,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
 
 public class ConnectionListener extends EventListener {
 
+	private final PermissionManager permManager;
+	
 	public ConnectionListener(Main plugin) {
 		super(plugin);
+		permManager = getPlugin().permissionManager();
 	}
 	
 	/*@EventHandler // TODO: Make a dynamic motd!
@@ -35,6 +39,11 @@ public class ConnectionListener extends EventListener {
 	
 	@EventHandler
 	public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
+		if (e.getLoginResult() == Result.KICK_WHITELIST) {
+			e.disallow(Result.KICK_WHITELIST, Component.text("Bean's Beans is currently whitelisted.", NamedTextColor.RED));
+			return;
+		}
+		
 		BanEntry be = Datasource.getBanEntry(e.getUniqueId());
 		
 		if (be != null) {
@@ -60,7 +69,7 @@ public class ConnectionListener extends EventListener {
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent e) {
 		final Player p = e.getPlayer();
-		getPlugin().permissionManager().updatePlayerPermissions(p);
+		permManager.updatePlayerPermissions(p);
 		
 		PlayerProfile pp = PlayerProfile.from(p);
 		pp.updateShownNames(); // Done here due to requiring an existing player.
@@ -91,11 +100,13 @@ public class ConnectionListener extends EventListener {
 
 	@EventHandler
 	public void onPlayerLeave(PlayerQuitEvent e) {
-		if (!e.getPlayer().hasPermission("bean.gm." + e.getPlayer().getGameMode().name().toLowerCase()))
-			e.getPlayer().setGameMode(GameMode.SURVIVAL);
+		final Player p = e.getPlayer();
+		if (!p.hasPermission("bean.gm." + p.getGameMode().name().toLowerCase()))
+			p.setGameMode(GameMode.SURVIVAL);
 		
-		getPlugin().permissionManager().clearPlayerPermissions(e.getPlayer());
-		PlayerProfile pp = PlayerProfile.from(e.getPlayer());
+		permManager.clearPlayerPermissions(p);
+		permManager.stopPreviewingRank(p);
+		PlayerProfile pp = PlayerProfile.from(p);
 		pp.closeBeanGui(); // Just in case
 		e.quitMessage(Component.text("« ", NamedTextColor.RED).append(pp.getComponentName()).append(Component.text(" left the server!", NamedTextColor.YELLOW)));
 		//EmbedBuilder eb = getPlugin().discord().embedBuilder(0xff7876, "**"+pp.getDisplayName()+"** left the server!");

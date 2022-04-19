@@ -15,7 +15,6 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.api.exceptions.ContextException;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
 public abstract class DiscordCommand {
@@ -51,7 +50,7 @@ public abstract class DiscordCommand {
 	 * Users with the Administrator permission will bypass these checks.
 	 * @param event SlashCommandEvent
 	 */
-	public void preSlashCommand(@Nonnull SlashCommandEvent event) throws ContextException {
+	public void preSlashCommand(@Nonnull SlashCommandEvent event) {
 		if (requiredRank != null) {
 			if (!event.getMember().hasPermission(Permission.ADMINISTRATOR) && !isRank(event.getMember(), requiredRank)) {
 				event.replyEmbeds(embedBuilder(0xff4444, "You don't have permission to use this command.").build()).setEphemeral(true).queue();

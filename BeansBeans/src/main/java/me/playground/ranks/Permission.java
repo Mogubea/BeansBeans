@@ -19,5 +19,6 @@ public class Permission {
 	
 	public final static String DELIVERY_CLAIMALL = "bean.delivery.claimall";
 	public final static String QUICK_SHULKER_BOX = "bean.quickshulkerbox";
+	public final static String QUICK_WOOL_DYE = "bean.quickwooldye";
 	
 }
