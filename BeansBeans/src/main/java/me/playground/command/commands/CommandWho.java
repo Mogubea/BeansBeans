@@ -34,7 +34,7 @@ public class CommandWho extends BeanCommand {
 		
 		Component statusPrefix = Component.empty();
 		if (!target.isOnline())
-			if (target.isBanned())
+			if (!target.isBanned())
 				statusPrefix = statusPrefix.append(Component.text("\u00a7f[\u00a77Offline\u00a7f]").hoverEvent(HoverEvent.showText(Component.text("\u00a77This player is offline."))));
 			else
 				statusPrefix = statusPrefix.append(Component.text("\u00a7f[\u00a7cBanned\u00a7f]").hoverEvent(HoverEvent.showText(Component.text("\u00a77This player is banned."))));
