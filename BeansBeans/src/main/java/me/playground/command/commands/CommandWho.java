@@ -6,8 +6,10 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
@@ -18,6 +20,7 @@ import me.playground.utils.TabCompleter;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.TextColor;
 
 public class CommandWho extends BeanCommand {
 	
@@ -46,8 +49,20 @@ public class CommandWho extends BeanCommand {
 		int hours = Math.floorDiv(mins, 60);
 		mins -= hours*60;
 		
+		// Display additional information to Staff Members
+		if (target.isOnline() && sender.hasPermission("bean.cmd.who.extra")) {
+			Player t = target.getPlayer();
+			Location l = t.getLocation();
+			
+			sender.sendMessage(Component.text("\u00a77Ping: \u00a7f" + t.getPing() + "ms"));
+			sender.sendMessage(Component.text("\u00a77Location: ").append(worldInfo(sender, t.getWorld()))
+					.append(Component.text("\u00a77, X: \u00a7r" + l.getBlockX() + "\u00a77, Y: \u00a7r" + l.getBlockY() + "\u00a77, Z: \u00a7r" + l.getBlockZ())
+							.colorIfAbsent(TextColor.color(0x30cb5a))));
+		}
+		
 		sender.sendMessage(Component.text("\u00a77Playtime: \u00a7f" + (hours > 0 ? hours + " Hours and " : "") + mins + " Minutes"));
 		sender.sendMessage(Component.text("\u00a77Ranks: ").append(target.getComponentRanks()));
+		
 		return true;
 	}
 

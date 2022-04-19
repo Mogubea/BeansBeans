@@ -17,6 +17,7 @@ import me.playground.command.commands.CommandCurse;
 import me.playground.command.commands.CommandEnchant;
 import me.playground.command.commands.CommandEnderchest;
 import me.playground.command.commands.CommandGamemode;
+import me.playground.command.commands.CommandHat;
 import me.playground.command.commands.CommandHeal;
 import me.playground.command.commands.CommandHome;
 import me.playground.command.commands.CommandHug;
@@ -35,6 +36,7 @@ import me.playground.command.commands.CommandSapphire;
 import me.playground.command.commands.CommandSay;
 import me.playground.command.commands.CommandSendItem;
 import me.playground.command.commands.CommandSethome;
+import me.playground.command.commands.CommandSkull;
 import me.playground.command.commands.CommandSun;
 import me.playground.command.commands.CommandTeleport;
 import me.playground.command.commands.CommandToCoord;
@@ -127,6 +129,8 @@ public class CommandManager {
 		registerCommand(new CommandCurse(plugin));
 		registerCommand(new CommandAFK(plugin));
 		registerCommand(new CommandSendItem(plugin));
+		registerCommand(new CommandHat(plugin));
+		registerCommand(new CommandSkull(plugin));
 		plugin.getLogger().info("Registered " + myCommands.size() + " commands in " + (System.currentTimeMillis()-mili) + "ms");
 	}
 	

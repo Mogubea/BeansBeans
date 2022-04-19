@@ -29,10 +29,11 @@ public enum Rank {
 			Permission.QUICK_SHULKER_BOX,
 			Permission.QUICK_WOOL_DYE),
 	PATRICIAN(2, 0xd64dd6, 50, 873916287682756668L,
-			"The second tier of **Supporter Rank**. This rank provides access to custom nicknames, **/anvil**, delivery "
+			"The second tier of **Supporter Rank**. This rank provides access to custom nicknames, **/anvil**, **/hat**, delivery "
 					+ "claim shortcuts and everything that <@&873535964423794709> offers!",
 					
 			"bean.cmd.anvil",
+			"bean.cmd.hat",
 			Permission.NICKNAME_APPLY,
 			Permission.DELIVERY_CLAIMALL),
 	SENATOR(3, 0xaa32da, 100, 914921526158041089L,
@@ -73,6 +74,7 @@ public enum Rank {
 			"If you ever need assistance with anything, don't be afraid to ask a Moderator for help!",
 			
 			Permission.NICKNAME_OVERRIDE,
+			"bean.cmd.who.extra",
 			"bean.cmd.say",
 			"bean.cmd.gamemode",
 			"bean.cmd.world",
