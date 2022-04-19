@@ -36,7 +36,7 @@ public class CommandPlugin extends BeanCommand {
 			PluginDescriptionFile pd = p.getDescription();
 			String name = (p.isEnabled() ? "\u00a7a" : "\u00a7c") + p.getName();
 			
-			Component hoverInfo = Component.text(name + " (v " + pd.getVersion() + ")");
+			Component hoverInfo = Component.text(name + " (v" + pd.getVersion() + ")");
 			if (!pd.getAuthors().isEmpty()) { 
 				String auths = pd.getAuthors().toString();
 				auths = auths.substring(1, auths.length() - 1);

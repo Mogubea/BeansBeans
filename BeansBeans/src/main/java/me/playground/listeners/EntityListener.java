@@ -249,6 +249,9 @@ public class EntityListener extends EventListener {
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onEntityDeath(EntityDeathEvent e) {
+		// Don't interfere with Armour Stands
+		if (e.getEntity() instanceof ArmorStand) return;
+		
 		if (e.getEntity() instanceof ArmorStand && ((ArmorStand)e.getEntity()).isMarker()) {
 			e.setCancelled(true);
 			return;
