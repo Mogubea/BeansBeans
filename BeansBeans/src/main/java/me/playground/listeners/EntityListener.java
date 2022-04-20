@@ -10,10 +10,10 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.attribute.AttributeModifier.Operation;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Cat;
-import org.bukkit.entity.ChestedHorse;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -101,20 +101,12 @@ public class EntityListener extends EventListener {
 		if (isDumbEntity(e.getEntityType())) {
 			final Region r = getRegionAt(e.getEntity().getLocation());
 			if (e.getDamager() instanceof Player) {
-				final Player p = (Player)e.getDamager();
-				boolean cancel = r.getEffectiveFlag(Flags.BUILD_ACCESS).higherThan(r.getMember((Player)e.getDamager()));
-				if (cancel) {
-					p.sendActionBar(Component.text("\u00a7cYou don't have permission to break here."));
-					e.setCancelled(true);
-				}
+				Player p = (Player)e.getDamager();
+				enactRegionPermission(r, e, p, Flags.BUILD_ACCESS, "break");
 			} else if (e.getDamager() instanceof Projectile) {
 				if (((Projectile)e.getDamager()).getShooter() instanceof Player) {
-					final Player p = ((Player)((Projectile)e.getDamager()).getShooter());
-					boolean cancel = r.getEffectiveFlag(Flags.BUILD_ACCESS).higherThan(r.getMember(p));
-					if (cancel) {
-						p.sendActionBar(Component.text("\u00a7cYou don't have permission to break here."));
-						e.setCancelled(true);
-					}
+					Player p = ((Player)((Projectile)e.getDamager()).getShooter());
+					enactRegionPermission(r, e, p, Flags.BUILD_ACCESS, "break");
 				} else {
 					e.setCancelled(true);
 				}
@@ -144,7 +136,7 @@ public class EntityListener extends EventListener {
 				fromPlayer = true;
 			
 			if (fromPlayer) {
-				if (!(r1.getEffectiveFlag(Flags.PVP) || r2.getEffectiveFlag(Flags.PVP))) // XXX: PVP
+				if (!(r1.getEffectiveFlag(Flags.PVP) && r2.getEffectiveFlag(Flags.PVP))) // XXX: PVP
 					e.setCancelled(true);
 			} else {
 				e.setDamage(e.getDamage() * r2.getEffectiveFlag(Flags.MOB_DAMAGE_FROM));
@@ -170,7 +162,7 @@ public class EntityListener extends EventListener {
 				e.setDamage(e.getDamage() * r2.getEffectiveFlag(Flags.MOB_DAMAGE_TO));
 				if (e.getDamage() > 0) {
 					// Prevent tameable entities from dying to anyone except the Owner
-					if (e.getEntity() instanceof Cat || e.getEntity() instanceof Wolf || e.getEntity() instanceof Parrot || e.getEntity() instanceof ChestedHorse) {
+					if (e.getEntity() instanceof Cat || e.getEntity() instanceof Wolf || e.getEntity() instanceof Parrot || e.getEntity() instanceof AbstractHorse) {
 						Tameable tamed = (Tameable) e.getEntity();
 						if (tamed.isTamed()) // TODO: pvp region check
 							if (tamed.getOwner() != null && tamed.getOwner().getUniqueId() != e.getDamager().getUniqueId())
@@ -203,7 +195,7 @@ public class EntityListener extends EventListener {
 			e.setCancelled(!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.ENTITY_TRAILS));
 		else {
 			final Region r = getRegionAt(e.getBlock().getLocation());
-			e.setCancelled(r.getEffectiveFlag(Flags.BUILD_ACCESS).higherThan(r.getMember((Player)e.getEntity())));
+			e.setCancelled(!checkRegionPermission(r, e, (Player)e.getEntity(), Flags.BUILD_ACCESS));
 		}
 	}
 	
@@ -212,21 +204,9 @@ public class EntityListener extends EventListener {
 		// Protect Item Frames from being destroyed by players
 		final Region r = getRegionAt(e.getEntity().getLocation());
 		if (e.getRemover() instanceof Player) {
-			final Player p = (Player)e.getRemover();
-			boolean cancel = r.getEffectiveFlag(Flags.BUILD_ACCESS).higherThan(r.getMember((Player)e.getRemover()));
-			if (cancel) {
-				p.sendActionBar(Component.text("\u00a7cYou don't have permission to break here."));
-				e.setCancelled(true);
-				return;
-			}
+			enactRegionPermission(r, e, (Player)e.getRemover(), Flags.BUILD_ACCESS, "break");
 		} else if (e.getRemover() instanceof Projectile && ((Projectile)e.getRemover()).getShooter() instanceof Player) {
-			final Player p = ((Player)((Projectile)e.getRemover()).getShooter());
-			boolean cancel = r.getEffectiveFlag(Flags.BUILD_ACCESS).higherThan(r.getMember(p));
-			if (cancel) {
-				p.sendActionBar(Component.text("\u00a7cYou don't have permission to break here."));
-				e.setCancelled(true);
-				return;
-			}
+			enactRegionPermission(r, e, ((Player)((Projectile)e.getRemover()).getShooter()), Flags.BUILD_ACCESS, "break");
 		} else if (!r.isWorldRegion()) {
 			e.setCancelled(true);
 		}
