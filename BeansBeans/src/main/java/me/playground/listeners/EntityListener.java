@@ -422,8 +422,10 @@ public class EntityListener extends EventListener {
 	@EventHandler(priority = EventPriority.LOW)
 	public void onEntitySpawn(CreatureSpawnEvent e) {
 		// XXX: 2x Wither Max Health
-		if (e.getEntityType() == EntityType.WITHER)
+		if (e.getEntityType() == EntityType.WITHER) {
 			e.getEntity().getAttribute(Attribute.GENERIC_MAX_HEALTH).addModifier(new AttributeModifier("generic.max_health", 1, Operation.MULTIPLY_SCALAR_1));
+			e.getEntity().setHealth(e.getEntity().getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
+		}
 		
 		if (e.getSpawnReason() == SpawnReason.NATURAL) {
 			final Region r = getRegionAt(e.getLocation());

@@ -23,6 +23,9 @@ public class DiscordCommandEmbed extends DiscordCommand {
 						.addOption(OptionType.STRING, "titleurl", "Header url.")
 						.addOption(OptionType.STRING, "image", "Direct url for image.")
 						.addOption(OptionType.STRING, "thumbnail", "Direct url for thumbnail image.")
+						.addOption(OptionType.STRING, "author", "Shows above the title")
+						.addOption(OptionType.STRING, "authorurl", "URL of the author tag, requires author")
+						.addOption(OptionType.STRING, "authorimg", "Top left mini image, requires author")
 						.addOption(OptionType.STRING, "footer", "Footer content.")
 						.addOption(OptionType.STRING, "footerurl", "Direct url for the footer image.")
 						.addOption(OptionType.BOOLEAN, "footerdate", "Use custom date footer format.")
@@ -58,6 +61,12 @@ public class DiscordCommandEmbed extends DiscordCommand {
 					suggestion.setImage(e.getOption("image").getAsString());
 				if (e.getOption("thumbnail") != null)
 					suggestion.setThumbnail(e.getOption("thumbnail").getAsString());
+				
+				if (e.getOption("author") != null) {
+					String url = e.getOption("authorurl") != null ? e.getOption("authorurl").getAsString() : null;
+					String img = e.getOption("authorimg") != null ? e.getOption("authorimg").getAsString() : null;
+					suggestion.setAuthor(e.getOption("author").getAsString(), url, img);
+				}
 				
 				if (e.getOption("footerdate") != null && e.getOption("footerdate").getAsBoolean()) {
 					suggestion.setTimestamp(Instant.now());

@@ -63,7 +63,7 @@ public class ConnectionListener extends EventListener {
 			return;
 		}
 		pp.updateRealName(e.getName());
-		e.getPlayerProfile().setName(pp.getDisplayName());
+		e.getPlayerProfile().setName(pp.getDisplayName()); // TODO: figure it out idk?
 	}
 
 	@EventHandler
