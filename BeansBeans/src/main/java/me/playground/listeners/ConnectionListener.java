@@ -20,6 +20,7 @@ import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileModifyRequest;
 import me.playground.ranks.Rank;
 import me.playground.utils.BeanColor;
+import me.playground.utils.Calendar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -70,6 +71,11 @@ public class ConnectionListener extends EventListener {
 	public void onPlayerJoin(PlayerJoinEvent e) {
 		final Player p = e.getPlayer();
 		permManager.updatePlayerPermissions(p);
+		
+		p.sendPlayerListHeader(
+				Component.text("\u00a77It is currently \u00a7b" + Calendar.getTimeString(Calendar.getTime(p.getWorld()), true)
+				+ "\u00a77 on \u00a73Day " + Calendar.getDay(p.getWorld().getFullTime()) 
+				+ "\n\n\u00a7fOnline Players:"));
 		
 		PlayerProfile pp = PlayerProfile.from(p);
 		pp.updateShownNames(); // Done here due to requiring an existing player.

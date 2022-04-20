@@ -14,7 +14,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import me.playground.command.CommandManager;
 import me.playground.command.commands.CommandCurse;
-import me.playground.currency.Currency;
 import me.playground.data.Datasource;
 import me.playground.data.DatasourceCore;
 import me.playground.discord.DiscordBot;
@@ -34,10 +33,8 @@ import me.playground.regions.RegionManager;
 import me.playground.shop.ShopManager;
 import me.playground.threads.StatusResponseThread;
 import me.playground.threads.WhateverChat;
-import me.playground.utils.BeanColor;
 import me.playground.utils.Calendar;
 import me.playground.utils.SignMenuFactory;
-import me.playground.utils.Utils;
 import me.playground.voting.VoteManager;
 import me.playground.warps.WarpManager;
 import me.playground.worlds.WorldManager;
@@ -311,14 +308,10 @@ public class Main extends JavaPlugin {
 							}
 							pp.getCheckDonorExpiration();
 							pp.updateComponentName();
-							p.sendPlayerListHeaderAndFooter(
+							p.sendPlayerListHeader(
 									Component.text("\u00a77It is currently \u00a7b" + Calendar.getTimeString(Calendar.getTime(p.getWorld()), true)
 									+ "\u00a77 on \u00a73Day " + Calendar.getDay(p.getWorld().getFullTime()) 
-									+ "\n\n\u00a7fOnline Players:"),
-									
-									pp.getHighestRank().toComponent().append(Component.text("\u00a7f --- " + 
-									Utils.currencyString(Currency.COINS, pp.getBalance()) + "\u00a7f --- \u00a7r" 
-									+ pp.getHeirlooms().size() + " Heirlooms").colorIfAbsent(BeanColor.HEIRLOOM)));
+									+ "\n\n\u00a7fOnline Players:"));
 						}
 						
 					});
