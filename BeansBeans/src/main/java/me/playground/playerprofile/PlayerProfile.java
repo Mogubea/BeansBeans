@@ -811,7 +811,7 @@ public class PlayerProfile {
 	}
 	
 	public boolean onCdElseAdd(String id, int mili, boolean force) {
-		if (force && hasPermission(Permission.BYPASS_COOLDOWNS))
+		if (!force && hasPermission(Permission.BYPASS_COOLDOWNS))
 			return false;
 		boolean onCd = onCooldown(id);
 		if (!onCd)
