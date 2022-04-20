@@ -40,6 +40,7 @@ public class TeamManager {
 	
 	private Scoreboard createScoreboard(Player p) {
 		Scoreboard playerBoard = plugin.getServer().getScoreboardManager().getNewScoreboard();
+		playerBoard.registerNewObjective("showhealth", "health", Component.text("\u00a7c\u2764")).setDisplaySlot(DisplaySlot.BELOW_NAME);
 		p.setScoreboard(playerBoard);
 		return playerBoard;
 	}

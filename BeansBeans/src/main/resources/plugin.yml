@@ -4,6 +4,6 @@ api-version: 1.18
 main: me.playground.main.Main
 softdepend: [WorldEdit, dynmap, ProtocolLib]
 author: Mogubean
-website: https://beansbeans.net
-description: The plugin home to every feature of Bean's Bean's.
+website: http://beansbeans.net
+description: The plugin home to every feature of Bean's Beans.
 commands:
