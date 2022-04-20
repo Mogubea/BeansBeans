@@ -35,7 +35,7 @@ public class BeanGuiNPCEdit extends BeanGui {
 	
 	public BeanGuiNPCEdit(Player p, NPCHuman npc) {
 		super(p);
-		this.name = "Edit NPC \""+npc.getEntity().displayName+"\"";
+		setName("Edit NPC \""+npc.getEntity().displayName+"\"");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,blank,null,

@@ -10,7 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 
 import me.playground.items.BeanItem;
-import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.Component;
 
 /**
  * Open a {@link ShulkerBox} from the inventory.
@@ -31,7 +31,7 @@ public class BeanGuiShulker extends BeanGui {
 		ShulkerBox box = (ShulkerBox) meta.getBlockState();
 		
 		this.shulker = box;
-		this.name = meta.hasDisplayName() ? ((TextComponent)meta.displayName()).content() : itemStack.getI18NDisplayName();
+		setName(meta.hasDisplayName() ? meta.displayName() : Component.translatable(itemStack));
 		this.presetType = InventoryType.SHULKER_BOX;
 		this.presetSize = presetType.getDefaultSize();
 		this.presetInv = shulker.getInventory().getContents();

@@ -27,7 +27,7 @@ public class BeanGuiInbox extends BeanGui {
 	public BeanGuiInbox(Player p) {
 		super(p);
 		
-		this.name = pp.isOverridingProfile() ? p.getName() + "'s Inbox" : "Your Inbox";
+		setName(pp.isOverridingProfile() ? p.getName() + "'s Inbox" : "Your Inbox");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blank,blank,bBlank,bBlank,null,bBlank,bBlank,blank,blank,

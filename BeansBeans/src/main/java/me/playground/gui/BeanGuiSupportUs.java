@@ -19,7 +19,7 @@ public class BeanGuiSupportUs extends BeanGui {
 	public BeanGuiSupportUs(Player p) {
 		super(p);
 		
-		this.name = "Support the Server!";
+		setName("Support the Server!");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blankbl,blankbl,blank,blank,newItem(tpp.getSkull(), tpp.getColouredName()),blank,blank,blankbl,blankbl,

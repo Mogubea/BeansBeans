@@ -45,7 +45,7 @@ public abstract class BeanGui implements IPluginRef {
 	
 	protected int presetSize = 27;
 	protected InventoryType presetType;
-	protected String name = "Error";
+	private Component name = Component.text("Inventory");
 	protected ItemStack[] presetInv;
 	/**
 	 * The PlayerProfile of the inventory viewer.
@@ -108,9 +108,9 @@ public abstract class BeanGui implements IPluginRef {
 	
 	public void openInventory() {
 		if (this.presetType != null && presetType.isCreatable())
-			this.i = Bukkit.createInventory(p, presetType, Component.text(name));
+			this.i = Bukkit.createInventory(p, presetType, name);
 		else
-			this.i = Bukkit.createInventory(p, presetSize, Component.text(name));
+			this.i = Bukkit.createInventory(p, presetSize, name);
 		i.setContents(presetInv);
 		p.openInventory(i);
 		pp.setBeanGui(this);
@@ -178,6 +178,18 @@ public abstract class BeanGui implements IPluginRef {
 	
 	public int downData() {
 		return this.data--;
+	}
+	
+	protected void setName(Component name) {
+		this.name = name;
+	}
+	
+	protected void setName(String name) {
+		this.name = Component.text(name);
+	}
+	
+	public Component getName() {
+		return name;
 	}
 	
 	protected boolean isOverrideView() {

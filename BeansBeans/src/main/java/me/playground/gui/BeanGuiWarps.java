@@ -53,7 +53,7 @@ public class BeanGuiWarps extends BeanGui {
 	public BeanGuiWarps(Player p) {
 		super(p);
 		
-		this.name = "Settings";
+		setName("Settings");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				panes[0],panes[0],wD_Pri,panes[0],wD_Pub,panes[0],wD_Inv,panes[0],panes[0],

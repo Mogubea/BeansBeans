@@ -22,7 +22,7 @@ public class BeanGuiPlayerSettings extends BeanGuiPlayer {
 	public BeanGuiPlayerSettings(Player p) {
 		super(p);
 		
-		this.name = "Settings";
+		setName("Settings");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blank,blank,bBlank,bBlank,null,bBlank,bBlank,blank,blank,

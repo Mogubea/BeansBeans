@@ -26,7 +26,7 @@ public class BeanGuiSkillsDetails extends BeanGui {
 		super(p);
 		
 		this.skill = skill;
-		this.name = skill.getPlainName() + " Skill";
+		setName(skill.getPlainName() + " Skill");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blank,blank,bBlank,bBlank,newItem(skill.getDisplayStack(), skill.getDisplayName()),bBlank,bBlank,blank,blank,

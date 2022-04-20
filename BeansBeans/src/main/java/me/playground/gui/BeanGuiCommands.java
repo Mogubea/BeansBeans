@@ -26,7 +26,7 @@ public class BeanGuiCommands extends BeanGui {
 	public BeanGuiCommands(Player p) {
 		super(p);
 		
-		this.name = "Commands";
+		setName("Commands");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				null,null,null,null,null,null,null,null,null,

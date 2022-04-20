@@ -45,7 +45,7 @@ public class BeanGuiRegionFlags extends BeanGuiRegion {
 	public BeanGuiRegionFlags(Player p) {
 		super(p);
 		
-		this.name = "Regions -> Flags";
+		setName("Regions -> Flags");
 		this.presetInv = new ItemStack[] {
 				rBlank,rBlank,blank,blank,null,blank,blank,rBlank,rBlank,
 				rBlank,null,null,null,null,null,null,null,rBlank,

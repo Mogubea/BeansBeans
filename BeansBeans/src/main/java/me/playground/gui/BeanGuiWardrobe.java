@@ -11,7 +11,7 @@ public class BeanGuiWardrobe extends BeanGui {
 	public BeanGuiWardrobe(Player p) {
 		super(p);
 		
-		this.name = "Wardrobe";
+		setName("Wardrobe");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blank,blank,blank,null,null,null,null,null,blank,

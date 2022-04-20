@@ -11,7 +11,7 @@ public class BeanGuiSkillsOLD extends BeanGui {
 	public BeanGuiSkillsOLD(Player p) {
 		super(p);
 		
-		this.name = "Skills";
+		setName("Skills");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				null,blank,null,null,null,null,null,null,null,

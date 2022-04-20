@@ -23,7 +23,7 @@ public abstract class BeanGuiConfirm extends BeanGui {
 		super(p);
 		
 		this.confirmationInfo = confirmationInfo;
-		this.name = "Confirm Action";
+		setName("Confirm Action");
 		this.presetSize = 27;
 		this.presetInv = new ItemStack[] {
 				confirm,confirm,confirm,blank,null,blank,cancel,cancel,cancel,

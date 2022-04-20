@@ -32,7 +32,7 @@ public class BeanGuiPlayerMain extends BeanGuiPlayer {
 	public BeanGuiPlayerMain(Player p) {
 		super(p);
 		
-		this.name = pp.isOverridingProfile() ? p.getName() + "'s Menu" : "Your Menu";
+		setName(pp.isOverridingProfile() ? p.getName() + "'s Menu" : "Your Menu");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blank,blank,bBlank,bBlank,null,bBlank,bBlank,blank,blank,

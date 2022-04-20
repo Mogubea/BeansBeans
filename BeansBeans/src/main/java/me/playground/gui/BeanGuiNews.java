@@ -21,7 +21,7 @@ public class BeanGuiNews extends BeanGui {
 	public BeanGuiNews(Player p) {
 		super(p);
 		
-		this.name = "Server News";
+		setName("Server News");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blank,blank,bBlank,bBlank,newItem(new ItemStack(Material.ENCHANTED_BOOK), Component.text("Server News", TextColor.color(0x994411))),bBlank,bBlank,blank,blank,

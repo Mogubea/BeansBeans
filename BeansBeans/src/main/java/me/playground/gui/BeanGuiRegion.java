@@ -41,7 +41,7 @@ public abstract class BeanGuiRegion extends BeanGui {
 		if (p.hasPermission("bean.region.override"))
 			this.localRegions.add(rm.getWorldRegion(p.getWorld()));
 		this.regionIdx = 0;
-		this.name = "Regions";
+		setName("Regions");
 		this.presetSize = 54;
 		this.rBlank = newItem(new ItemStack(Material.BLUE_STAINED_GLASS_PANE, 1), getRegion().getColouredName());
 	}

@@ -12,7 +12,7 @@ public class BeanGuiBeanItems extends BeanGui {
 	public BeanGuiBeanItems(Player p) {
 		super(p);
 		
-		this.name = "Custom Items";
+		setName("Custom Items");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blankop,null,null,null,null,null,null,null,blankop,

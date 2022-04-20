@@ -33,7 +33,7 @@ public class BeanGuiRegionMembers extends BeanGuiRegion {
 	public BeanGuiRegionMembers(Player p) {
 		super(p);
 		
-		this.name = "Regions -> Members";
+		setName("Regions -> Members");
 		this.presetInv = new ItemStack[] {
 				null,null,null,null,null,null,null,null,null,
 				null,null,null,null,null,null,null,null,null,

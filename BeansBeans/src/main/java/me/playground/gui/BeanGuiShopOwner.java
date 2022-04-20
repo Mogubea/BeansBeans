@@ -34,7 +34,7 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 	
 	public BeanGuiShopOwner(Player p, Shop s) {
 		super(p, s);
-		this.name = s.getOwnerId() > 0 ? "Your Shop" : "Server Shop";
+		setName(s.getOwnerId() > 0 ? "Your Shop" : "Server Shop");
 		this.presetInv = new ItemStack[] {
 				blank,blank2,blank,display,display,display,blank,blank2,blank,
 				blankS,blankk,blankk,display,null,display,blankk,blankk,blankB,

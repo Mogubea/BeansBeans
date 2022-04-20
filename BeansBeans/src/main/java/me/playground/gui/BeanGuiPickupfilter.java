@@ -19,7 +19,7 @@ public class BeanGuiPickupfilter extends BeanGui {
 	public BeanGuiPickupfilter(Player p) {
 		super(p);
 		
-		this.name = "Pickup Blacklist";
+		setName("Pickup Blacklist");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				null,null,null,null,null,null,null,null,null,

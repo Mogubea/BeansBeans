@@ -61,7 +61,7 @@ public class BeanGuiBestiaryEntity extends BeanGuiBestiary {
 	public BeanGuiBestiaryEntity(Player p) {
 		super(p);
 		
-		this.name = "Bestiary";
+		setName("Bestiary");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blank,blank,blank,blank,null,blank,blank,blank,blank,

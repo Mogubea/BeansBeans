@@ -21,7 +21,7 @@ public class BeanGuiStaffModifyRequests extends BeanGuiStaff {
 	public BeanGuiStaffModifyRequests(Player p) {
 		super(p);
 		
-		this.name = "Staff Menu";
+		setName("Staff Menu");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blank,blank,bBlank,bBlank,null,bBlank,bBlank,blank,blank,

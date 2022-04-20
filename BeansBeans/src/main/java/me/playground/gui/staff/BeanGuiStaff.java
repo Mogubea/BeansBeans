@@ -19,7 +19,7 @@ public class BeanGuiStaff extends BeanGui {
 	public BeanGuiStaff(Player p) {
 		super(p);
 		
-		this.name = "Staff Menu";
+		setName("Staff Menu");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blank,blank,bBlank,bBlank,null,bBlank,bBlank,blank,blank,

@@ -75,7 +75,7 @@ public class EntityListener extends EventListener {
 		final ArmorStand di = (ArmorStand) loc.getWorld().spawnEntity(new Location(loc.getWorld(), 0, -10, 0), EntityType.ARMOR_STAND);
 		di.setInvisible(true);
 		di.setMarker(true);
-		di.customName(Component.text(dmg).color(TextColor.color(col)));
+		di.customName(Component.text(dmg, TextColor.color(col)));
 		di.setCustomNameVisible(true);
 		di.teleport(loc);
 		
@@ -101,8 +101,7 @@ public class EntityListener extends EventListener {
 		if (isDumbEntity(e.getEntityType())) {
 			final Region r = getRegionAt(e.getEntity().getLocation());
 			if (e.getDamager() instanceof Player) {
-				Player p = (Player)e.getDamager();
-				enactRegionPermission(r, e, p, Flags.BUILD_ACCESS, "break");
+				enactRegionPermission(r, e, (Player)e.getDamager(), Flags.BUILD_ACCESS, "break");
 			} else if (e.getDamager() instanceof Projectile) {
 				if (((Projectile)e.getDamager()).getShooter() instanceof Player) {
 					Player p = ((Player)((Projectile)e.getDamager()).getShooter());

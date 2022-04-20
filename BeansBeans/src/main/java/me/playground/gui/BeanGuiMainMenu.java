@@ -60,7 +60,7 @@ public class BeanGuiMainMenu extends BeanGui {
 	public BeanGuiMainMenu(Player p) {
 		super(p);
 		
-		this.name = "Main Menu";
+		setName("Main Menu");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				bBlank,bBlank,bBlank,blank,null,blank,bBlank,bBlank,bBlank,

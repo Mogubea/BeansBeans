@@ -24,7 +24,7 @@ public abstract class BeanGuiShop extends BeanGui {
 		super(p);
 		
 		this.shop = s;
-		this.name = s.getOwnerId() > 0 ? "Player Shop" : "Server Shop";
+		setName(s.getOwnerId() > 0 ? "Player Shop" : "Server Shop");
 		this.presetSize = 45;
 		this.presetInv = null;
 	}

@@ -32,7 +32,7 @@ public class BeanGuiPlayerLoginMessage extends BeanGuiPlayer {
 	public BeanGuiPlayerLoginMessage(Player p) {
 		super(p);
 		
-		this.name = pp.isOverridingProfile() ? p.getName() + "'s Name Colour" : "Your Name Colour";
+		setName(pp.isOverridingProfile() ? p.getName() + "'s Name Colour" : "Your Name Colour");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blank,blank,bBlank,bBlank,null,bBlank,bBlank,blank,blank,

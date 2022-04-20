@@ -22,7 +22,7 @@ public class BeanGuiHeirlooms extends BeanGui {
 	public BeanGuiHeirlooms(Player p) {
 		super(p);
 		
-		this.name = "Your Heirlooms";
+		setName("Your Heirlooms");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				null,null,null,null,null,null,null,null,null,

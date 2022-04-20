@@ -25,7 +25,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 	public BeanGuiRegionMain(Player p) {
 		super(p);
 		
-		this.name = "Regions";
+		setName("Regions");
 		this.presetInv = new ItemStack[] {
 				rBlank,rBlank,bBlank,bBlank,null,bBlank,bBlank,rBlank,rBlank,
 				rBlank,null,null,null,null,null,null,null,rBlank,

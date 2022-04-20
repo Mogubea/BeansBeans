@@ -41,7 +41,7 @@ public class BeanGuiInboxDelivery extends BeanGui {
 		super(p);
 		this.delivery = delivery;
 		
-		this.name = pp.isOverridingProfile() ? p.getName() + "'s Delivery" : "Your Delivery";
+		setName(pp.isOverridingProfile() ? p.getName() + "'s Delivery" : "Your Delivery");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				blank,blank,bBlank,bBlank,null,bBlank,bBlank,blank,blank,

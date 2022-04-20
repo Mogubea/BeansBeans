@@ -13,7 +13,7 @@ public class BeanGuiDebug extends BeanGui {
 	
 	public BeanGuiDebug(Player p) {
 		super(p);
-		this.name = "Debug";
+		setName("Debug");
 		this.presetSize = 54;
 	}
 	

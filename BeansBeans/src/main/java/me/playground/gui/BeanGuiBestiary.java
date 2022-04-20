@@ -50,7 +50,7 @@ public class BeanGuiBestiary extends BeanGui {
 	public BeanGuiBestiary(Player p) {
 		super(p);
 		
-		this.name = "Bestiary";
+		setName("Bestiary");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				null,null,null,null,null,null,null,null,null,

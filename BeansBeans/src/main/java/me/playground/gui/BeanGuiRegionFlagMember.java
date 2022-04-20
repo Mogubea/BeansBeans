@@ -32,7 +32,7 @@ public class BeanGuiRegionFlagMember extends BeanGuiRegion {
 	protected BeanGuiRegionFlagMember(Player p, int regionIdx, FlagMember flag) {
 		super(p, regionIdx);
 		
-		this.name = "Flags -> " + flag.getDisplayName();
+		setName("Flags -> " + flag.getDisplayName());
 		this.presetInv = new ItemStack[] {
 				rBlank,rBlank,blank,blank,null,blank,blank,rBlank,rBlank,
 				rBlank,null,null,null,null,null,null,null,rBlank,
