@@ -18,6 +18,7 @@ import me.playground.main.Main;
 import me.playground.main.PermissionManager;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileModifyRequest;
+import me.playground.playerprofile.stats.StatType;
 import me.playground.ranks.Rank;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Calendar;
@@ -40,10 +41,7 @@ public class ConnectionListener extends EventListener {
 	
 	@EventHandler
 	public void onPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
-		if (e.getLoginResult() == Result.KICK_WHITELIST) {
-			e.disallow(Result.KICK_WHITELIST, Component.text("Bean's Beans is currently whitelisted.", NamedTextColor.RED));
-			return;
-		}
+		if (e.getLoginResult() != Result.ALLOWED) return;
 		
 		BanEntry be = Datasource.getBanEntry(e.getUniqueId());
 		
@@ -63,6 +61,7 @@ public class ConnectionListener extends EventListener {
 			e.disallow(Result.KICK_OTHER, Component.text("\u00a7cThere was a problem loading your profile.\n\u00a77Please contact a member of Staff via the Server's Discord."));
 			return;
 		}
+		
 		pp.updateRealName(e.getName());
 		e.getPlayerProfile().setName(pp.getDisplayName()); // TODO: figure it out idk?
 	}
@@ -78,7 +77,8 @@ public class ConnectionListener extends EventListener {
 				+ "\n\n\u00a7fOnline Players:"));
 		
 		PlayerProfile pp = PlayerProfile.from(p);
-		pp.updateShownNames(); // Done here due to requiring an existing player.
+		pp.updateShownNames(false); // Done here due to requiring an existing player.
+		pp.pokeAFK();
 		getPlugin().teamManager().initScoreboard(p);
 		getPlugin().npcManager().showAllNPCs(p);
 		
@@ -88,6 +88,7 @@ public class ConnectionListener extends EventListener {
 			p.getInventory().setItem(9, BeanGui.menuItem);
 		
 		pp.getSkills().assignBarPlayer(p);
+		pp.getStats().setStat(StatType.GENERIC, "lastLogin", (int)(System.currentTimeMillis()/1000000L));
 		e.joinMessage(Component.text("» ", NamedTextColor.GREEN).append(pp.getComponentName()).append(Component.text(" joined the server!", NamedTextColor.YELLOW)));
 		
 		// Check for Donor Rank expiriry
@@ -113,6 +114,7 @@ public class ConnectionListener extends EventListener {
 		permManager.clearPlayerPermissions(p);
 		permManager.stopPreviewingRank(p);
 		PlayerProfile pp = PlayerProfile.from(p);
+		pp.getStats().setStat(StatType.GENERIC, "lastLogout", (int)(System.currentTimeMillis()/1000000L));
 		pp.closeBeanGui(); // Just in case
 		e.quitMessage(Component.text("« ", NamedTextColor.RED).append(pp.getComponentName()).append(Component.text(" left the server!", NamedTextColor.YELLOW)));
 		//EmbedBuilder eb = getPlugin().discord().embedBuilder(0xff7876, "**"+pp.getDisplayName()+"** left the server!");

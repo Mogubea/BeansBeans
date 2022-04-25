@@ -140,7 +140,7 @@ public class CommandModify extends BeanCommand {
 				break;
 			case 4:
 				try {
-					PlayerSetting st = PlayerSetting.valueOf(value);
+					PlayerSetting st = PlayerSetting.valueOf(value.toUpperCase());
 					pp.flipSetting(st);
 					sender.sendMessage(pp.getDisplayName() + "\u00a77's " + st.toString() + " flag is now " + (pp.isSettingEnabled(st) ? "\u00a7aenabled" : "\u00a7cdisabled"));
 				} catch (Exception e) {

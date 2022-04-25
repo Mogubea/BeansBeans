@@ -95,7 +95,7 @@ public class DiscordBot extends ListenerAdapter {
 		if (!this.isOnline()) return;
 		try {
 			if (lastId != playerId) {
-				final String name = ((TextComponent)ProfileStore.from(playerId, false).getColouredName()).content();
+				final String name = ProfileStore.from(playerId, false).getDisplayName();
 				Icon icon = getHeadIcon(playerId);
 				hook.getManager().setName(name).setAvatar(icon).queue(woo -> {
 					chatClient.send(message);
@@ -276,21 +276,13 @@ public class DiscordBot extends ListenerAdapter {
 	
 	@Override
 	public void onSlashCommand(SlashCommandEvent e) {
-		if (e.getMember().getUser().isBot()) return;
-		if (e.isAcknowledged()) { // TODO: catch this properly, this doesn't work
-			plugin.getSLF4JLogger().warn("Discord Command \"/" + e.getName() + "\" was already acknowledged."); 
-			return; 
-		}
-		
 		final DiscordCommand cmd = discordCommands.get(e.getName().toLowerCase());
-		if (cmd != null)
-			cmd.preSlashCommand(e);
+		if (cmd != null) cmd.preSlashCommand(e);
 	}
 	
 	@Override
 	public void onMessageReactionAdd(MessageReactionAddEvent e) {
-		if (e.getMember().getUser().isBot())
-			return;
+		if (e.getMember().getUser().isBot()) return;
 		
 		if (e.getChannel().getIdLong() == getPlayerReportChatId() || e.getChannel().getIdLong() == getBugReportChatId())
 			this.getCommand("report").onMessageReactionAdd(e);
@@ -377,6 +369,7 @@ public class DiscordBot extends ListenerAdapter {
 					+ "There are **"+plugin.warpManager().countWarps()+"** Warps", false);
 			test.setFooter("Last updated ");
 			test.setTimestamp(Instant.now());
+			test.setAuthor("Bean's Beans Server Status", null, "https://img.icons8.com/nolan/344/ingredients-list.png");
 			
 			discordBot.getTextChannelById(statusChatId).retrieveMessageById(statusMessageId).queue((message) -> {
 				message.editMessageEmbeds(test.build()).queue();

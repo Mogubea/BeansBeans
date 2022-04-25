@@ -14,7 +14,7 @@ import org.dynmap.markers.Marker;
 
 import me.playground.data.DynmapDatasource;
 import me.playground.main.Main;
-import me.playground.playerprofile.PlayerProfile;
+import me.playground.playerprofile.ProfileStore;
 
 /**
  * An instance of {@link DynmapDatasource} for {@link Warp} data management.
@@ -123,7 +123,7 @@ public class WarpDatasource extends DynmapDatasource<Warp> {
 			s.setInt(1, creatorId);
 			s.setInt(2, creatorId);
 			s.setString(3, warpName);
-			s.setString(4, "A warp by " + PlayerProfile.getDisplayName(creatorId).content());
+			s.setString(4, "A warp by " + ProfileStore.from(creatorId).getDisplayName());
 			s.setInt(5, getWorldId(loc.getWorld()));
 			s.setFloat(6, (float)loc.getX());
 			s.setFloat(7, (float)loc.getY());
@@ -134,7 +134,7 @@ public class WarpDatasource extends DynmapDatasource<Warp> {
 			
 			ResultSet r = s.getGeneratedKeys();
 			r.next();
-			w = new Warp(manager, r.getInt(1), creatorId, creatorId, warpName, null, "A warp by " + PlayerProfile.getDisplayName(creatorId).content(), false, false, 0, new ArrayList<Integer>(), new ArrayList<Integer>(), loc);
+			w = new Warp(manager, r.getInt(1), creatorId, creatorId, warpName, null, "A warp by " + ProfileStore.from(creatorId).getDisplayName(), false, false, 0, new ArrayList<Integer>(), new ArrayList<Integer>(), loc);
 			r.close();
 		} catch (SQLException e) {
 			e.printStackTrace();

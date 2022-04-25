@@ -50,7 +50,6 @@ import me.playground.playerprofile.skills.SkillInfo;
 import me.playground.playerprofile.skills.SkillType;
 import me.playground.ranks.Permission;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 
 public class ContainerListener extends EventListener {
 	
@@ -90,14 +89,12 @@ public class ContainerListener extends EventListener {
 			final Material type = i.getType();
 			
 			ItemStack original = inv.getContents()[0];
+			
 			// If tool's name is base item name, update it to new item name - Only smithing
 			if (original != null && original.getType() != i.getType()) {
-				if (original.hasItemMeta() && original.getItemMeta().hasDisplayName() && 
-						((TextComponent)original.getItemMeta().displayName()).content().equals(i.getI18NDisplayName())) {
-					ItemMeta meta = i.getItemMeta();
-					meta.displayName(bi != null ? bi.getDisplayName() : Component.translatable(i));
-					i.setItemMeta(meta);
-				}
+				final Component translatable = Component.translatable(i);
+				if (!BeanItem.hasBeenRenamed(i))
+					i.editMeta((meta) -> {meta.displayName(bi != null ? bi.getDisplayName() : translatable);});
 			}
 			
 			if (type.getMaxDurability() > 1) {

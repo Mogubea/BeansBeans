@@ -2,6 +2,7 @@ package me.playground.gui;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -23,7 +24,6 @@ import me.playground.utils.Utils;
 import me.playground.warps.Warp;
 import me.playground.warps.WarpType;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 
@@ -46,6 +46,7 @@ public class BeanGuiWarps extends BeanGui {
 	private final static ItemStack wF_Name = newItem(new ItemStack(Material.CRIMSON_SIGN), Component.text("\u00a77Name Filter: \u00a7fNone"), "", "\u00a78\u00a7oClick to filter warps by Name");
 	private final static ItemStack wF_Filter = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzY0YzBiYWFlYTM5NDU4NjQwNWUxNTU3ZjU3ZTUwNTlmNGQ0YjAzYmYwN2FhMmJhMGYyMDkzODQ3MWQyNzFhYiJ9fX0="), Component.text("\u00a77Type Filter: \u00a7fNone"), "", "\u00a7f > \u00a77None", "\u00a78> Player Warp", "\u00a78> Shop Warp", "\u00a78> Server Warp", "\u00a78\u00a7oClick to Cycle through Warp Types");
 	
+	private final Map<Integer, Warp> mapping = new HashMap<Integer, Warp>();
 	private final Map<String, Warp> warps = getPlugin().warpManager().getWarps();
 	private String nameFilter = null;
 	private WarpType typeFilter = null;
@@ -115,9 +116,8 @@ public class BeanGuiWarps extends BeanGui {
 					this.typeFilter = null;
 				p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.35F, 1.0F);
 			}
-		} else if (slot < 36 && slot > 8) {
-			String itemName = ((TextComponent)e.getCurrentItem().getItemMeta().displayName()).content();
-			p.performCommand("warp " + itemName);
+		} else if (mapping.get(slot) != null) { // TODO: just put in a list stop this funky shit
+			mapping.get(slot).warp(p);
 		} else {
 			int[] door = {2,4,6};
 			if (p.hasPermission("bean.cmd.warp.others"))
@@ -226,6 +226,8 @@ public class BeanGuiWarps extends BeanGui {
 		if (page < (Math.floor(warpCount / 36)))
 			contents[52] = nextPage;
 		
+		mapping.clear();
+		
 		for (int x = 0 + (page * 36); x < Math.min(warpCount, 36 * (page + 1)); x++) {
 			Warp w = warpss.get(x);
 			
@@ -253,7 +255,9 @@ public class BeanGuiWarps extends BeanGui {
 			meta.lore(lore);
 			settingItem.setItemMeta(meta);
 			
-			contents[9 + x - (page * 36)] = settingItem;
+			int slot = 9 + x - (page * 36);
+			contents[slot] = settingItem;
+			mapping.put(slot, w);
 		}
 		
 		i.setContents(contents);

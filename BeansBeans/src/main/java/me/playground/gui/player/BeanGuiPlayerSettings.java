@@ -60,7 +60,7 @@ public class BeanGuiPlayerSettings extends BeanGuiPlayer {
 		
 		for (int x = 0; x < settings.length; x++) {
 			PlayerSetting setting = settings[x];
-			if (!pp.hasPermission(setting.getPermissionString())) continue;
+//			if (!pp.hasPermission(setting.getPermissionString())) continue; Does work, just need to change this gui
 			
 			boolean enabled = pp.isSettingEnabled(setting);
 			ItemStack settingItem = new ItemStack(enabled ? Material.LIME_DYE : Material.GRAY_DYE);

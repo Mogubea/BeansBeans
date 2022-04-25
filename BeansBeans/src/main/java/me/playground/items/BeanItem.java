@@ -55,6 +55,7 @@ import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -502,23 +503,15 @@ public class BeanItem {
 		final boolean shouldFormatNameRarity = !rarity.equals(ItemRarity.COMMON) || !rarityString.equals(rarity.toComponent());
 		
 		// Display Name
-		if (true) {
-			if (meta.hasDisplayName()) {
-				meta.displayName(meta.displayName().color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
-				if (custom != null) {
-					if (!((TextComponent)meta.displayName()).content().equals(custom.getDisplayName().content())) {
-						lore.add(custom.getDisplayName().color(NamedTextColor.DARK_GRAY));
-					}
-				} else if (meta.displayName() instanceof TextComponent) {
-					if (!((TextComponent)meta.displayName()).content().equals(item.getI18NDisplayName())) {
-						lore.add(Component.translatable(item, NamedTextColor.DARK_GRAY));
-					}
-				}
-			} else if (custom != null) {
-				meta.displayName(custom.getDisplayName().color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
-			} else {
-				meta.displayName(Component.translatable(item, rarity.getColour()).decoration(TextDecoration.ITALIC, false));
-			}
+		if (meta.hasDisplayName()) {
+			meta.displayName(meta.displayName().color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
+			
+			if (hasBeenRenamed(item))
+				lore.add(custom != null ? custom.getDisplayName().color(NamedTextColor.DARK_GRAY) : Component.translatable(item, NamedTextColor.DARK_GRAY));
+		} else if (custom != null) {
+			meta.displayName(custom.getDisplayName().color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
+		} else {
+			meta.displayName(Component.translatable(item, rarity.getColour()).decoration(TextDecoration.ITALIC, false));
 		}
 		
 		if (custom != null)
@@ -647,6 +640,12 @@ public class BeanItem {
 		}
 		
 		return item;
+	}
+	
+	public static boolean hasBeenRenamed(ItemStack item) {
+		BeanItem custom = BeanItem.from(item);
+		ItemMeta meta = item.getItemMeta();
+		return (!(meta.displayName() instanceof TranslatableComponent || (custom != null && ((TextComponent)meta.displayName()).content().equals(custom.getDisplayName().content()))));
 	}
 	
 	protected static Component getRarityString(ItemRarity rarity, ItemStack item) {

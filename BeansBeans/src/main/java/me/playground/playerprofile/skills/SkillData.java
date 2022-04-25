@@ -20,6 +20,7 @@ public class SkillData {
 	}
 	
 	public SkillData() {
+		forceHideBar();
 	}
 	
 	public SkillData addXp(SkillType skill, long amount) {

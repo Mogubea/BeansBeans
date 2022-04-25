@@ -12,6 +12,7 @@ import org.bukkit.scoreboard.Team;
 
 import me.playground.civilizations.Civilization;
 import me.playground.playerprofile.PlayerProfile;
+import me.playground.playerprofile.settings.PlayerSetting;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
 import me.playground.regions.flags.MemberLevel;
@@ -35,12 +36,16 @@ public class TeamManager {
 		createScoreboard(p);
 		loadTeamsFor(p);
 		updateTeam(p);
-		updateSidebar(p);
+		
+		if (PlayerProfile.from(p).isSettingEnabled(PlayerSetting.SHOW_SIDEBAR))
+			updateSidebar(p);
 	}
 	
 	private Scoreboard createScoreboard(Player p) {
 		Scoreboard playerBoard = plugin.getServer().getScoreboardManager().getNewScoreboard();
-		playerBoard.registerNewObjective("showhealth", "health", Component.text("\u00a7c\u2764")).setDisplaySlot(DisplaySlot.BELOW_NAME);
+		Objective obj = playerBoard.registerNewObjective("showhealth", "health", Component.text("\u00a7c\u2764"));
+		obj.setDisplaySlot(DisplaySlot.BELOW_NAME);
+		obj.getScore(p).setScore((int)p.getHealth());
 		p.setScoreboard(playerBoard);
 		return playerBoard;
 	}
@@ -58,8 +63,9 @@ public class TeamManager {
 		// Team colouration is exclusive per scoreboard and must be redefined for every single player's scoreboard.
 		// It is uncertain how memory intensive this can become the more players get online.. But thankfully Scoreboards are WeakReferenced.
 		plugin.getServer().getOnlinePlayers().forEach((player) -> {
-			Team team = player.getScoreboard().getTeam("id"+pp.getId());
-			if (team == null) team = player.getScoreboard().registerNewTeam("id"+pp.getId());
+			String id = "id" + pp.getId() + "-" + PlayerProfile.from(player).getId();
+			Team team = player.getScoreboard().getTeam(id);
+			if (team == null) team = player.getScoreboard().registerNewTeam(id);
 			if (!team.hasEntry(p.getName()))
 				team.addEntry(p.getName());
 			
@@ -82,8 +88,9 @@ public class TeamManager {
 			final Component suffix = pp.isRank(Rank.PLEBEIAN) ? Component.text(" \u272d", pp.getDonorRank().getRankColour()) : Component.empty();
 			final NamedTextColor color = NamedTextColor.nearestTo(pp.getNameColour());
 			
-			Team team = p.getScoreboard().getTeam("id"+pp.getId());
-			if (team == null) team = player.getScoreboard().registerNewTeam("id"+pp.getId());
+			String id = "id" + pp.getId() + "-" + PlayerProfile.from(p).getId();
+			Team team = p.getScoreboard().getTeam(id);
+			if (team == null) team = p.getScoreboard().registerNewTeam(id);
 			if (!team.hasEntry(player.getName()))
 				team.addEntry(player.getName());
 			
@@ -91,6 +98,16 @@ public class TeamManager {
 			team.prefix(prefix);
 			team.suffix(suffix);
 		});
+	}
+	
+	public void hideSidebar(Player p) {
+		Objective obj = p.getScoreboard().getObjective("id" + PlayerProfile.from(p).getId() + "-side");
+		if (obj != null) obj.setDisplaySlot(null);
+	}
+	
+	public void showSidebar(Player p) {
+		Objective obj = p.getScoreboard().getObjective("id" + PlayerProfile.from(p).getId() + "-side");
+		if (obj != null) obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 	}
 	
 	// TODO: micro optimize and neaten up

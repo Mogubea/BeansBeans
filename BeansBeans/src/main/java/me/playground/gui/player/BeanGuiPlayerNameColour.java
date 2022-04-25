@@ -207,7 +207,7 @@ public class BeanGuiPlayerNameColour extends BeanGuiPlayer {
 		// Custom Colour
 		final boolean isUnlocked = pOverride || pp.hasPermission(Permission.NAMECOLOUR_CUSTOM);
 		
-		if (!isUnlocked && hasListed) return;
+		//if (!isUnlocked && hasListed) return;
 		
 		ItemStack chestCol = new ItemStack(Material.LEATHER_CHESTPLATE);
 		LeatherArmorMeta meta = (LeatherArmorMeta) chestCol.getItemMeta();

@@ -50,15 +50,21 @@ public class CommandWho extends BeanCommand {
 		mins -= hours*60;
 		
 		// Display additional information to Staff Members
-		if (target.isOnline() && sender.hasPermission("bean.cmd.who.extra")) {
-			Player t = target.getPlayer();
-			Location l = t.getLocation();
-			
-			sender.sendMessage(Component.text("\u00a77Ping: \u00a7f" + t.getPing() + "ms"));
-			sender.sendMessage(Component.text("\u00a77Location: ").append(worldInfo(sender, t.getWorld()))
-					.append(Component.text("\u00a77, X: \u00a7r" + l.getBlockX() + "\u00a77, Y: \u00a7r" + l.getBlockY() + "\u00a77, Z: \u00a7r" + l.getBlockZ())
-							.colorIfAbsent(TextColor.color(0x30cb5a))));
+		if (sender.hasPermission("bean.cmd.who.extra")) {
+			if (target.isOnline()) {
+				Player t = target.getPlayer();
+				Location l = t.getLocation();
+				
+				sender.sendMessage(Component.text("\u00a77Ping: \u00a7f" + t.getPing() + "ms"));
+				sender.sendMessage(Component.text("\u00a77Location: ").append(worldInfo(sender, t.getWorld()))
+						.append(Component.text("\u00a77, X: \u00a7r" + l.getBlockX() + "\u00a77, Y: \u00a7r" + l.getBlockY() + "\u00a77, Z: \u00a7r" + l.getBlockZ())
+								.colorIfAbsent(TextColor.color(0x30cb5a))));
+				sender.sendMessage(Component.text("\u00a77Last Login: \u00a7f" + Utils.timeStringFromNow(target.getLastLogin()) + " ago"));
+			} else {
+				sender.sendMessage(Component.text("\u00a77Last Logout: \u00a7f" + Utils.timeStringFromNow(target.getLastLogout()) + " ago"));
+			}
 		}
+		
 		
 		sender.sendMessage(Component.text("\u00a77Playtime: \u00a7f" + (hours > 0 ? hours + " Hours and " : "") + mins + " Minutes"));
 		sender.sendMessage(Component.text("\u00a77Ranks: ").append(target.getComponentRanks()));

@@ -263,7 +263,7 @@ public class Main extends JavaPlugin {
 			public void run() {
 				final long mili = System.currentTimeMillis();
 				boolean doScoreboardUpdate = mili-lastScoreboardUpdate >= 1000 * 5;
-				boolean doProfilePoke = mili-lastProfilePoke >= 1000 * 12;
+				boolean doProfilePoke = mili-lastProfilePoke >= 1000 * 15;
 				
 				// Every Second
 				if (mili-lastPlaytimePoke >= 1000) {
@@ -295,7 +295,7 @@ public class Main extends JavaPlugin {
 								pp.updateScoreboard();
 						}
 						
-						// Every 12 Seconds
+						// Every 15 Seconds
 						if (doProfilePoke) {
 							lastProfilePoke = mili;
 							// Playtime Check - Only checks for the next rank in line, this could be a non-playtime rank (eg. Exalted -> Moderator), that's why there's a check.

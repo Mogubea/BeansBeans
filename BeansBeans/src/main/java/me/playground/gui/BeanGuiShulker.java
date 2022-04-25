@@ -48,7 +48,7 @@ public class BeanGuiShulker extends BeanGui {
 		meta.setBlockState(box);
 		itemStack.setItemMeta(meta);
 		BeanItem.formatItem(itemStack);
-		p.playSound(p.getLocation(), Sound.BLOCK_SHULKER_BOX_CLOSE, 0.5F, 1F);
+		p.playSound(p.getLocation(), Sound.BLOCK_SHULKER_BOX_CLOSE, 0.25F, 1F);
 	}
 	
 	@Override
@@ -60,7 +60,7 @@ public class BeanGuiShulker extends BeanGui {
 	
 	@Override
 	public void onInventoryOpened() {
-		p.playSound(p.getLocation(), Sound.BLOCK_SHULKER_BOX_OPEN, 0.5F, 1F);
+		p.playSound(p.getLocation(), Sound.BLOCK_SHULKER_BOX_OPEN, 0.25F, 1F);
 	}
 	
 	@Override

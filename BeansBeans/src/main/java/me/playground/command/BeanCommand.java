@@ -27,6 +27,8 @@ import me.playground.items.BeanItem;
 import me.playground.main.IPluginRef;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
+import me.playground.playerprofile.ProfileStore;
+import me.playground.playerprofile.stats.StatType;
 import me.playground.ranks.Rank;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
@@ -105,6 +107,8 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 					((Player)sender).sendActionBar(Component.text("\u00a7cYou are sending commands too fast!"));
 					return false;
 				}
+				
+				pp.getStats().addToStat(StatType.GENERIC, "commandsRun", 1);
 			}
 			
 			if (args.length < minArgs)
@@ -247,8 +251,12 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	
 	protected PlayerProfile toProfile(CommandSender sender, String s) {
 		PlayerProfile pp = PlayerProfile.fromIfExists(s);
-		if (pp == null)
-			throw new CommandException(sender, "Couldn't find player '"+s+"'");
+		if (pp == null) {
+			Player p = toPlayer(sender, s);
+			if (p != null)
+				pp = PlayerProfile.from(p);
+		}
+			
 		return pp;
 	}
 	
@@ -274,7 +282,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 				return p;
 		}
 		
-		throw new CommandException(sender, "Couldn't find player '"+PlayerProfile.getDisplayName(id).content()+"'");
+		throw new CommandException(sender, "Couldn't find player '"+ ProfileStore.from(id).getDisplayName()+"'");
 	}
 	
 	protected Collection<? extends Player> onlinePlayers() {

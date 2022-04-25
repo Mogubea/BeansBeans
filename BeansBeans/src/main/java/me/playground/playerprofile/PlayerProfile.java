@@ -284,6 +284,7 @@ public class PlayerProfile {
 	}
 	
 	public boolean hasPermission(String permissionString) {
+		if (permissionString == null || permissionString.isEmpty()) return true;
 		return this.permissions.contains("*") || this.permissions.contains(permissionString);
 	}
 	
@@ -295,6 +296,9 @@ public class PlayerProfile {
 		return permissions;
 	}
 	
+	/**
+	 * Checks whether this player has or inherits the specified {@link Rank}.
+	 */
 	public boolean isRank(Rank rank) {
 		// If it's a donor rank, just check if your current donor rank is equal or higher.
 		if (rank.isDonorRank() && getDonorRank() != null && rank.power() <= getDonorRank().power())
@@ -457,7 +461,7 @@ public class PlayerProfile {
 				permissions.add(perm);
 		}
 		
-		updateShownNames();
+		updateShownNames(false);
 		
 		// Update perms
 		if (isOnline() && Main.getInstance().isEnabled()) // TODO: possibly find a less static method of handling this..?
@@ -478,21 +482,27 @@ public class PlayerProfile {
 	}
 	
 	public String setNickname(String nickname) {
-		this.nickname = nickname;
+		this.nickname = (nickname.equals(name)) ? null : nickname;
 		Main.getInstance().getDiscord().updateNickname(this);
-		updateShownNames();
+		updateShownNames(true);
 		return nickname;
 	}
 	
 	public void setNameColour(int colour) {
 		this.nameColour = colour;
-		updateShownNames();
+		updateShownNames(false);
 	}
 	
+	/**
+	 * @return the player's nickname, or null.
+	 */
 	public String getNickname() {
 		return nickname;
 	}
 	
+	/**
+	 * @return if the player has a nickname.
+	 */
 	public boolean hasNickname() {
 		return nickname != null;
 	}
@@ -578,25 +588,24 @@ public class PlayerProfile {
 			p.getWorld().dropItem(p.getLocation(), this.armourWardrobe[offset + x]);
 			this.armourWardrobe[offset + x] = null;
 		}
-		
 	}
 	
 	/**
 	 * Update the player's current names + scoreboard
 	 * Also fires {@link #updateComponentName()}.
 	 */
-	public void updateShownNames() {
+	@SuppressWarnings("removal")
+	public void updateShownNames(boolean updateProfileName) {
 		this.colouredName = Component.text(nickname==null?name:nickname).color(TextColor.color(getNameColour()));
 			if (isOnline()) {
+				if (updateProfileName) {
+					com.destroystokyo.paper.profile.PlayerProfile prof = getPlayer().getPlayerProfile();
+					prof.setName(getDisplayName());
+					getPlayer().setPlayerProfile(prof);
+				}
 				flagScoreboardUpdate();
 				getPlayer().displayName(getColouredName()); // Display Name
 				Main.getTeamManager().updateTeam(getPlayer()); // Team, Tab list etc.
-				/*Bukkit.getOnlinePlayers().forEach((p) -> {
-					PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
-					connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.d, ((CraftPlayer)p).getHandle())); // d updates player's display name
-					connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.e, ((CraftPlayer)p).getHandle()));
-					//Bukkit.getServer().getScheduler().runTask(Main.getInstance(), () -> { connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.a, ((CraftPlayer)p).getHandle())); });
-				});*/
 			}
 			ProfileStore.updateStore(playerId, playerUUID, name, getDisplayName(), nameColour);
 		updateComponentName();
@@ -635,9 +644,7 @@ public class PlayerProfile {
 		
 		if (isInCivilization() && hasJob())
 			hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Job: ").append(getJob().toComponent()));
-		
 		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Playtime: \u00a7f" + (hours > 0 ? hours + " Hours and " : "") + mins + " Minutes"));
-		
 		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Id: \u00a7a" + getId()));
 		
 		this.chatLine = Component.empty().append(chatLine.hoverEvent(HoverEvent.showText(hoverComponents)));
@@ -679,14 +686,16 @@ public class PlayerProfile {
 	}
 	
 	private void doSettingEffect(PlayerSetting setting) {
-		//final boolean enabled = isSettingEnabled(setting);
+		if (!isOnline()) return;
+		final boolean enabled = isSettingEnabled(setting);
 		switch(setting) {
-		//case HIDE_ARMOR:
-		//	if (enabled)
-		//		EquipmentHider.fakeRemoveArmor(playerUUID);
-		//	else
-		//		EquipmentHider.sendActualArmor(playerUUID);
-		//	break;
+		case SHOW_SIDEBAR:
+			if (enabled) {
+				flagScoreboardUpdate(); // flag rather than actually update since it's a spammable setting
+				showScoreboard();
+			} else
+				hideScoreboard();
+				break;
 		default:
 			break;
 		}
@@ -788,6 +797,14 @@ public class PlayerProfile {
 		final BeanItem bi = BeanItem.from(item);
 		String itemStr = (bi != null) ? bi.getIdentifier() : item.getType().name();
 		this.pickupBlacklist.remove(itemStr);
+	}
+	
+	public long getLastLogin() {
+		return getStat(StatType.GENERIC, "lastLogin") * 1000000L;
+	}
+	
+	public long getLastLogout() {
+		return getStat(StatType.GENERIC, "lastLogout") * 1000000L;
 	}
 	
 	public void addCooldown(String id, int mili) {
@@ -1011,8 +1028,18 @@ public class PlayerProfile {
 		return loadTime;
 	}
 	
+	private void showScoreboard() {
+		Main.getTeamManager().showSidebar(getPlayer());
+	}
+	
+	private void hideScoreboard() {
+		Main.getTeamManager().hideSidebar(getPlayer());
+	}
+	
 	public void updateScoreboard() {
 		if (!isOnline()) return;
+		if (!isSettingEnabled(PlayerSetting.SHOW_SIDEBAR)) return;
+		
 		Main.getTeamManager().updateSidebar(getPlayer());
 		this.scoreboardFlag = false;
 	}

@@ -16,7 +16,7 @@ public enum PlayerSetting {
 	SHOW_DEATH_MESSAGES("Death Messages in Chat", true, "\u00a77Display whenever a player kicks the bucket."),
 	SHOW_JOB_MESSAGES("Job Messages in Chat", true, "\u00a77Display whenever a player changes their job."),
 	QUICK_WOOL_DYE("Quick Wool Dye (Plebeian+)", Permission.QUICK_WOOL_DYE, true, "\u00a77Right Click a Block of Wool or Carpet","\u00a77with a dye to change its colour."),
-	
+	SHOW_SIDEBAR("Show Sidebar", true, "\u00a77Display the Sidebar on the right."),
 	;
 	
 	final private static long defaultSetting;
@@ -24,7 +24,7 @@ public enum PlayerSetting {
 		long ack = 0;
 		for (PlayerSetting ps : values()) {
 			if (ps.isEnabledByDefault())
-			ack |= 1 << ps.ordinal();
+				ack |= 1 << ps.ordinal();
 		}
 		defaultSetting = ack;
 	}
@@ -36,10 +36,10 @@ public enum PlayerSetting {
 	
 	PlayerSetting(String displayName, String permString, boolean enabled, String...description) {
 		this.displayName = displayName;
-		this.enabled = false;
+		this.enabled = enabled;
 		for (String s : description)
 			this.description.add(Component.text(s));
-		this.permString = "";
+		this.permString = permString;
 	}
 	
 	PlayerSetting(String displayName, boolean enabled, String...description) {

@@ -315,13 +315,13 @@ public class PlayerListener extends EventListener {
 				if (p.getGameMode() != GameMode.CREATIVE)
 					item.subtract(1);
 				doArmSwing(p);
-			} else if (item.getItemMeta().hasEnchant(Enchantment.FIRE_ASPECT) || (itemMat == Material.ENCHANTED_BOOK && ((EnchantmentStorageMeta)item).hasEnchant(Enchantment.FIRE_ASPECT))) {
+			} else if (item.getItemMeta().hasEnchant(Enchantment.FIRE_ASPECT) || (itemMat == Material.ENCHANTED_BOOK && ((EnchantmentStorageMeta)item.getItemMeta()).hasEnchant(Enchantment.FIRE_ASPECT))) {
 				if (blockMat.name().endsWith("CANDLE") || blockMat.name().endsWith("CANDLE_CAKE") || blockMat.name().endsWith("CAMPFIRE")) {
 					Lightable data = (Lightable) block.getBlockData();
 					if (data.isLit() || !enactRegionPermission(canBuild, e, p, "ignite fires")) return;
 					
 					data.setLit(true);
-					block.getWorld().playSound(block.getLocation().toCenterLocation(), Sound.ITEM_FIRECHARGE_USE, 0.25F, 0.7F + getPlugin().getRandom().nextFloat()/2F);
+					block.getWorld().playSound(block.getLocation().toCenterLocation(), Sound.ITEM_FIRECHARGE_USE, 0.2F, 0.7F + getPlugin().getRandom().nextFloat()/2F);
 					block.setBlockData(data, false); // no need for physics check
 					doArmSwing(p);
 					e.setCancelled(true);
