@@ -414,7 +414,14 @@ public class PlayerListener extends EventListener {
 					if (event.isCancelled()) return;
 					
 					for (ItemStack i : b.getDrops()) {
-						i.setAmount(Math.max(1, i.getAmount()-1));
+						int amt = Math.max(1, i.getAmount() - 1);
+						// Heavy nerf to seed drops
+						if (i.getType().name().endsWith("_SEEDS"))
+							amt = rand.nextInt(2);
+						
+						if (amt < 1) continue;
+						
+						i.setAmount(amt);
 						e.getPlayer().getWorld().dropItemNaturally(b.getLocation(), i);
 					}
 					
@@ -471,7 +478,7 @@ public class PlayerListener extends EventListener {
 					}
 					if (fast)
 						if (getPlugin().getRandom().nextInt(65)==1)
-							Bukkit.getPluginManager().callEvent(new PlayerItemDamageEvent(p, p.getInventory().getBoots(), 1));
+							Bukkit.getPluginManager().callEvent(new PlayerItemDamageEvent(p, p.getInventory().getBoots(), 1, 1));
 				} else if (p.getWalkSpeed() != DEFAULT_MOVESPEED) {
 					p.setWalkSpeed(DEFAULT_MOVESPEED);
 				}
