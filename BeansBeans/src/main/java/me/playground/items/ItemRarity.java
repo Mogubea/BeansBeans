@@ -12,7 +12,7 @@ public enum ItemRarity {
 	COMMON(0xFEFEFE, 0xBABABA),
 	UNCOMMON(0x00ff40),
 	RARE(0x3050ff),
-	EPIC(0x9f158f),
+	EPIC(0xbf25af),
 	LEGENDARY(0xef9a05),
 	MYTHIC(0xef249f),
 	IRIDESCENT(0xFF9FFF),

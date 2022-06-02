@@ -255,4 +255,5 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 		AreaMarker m = markerSet.findAreaMarker("region."+r.getName());
 		if (m != null) m.deleteMarker();
 	}
+	
 }

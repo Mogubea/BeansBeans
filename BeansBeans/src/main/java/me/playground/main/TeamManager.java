@@ -55,7 +55,13 @@ public class TeamManager {
 	 */
 	public void updateTeam(Player p) {
 		final PlayerProfile pp = PlayerProfile.from(p);
-		final Component prefix = Component.empty().append(pp.isAFK() ? Component.text("[AFK] ", NamedTextColor.GRAY) : Component.empty()).append(pp.isRank(Rank.MODERATOR) ? Component.text("\u24E2 ", Rank.MODERATOR.getRankColour()) : Component.empty());
+		
+		List<String> flags = new ArrayList<String>();
+		if (pp.isHidden()) flags.add("HIDE");
+		if (pp.isAFK()) flags.add("AFK");
+		
+		Component pprefix = !flags.isEmpty() ? Component.text("" + flags, NamedTextColor.GRAY) : Component.empty();
+		final Component prefix = pprefix.append(pp.isRank(Rank.MODERATOR) ? Component.text("\u24E2 ", Rank.MODERATOR.getRankColour()) : flags.isEmpty() ? Component.empty() : Component.text(" "));
 		final Component suffix = pp.isRank(Rank.PLEBEIAN) ? Component.text(" \u272d", pp.getDonorRank().getRankColour()) : Component.empty();
 		final NamedTextColor color = NamedTextColor.nearestTo(pp.getNameColour());
 		
@@ -84,7 +90,12 @@ public class TeamManager {
 	private void loadTeamsFor(Player p) {
 		plugin.getServer().getOnlinePlayers().forEach((player) -> {
 			final PlayerProfile pp = PlayerProfile.from(player);
-			final Component prefix = Component.empty().append(pp.isAFK() ? Component.text("[AFK] ", NamedTextColor.GRAY) : Component.empty()).append(pp.isRank(Rank.MODERATOR) ? Component.text("\u24E2 ", Rank.MODERATOR.getRankColour()) : Component.empty());
+			List<String> flags = new ArrayList<String>();
+			if (pp.isHidden()) flags.add("HIDE");
+			if (pp.isAFK()) flags.add("AFK");
+			
+			Component pprefix = !flags.isEmpty() ? Component.text("" + flags, NamedTextColor.GRAY) : Component.empty();
+			final Component prefix = pprefix.append(pp.isRank(Rank.MODERATOR) ? Component.text("\u24E2 ", Rank.MODERATOR.getRankColour()) : flags.isEmpty() ? Component.empty() : Component.text(" "));
 			final Component suffix = pp.isRank(Rank.PLEBEIAN) ? Component.text(" \u272d", pp.getDonorRank().getRankColour()) : Component.empty();
 			final NamedTextColor color = NamedTextColor.nearestTo(pp.getNameColour());
 			
@@ -119,7 +130,11 @@ public class TeamManager {
 		Objective obj = playerBoard.getObjective("id"+pp.getId()+"-side");
 		if (obj != null) obj.unregister();
 		
-		obj = playerBoard.registerNewObjective("id"+pp.getId()+"-side", "dummy", pp.getColouredName().append(Component.text(pp.isAFK() ? "\u00a77 [AFK]" : "")));
+		List<String> flags = new ArrayList<String>();
+		if (pp.isHidden()) flags.add("HIDE");
+		if (pp.isAFK()) flags.add("AFK");
+		
+		obj = playerBoard.registerNewObjective("id"+pp.getId()+"-side", "dummy", pp.getColouredName().append(!flags.isEmpty() ? Component.text("\u00a77 " + flags) : Component.empty()));
 		obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 		
 		Region r = pp.getCurrentRegion();
@@ -151,14 +166,18 @@ public class TeamManager {
 		
 		if (r != null && !r.isWorldRegion()) {
 			String rName = r.getName();
-			if (rName.length() > 9)
-				rName = rName.substring(0, 10) + "..";
+			if (rName.length() > 7)
+				rName = rName.substring(0, 8) + "..";
 			
 			scores.add("\u00a7b\u25D9 \u00a7fRegion: \u00a79" + rName);
 			MemberLevel level = r.getMember(p);
 			scores.add("\u00a7b\u25D9 \u00a7fPerms: \u00a7b" + level.toString());
 		} else {
-			scores.add("\u00a7b\u25D9 \u00a7fWorld: \u00a72" + p.getWorld().getName());
+			String rName = p.getWorld().getName();
+			if (rName.length() > 7)
+				rName = rName.substring(0, 8) + "..";
+			
+			scores.add("\u00a7b\u25D9 \u00a7fWorld: \u00a72" + rName);
 		}
 		
 		// TODO: add a toggle.

@@ -124,6 +124,7 @@ public class BeanItem {
 		put(Material.DEEPSLATE_COAL_ORE, ItemRarity.RARE);
 		put(Material.DEEPSLATE_EMERALD_ORE, ItemRarity.RARE);
 		put(Material.DRAGON_EGG, ItemRarity.RARE);
+		put(Material.SPAWNER, ItemRarity.RARE);
 		
 		put(Material.TOTEM_OF_UNDYING, ItemRarity.EPIC);
 		put(Material.ENCHANTED_GOLDEN_APPLE, ItemRarity.EPIC);
@@ -222,6 +223,8 @@ public class BeanItem {
 	};
 	
 	public final static BeanItem SHOP_STAND = new BItemShopStand(0, "SHOP_STAND", "Shopping Stand", ItemRarity.RARE);
+	public final static BeanItem PLAYER_MENU = new BeanItem(1, "PLAYER_MENU", "Player Menu", Material.NETHER_STAR, ItemRarity.UNCOMMON, 1)
+			.setDefaultLore(Component.text("Click to open the ", NamedTextColor.GRAY).append(Component.text("/menu", BeanColor.COMMAND)));
 	
 	public final static BeanItem TALARIANS = new BItemDurable(3, "TALARIANS", "Lesser Talarians", Utils.getDyedLeather(Material.LEATHER_BOOTS, 0xFF8833), ItemRarity.RARE, 1, 176)
 			.setDefaultLore(
@@ -473,11 +476,11 @@ public class BeanItem {
 			for (ItemStack i : box.getInventory()) {
 				if (i == null) continue;
 				if (x++ > 2) continue;
-				lore.add(Component.text("\u00a77" + i.getAmount() + "x ").append(i.displayName()));
+				lore.add(Component.text(" • " + i.getAmount() + "x ", NamedTextColor.GRAY).append(i.getItemMeta().hasDisplayName() ? i.getItemMeta().displayName() : Component.translatable(i, NamedTextColor.WHITE)).decoration(TextDecoration.ITALIC, false));
 			}
 			
 			if (x > 3)
-				lore.add(Component.text("\u00a77\u00a7oAnd " + (x-3) + " more..."));
+				lore.add(Component.text("And " + (x-3) + " more...", NamedTextColor.GRAY));
 		}
 		return lore;
 	}
@@ -487,6 +490,9 @@ public class BeanItem {
 		
 		ArrayList<Component> lore = doVanillaLore(item);
 		final BeanItem custom = from(item);
+		
+		if (!lore.isEmpty())
+			meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
 		
 		ItemRarity rarity = getItemRarity(item);
 		Map<Enchantment, Integer> enchants = null;
@@ -500,19 +506,7 @@ public class BeanItem {
 		}
 		
 		final Component rarityString = getRarityString(rarity, item);
-		final boolean shouldFormatNameRarity = !rarity.equals(ItemRarity.COMMON) || !rarityString.equals(rarity.toComponent());
-		
-		// Display Name
-		if (meta.hasDisplayName()) {
-			meta.displayName(meta.displayName().color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
-			
-			if (hasBeenRenamed(item))
-				lore.add(custom != null ? custom.getDisplayName().color(NamedTextColor.DARK_GRAY) : Component.translatable(item, NamedTextColor.DARK_GRAY));
-		} else if (custom != null) {
-			meta.displayName(custom.getDisplayName().color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
-		} else {
-			meta.displayName(Component.translatable(item, rarity.getColour()).decoration(TextDecoration.ITALIC, false));
-		}
+		final boolean shouldFormatNameRarity = rarityString != null;
 		
 		if (custom != null)
 			meta.setAttributeModifiers(custom.getAttributes());
@@ -628,24 +622,41 @@ public class BeanItem {
 			lore.add(getRarityString(rarity, item));
 		}
 		
+		// Display Name
+		if (meta.hasDisplayName()) {
+			meta.displayName(meta.displayName().color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
+			
+			if (hasBeenRenamed(item))
+				lore.add(0, custom != null ? custom.getDisplayName().color(NamedTextColor.DARK_GRAY) : Component.translatable(item, NamedTextColor.DARK_GRAY));
+		} else if (custom != null) {
+			meta.displayName(custom.getDisplayName().color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
+		} else if (rarity != ItemRarity.COMMON) {
+			meta.displayName(Component.translatable(item, rarity.getColour()).decoration(TextDecoration.ITALIC, false));
+		}
 		
 		if (item.getType().getMaxDurability() > 0) { // lore will never be empty
 			lore.add(Component.empty());
 			meta.lore(lore);
 			item.setItemMeta(meta);
-			reduceItemDurabilityBy(item, 0);
-		} else if (lore.size() > 0) {
-			meta.lore(lore);
-			item.setItemMeta(meta);
+			return reduceItemDurabilityBy(item, 0);
 		}
+		
+		if (!lore.isEmpty()) 
+			meta.lore(lore);
+		item.setItemMeta(meta);
 		
 		return item;
 	}
 	
 	public static boolean hasBeenRenamed(ItemStack item) {
-		BeanItem custom = BeanItem.from(item);
 		ItemMeta meta = item.getItemMeta();
-		return (!(meta.displayName() instanceof TranslatableComponent || (custom != null && ((TextComponent)meta.displayName()).content().equals(custom.getDisplayName().content()))));
+		 // Renamed items are always TextComponents.
+		if (meta.displayName() instanceof TranslatableComponent) return false;
+		BeanItem custom = BeanItem.from(item);
+		 // If it's a custom item and has the same name
+		if (custom != null && ((TextComponent)meta.displayName()).content().equals(custom.getDisplayName().content())) return false;
+		
+		return true;
 	}
 	
 	protected static Component getRarityString(ItemRarity rarity, ItemStack item) {
@@ -687,7 +698,9 @@ public class BeanItem {
 			return rarity.toComponent().append(Component.text(" Rod"));
 		if (m == Material.SHIELD)
 			return rarity.toComponent().append(Component.text(" Shield"));
-		return rarity.toComponent();
+		if (m == Material.ELYTRA)
+			return rarity.toComponent().append(Component.text(" Elytra"));
+		return null;
 	}
 	
 	public static ItemRarity getItemRarity(ItemStack item) {
@@ -791,10 +804,6 @@ public class BeanItem {
 	
 	public static ItemStack resetItemFormatting(ItemStack item) {
 		ItemMeta meta = item.getItemMeta();
-		ItemRarity rarity = getItemRarity(item);
-		
-		final Component rarityString = getRarityString(rarity, item);
-		final boolean shouldFormatNameRarity = !rarity.equals(ItemRarity.COMMON) || !rarityString.equals(rarity.toComponent());
 		
 		if (meta instanceof PotionMeta) {
 			PotionMeta pm = (PotionMeta) meta;
@@ -857,8 +866,6 @@ public class BeanItem {
 				neww.pages(pm.pages());
 			item.setItemMeta(neww);
 			return item;
-		} else if (!shouldFormatNameRarity) {
-			return new ItemStack(item.getType(), item.getAmount());
 		} else {
 			return BeanItem.formatItem(item);
 		}

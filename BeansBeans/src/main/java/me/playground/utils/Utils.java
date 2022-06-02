@@ -4,8 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
@@ -17,7 +15,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Particle;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
@@ -245,38 +242,6 @@ public class Utils {
 		}
 		
 		return component.decoration(TextDecoration.ITALIC, false);
-	}
-	
-	/**
-	 * Get an online player whether it's by nickname or username.
-	 * 
-	 * @param name - Search
-	 * @return Player
-	 */
-	@SuppressWarnings("unchecked")
-	public static Player playerPartialMatch(String name) {
-		final Collection<Player> online = (Collection<Player>) Bukkit.getServer().getOnlinePlayers();
-		List<Player> targets = new ArrayList<Player>();
-		
-		targets.addAll(online);
-
-		for (final Player p : targets) {
-			//if (p.getCustomName().equalsIgnoreCase(name))
-			//	return p;
-			if (p.getName().equalsIgnoreCase(name))
-				return p;
-		}
-
-		String lowerName = name.toLowerCase();
-		if (lowerName.length() >= 3) {
-			for (final Player p : targets) {
-				//if (p.getCustomName().toLowerCase().contains(lowerName))
-				//	return p;
-				if (p.getName().toLowerCase().contains(lowerName))
-					return p;
-			}
-		}
-		return null;
 	}
 	
 	public static void sendActionBar(Rank rank, Component message) {

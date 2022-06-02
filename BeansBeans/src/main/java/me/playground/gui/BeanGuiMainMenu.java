@@ -101,11 +101,12 @@ public class BeanGuiMainMenu extends BeanGui {
 		
 		contents[13] = newItem(tpp.getSkull(), tpp.getColouredName(), 
 				Component.text("\u00a77Rank: ").append(tpp.getHighestRank().toComponent()).append(tpp.getDonorRank() != null ? Component.text("\u00a77 (").append(tpp.getDonorRank().toComponent()).append(Component.text("\u00a77)")) : Component.empty()),
-				Component.text("\u00a77Wallet: "),
-				Component.text("\u00a77 - \u00a76" + df.format(tpp.getBalance()) + " Coins"),
-				Component.text("\u00a77 - ").append(Component.text(tpp.getSapphire() + " Sapphire", BeanColor.SAPPHIRE).decoration(TextDecoration.ITALIC, false)),
 				Component.empty(),
-				Component.text("\u00a76» \u00a7eClick to modify your profile!"));
+				Component.text("\u00a77View and edit information about your"),
+				Component.text("\u00a77Player Profile such as your name colour,"),
+				Component.text("\u00a77Discord and general profile settings."),
+				Component.empty(),
+				Component.text("\u00a76» \u00a7eClick to open!"));
 		
 		ItemStack waa = icon_heirlooms.clone();
 		ItemMeta waameta = waa.getItemMeta();
@@ -115,8 +116,8 @@ public class BeanGuiMainMenu extends BeanGui {
 		waameta.lore(Arrays.asList(
 				Component.text("Using \u00a7f" + tpp.getHeirlooms().size() + "\u00a7r/\u00a77" + tpp.getHeirlooms().getMaxHeirlooms() + "\u00a7r Slots").colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false), 
 				Component.text(""),
-				Component.text("\u00a77\u00a7oStore and utilise the effects of"),
-				Component.text("\u00a77\u00a7oyour Heirlooms in this magical bag."),
+				Component.text("\u00a77Store and utilise the effects of"),
+				Component.text("\u00a77your Heirlooms in this magical bag."),
 				Component.text(""),
 				Component.text("Stat Modifiers:", BeanColor.HEIRLOOM).decoration(TextDecoration.ITALIC, false),
 				Component.text(tpp.getHeirlooms().getLuckBonus() == 0 ? "\u00a78\u25C8 Luck: 0" : "\u00a7r\u25C8 Luck: \u00a7f" + (tpp.getHeirlooms().getLuckBonus())).colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false),

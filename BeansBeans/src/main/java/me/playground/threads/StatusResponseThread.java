@@ -45,7 +45,7 @@ public class StatusResponseThread extends Thread {
 		
 		try {
 			server.close();
-			plugin.getSLF4JLogger().error("No longer listening for Status Requests.");
+			plugin.getSLF4JLogger().warn("No longer listening for Status Requests.");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -89,10 +89,10 @@ public class StatusResponseThread extends Thread {
 				//in.close();
 				socket.close();
 			} catch (SocketException e) {
-				e.printStackTrace(); // Protocol error
+			//	e.printStackTrace(); // Protocol error
 				shutdown();
 			} catch (Exception e) {
-				e.printStackTrace(); // General error
+			//	e.printStackTrace(); // General error
 				shutdown();
 			}
 		}

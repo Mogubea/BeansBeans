@@ -15,7 +15,6 @@ import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.playerprofile.stats.StatType;
 import me.playground.utils.TabCompleter;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -45,7 +44,7 @@ public class CommandWho extends BeanCommand {
 			statusPrefix = statusPrefix.append(Component.text("\u00a7f[\u00a77AFK\u00a7f]").hoverEvent(HoverEvent.showText(Component.text("\u00a77AFK For: \u00a7f" + Utils.timeStringFromNow(target.getLastAFK())))));
 		
 		sender.sendMessage(Component.text("\u00a77Information about ").append(target.getComponentName()).append(Component.text(" ")).append(statusPrefix));
-		int mins = target.getStat(StatType.GENERIC, "playtime") / 60;
+		int mins = target.getPlaytime() / 60;
 		int hours = Math.floorDiv(mins, 60);
 		mins -= hours*60;
 		

@@ -21,7 +21,12 @@ public abstract class DynmapDatasource<T> extends PrivateDatasource {
 		super(plugin);
 		
 		if (isDynmapEnabled()) {
-			markerSet = getMarkerAPI().createMarkerSet("me.playground.markers."+markerSetName.toLowerCase(), markerSetName, getMarkerAPI().getMarkerIcons(), false);
+			MarkerSet set = getMarkerAPI().createMarkerSet("me.playground.markers."+markerSetName.toLowerCase(), markerSetName, getMarkerAPI().getMarkerIcons(), false);
+			if (set == null) { // If it already exists, it will return null. This is a /reload precaution.
+				getMarkerAPI().getMarkerSet("me.playground.markers."+markerSetName.toLowerCase()).deleteMarkerSet();
+				set = getMarkerAPI().createMarkerSet("me.playground.markers."+markerSetName.toLowerCase(), markerSetName, getMarkerAPI().getMarkerIcons(), false);
+			}
+			markerSet = set;
 		} else {
 			markerSet = null;
 		}

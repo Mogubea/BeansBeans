@@ -8,15 +8,16 @@ import net.kyori.adventure.text.Component;
 
 public enum PlayerSetting {
 	
-	ALLOW_TP("Teleport Attempts", false, "\u00a77When enabled, players can \u00a7b/tp\u00a77 to you", "\u00a77when inside a \u00a79region\u00a77 or \u00a72world\u00a77 that permits it."),
-	CHAT_TIMESTAMPS("Chat Timestamps", false, "\u00a77Doesn't do anything right now."),
-	PING_SOUNDS("@Ping Sounds", true, "\u00a77When enabled, you will hear a soft", "\u00a7dsound of amethyst\u00a77 when pinged."),
-	DISCORD("Discord Linking", false, "\u00a77Only enable this when trying to \u00a7b/link\u00a77", "\u00a77your \u00a79Discord Account\u00a77 from within", "\u00a77the \u00a79Discord Server\u00a77."),
+	ALLOW_TP("Teleport Attempts", false, "\u00a77While enabled players can \u00a7b/tp\u00a77 to you", "\u00a77when inside a \u00a79region\u00a77 or \u00a72world\u00a77 that permits it."),
+	MENU_ITEM("Player Menu Item", true, "\u00a77While enabled you will have a \u00a7aNether Star\u00a77", "\u00a77in the top left of your inventory acting", "\u00a77as a shortcut to the \u00a7b/menu\u00a77."),
+	PING_SOUNDS("@Ping Sounds", true, "\u00a77While enabled you will hear a soft", "\u00a7dsound of amethyst\u00a77 when pinged."),
+	DISCORD("Null Setting", false, "This setting is empty for now."),
 	SHOW_ACHIEVEMENTS("Achievements in Chat", true, "\u00a77Display whenever a player gets an \u00a76Achievement\u00a77."),
 	SHOW_DEATH_MESSAGES("Death Messages in Chat", true, "\u00a77Display whenever a player kicks the bucket."),
 	SHOW_JOB_MESSAGES("Job Messages in Chat", true, "\u00a77Display whenever a player changes their job."),
 	QUICK_WOOL_DYE("Quick Wool Dye (Plebeian+)", Permission.QUICK_WOOL_DYE, true, "\u00a77Right Click a Block of Wool or Carpet","\u00a77with a dye to change its colour."),
 	SHOW_SIDEBAR("Show Sidebar", true, "\u00a77Display the Sidebar on the right."),
+	HIDE("Hide Test", "bean.cmd.hide", false, "\u00a7b/hide\u00a77 toggle test.")
 	;
 	
 	final private static long defaultSetting;

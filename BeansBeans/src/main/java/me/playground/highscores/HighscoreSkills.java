@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import me.playground.data.Datasource;
-import me.playground.playerprofile.skills.SkillType;
+import me.playground.skills.Skill;
 
 public class HighscoreSkills extends Highscore {
 
-	private final SkillType skill;
+	private final Skill skill;
 	
-	public HighscoreSkills(SkillType skill) {
+	public HighscoreSkills(Skill skill) {
 		super();
 		this.skill = skill;
 		this.suffix = " XP";

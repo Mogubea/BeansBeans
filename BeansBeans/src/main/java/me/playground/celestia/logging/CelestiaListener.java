@@ -2,7 +2,6 @@ package me.playground.celestia.logging;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -10,9 +9,15 @@ import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import me.playground.data.Datasource;
+import me.playground.listeners.EventListener;
+import me.playground.main.Main;
 
-public class CelestiaListener implements Listener {
+public class CelestiaListener extends EventListener {
 	
+	public CelestiaListener(Main plugin) {
+		super(plugin);
+	}
+
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onJoin(PlayerLoginEvent e) {
 		Datasource.logCelestia(CelestiaAction.JOIN, e.getPlayer(), e.getPlayer().getLocation(), e.getRealAddress().getHostAddress() + " ("+e.getResult().name()+")");

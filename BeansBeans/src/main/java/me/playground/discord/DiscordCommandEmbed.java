@@ -36,7 +36,6 @@ public class DiscordCommandEmbed extends DiscordCommand {
 
 	@Override
 	public void onCommand(SlashCommandEvent e) {
-		e.deferReply(true).queue();
 		EmbedBuilder eb = new EmbedBuilder();
 		eb.setColor(0xff4455);
 		

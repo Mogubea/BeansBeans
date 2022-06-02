@@ -11,7 +11,6 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import me.playground.main.Main;
 import me.playground.ranks.Permission;
 import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
@@ -21,10 +20,12 @@ public class BeanGuiCommands extends BeanGui {
 	
 	protected static final ItemStack blank = newItem(new ItemStack(Material.LIME_STAINED_GLASS_PANE, 1), "\u00a7aCommands");
 	
-	final List<Command> cmds = Main.getCommandManager().getMyCommands();
+	private final List<Command> cmds;
 	
 	public BeanGuiCommands(Player p) {
 		super(p);
+		
+		cmds = getPlugin().commandManager().getMyCommands();
 		
 		setName("Commands");
 		this.presetSize = 54;

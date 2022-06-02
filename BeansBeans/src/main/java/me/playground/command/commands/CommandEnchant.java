@@ -44,7 +44,7 @@ public class CommandEnchant extends BeanCommand {
 		Enchantment e = Enchantment.getByKey(NamespacedKey.minecraft(args[0]));
 		
 		if (e == null)
-			e = Enchantment.getByKey(Main.key(args[0]));
+			e = Enchantment.getByKey(getPlugin().getKey(args[0]));
 		if (e == null)
 			throw new CommandException(sender, "Unknown enchantment '"+args[0]+"'");
 		

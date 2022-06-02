@@ -1,15 +1,17 @@
 package me.playground.main;
 
-import java.lang.reflect.Field;
-import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerKickEvent.Cause;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import me.playground.command.CommandManager;
@@ -17,7 +19,7 @@ import me.playground.command.commands.CommandCurse;
 import me.playground.data.Datasource;
 import me.playground.data.DatasourceCore;
 import me.playground.discord.DiscordBot;
-import me.playground.enchants.BeanEnchantment;
+import me.playground.enchants.EnchantManager;
 import me.playground.highscores.Highscores;
 import me.playground.items.BeanItem;
 import me.playground.listeners.ListenerManager;
@@ -31,6 +33,7 @@ import me.playground.recipes.RecipeManager;
 import me.playground.regions.Region;
 import me.playground.regions.RegionManager;
 import me.playground.shop.ShopManager;
+import me.playground.skills.Skill;
 import me.playground.threads.StatusResponseThread;
 import me.playground.threads.WhateverChat;
 import me.playground.utils.Calendar;
@@ -39,15 +42,18 @@ import me.playground.voting.VoteManager;
 import me.playground.warps.WarpManager;
 import me.playground.worlds.WorldManager;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.title.Title;
-import net.kyori.adventure.title.Title.Times;
 
 public class Main extends JavaPlugin {
 
 	private static Main instance;
 	public static long STARTUP_TIME;
 	private final Random random = new Random();
+	private boolean isDebug;
+	private boolean fullyBooted;
 	
+	private Map<String, NamespacedKey> registeredKeys = new HashMap<String, NamespacedKey>();
+	
+	private EnchantManager enchantManager;
 	private TeamManager teamManager;
 	private CommandManager commandManager;
 	public NPCManager npcManager;
@@ -59,18 +65,22 @@ public class Main extends JavaPlugin {
 	private PermissionManager permissionManager;
 	private RecipeManager recipeManager;
 	private LootManager lootManager;
+	private ListenerManager listenerManager;
 	private SignMenuFactory signMenuFactory;
 	
 	private DiscordBot discordBot;
 	private VoteManager voteManager;
 	private WhateverChat webChatServer;
+	private StatusResponseThread webStatusThread;
 	
 	private DatasourceCore datasource;
 
 	public void onEnable() {
+		isDebug = getConfig().getBoolean("debug", false);
 		STARTUP_TIME = System.currentTimeMillis();
 		instance = this;
-		registerEnchantments();
+		
+		enchantManager = new EnchantManager(this);
 		
 		this.signMenuFactory = new SignMenuFactory(this);
 		new ProtocolNPCListener(this);
@@ -96,11 +106,13 @@ public class Main extends JavaPlugin {
 		Datasource.loadAllLoot();
 		
 		// Register Listeners
-		new ListenerManager(this);
+		listenerManager = new ListenerManager(this);
+		
+		getSLF4JLogger().info("Loaded " + Skill.getRegisteredSkills().size() + " Skills"); // Before Civilizations as they and jobs depend on skills
 		
 		Datasource.loadAllCivilizations();
 		
-		getLogger().fine("Loaded " + BeanItem.values().length + " Custom Items");
+		getSLF4JLogger().info("Loaded " + BeanItem.values().length + " Custom Items");
 
 		// UUID testId = UUID.randomUUID(); // creates a test profile, IT WORKS!!!!!
 		// System.out.println("TEST 1: profile id for "+testId+" is: " +
@@ -115,33 +127,54 @@ public class Main extends JavaPlugin {
 		
 		// TODO:
 		try {
-			getSLF4JLogger().warn("Attempting to load status thread");
-			new StatusResponseThread(this, getServer().getIp(), 8191);
+			webStatusThread = new StatusResponseThread(this, getServer().getIp(), 8191);
 		} catch (Exception e) {
-			getSLF4JLogger().error("Failed to load status thread");
+			getSLF4JLogger().warn("Failed to load Live Status Thread.");
 			e.printStackTrace();
 		}
 		
 		startMainServerLoop();
+		fullyBooted = true;
 	}
-
+	
 	public void onDisable() {
-		npcManager.hideAllNPCsFromAll();
+//		if (npcManager != null)
+//			npcManager.hideAllNPCsFromAll();
 		
-		for (UUID uuid : permissionManager.getRankPreviewers())
-			permissionManager.stopPreviewingRank(Bukkit.getPlayer(uuid));
-		
-		for (Player p : Bukkit.getOnlinePlayers()) { // wtf is this title method lol
-			p.showTitle(Title.title(Component.text("\u00a7cServer is Restarting..."), Component.empty(), Times.times(Duration.ofSeconds(1), Duration.ofSeconds(4), Duration.ofSeconds(1))));
-			p.closeInventory();
-			PlayerProfile.from(p).getSkills().forceHideBar();
-			permissionManager.clearPlayerPermissions(p);
+		if (permissionManager != null) {
+			for (UUID uuid : permissionManager.getRankPreviewers())
+				permissionManager.stopPreviewingRank(Bukkit.getPlayer(uuid));
+			
+			for (Player p : Bukkit.getOnlinePlayers())
+				permissionManager.clearPlayerPermissions(p);
 		}
 		
-		Datasource.saveAll();
-		unregisterEnchantments();
-		discordBot.shutdown();
-		webChatServer.shutdown();
+		for (Player p : Bukkit.getOnlinePlayers())
+			p.kick(Component.text("\u00a7eBean's Beans is reloading."), Cause.RESTART_COMMAND);
+		
+		if (recipeManager != null)
+			recipeManager.unregisterRecipes();
+		
+		if (fullyBooted) {
+			Bukkit.getScheduler().cancelTask(mainLoop);
+			Datasource.saveAll();
+		}
+		
+		if (commandManager != null)
+			commandManager.unregisterCommands();
+		
+		if (enchantManager != null)
+			enchantManager.unregisterEnchantments();
+		
+		if (listenerManager != null)
+			listenerManager.unregisterEvents();
+		
+		if (discordBot != null) 
+			discordBot.shutdown();
+		if (webChatServer != null) 
+			webChatServer.shutdown();
+		if (webStatusThread != null)
+			webStatusThread.shutdown();
 	}
 	
 	public DatasourceCore getDatasourceCore() {
@@ -156,16 +189,8 @@ public class Main extends JavaPlugin {
 		return instance;
 	}
 	
-	public static CommandManager getCommandManager() {
-		return Main.instance.commandManager;
-	}
-	
 	public static RegionManager getRegionManager() {
 		return Main.instance.regionManager;
-	}
-	
-	public static WarpManager getWarpManager() {
-		return Main.instance.warpManager;
 	}
 	
 	public static ShopManager getShopManager() {
@@ -183,36 +208,47 @@ public class Main extends JavaPlugin {
 	public CommandManager commandManager() {
 		return commandManager;
 	}
+	
 	public WorldManager getWorldManager() {
 		return worldManager;
 	}
+	
 	public RegionManager regionManager() {
 		return regionManager;
 	}
+	
 	public WarpManager warpManager() {
 		return warpManager;
 	}
+	
 	public ShopManager shopManager() {
 		return shopManager;
 	}
+	
 	public TeamManager teamManager() {
 		return teamManager;
 	}
+	
 	public PermissionManager permissionManager() {
 		return permissionManager;
 	}
+	
 	public DiscordBot getDiscord() {
 		return discordBot;
 	}
+	
 	public RecipeManager recipeManager() {
 		return recipeManager;
 	}
+	
 	public NPCManager npcManager() {
 		return npcManager;
 	}
+	
 	public LootManager lootManager() {
 		return lootManager;
 	}
+	
 	public VoteManager voteManager() {
 		return voteManager;
 	}
@@ -221,35 +257,32 @@ public class Main extends JavaPlugin {
 		return webChatServer;
 	}
 	
-	private void registerEnchantments() {
-		try {
-            Field acceptingNew = Enchantment.class.getDeclaredField("acceptingNew");
-            acceptingNew.setAccessible(true);
-            acceptingNew.set(null, true);
-            for (BeanEnchantment ench : BeanEnchantment.getCustomEnchants())
-            	Enchantment.registerEnchantment(ench);
-            getLogger().fine("Registered custom enchantments.");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-	}
-	
-	@SuppressWarnings("unchecked")
-	private void unregisterEnchantments() {
-		try {
-           Field keyField = Enchantment.class.getDeclaredField("byKey");
-           Field nameField = Enchantment.class.getDeclaredField("byName");
-           keyField.setAccessible(true);
-           nameField.setAccessible(true);
-           HashMap<NamespacedKey, Enchantment> byKey = (HashMap<NamespacedKey, Enchantment>) keyField.get(null);
-           HashMap<String, Enchantment> byName = (HashMap<String, Enchantment>) nameField.get(null);
-           for (BeanEnchantment ench : BeanEnchantment.getCustomEnchants()) {
-        	   byKey.remove(ench.getKey());
-        	   byName.remove(ench.getName());
-           }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+	/**
+	 * Get an online player whether it's by nickname or username.
+	 */
+	public Player searchForPlayer(String name) {
+		final Collection<? extends Player> online = getServer().getOnlinePlayers();
+		List<Player> targets = new ArrayList<Player>();
+		targets.addAll(online);
+		int size = targets.size();
+
+		for (int x = -1; ++x < size;) {
+			Player p = targets.get(x);
+			me.playground.playerprofile.PlayerProfile pp = me.playground.playerprofile.PlayerProfile.from(p);
+			if ((pp.hasNickname() && pp.getDisplayName().equalsIgnoreCase(name)) || pp.getRealName().equalsIgnoreCase(name))
+				return p;
+		}
+
+		String lowerName = name.toLowerCase();
+		if (lowerName.length() >= 3) {
+			for (int x = -1; ++x < size;) {
+				Player p = targets.get(x);
+				me.playground.playerprofile.PlayerProfile pp = me.playground.playerprofile.PlayerProfile.from(p);
+				if ((pp.hasNickname() && pp.getDisplayName().toLowerCase().contains(lowerName)) || pp.getRealName().toLowerCase().equalsIgnoreCase(lowerName))
+					return p;
+			}
+		}
+		return null;
 	}
 	
 	private long lastProfilePoke;
@@ -258,8 +291,10 @@ public class Main extends JavaPlugin {
 	private long lastScoreboardUpdate;
 	private long lastDiscordPoke;
 	
+	private int mainLoop;
+	
 	private void startMainServerLoop() {
-		Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+		mainLoop = Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
 				final long mili = System.currentTimeMillis();
 				boolean doScoreboardUpdate = mili-lastScoreboardUpdate >= 1000 * 5;
@@ -301,7 +336,7 @@ public class Main extends JavaPlugin {
 							// Playtime Check - Only checks for the next rank in line, this could be a non-playtime rank (eg. Exalted -> Moderator), that's why there's a check.
 							if (!permissionManager().isPreviewing(p)) {
 								Rank next = Rank.values()[pp.getPlaytimeRank().ordinal()+1];
-								if (next.isPlaytimeRank() && pp.getStat(StatType.GENERIC, "playtime") >= next.getPlaytimeRequirement()) {
+								if (next.isPlaytimeRank() && pp.getPlaytime() >= next.getPlaytimeRequirement()) {
 									pp.grantAdvancement("beansbeans:advancements/ranks/"+next.lowerName());
 									pp.addRank(next);
 								}
@@ -331,8 +366,15 @@ public class Main extends JavaPlugin {
 		}, 10L, 10L); // every 500ms
 	}
 
-	public static NamespacedKey key(String key) {
-		return new NamespacedKey(getInstance(), key);
+	public NamespacedKey getKey(String key) {
+		String lcKey = key.toLowerCase();
+		NamespacedKey nsk = registeredKeys.get(lcKey);
+		if (nsk == null) {
+			nsk = new NamespacedKey(this, lcKey);
+			registeredKeys.put(lcKey, nsk);
+		}
+		
+		return nsk;
 	}
 	
 	public NamespacedKey keyRecipe(String key) {
@@ -341,6 +383,10 @@ public class Main extends JavaPlugin {
 	
 	public Random getRandom() {
 		return random;
+	}
+	
+	public boolean isDebugMode() {
+		return this.isDebug;
 	}
 	
 }

@@ -37,5 +37,5 @@ public class CommandAnvil extends BeanCommand {
 	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
 		return Component.text("\u00a7cUsage: \u00a7f"+str);
 	}
-
+	
 }

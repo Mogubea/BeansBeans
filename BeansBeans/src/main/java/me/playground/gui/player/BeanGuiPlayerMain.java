@@ -27,7 +27,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 
 public class BeanGuiPlayerMain extends BeanGuiPlayer {
 	
-	private static final ItemStack icon_settings = newItem(new ItemStack(Material.REDSTONE_TORCH), "\u00a7cYour Settings", "", "\u00a76» \u00a7eClick to modify!");
+	private final ItemStack skullDiscord = Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGQ0MjMzN2JlMGJkY2EyMTI4MDk3ZjFjNWJiMTEwOWU1YzYzM2MxNzkyNmFmNWZiNmZjMjAwMDAwMTFhZWI1MyJ9fX0=");
 	
 	public BeanGuiPlayerMain(Player p) {
 		super(p);
@@ -53,7 +53,7 @@ public class BeanGuiPlayerMain extends BeanGuiPlayer {
 		final int slot = e.getRawSlot();
 		
 		switch(slot) {
-		case 19: // Name Change
+		case 20: // Name Change
 			if (!pp.isOverridingProfile()) {
 				if (tpp.onCooldown("nicknameRequest")) {
 					p.sendActionBar(Component.text("\u00a7cPlease wait before applying for another nickname!"));
@@ -106,7 +106,7 @@ public class BeanGuiPlayerMain extends BeanGuiPlayer {
 		case 21:
 			new BeanGuiPlayerNameColour(p).openInventory();
 			return;
-		case 23: case 25:
+		/*case 23: case 25:
 			final boolean in = slot == 23;
 			final String msg = in ? "login" : "logout";
 			
@@ -151,8 +151,15 @@ public class BeanGuiPlayerMain extends BeanGuiPlayer {
                 return true;
             });
 			menuu.open(p);
+			return;*/
+		case 23:
+			if (this.isOverrideView() || getPlugin().getDiscord().isLinked(tpp.getId())) return;
+			long code = getPlugin().getDiscord().generateLinkCode(tpp.getId());
+			p.sendMessage(Component.text("\u00a77Your Discord Link Code is \u00a7f\u00a7l" + code));
+			p.sendMessage(Component.text("\u00a77Use the \u00a7b/link " + code + "\u00a77 command in the Bean's Beans Discord to link your accounts!"));
+			p.closeInventory();
 			return;
-		case 34:
+		case 24:
 			new BeanGuiPlayerSettings(p).openInventory();
 			return;
 		}
@@ -165,19 +172,20 @@ public class BeanGuiPlayerMain extends BeanGuiPlayer {
 		
 		boolean canNick = pp.isOverridingProfile() || tpp.hasPermission(Permission.NICKNAME_APPLY) || tpp.hasPermission(Permission.NICKNAME_OVERRIDE);
 		
-		contents[19] = newItem(new ItemStack(Material.NAME_TAG), Component.text("Nickname", tpp.getNameColour()).append(Component.text(canNick ? "" : "\u00a77 (Unavailable)")),
-				Component.text(tpp.hasNickname() ? "\u00a77Current Nickname: \u00a7f"+tpp.getNickname() : "\u00a77No nickname..."),
+		contents[20] = newItem(new ItemStack(Material.NAME_TAG), Component.text("Nickname", tpp.getNameColour()).append(Component.text(canNick ? "" : "\u00a77 (Unavailable)")),
+				Component.text(tpp.hasNickname() ? "\u00a77Current Nickname: \u00a7f"+tpp.getNickname() : "\u00a77You have no nickname set."),
 				Component.empty(),
 				canNick ? 
 						(!tpp.onCooldown("nicknameRequest") ? Component.text(pp.isOverridingProfile() || tpp.hasPermission(Permission.NICKNAME_OVERRIDE) ? "\u00a76» \u00a7eClick to modify!" 
 								: "\u00a76» \u00a7eClick to apply!") 
 								: Component.text("\u00a7cCooldown: " + Utils.timeStringFromNow(tpp.getCooldown("nicknameRequest")))) 
-						: Component.text("\u00a7c» Only ").append(Rank.PATRICIAN.toComponent()).append(Component.text("\u00a7c's can apply for nicknames.")));
+						: Component.text("\u00a78» Requires the " + Rank.PATRICIAN.getNiceName() + " rank."));
 		
+		// Name Colour Icon
 		ItemStack chestCol = new ItemStack(Material.LEATHER_CHESTPLATE);
 		LeatherArmorMeta meta = (LeatherArmorMeta) chestCol.getItemMeta();
 		meta.displayName(Component.text("Name Colour", tpp.getNameColour()).decoration(TextDecoration.ITALIC, false));
-		ArrayList<Component> lore = new ArrayList<Component>();
+		final ArrayList<Component> lore = new ArrayList<Component>();
 		lore.add(Component.text("\u00a77Current Colour: #").append(Component.text(Long.toHexString(tpp.getNameColour().value()), tpp.getNameColour()).decoration(TextDecoration.ITALIC, false)));
 		lore.add(Component.empty());
 		lore.add(Component.text("\u00a76» \u00a7eClick to modify!"));
@@ -188,7 +196,42 @@ public class BeanGuiPlayerMain extends BeanGuiPlayer {
 		
 		contents[21] = chestCol;
 		
-		contents[34] = icon_settings;
+		// Rank Icon
+		ItemStack rankIcon = newItem(new ItemStack(Material.CLOCK), Component.text("Rank", tpp.getNameColour()));
+		Rank playtimeRank = tpp.getPlaytimeRank();
+		lore.clear();
+		lore.add(Component.text("\u00a77Rank: ").append(tpp.getHighestRank().toComponent()));
+		if (tpp.isRank(Rank.MODERATOR))
+			lore.add(Component.text("\u00a77Playtime Rank: ").append(playtimeRank.toComponent()));
+		lore.add(Component.text("\u00a77Playtime: \u00a7f" + Utils.timeStringFromMillis(tpp.getPlaytime() * 1000)));
+		if (tpp.getPlaytimeRank() != Rank.EXALTED) {
+			Rank next = Rank.values()[tpp.getPlaytimeRank().ordinal()+1];
+			lore.add(playtimeRank.toComponent().append(Component.text(" ")).append(Utils.getProgressBar('-', 16, tpp.getPlaytime(), next.getPlaytimeRequirement(), 0x444444, playtimeRank.getRankColour().value())).append(Component.text(" ")).append(next.toComponent()));
+		}
+		
+		if (tpp.getDonorRank() != null) {
+			lore.add(Component.empty());
+			lore.add(Component.text("\u00a77Supporter Rank: ").append(tpp.getDonorRank().toComponent()));
+		}
+		rankIcon.editMeta((metaa) -> metaa.lore(lore));
+		
+		contents[22] = rankIcon;
+		
+		// Discord Icon
+		ItemStack discordIcon = newItem(skullDiscord, Component.text("Discord", tpp.getNameColour()));
+		lore.clear();
+		if (getPlugin().getDiscord().isLinked(tpp.getId())) {
+			lore.add(Component.text("\u00a77Status: \u00a79Linked"));
+			lore.add(Component.text("\u00a77Account: \u00a7b" + getPlugin().getDiscord().getDiscordAccount(tpp.getId()).getUser().getAsTag()));
+		} else {
+			lore.add(Component.text("\u00a77Status: \u00a7cNot Linked"));
+			lore.add(Component.empty());
+			lore.add(Component.text("\u00a76» \u00a7eClick to obtain Link Code!"));
+		}
+		discordIcon.editMeta((metaa) -> metaa.lore(lore));
+		
+		contents[23] = discordIcon;
+		contents[24] = newItem(new ItemStack(Material.REDSTONE_TORCH), Component.text("Settings", tpp.getNameColour()), Component.empty(), Component.text("\u00a76» \u00a7eClick to modify!"));
 		
 		i.setContents(contents);
 	}

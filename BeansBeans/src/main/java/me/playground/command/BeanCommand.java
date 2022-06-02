@@ -75,14 +75,6 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 		this.minArgs = minArguments;
 	}
 	
-	public BeanCommand(final Main plugin, boolean canConsoleRun, Rank permissionRank, @Nonnull String... aliases) {
-		this(plugin, permissionRank == null ? "" : "bean.rank." + permissionRank.lowerName(), canConsoleRun, aliases);
-	}
-	
-	public BeanCommand(final Main plugin, boolean canConsoleRun, Rank permissionRank, int minArguments, @Nonnull String... aliases) {
-		this(plugin, permissionRank == null ? "" : "bean.rank." + permissionRank.lowerName(), canConsoleRun, minArguments, aliases);
-	}
-	
 	public abstract boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args);
 	public abstract @Nullable List<String> runTabComplete(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args);
 	public abstract Component getUsage(@Nonnull CommandSender sender, @Nonnull String str, @Nonnull String[] args);
@@ -90,6 +82,9 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	@Override
 	public boolean onCommand(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		try {
+			if (str.startsWith("beansbeans:"))
+				str = str.substring(11);
+			
 			if (!this.isEnabled())
 				throw new CommandException(sender, "/"+str + " is currently disabled.");
 		
@@ -240,7 +235,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	}
 	
 	protected Player toPlayer(CommandSender sender, String s, boolean self) {
-		Player p = Utils.playerPartialMatch(s);
+		Player p = getPlugin().searchForPlayer(s);
 		if (p == null)
 			throw new CommandException(sender, "Couldn't find player '"+s+"'");
 		if (!self && p == sender)
@@ -348,6 +343,10 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 		if (sender instanceof Player && ((Player)sender).getGameMode() == mode)
 			throw new CommandException(sender, "This command is disabled in " + mode.name().toLowerCase() + " mode.");
 		return true;
+	}
+	
+	public Component toComponent() {
+		return Component.text("/"+aliases[0]).hoverEvent(HoverEvent.showText(Component.text(this.description))).clickEvent(ClickEvent.suggestCommand("/"+aliases[0])).color(BeanColor.COMMAND);
 	}
 	
 	protected Component commandInfo(String cmd) {

@@ -6,7 +6,7 @@ import net.kyori.adventure.text.format.TextColor;
 public class BeanColor implements TextColor {
 	
 	public static final BeanColor WORLD 		= new BeanColor(0x109b3a);
-	public static final BeanColor COMMAND		= new BeanColor(0x95CAFF);
+	public static final BeanColor COMMAND		= new BeanColor(0xA5AAFF);
 	public static final BeanColor ENCHANT 		= new BeanColor(0x75EFFF);
 	public static final BeanColor ENCHANT_OP 	= new BeanColor(0x35FFFF);
 	public static final BeanColor REGION 		= new BeanColor(0x5755bf);

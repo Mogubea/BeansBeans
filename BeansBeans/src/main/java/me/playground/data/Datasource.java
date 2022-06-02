@@ -50,13 +50,13 @@ import me.playground.playerprofile.ProfileModifyRequest;
 import me.playground.playerprofile.ProfileModifyRequest.ModifyType;
 import me.playground.playerprofile.ProfileStore;
 import me.playground.playerprofile.settings.PlayerSetting;
-import me.playground.playerprofile.skills.SkillData;
-import me.playground.playerprofile.skills.SkillInfo;
-import me.playground.playerprofile.skills.SkillType;
 import me.playground.playerprofile.stats.DirtyInteger;
 import me.playground.playerprofile.stats.PlayerStats;
 import me.playground.playerprofile.stats.StatType;
 import me.playground.ranks.Rank;
+import me.playground.skills.Skill;
+import me.playground.skills.SkillInfo;
+import me.playground.skills.Skills;
 import me.playground.utils.Utils;
 import me.playground.voting.VoteService;
 import net.kyori.adventure.text.Component;
@@ -278,7 +278,7 @@ public class Datasource {
 		} finally {
 			close(c, statement);
 		}
-		saveBeanExperience(pp.getId(), pp.getSkills());
+		saveSkills(pp.getId(), pp.getSkills());
 		saveArmourWardrobe(pp);
 		savePickupBlacklist(pp.getId());
 		savePlayerHeirlooms(pp);
@@ -307,7 +307,7 @@ public class Datasource {
 		}
 	}
 
-	public static SkillData loadOrMakeBeanExperience(int databaseId) {
+	public static Skills loadSkills(PlayerProfile profile) {
 		Connection c = null;
 		PreparedStatement statement = null;
 		ResultSet r = null;
@@ -315,23 +315,20 @@ public class Datasource {
 		try {
 			c = getNewConnection();
 			statement = connection.prepareStatement("SELECT * FROM " + table_experience + " WHERE playerId = ?");
-			statement.setInt(1, databaseId);
+			statement.setInt(1, profile.getId());
 			r = statement.executeQuery();
 			if (r.next()) {
-				HashMap<SkillType, SkillInfo> xpSources = new HashMap<SkillType, SkillInfo>();
-				final SkillType[] st = SkillType.values();
-				for (int x = 0; x < st.length; x++) {
-					final SkillType src = st[x];
-					xpSources.put(src, new SkillInfo(r.getLong(src.toString().toLowerCase() + "_xp")));
-				}
-				return new SkillData(xpSources);
+				HashMap<Skill, SkillInfo> xpSources = new HashMap<Skill, SkillInfo>();
+				for (Skill skill : Skill.getRegisteredSkills())
+					xpSources.put(skill, new SkillInfo(r.getLong(skill.getName() + "_xp")));
+				return new Skills(profile, xpSources);
 			} else {
 				close(c, statement);
 				c = getNewConnection();
 				statement = connection.prepareStatement("INSERT INTO " + table_experience + "(playerId) VALUES (?)");
-				statement.setInt(1, databaseId);
+				statement.setInt(1, profile.getId());
 				statement.executeUpdate();
-				return new SkillData();
+				return new Skills(profile);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -341,17 +338,17 @@ public class Datasource {
 		return null;
 	}
 
-	public static void saveBeanExperience(int databaseId, SkillData sd) {
+	public static void saveSkills(int databaseId, Skills sd) {
 		Connection c = null;
 		PreparedStatement statement = null;
 		try {
 			c = getNewConnection();
 
 			String statementStr = "UPDATE " + table_experience + " SET ";
-			int max = SkillType.values().length;
-			for (SkillType src : SkillType.values()) {
+			int max = Skill.getRegisteredSkills().size();
+			for (Skill src : Skill.getRegisteredSkills()) {
 				max--;
-				statementStr += src.toString().toLowerCase() + " = ?," + src.toString().toLowerCase() + "_xp = ?"
+				statementStr += src.getName() + " = ?," + src.getName() + "_xp = ?"
 						+ (max > 0 ? "," : "");
 			}
 
@@ -359,9 +356,9 @@ public class Datasource {
 			statement = connection.prepareStatement(statementStr);
 			int idx = 1;
 
-			for (SkillType src : SkillType.values()) {
-				statement.setInt(idx++, sd.getSkillInfo(src).getLevel());
-				statement.setLong(idx++, sd.getSkillInfo(src).getXp());
+			for (Skill src : Skill.getRegisteredSkills()) {
+				statement.setInt(idx++, sd.getLevel(src));
+				statement.setLong(idx++, sd.getTotalExperience(src));
 			}
 
 			statement.setInt(idx++, databaseId);
@@ -395,7 +392,7 @@ public class Datasource {
 	
 	public static void saveAll() {
 		long then = System.currentTimeMillis();
-		PlayerProfile.profileCache.asMap().values().forEach(profile -> saveProfile(profile));
+		PlayerProfile.asMap().values().forEach(profile -> saveProfile(profile));
 		Main.getInstance().getDatasourceCore().saveAll();
 		saveDirtyLootEntries();
 		Utils.sendActionBar(Rank.ADMINISTRATOR, Component.text("\u00a7dSaved everything in roughly \u00a75" + (System.currentTimeMillis()-then) + "ms"));
@@ -648,20 +645,20 @@ public class Datasource {
 		return map;
 	}
 	
-	public static LinkedHashMap<Integer, Long> getSkillHighscores(SkillType skill) {
+	public static LinkedHashMap<Integer, Long> getSkillHighscores(Skill skill) {
 		Connection c = null;
 		PreparedStatement statement = null;
 		LinkedHashMap<Integer, Long> map = null;
 		
 		try {
 			c = getNewConnection();
-			statement = c.prepareStatement("SELECT playerId,"+skill.name()+"_xp FROM "+table_experience+" ORDER BY "+skill.name()+"_xp ASC");
+			statement = c.prepareStatement("SELECT playerId,"+skill.getName()+"_xp FROM "+table_experience+" ORDER BY "+skill.getName()+"_xp ASC");
 			ResultSet rs = statement.executeQuery();
 			
 			map = new LinkedHashMap<Integer, Long>();
 			
 			while(rs.next())
-				map.put(rs.getInt("playerId"), rs.getLong(skill.name()+"_xp"));
+				map.put(rs.getInt("playerId"), rs.getLong(skill.getName()+"_xp"));
 			
 			statement.close();
 		} catch (SQLException e) {
@@ -682,10 +679,10 @@ public class Datasource {
 			c = getNewConnection();
 			
 			String st = "SELECT playerId, (";
-			SkillType[] skills = SkillType.values();
-			int size = skills.length;
-			for (int x = -1; ++x < size;)
-				st += skills[x].name().toLowerCase()+"_xp" + ((x < size-1) ? "+" : "");
+			
+			for (Skill skill : Skill.getRegisteredSkills())
+				st += skill.getName()+"_xp+";
+			st = st.substring(0, st.length() - 1);
 			st += ") AS totalxp FROM " + table_experience + " ORDER BY totalxp ASC";
 			
 			statement = c.prepareStatement(st);
@@ -1132,6 +1129,25 @@ public class Datasource {
 		return false;
 	}
 	
+	public static boolean breakDiscordLink(int playerId) {
+		Connection c = null;
+		PreparedStatement statement = null;
+		
+		try {
+			c = getNewConnection();
+			statement = c.prepareStatement("DELETE FROM discords WHERE playerId = ?");
+			statement.setInt(1, playerId);
+			
+			statement.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close(c, statement);
+		}
+		return false;
+	}
+	
 	public static void loadAllCivilizations() {
 		Connection c = null;
 		PreparedStatement statement = null;
@@ -1492,12 +1508,8 @@ public class Datasource {
 			rs = statement.getGeneratedKeys();
 			rs.next();
 			
-			if (ProfileStore.from(playerId, true) != null && ProfileStore.from(playerId).isOnline()) {
-				PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
-				Timestamp tsOne = rs.getTimestamp(4);
-				
-				pp.getInbox().add(new Delivery(rs.getInt(1), playerId, senderId, tsOne == null ? 0L : tsOne.getTime(), 0L, expiryTime, type, title, message, content));
-			}
+			PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
+			pp.getInbox().add(new Delivery(rs.getInt(1), playerId, senderId, System.currentTimeMillis(), 0L, expiryTime, type, title, message, content));
 			
 			return true;
 		} catch (SQLException e) {

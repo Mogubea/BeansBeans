@@ -58,7 +58,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 				// can
 			} else if (p.hasPermission("bean.region.rename")) {
 				if (pp.getBalance() < 500) {
-					p.sendActionBar(Component.text("\u00a7cYou don't have enough coins to rename a region!"));
+					p.sendActionBar(Component.text("\u00a7cYou don't have enough coins to rename the region!"));
 					p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
 					return;
 				}

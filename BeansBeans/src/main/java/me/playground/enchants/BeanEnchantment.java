@@ -20,7 +20,7 @@ public class BeanEnchantment extends Enchantment {
 	
 	private final static Set<BeanEnchantment> enchants = new HashSet<BeanEnchantment>();
 	
-	final public static BeanEnchantment MOLTEN_TOUCH = new BeanEnchantment(Main.key("molten_touch"), "Molten Touch", EnchantmentTarget.TOOL, 1, 1, 40, false, false) {
+	final public static BeanEnchantment MOLTEN_TOUCH = new BeanEnchantment(Main.getInstance().getKey("molten_touch"), "Molten Touch", EnchantmentTarget.TOOL, 1, 1, 40, false, false) {
 		public boolean canEnchantItem(ItemStack arg0) {
 			return false;
 		}
@@ -30,13 +30,13 @@ public class BeanEnchantment extends Enchantment {
 		}
 	};
 	
-	final public static BeanEnchantment REINFORCED = new BeanEnchantment(Main.key("reinforced"), "Reinforced", EnchantmentTarget.BREAKABLE, 3, 1, 24, false, false) {
+	final public static BeanEnchantment REINFORCED = new BeanEnchantment(Main.getInstance().getKey("reinforced"), "Reinforced", EnchantmentTarget.BREAKABLE, 3, 1, 24, false, false) {
 		public boolean conflictsWith(Enchantment arg0) {
 			return arg0.equals(Enchantment.DURABILITY);
 		}
 	};
 	
-	final public static BeanEnchantment SEARING = new BeanEnchantment(Main.key("searing"), "Searing", EnchantmentTarget.FISHING_ROD, 1, 1, 26, false, false);
+	final public static BeanEnchantment SEARING = new BeanEnchantment(Main.getInstance().getKey("searing"), "Searing", EnchantmentTarget.FISHING_ROD, 1, 1, 26, false, false);
 	
 	// XXX: Class begin
 	

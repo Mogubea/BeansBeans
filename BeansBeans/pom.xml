@@ -1,8 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>BeansBeans</groupId>
   <artifactId>BeansBeans</artifactId>
-  <version>0.4.4-ALPHA</version>
+  <version>0.4.5-ALPHA</version>
   
   <properties>
     <maven.compiler.target>17</maven.compiler.target>
@@ -10,7 +11,7 @@
   </properties>
   
   <dependencies>
-  	<dependency>
+    <dependency>
   		<groupId>io.papermc.paper</groupId>
   		<artifactId>paper-api</artifactId>
   		<version>1.18.2-R0.1-SNAPSHOT</version>
@@ -57,12 +58,18 @@
   		<artifactId>Java-WebSocket</artifactId>
   		<version>1.5.2</version>
 	</dependency>
+	<dependency>
+        <groupId>me.lucko</groupId>
+        <artifactId>commodore</artifactId>
+        <version>1.13</version>
+        <scope>compile</scope>
+    </dependency>
   </dependencies>
   
   <repositories>
 	<repository>
-		<id>papermc</id>
-		<url>https://papermc.io/repo/repository/maven-public/</url>
+    	<id>papermc</id>
+    	<url>https://papermc.io/repo/repository/maven-public/</url>
 	</repository>
 	<repository>
         <id>spigot-repo</id>
@@ -89,11 +96,23 @@
    		<id>bintray-jcenter</id>
     	<url>https://jcenter.bintray.com</url>
 	</repository>
+	<repository>
+        <id>minecraft-repo</id>
+        <url>https://libraries.minecraft.net/</url>
+    </repository>
   </repositories>
   
   <build>
     <plugins>
-      <plugin>
+    	<plugin>
+    		<groupId>org.apache.maven.plugins</groupId>
+    		<artifactId>maven-compiler-plugin</artifactId>
+    		<version>3.8.1</version>
+    		<configuration>
+       			<release>17</release>
+    		</configuration>
+		</plugin>
+      	<plugin>
             <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.1</version>

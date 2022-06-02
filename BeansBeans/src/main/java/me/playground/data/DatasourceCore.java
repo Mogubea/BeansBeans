@@ -33,6 +33,8 @@ public class DatasourceCore implements IPluginRef {
 		plugin = pl;
 		
 		dynmap = (DynmapAPI) pl.getServer().getPluginManager().getPlugin("dynmap");
+		if (dynmap == null)
+			pl.getSLF4JLogger().warn("DynmapAPI was not found, attempting to continue without DynmapAPI features.");
 		
 		try {
 			synchronized (pl) {

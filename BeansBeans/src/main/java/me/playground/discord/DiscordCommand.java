@@ -141,9 +141,11 @@ public abstract class DiscordCommand {
 						+ (rank.getPlaytimeRequirement() > 60 * 60 * 23 ? " *("+(df.format(rank.getPlaytimeRequirement()/60/60))+" Hours)*": ""), false);
 		} else if (rank.isDonorRank()) {
 			if (rank == Rank.PLEBEIAN)
-				embed.addField("How to Obtain", "Sapphire or Subscription Purchase", false);
-			else
-				embed.addField("How to Obtain", "Subscription Purchase Only", false);
+				embed.addField("How to Obtain", "Temporary Sapphire or Purchase (£10.00)", false);
+			else if (rank == Rank.PATRICIAN)
+				embed.addField("How to Obtain", "Purchase Only (£25.00)", false);
+			else if (rank == Rank.SENATOR)
+				embed.addField("How to Obtain", "Purchase Only (£50.00)", false);
 		}
 		return embed.build();
 	}

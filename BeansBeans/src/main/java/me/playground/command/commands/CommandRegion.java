@@ -32,7 +32,6 @@ import me.playground.gui.BeanGuiRegion;
 import me.playground.gui.BeanGuiRegionMain;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.ranks.Rank;
 import me.playground.regions.Region;
 import me.playground.regions.RegionManager;
 import me.playground.regions.flags.Flag;
@@ -53,7 +52,7 @@ public class CommandRegion extends BeanCommand {
 		this.description = "The general region command.";
 	}
 	
-	final List<String> subCmds = Arrays.asList("addmember", "define", "delete", "list", "info", "priority", "redefine", "reload", "removemember", "rename", "select", "setflag", "warpto");
+	final List<String> subCmds = Arrays.asList("addmember", "define", "delete", "list", "info", "priority", "redefine", "removemember", "rename", "select", "setflag", "warpto");
 	final String[] para2 = { "~" };
 	
 	@Override
@@ -252,9 +251,6 @@ public class CommandRegion extends BeanCommand {
 			region.removeMember(id);
 			refreshRegionViewers(region);
 			p.sendMessage(Component.text("\u00a77Removed ").append(PlayerProfile.getDisplayName(id)).append(Component.text(" \u00a77from ").append(region.toComponent())));
-		} else if (subcmd.equals("reload") && checkRank(p, Rank.OWNER)) {
-			rm.reload();
-			sender.sendMessage("\u00a7aSaved and reloaded "+rm.countRegions()+" regions.");
 		} else if (subcmd.equals("setflag")) {
 			if (args.length < 3)
 				throw new CommandException(p, "Usage: \u00a7f/"+str+" setflag \u00a77<region> <flag> <value or none>");

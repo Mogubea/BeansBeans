@@ -12,7 +12,7 @@ import org.bukkit.inventory.ItemStack;
 
 import me.playground.highscores.Highscore;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.playerprofile.skills.SkillType;
+import me.playground.skills.Skill;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -20,16 +20,16 @@ import net.kyori.adventure.text.format.TextDecoration;
 public class BeanGuiSkillsDetails extends BeanGui {
 	
 	private static final ItemStack blank = newItem(new ItemStack(Material.ORANGE_STAINED_GLASS_PANE, 1), "\u00a76Skills");
-	private final SkillType skill;
+	private final Skill skill;
 	
-	public BeanGuiSkillsDetails(Player p, SkillType skill) {
+	public BeanGuiSkillsDetails(Player p, Skill skill) {
 		super(p);
 		
 		this.skill = skill;
-		setName(skill.getPlainName() + " Skill");
+		setName(skill.getName() + " Skill");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
-				blank,blank,bBlank,bBlank,newItem(skill.getDisplayStack(), skill.getDisplayName()),bBlank,bBlank,blank,blank,
+				blank,blank,bBlank,bBlank,newItem(skill.getDisplayStack(), skill.toComponent()),bBlank,bBlank,blank,blank,
 				blank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,blank,
 				bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,
 				bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,
@@ -48,18 +48,18 @@ public class BeanGuiSkillsDetails extends BeanGui {
 		
 		switch(slot) {
 		case 46: // Previous Skill
-			SkillType[] types = SkillType.values();
-			int a = skill.ordinal() - 1;
-			if (a < 0) a = types.length - 1;
+			List<Skill> types = Skill.getRegisteredSkills();
+			int a = types.indexOf(skill) - 1;
+			if (a < 0) a = types.size() - 1;
 			
-			new BeanGuiSkillsDetails(p, types[a]).openInventory();
+			new BeanGuiSkillsDetails(p, types.get(a)).openInventory();
 			return;
 		case 52: // Next Skill
-			SkillType[] typez = SkillType.values();
-			int b = skill.ordinal() + 1;
-			if (b >= typez.length) b = 0;
+			List<Skill> typez = Skill.getRegisteredSkills();
+			int b = typez.indexOf(skill) + 1;
+			if (b >= typez.size()) b = 0;
 			
-			new BeanGuiSkillsDetails(p, typez[b]).openInventory();
+			new BeanGuiSkillsDetails(p, typez.get(b)).openInventory();
 			return;
 		}
 	}
@@ -67,13 +67,13 @@ public class BeanGuiSkillsDetails extends BeanGui {
 	@Override // TODO:
 	public void onInventoryOpened() {
 		final ItemStack[] contents = presetInv.clone();
-		SkillType[] types = SkillType.values();
-		int a = skill.ordinal() - 1;
-		if (a < 0) a = types.length - 1;
-		contents[46] = newItem(types[a].getDisplayStack(), types[a].getDisplayName());
-		a = skill.ordinal() + 1;
-		if (a >= types.length) a = 0;
-		contents[52] = newItem(types[a].getDisplayStack(), types[a].getDisplayName());
+		List<Skill> types = Skill.getRegisteredSkills();
+		int a = types.indexOf(skill) - 1;
+		if (a < 0) a = types.size() - 1;
+		contents[46] = newItem(types.get(a).getDisplayStack(), types.get(a).toComponent());
+		a = types.indexOf(skill) + 1;
+		if (a >= types.size()) a = 0;
+		contents[52] = newItem(types.get(a).getDisplayStack(), types.get(a).toComponent());
 		
 		if (page > 0)
 			contents[36] = prevPage;
@@ -91,7 +91,7 @@ public class BeanGuiSkillsDetails extends BeanGui {
 				contents[37 + x].addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
 		}
 		
-		Highscore highscore = getPlugin().highscores.getHighscore(skill.getPlainName() + " XP");
+		Highscore highscore = getPlugin().highscores.getHighscore(skill.getName() + " XP");
 		ItemStack head = new ItemStack(Material.CARTOGRAPHY_TABLE);
 		
 		List<Component> scoreLore = new ArrayList<Component>();
@@ -111,7 +111,7 @@ public class BeanGuiSkillsDetails extends BeanGui {
 		}
 		
 		head.editMeta(meta -> {
-			meta.displayName(Component.text(skill.getPlainName() + " Leaderboard", skill.getColour()).decoration(TextDecoration.ITALIC, false));
+			meta.displayName(Component.text(skill.getName() + " Leaderboard", skill.getColour()).decoration(TextDecoration.ITALIC, false));
 			meta.lore(scoreLore);
 		});
 		

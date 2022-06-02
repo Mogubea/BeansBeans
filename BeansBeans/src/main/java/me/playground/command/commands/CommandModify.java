@@ -84,9 +84,13 @@ public class CommandModify extends BeanCommand {
 				sender.sendMessage(pp.getColouredName().append(Component.text("\u00a77's nickname has been updated from ").append(Component.text(old0).color(pp.getNameColour()))));
 				break;
 			case 1:
-				TextColor old1 = pp.getNameColour();
-				pp.setNameColour((int)Long.parseLong(value, 16));
-				sender.sendMessage(pp.getColouredName().append(Component.text("\u00a77's colour has been updated from ").append(Component.text(pp.getDisplayName()).color(old1))));
+				try {
+					TextColor old1 = pp.getNameColour();
+					pp.setNameColour((int)Long.parseLong(value, 16));
+					sender.sendMessage(pp.getColouredName().append(Component.text("\u00a77's colour has been updated from ").append(Component.text(pp.getDisplayName()).color(old1))));
+				} catch (Exception e) {
+					sender.sendMessage(Component.text("'"+value+"' is an invalid hex colour!", NamedTextColor.RED));
+				}
 				break;
 			case 2:
 				Rank rank0 = null;

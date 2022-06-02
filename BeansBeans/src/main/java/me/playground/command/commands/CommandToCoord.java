@@ -14,8 +14,14 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+
 import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
+import me.playground.command.ICommodore;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.TabCompleter;
@@ -24,7 +30,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 
-public class CommandToCoord extends BeanCommand {
+public class CommandToCoord extends BeanCommand implements ICommodore {
 
 	public CommandToCoord(Main plugin) {
 		super(plugin, "bean.cmd.tocoord", false, 3, "tocoord", "tpcoord", "tpc");
@@ -69,6 +75,24 @@ public class CommandToCoord extends BeanCommand {
 	@Override
 	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
 		return Component.text("\u00a7cUsage: \u00a7f/"+str).append(usageArguments[0]).append(usageArguments[1]).append(usageArguments[2]).append(usageArguments[3]);
+	}
+
+	@Override
+	public LiteralCommandNode<?> getCommodore() {
+		return LiteralArgumentBuilder.literal("tocoord")
+		        .then(LiteralArgumentBuilder.literal("set")
+		                .then(LiteralArgumentBuilder.literal("day"))
+		                .then(LiteralArgumentBuilder.literal("noon"))
+		                .then(LiteralArgumentBuilder.literal("night"))
+		                .then(LiteralArgumentBuilder.literal("midnight"))
+		                .then(RequiredArgumentBuilder.argument("time", IntegerArgumentType.integer())))
+		        .then(LiteralArgumentBuilder.literal("add")
+		                .then(RequiredArgumentBuilder.argument("time", IntegerArgumentType.integer())))
+		        .then(LiteralArgumentBuilder.literal("query")
+		                .then(LiteralArgumentBuilder.literal("daytime"))
+		                .then(LiteralArgumentBuilder.literal("gametime"))
+		                .then(LiteralArgumentBuilder.literal("day"))
+		        ).build();
 	}
 
 }

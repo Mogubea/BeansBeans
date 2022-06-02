@@ -11,6 +11,7 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 
 import me.playground.items.BeanItem;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 
 /**
  * Open a {@link ShulkerBox} from the inventory.
@@ -31,7 +32,7 @@ public class BeanGuiShulker extends BeanGui {
 		ShulkerBox box = (ShulkerBox) meta.getBlockState();
 		
 		this.shulker = box;
-		setName(meta.hasDisplayName() ? meta.displayName() : Component.translatable(itemStack));
+		setName(meta.hasDisplayName() ? meta.displayName().color(TextColor.color(0x3a3a3a)) : Component.translatable(itemStack));
 		this.presetType = InventoryType.SHULKER_BOX;
 		this.presetSize = presetType.getDefaultSize();
 		this.presetInv = shulker.getInventory().getContents();
@@ -70,6 +71,10 @@ public class BeanGuiShulker extends BeanGui {
 			if (i == null) return e.getCursor() == null; // Only cancel if both cursor and slot are null.
 		}
 		return false;
+	}
+	
+	public int getShulkerSlot() {
+		return shulkerSlot;
 	}
 	
 }

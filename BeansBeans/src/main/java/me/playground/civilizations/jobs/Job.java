@@ -1,6 +1,7 @@
 package me.playground.civilizations.jobs;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,7 +19,7 @@ import me.playground.civilizations.Civilization;
 import me.playground.civilizations.structures.Structure;
 import me.playground.civilizations.structures.Structures;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.playerprofile.skills.SkillType;
+import me.playground.skills.Skill;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -50,7 +51,7 @@ public abstract class Job {
 	private int structureCount;
 	
 	// Skill Requirements for a Citizen to be able to use the Job.
-	private final TreeMap<SkillType, Short> skillRequirements = new TreeMap<SkillType, Short>();
+	private final Map<Skill, Short> skillRequirements = new HashMap<Skill, Short>();
 	
 	// Payouts
 	private final Map<String, Integer> pay = new TreeMap<String, Integer>();
@@ -94,7 +95,7 @@ public abstract class Job {
 		this.structureCount = amountNeeded;
 	}
 	
-	protected void addSkillRequirement(SkillType type, int level) {
+	protected void addSkillRequirement(Skill type, int level) {
 		this.skillRequirements.put(type, (short) level);
 	}
 	
@@ -111,7 +112,7 @@ public abstract class Job {
 	public boolean canPlayerApply(Player p) {
 		PlayerProfile pp = PlayerProfile.from(p);
 		if (skillRequirements.isEmpty()) return true;
-		for (Entry<SkillType, Short> ent : skillRequirements.entrySet())
+		for (Entry<Skill, Short> ent : skillRequirements.entrySet())
 			if (pp.getSkillLevel(ent.getKey()) < ent.getValue()) return false;
 		
 		return true;

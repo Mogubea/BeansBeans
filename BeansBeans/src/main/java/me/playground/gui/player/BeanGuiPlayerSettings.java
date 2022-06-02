@@ -58,9 +58,11 @@ public class BeanGuiPlayerSettings extends BeanGuiPlayer {
 		
 		PlayerSetting[] settings = PlayerSetting.values();
 		
+		byte xSlot = -1;
 		for (int x = 0; x < settings.length; x++) {
 			PlayerSetting setting = settings[x];
-//			if (!pp.hasPermission(setting.getPermissionString())) continue; Does work, just need to change this gui
+			if (!pp.hasPermission(setting.getPermissionString())) continue;
+			xSlot++;
 			
 			boolean enabled = pp.isSettingEnabled(setting);
 			ItemStack settingItem = new ItemStack(enabled ? Material.LIME_DYE : Material.GRAY_DYE);
@@ -73,7 +75,7 @@ public class BeanGuiPlayerSettings extends BeanGuiPlayer {
 			meta.lore(lore);
 			settingItem.setItemMeta(meta);
 			
-			int slot = 10 + (x % 7) + ((x / 7) * 9);
+			int slot = 10 + (xSlot % 7) + ((xSlot / 7) * 9);
 			contents[slot] = settingItem;
 			mapping.put(slot, setting);
 		}

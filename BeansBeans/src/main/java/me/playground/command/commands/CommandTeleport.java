@@ -25,7 +25,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 public class CommandTeleport extends BeanCommand {
 
 	public CommandTeleport(Main plugin) {
-		super(plugin, "bean.cmd.teleport", true, 1, "teleport", "tp");
+		super(plugin, "bean.cmd.teleport", true, 1, "teleport", "tp", "tpa");
 		description = "Teleport to another player";
 	}
 	
@@ -43,7 +43,7 @@ public class CommandTeleport extends BeanCommand {
 			this.checkRankPower(sender, teleporter, "You can't teleport players of equal or higher ranking!");
 		
 		if (teleporter == target)
-			throw new CommandException(sender, "Couldn't teleport, already there!");
+			throw new CommandException(sender, "You can't teleport to yourself!");
 		
 		final PlayerProfile tepp = PlayerProfile.from(teleporter);
 		final PlayerProfile tapp = PlayerProfile.from(target);

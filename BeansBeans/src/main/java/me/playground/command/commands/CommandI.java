@@ -15,7 +15,6 @@ import me.playground.command.BeanCommand;
 import me.playground.items.BeanItem;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.ranks.Rank;
 import me.playground.utils.TabCompleter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -24,7 +23,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 public class CommandI extends BeanCommand {
 
 	public CommandI(Main plugin) {
-		super(plugin, false, Rank.ADMINISTRATOR, 1, "i");
+		super(plugin, "bean.cmd.i", false, 1, "i");
 		description = "Give yourself an item.";
 	}
 	

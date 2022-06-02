@@ -46,9 +46,8 @@ import me.playground.items.BItemDurable;
 import me.playground.items.BeanItem;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.playerprofile.skills.SkillInfo;
-import me.playground.playerprofile.skills.SkillType;
 import me.playground.ranks.Permission;
+import me.playground.skills.Skill;
 import net.kyori.adventure.text.Component;
 
 public class ContainerListener extends EventListener {
@@ -309,7 +308,7 @@ public class ContainerListener extends EventListener {
 		}
 		
 		// Reduce the cost of forging based on level.
-		final SkillInfo skillInfo = PlayerProfile.from(e.getView().getPlayer()).getSkills().getSkillInfo(SkillType.REPAIR);
+		/*final SkillInfo skillInfo = PlayerProfile.from(e.getView().getPlayer()).getSkills().getSkillInfo(SkillType.REPAIR);
 		if (skillInfo.getLevel() >= 10) {
 			final AnvilInventory inv = e.getInventory();
 			
@@ -318,7 +317,7 @@ public class ContainerListener extends EventListener {
 				
 				Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> { inv.setMaximumRepairCost(100); inv.setRepairCost(finalCost); });
 			}
-		}
+		}*/
 	}
 	
 	@EventHandler
@@ -351,7 +350,7 @@ public class ContainerListener extends EventListener {
 					
 					int playerXp = p.getLevel();
 					if (playerXp >= cost)
-						PlayerProfile.from(p).getSkills().addXp(SkillType.REPAIR, cost*200);
+						PlayerProfile.from(p).getSkills().addExperience(Skill.FORGING, cost*200); 
 				}
 				
 				
@@ -379,10 +378,9 @@ public class ContainerListener extends EventListener {
 				if (e.getClickedInventory().getType() == InventoryType.PLAYER) {
 					if (stack.getType().name().endsWith("SHULKER_BOX")) {
 						if (p.hasPermission(Permission.QUICK_SHULKER_BOX)) {
-							if (bui == null || !(bui instanceof BeanGuiShulker)) {
-								e.setCancelled(true); // Schedule the task so client side doesn't end up with a ghost item.
-								Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> { new BeanGuiShulker(p, stack, e.getSlot()).openInventory(); });
-							}
+							e.setCancelled(true); // Schedule the task so client side doesn't end up with a ghost item.
+							if (bui instanceof BeanGuiShulker && ((BeanGuiShulker)bui).getShulkerSlot() == e.getSlot()) return;
+							Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> { new BeanGuiShulker(p, stack, e.getSlot()).openInventory(); });
 						}
 						return;
 					}
@@ -390,7 +388,7 @@ public class ContainerListener extends EventListener {
 			}
 			
 			// Main Menu Item
-			if (stack.equals(BeanGui.menuItem)) {
+			if (stack.equals(BeanItem.PLAYER_MENU.getOriginalStack())) {
 				e.setCancelled(true);
 				if (bui == null || !(bui instanceof BeanGuiMainMenu)) { // Schedule the task so client side doesn't end up with a ghost item.
 					Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> { new BeanGuiMainMenu(p).openInventory(); });

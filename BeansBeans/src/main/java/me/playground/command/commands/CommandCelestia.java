@@ -12,7 +12,6 @@ import org.bukkit.command.CommandSender;
 import me.playground.command.BeanCommand;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.ranks.Rank;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -20,7 +19,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 public class CommandCelestia extends BeanCommand {
 
 	public CommandCelestia(Main plugin) {
-		super(plugin, false, Rank.MODERATOR, 1, "celestia", "cel");
+		super(plugin, "bean.cmd.celestia", false, 1, "celestia", "cel");
 	}
 	
 	@Override

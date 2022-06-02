@@ -8,7 +8,10 @@ import javax.annotation.Nullable;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
 import org.bukkit.Material;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Container;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ArmorStand;
@@ -20,7 +23,6 @@ import org.bukkit.inventory.ItemStack;
 import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
 import me.playground.enchants.BeanEnchantment;
-import me.playground.gui.BeanGui;
 import me.playground.gui.BeanGuiBeanItems;
 import me.playground.gui.BeanGuiShop;
 import me.playground.gui.debug.BeanGuiDebug;
@@ -45,10 +47,9 @@ public class CommandOp extends BeanCommand {
 		description = "Operator Command.";
 	}
 
-	final String[] subCmds = { "commands", "customitems", "debug", "fixformatting", "guiprofile", "lockserver", "menuitem", "moltentouch", "openserver", "pissoff", "previewrank", "shops" };
+	final String[] subCmds = { "commands", "customitems", "debug", "fixformatting", "formatchunks", "guiprofile", "lockserver", "moltentouch", "openserver", "pissoff", "previewrank", "shops" };
 	final String[] npcSubCmds = { "create", "list", "reload", "setskin", "tphere", "warpto", };
 	final String[] shopSubCmds = { "enable", "disable", "reload" };
-	final String[] shopReloadCmds = { "-f" };
 	
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
@@ -62,6 +63,40 @@ public class CommandOp extends BeanCommand {
 		
 		if ("debug".equals(cmdStr) && checkPlayer(sender)) {
 			new BeanGuiDebug(p).openInventory();
+			return true;
+		}
+		
+		if ("formatchunks".equals(cmdStr) && checkPlayer(sender)) {
+			int dist = args.length > 1 ? toIntDef(args[1], 0) : 0;
+			if (dist < 1) dist = 1;
+			int totalContainers = 0;
+			int totalItems = 0;
+			p.sendMessage(Component.text("\u00a77Formatting the contents of \u00a7e" + ((2*dist + 1)^2) + " Chunks\u00a77..."));
+			int cX = p.getChunk().getX(); //p.getWorld().getChunkAt(cX).getTileEntities(b -> (b.getState() instanceof Container), true);
+			int cZ = p.getChunk().getZ();
+			
+			for (int x = -1-dist; ++x < dist + 1;)
+					for (int z = -1-dist; ++z < dist + 1;) {
+						Chunk ch = p.getWorld().getChunkAt(cX + x, cZ + z);
+						p.sendMessage(Component.text("X: " + ch.getX() + ", Z:" + ch.getZ()));
+						BlockState[] blockStates = ch.getTileEntities();
+						int count = blockStates.length;
+						totalContainers += count;
+						for (int b = -1; ++b < count;) {
+							if (!(blockStates[b] instanceof Container)) continue;
+							Container c = (Container) blockStates[b];
+							ItemStack[] newInv = c.getInventory().getContents();
+							int invSize = newInv.length;
+							for (byte co = -1; ++co < invSize;) {
+								ItemStack i = newInv[co];
+								if (i == null) continue;
+								totalItems++;
+								newInv[co] = BeanItem.formatItem(i);
+							}
+							c.getInventory().setContents(newInv);
+						}
+					}
+			p.sendMessage(Component.text("\u00a77Done. Updated \u00a7a"+totalItems+"\u00a77 items in \u00a72" + totalContainers + "\u00a77 containers."));
 			return true;
 		}
 		
@@ -179,18 +214,7 @@ public class CommandOp extends BeanCommand {
 		}
 		
 		if ("shops".equals(cmdStr) || "shop".equals(cmdStr)) {
-			if ("reload".equals(subcmd)) {
-				for (Player pp : Bukkit.getOnlinePlayers()) {
-					PlayerProfile prof = PlayerProfile.from(pp);
-					if (prof.getBeanGui() != null && prof.getBeanGui() instanceof BeanGuiShop)
-						pp.closeInventory(Reason.UNLOADED);
-				}
-				
-				boolean forceEntityReload = args.length > 2 && args[2].equalsIgnoreCase("-f");
-				
-				getPlugin().shopManager().reload(forceEntityReload);
-				sender.sendMessage("\u00a7eShop \u00a77entries" + (forceEntityReload ? " and entities" : "") + " have been reloaded.");
-			} else if ("enable".equals(subcmd)) {
+			if ("enable".equals(subcmd)) {
 				getPlugin().shopManager().enable();
 				sender.sendMessage("\u00a7eShops \u00a77are now \u00a7aenabled\u00a77!");
 			} else if ("disable".equals(subcmd)) {
@@ -223,8 +247,6 @@ public class CommandOp extends BeanCommand {
 					if (item != null && item.getType() != Material.AIR)
 						BeanItem.resetItemFormatting(item);
 				sender.sendMessage(PlayerProfile.from(t).getComponentName().append(Component.text("\u00a77's Containers have been updated.")));
-			} else if ("menuitem".equals(cmdStr)) {
-				p.getInventory().addItem(BeanGui.menuItem);
 			} else if ("customitems".equals(cmdStr)) {
 				new BeanGuiBeanItems(p).openInventory();
 			} else if ("moltentouch".equals(cmdStr)) {
@@ -258,9 +280,7 @@ public class CommandOp extends BeanCommand {
 		if (args.length == 2 && args[0].equalsIgnoreCase("npc"))
 			return TabCompleter.completeString(args[1], this.npcSubCmds);
 		if (args.length >= 2 && args[0].equals("shops") || args[0].equals("shop")) {
-			if (args.length == 3 && args[1].equals("reload"))
-				return TabCompleter.completeString(args[2], this.shopReloadCmds);
-			else if (args.length == 2)
+			if (args.length == 2)
 				return TabCompleter.completeString(args[1], this.shopSubCmds);
 			return Collections.emptyList();
 		}

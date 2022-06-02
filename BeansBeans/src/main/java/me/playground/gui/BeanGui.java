@@ -38,8 +38,6 @@ public abstract class BeanGui implements IPluginRef {
 	public static final ItemStack icon_dataU = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjgyYWQxYjljYjRkZDIxMjU5YzBkNzVhYTMxNWZmMzg5YzNjZWY3NTJiZTM5NDkzMzgxNjRiYWM4NGE5NmUifX19"), "\u00a78Right");
 	public static final ItemStack icon_dataD = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzdhZWU5YTc1YmYwZGY3ODk3MTgzMDE1Y2NhMGIyYTdkNzU1YzYzMzg4ZmYwMTc1MmQ1ZjQ0MTlmYzY0NSJ9fX0="), "\u00a78Left");
 	
-	public static final ItemStack menuItem = newItem(new ItemStack(Material.NETHER_STAR), "\u00a7aPlayer Menu", "\u00a77\u00a7oClick to open!");
-	
 	protected final Player p;
 	protected final Main plugin;
 	

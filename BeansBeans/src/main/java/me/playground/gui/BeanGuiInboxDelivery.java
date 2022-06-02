@@ -1,7 +1,6 @@
 package me.playground.gui;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -24,10 +23,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 public class BeanGuiInboxDelivery extends BeanGui {
 	
 	protected static final ItemStack blank = newItem(new ItemStack(Material.YELLOW_STAINED_GLASS_PANE, 1), Component.text("\u00a76Your Mailbox"));
-	private static final ItemStack deleteDelivery = newItem(new ItemStack(Material.BARRIER), 
-			"\u00a7cDelete Delivery",
-			"\u00a77You can delete this delivery once all",
-			"\u00a77of its contents have been claimed.");
+	
 	private static final ItemStack claimAll = newItem(new ItemStack(Material.CHEST_MINECART), 
 			"\u00a7aClaim All",
 			"\u00a77Instantly claim everything from this delivery.",
@@ -66,31 +62,6 @@ public class BeanGuiInboxDelivery extends BeanGui {
 	@Override
 	public void onInventoryClicked(InventoryClickEvent e) {
 		int slot = e.getRawSlot();
-		
-		if (slot == 46 && delivery.isContentClaimed()) {
-			final BeanGuiInboxDelivery instance = this;
-			new BeanGuiConfirm(p, Arrays.asList(
-					Component.text("\u00a77Confirm to delete the " + delivery.getDeliveryType().getName() + ":"),
-					Component.text(delivery.getTitle(), delivery.getDeliveryType().getTitleColour()).decoration(TextDecoration.ITALIC, false))) {
-
-				@Override
-				public void onAccept() {
-					delivery.flagRemoval();
-					Datasource.updateDelivery(delivery);
-					tpp.getInbox().remove(delivery);
-					p.playSound(p.getLocation(), Sound.BLOCK_ENDER_CHEST_OPEN, 0.35F, 1.0F);
-					if (tpp.getInbox().size() - 1 <= 0)
-						new BeanGuiInbox(p).openInventory();
-				}
-
-				@Override
-				public void onDecline() {
-					instance.openInventory();
-				}
-				
-			}.openInventory();
-			return;
-		}
 		
 		if (slot == 52 && !delivery.isContentClaimed() && pp.hasPermission(Permission.DELIVERY_CLAIMALL)) {
 			mapping.forEach((map, content) -> {
@@ -137,8 +108,27 @@ public class BeanGuiInboxDelivery extends BeanGui {
 		List<DeliveryContent> contentz = delivery.getContent();
 		int size = contentz.size();
 		
-		for (int x = -1; ++x < size;) {
-			DeliveryContent content = contentz.get(x);
+		// Start stuff to make the first slot become prevPage and last slot become nextPage if necessary --
+		int baseSlot = 10;
+		int maxOnPage = 28;
+		int onPrevPages = 0;
+		if (getPage() > 0) {
+			onPrevPages = 27 + ((getPage()-1) * 26);
+			maxOnPage--;
+			contents[baseSlot] = prevPage;
+			baseSlot++;
+		}
+		
+		if (size-onPrevPages > maxOnPage) {
+			maxOnPage--;
+			contents[43] = nextPage;
+		}
+		
+		final int onPage = (size-onPrevPages) > maxOnPage ? maxOnPage : (size-onPrevPages);
+		// End stuff --
+		
+		for (int x = -1; ++x < onPage;) {
+			DeliveryContent content = contentz.get(x + onPrevPages);
 			final int row = x / 7;
 			
 			ItemStack stack = null;
@@ -156,19 +146,17 @@ public class BeanGuiInboxDelivery extends BeanGui {
 			lore.add(Component.text(content.isClaimed() ? "\u00a78» Already claimed!" : "\u00a76» \u00a7eClick to claim!"));
 			stack.lore(lore);
 			
-			
-			mapping.put(10 + x + (2 * row), content);
-			contents[10 + x + (2 * row)] = stack;
+			int slot = baseSlot + x + (2 * row);
+			mapping.put(slot, content);
+			contents[slot] = stack;
 		}
-		
-		contents[46] = deleteDelivery;
 		
 		contents[48] = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), "\u00a7eWhat are these?",
 				"\u00a77The \u00a7fcontents \u00a77of a \u00a76Delivery\u00a77 can include",
-				"\u00a77various things like items, coins, experience etc.",
-				"\u00a77You can click a piece of \u00a7fcontent \u00a77to claim it forever!",
+				"\u00a77various things like items, coins etc.",
+				"\u00a77You can click a piece of \u00a7fcontent \u00a77to claim it!",
 				"",
-				"\u00a7cDeliveries with expiration dates will delete themselves",
+				"\u00a7cDeliveries will automatically delete themselves",
 				"\u00a7conce all of their contents have been collected.");
 		
 		if (pp.hasPermission(Permission.DELIVERY_CLAIMALL))

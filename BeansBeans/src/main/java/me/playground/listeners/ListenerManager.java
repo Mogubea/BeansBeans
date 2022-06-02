@@ -1,17 +1,19 @@
 package me.playground.listeners;
 
-import org.bukkit.Bukkit;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 
 import me.playground.celestia.logging.CelestiaListener;
 import me.playground.enchants.BeanEnchantmentListener;
 import me.playground.main.Main;
-import me.playground.playerprofile.skills.BxpListener;
 
 public class ListenerManager {
 	
+	private final Main plugin;
+	
 	public ListenerManager(Main pl) {
-		PluginManager pm = Bukkit.getPluginManager();
+		this.plugin = pl;
+		PluginManager pm = pl.getServer().getPluginManager();
 		
 		pm.registerEvents(new ConnectionListener(pl), pl);
 		pm.registerEvents(new WorldListener(pl), pl);
@@ -21,14 +23,17 @@ public class ListenerManager {
 		pm.registerEvents(new BlockListener(pl), pl);
 		pm.registerEvents(new ShopListener(pl), pl);
 
-		pm.registerEvents(new BxpListener(pl), pl);
 		pm.registerEvents(new JobListener(pl), pl);
-		pm.registerEvents(new BeanEnchantmentListener(), pl);
+		pm.registerEvents(new BeanEnchantmentListener(pl), pl);
 		
-		pm.registerEvents(new CelestiaListener(), pl);
+		pm.registerEvents(new CelestiaListener(pl), pl);
 		pm.registerEvents(new VoteListener(pl), pl);
 		
 		pm.registerEvents(new PotionCauldronListener(pl), pl);
+	}
+	
+	public void unregisterEvents() {
+		HandlerList.unregisterAll(plugin);
 	}
 	
 }

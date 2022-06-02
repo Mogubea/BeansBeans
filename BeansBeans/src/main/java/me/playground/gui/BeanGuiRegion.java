@@ -40,6 +40,9 @@ public abstract class BeanGuiRegion extends BeanGui {
 		Collections.sort(localRegions);
 		if (p.hasPermission("bean.region.override"))
 			this.localRegions.add(rm.getWorldRegion(p.getWorld()));
+		
+		if (localRegions.size() < 1) return;
+		
 		this.regionIdx = 0;
 		setName("Regions");
 		this.presetSize = 54;

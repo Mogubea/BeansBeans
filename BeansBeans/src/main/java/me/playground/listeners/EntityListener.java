@@ -6,6 +6,7 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.attribute.AttributeModifier.Operation;
@@ -39,6 +40,7 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
+import org.bukkit.event.entity.SpawnerSpawnEvent;
 import org.bukkit.event.entity.VillagerAcquireTradeEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
@@ -46,6 +48,7 @@ import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import io.papermc.paper.event.player.PlayerTradeEvent;
 import me.playground.enchants.EnchantmentInfo;
@@ -60,6 +63,7 @@ import me.playground.playerprofile.stats.StatType;
 import me.playground.regions.Region;
 import me.playground.regions.flags.Flags;
 import me.playground.regions.flags.MemberLevel;
+import me.playground.skills.Skill;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 
@@ -69,12 +73,15 @@ public class EntityListener extends EventListener {
 	
 	public EntityListener(Main plugin) {
 		super(plugin);
+		
+		spawnerCountKey = plugin.getKey("spawnerspawns");
 	}
 	
 	private void spawnDamageIndicator(Location loc, int dmg, int col, int ticks) {
 		final ArmorStand di = (ArmorStand) loc.getWorld().spawnEntity(new Location(loc.getWorld(), 0, -10, 0), EntityType.ARMOR_STAND);
 		di.setInvisible(true);
 		di.setMarker(true);
+		di.setCollidable(false);
 		di.customName(Component.text(dmg, TextColor.color(col)));
 		di.setCustomNameVisible(true);
 		di.teleport(loc);
@@ -144,13 +151,14 @@ public class EntityListener extends EventListener {
 			}
 		// Against regular entities
 		} else if (e.getEntity() instanceof LivingEntity) {
+			Player p = (e.getDamager() instanceof Player) ? (Player)e.getDamager() : null;
+			if ((e.getDamager() instanceof Projectile && ((Projectile)e.getDamager()).getShooter() instanceof Player))
+				p = (Player) ((Projectile)e.getDamager()).getShooter();
+			
 			boolean bother = true;
 			
 			// Check for Animal/Villager Protection
 			if ((e.getEntity() instanceof Villager || e.getEntity() instanceof Animals) && r2.getEffectiveFlag(Flags.PROTECT_ANIMALS)) {
-				Player p = (e.getDamager() instanceof Player) ? (Player)e.getDamager() : null;
-				if ((e.getDamager() instanceof Projectile && ((Projectile)e.getDamager()).getShooter() instanceof Player))
-					p = (Player) ((Projectile)e.getDamager()).getShooter();
 				if (p == null || (p != null && !(r2.getMember(p).higherThan(MemberLevel.VISITOR)))) {
 					e.setDamage(0);
 					bother = false;
@@ -171,8 +179,10 @@ public class EntityListener extends EventListener {
 			}
 			if (e.getDamage() <= 0)
 				e.setCancelled(true);
-			else if (!isDumbEntity(e.getEntityType()))
+			else if (!isDumbEntity(e.getEntityType())) {
+				PlayerProfile.from(p).getSkills().doSkillEvents(e, Skill.COMBAT);
 				spawnDamageIndicator(loc2.add(-0.5 + getPlugin().getRandom().nextDouble(), e.getEntity().getHeight()-(getPlugin().getRandom().nextDouble()/2), -0.5 + getPlugin().getRandom().nextDouble()), (int)e.getDamage(), 0xff8899, 14);
+			}
 		}
 	}
 	
@@ -418,7 +428,19 @@ public class EntityListener extends EventListener {
 		}
 	}*/
 	
+	private final NamespacedKey spawnerCountKey;
+	
 	@EventHandler(priority = EventPriority.LOW)
+	public void onSpawnerSpawn(SpawnerSpawnEvent e) {
+		e.setCancelled(e.getSpawner().getBlock().isBlockPowered());
+		if (e.isCancelled()) return;
+		
+		int count = e.getSpawner().getPersistentDataContainer().getOrDefault(spawnerCountKey, PersistentDataType.INTEGER, 0);
+		e.getSpawner().getPersistentDataContainer().set(spawnerCountKey, PersistentDataType.INTEGER, count + 1);
+		e.getSpawner().update();
+	}
+	
+	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
 	public void onEntitySpawn(CreatureSpawnEvent e) {
 		// XXX: 2x Wither Max Health
 		if (e.getEntityType() == EntityType.WITHER) {

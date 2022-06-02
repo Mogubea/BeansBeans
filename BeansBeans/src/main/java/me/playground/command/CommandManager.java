@@ -1,6 +1,7 @@
 package me.playground.command;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,8 +9,12 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.SimplePluginManager;
 
+import me.lucko.commodore.Commodore;
+import me.lucko.commodore.CommodoreProvider;
 import me.playground.command.commands.CommandAFK;
 import me.playground.command.commands.CommandAnvil;
 import me.playground.command.commands.CommandCivilization;
@@ -19,9 +24,11 @@ import me.playground.command.commands.CommandEnderchest;
 import me.playground.command.commands.CommandGamemode;
 import me.playground.command.commands.CommandHat;
 import me.playground.command.commands.CommandHeal;
+import me.playground.command.commands.CommandHide;
 import me.playground.command.commands.CommandHome;
 import me.playground.command.commands.CommandHug;
 import me.playground.command.commands.CommandI;
+import me.playground.command.commands.CommandInvsee;
 import me.playground.command.commands.CommandModify;
 import me.playground.command.commands.CommandMoney;
 import me.playground.command.commands.CommandOp;
@@ -30,6 +37,7 @@ import me.playground.command.commands.CommandPickupfilter;
 import me.playground.command.commands.CommandPlugin;
 import me.playground.command.commands.CommandRandomTp;
 import me.playground.command.commands.CommandRegion;
+import me.playground.command.commands.CommandReload;
 import me.playground.command.commands.CommandReport;
 import me.playground.command.commands.CommandReturn;
 import me.playground.command.commands.CommandSapphire;
@@ -37,6 +45,7 @@ import me.playground.command.commands.CommandSay;
 import me.playground.command.commands.CommandSendItem;
 import me.playground.command.commands.CommandSethome;
 import me.playground.command.commands.CommandSkull;
+import me.playground.command.commands.CommandStats;
 import me.playground.command.commands.CommandSun;
 import me.playground.command.commands.CommandTeleport;
 import me.playground.command.commands.CommandToCoord;
@@ -61,6 +70,8 @@ import me.playground.command.commands.small.CommandVote;
 import me.playground.command.commands.small.CommandWardrobe;
 import me.playground.command.commands.small.CommandWarps;
 import me.playground.main.Main;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 public class CommandManager {
 	
@@ -68,6 +79,7 @@ public class CommandManager {
 	private List<Command> myCommands = new ArrayList<Command>();
 	
 	private final Main plugin;
+	private final Commodore commodore;
 	
 	public Main getPlugin() {
 		return plugin;
@@ -75,7 +87,10 @@ public class CommandManager {
 	
 	public CommandManager(Main plugin) {
 		this.plugin = plugin;
+		this.commodore = CommodoreProvider.getCommodore(plugin);
 		long mili = System.currentTimeMillis();
+		unregisterAnnoyingBukkit();
+		
 		// Warping Commands
 		registerCommand(new CommandHome(plugin));
 		registerCommand(new CommandSethome(plugin));
@@ -131,13 +146,39 @@ public class CommandManager {
 		registerCommand(new CommandSendItem(plugin));
 		registerCommand(new CommandHat(plugin));
 		registerCommand(new CommandSkull(plugin));
+		registerCommand(new CommandReload(plugin));
+		registerCommand(new CommandStats(plugin));
+		registerCommand(new CommandInvsee(plugin));
+		registerCommand(new CommandHide(plugin));
+		
 		plugin.getLogger().info("Registered " + myCommands.size() + " commands in " + (System.currentTimeMillis()-mili) + "ms");
 	}
 	
-	@SuppressWarnings("deprecation")
+	/**
+	 * Unregisters /reload, /rl, /pl and /plugins as they get in the way of my own commands.
+	 */
+	private void unregisterAnnoyingBukkit() {
+		SimplePluginManager spm = (SimplePluginManager) getPlugin().getServer().getPluginManager();
+		Field commandMapField = null;
+		try {
+			commandMapField = SimplePluginManager.class.getDeclaredField("commandMap");
+			commandMapField.setAccessible(true);
+			
+			SimpleCommandMap scm = (SimpleCommandMap) commandMapField.get(spm);
+			scm.getKnownCommands().remove("reload");
+			scm.getKnownCommands().remove("rl");
+			scm.getKnownCommands().remove("pl");
+			scm.getKnownCommands().remove("plugins");
+			commandMapField.setAccessible(false); 
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	private void registerCommand(BeanCommand cmd) {
 		String[] aliases = cmd.getAliases();
 		PluginCommand command = null;
+		
 		try {
 			Constructor<PluginCommand> c = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
 			c.setAccessible(true);
@@ -148,54 +189,25 @@ public class CommandManager {
 		
 		command.setAliases(Arrays.asList(aliases));
 		command.setPermission(cmd.getPermissionString());
-		command.setPermissionMessage("\u00a7cYou don't have permission to use /"+aliases[0]+".");
+		command.permissionMessage(Component.text("You don't have permission to use ", NamedTextColor.RED).append(cmd.toComponent()).append(Component.text(".", NamedTextColor.RED)));
 		command.setDescription(cmd.getDescription());
 		command.setExecutor(cmd);
 		Bukkit.getCommandMap().register(plugin.getDescription().getName(), command);
+		
+		if (cmd instanceof ICommodore)
+			commodore.register(((ICommodore)cmd).getCommodore());
+		
 		myCommands.add(command);
+	}
+	
+	public void unregisterCommands() {
+		int size = getMyCommands().size();
+		for (int x = -1; ++x < size;)
+			myCommands.get(x).unregister(Bukkit.getCommandMap());
 	}
 	
 	public List<Command> getMyCommands() {
 		return myCommands;
 	}
-	
-	/*public static List<Method> getMethodsAnnotatedWith(final Class<?> type, final Class<? extends Annotation> annotation) {
-	    final List<Method> methods = new ArrayList<Method>();
-	    Class<?> klass = type;
-	    while (klass != Object.class) { // need to iterated thought hierarchy in order to retrieve methods from above the current instance
-	        // iterate though the list of methods declared in the class represented by klass variable, and add those annotated with the specified annotation
-	        final List<Method> allMethods = new ArrayList<Method>(Arrays.asList(klass.getDeclaredMethods()));       
-	        for (final Method method : allMethods) {
-	            if (method.isAnnotationPresent(annotation)) {
-	                // TODO process annotInstance
-	                methods.add(method);
-	            }
-	        }
-	        // move to the upper class in the hierarchy in search for more methods
-	        klass = klass.getSuperclass();
-	    }
-	    return methods;
-	}*/
-	
-	/*private CommandMap getCommandMap() {
-		CommandMap commandMap = null;
-		try {
-			if (Bukkit.getPluginManager() instanceof SimplePluginManager) {
-				Field f = SimplePluginManager.class.getDeclaredField("commandMap");
-				f.setAccessible(true);
-				commandMap = (CommandMap) f.get(Bukkit.getPluginManager());
-			}
-		} catch (NoSuchFieldException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		}
-	 
-		return commandMap;
-	}*/
 	
 }

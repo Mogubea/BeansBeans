@@ -14,6 +14,7 @@ import org.bukkit.Sound;
 import org.bukkit.Statistic;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
+import org.bukkit.block.CreatureSpawner;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.block.data.Lightable;
 import org.bukkit.command.PluginCommand;
@@ -53,6 +54,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent.SlotType;
@@ -61,26 +63,24 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import me.playground.celestia.logging.CelestiaAction;
 import me.playground.data.Datasource;
 import me.playground.enchants.BeanEnchantment;
-import me.playground.gui.BeanGui;
 import me.playground.items.BItemFishingRod;
 import me.playground.items.BeanItem;
 import me.playground.listeners.events.PlayerInteractNPCEvent;
 import me.playground.listeners.events.PlayerRightClickHarvestEvent;
+import me.playground.listeners.events.SkillLevelUpEvent;
 import me.playground.loot.LootRetriever;
 import me.playground.loot.LootTable;
 import me.playground.loot.RetrieveMethod;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.settings.PlayerSetting;
-import me.playground.playerprofile.skills.BxpValues;
-import me.playground.playerprofile.skills.SkillData;
-import me.playground.playerprofile.skills.SkillType;
 import me.playground.playerprofile.stats.StatType;
 import me.playground.ranks.Permission;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
 import me.playground.regions.flags.Flags;
 import me.playground.regions.flags.MemberLevel;
+import me.playground.skills.Skill;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -89,6 +89,7 @@ import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 
 public class PlayerListener extends EventListener {
@@ -96,8 +97,8 @@ public class PlayerListener extends EventListener {
 	public PlayerListener(Main plugin) {
 		super(plugin);
 		
-		advancementCoins.put(Main.key("deepslateemeraldore"), 500);
-		advancementCoins.put(Main.key("minerscollection"), 500);
+		advancementCoins.put(plugin.getKey("deepslateemeraldore"), 500);
+		advancementCoins.put(plugin.getKey("minerscollection"), 500);
 	}
 	
 	@EventHandler
@@ -130,7 +131,7 @@ public class PlayerListener extends EventListener {
 				// Handle looking for pings within the message.
 				if (word.startsWith("@")) {
 					try {
-						Player ping = Utils.playerPartialMatch(word.substring(1));
+						Player ping = getPlugin().searchForPlayer(word.substring(1));
 						if (pinged.contains(ping.getUniqueId()))
 							throw new RuntimeException();
 						
@@ -181,15 +182,15 @@ public class PlayerListener extends EventListener {
 		final Location loc = new Location(p.getWorld(), old.getX(), old.getY(), old.getZ(), old.getYaw(), old.getPitch());
 		pp.updateLastLocation(loc, 0);
 		
-		if (!e.getKeepInventory()) // Just to be safe.
-			e.getDrops().remove(BeanGui.menuItem);
+		if (pp.isSettingEnabled(PlayerSetting.MENU_ITEM))
+			e.getDrops().remove(BeanItem.PLAYER_MENU.getOriginalStack());
 		
 		TextReplacementConfig c = TextReplacementConfig.builder().match("\u24E2 ").replacement("").build();
 		TextReplacementConfig c2 = TextReplacementConfig.builder().match(p.getName()).replacement(pp.getComponentName()).build();
 		
 		e.deathMessage(Component.text("\u00a77» ").append(e.deathMessage().color(TextColor.color(0xff9999))).replaceText(c).replaceText(c2));
 		
-		Bukkit.getOnlinePlayers().forEach(player -> { if (PlayerProfile.from(player).isSettingEnabled(PlayerSetting.SHOW_DEATH_MESSAGES)) { player.sendMessage(e.deathMessage()); }});
+		getPlugin().getServer().getOnlinePlayers().forEach(player -> { if (PlayerProfile.from(player).isSettingEnabled(PlayerSetting.SHOW_DEATH_MESSAGES)) { player.sendMessage(e.deathMessage()); }});
 		
 		e.deathMessage(null);
 	}
@@ -247,6 +248,23 @@ public class PlayerListener extends EventListener {
 		// Stop here if unnecessary to check
 		if (e.getHand() != EquipmentSlot.HAND || e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.LEFT_CLICK_BLOCK) return;
 		
+		final Player p = e.getPlayer();
+		
+		// Check Spawner spawncount
+		if (e.getAction() == Action.RIGHT_CLICK_BLOCK && block.getType() == Material.SPAWNER && e.getItem() == null && !PlayerProfile.from(p).onCdElseAdd("spawnerCheck", 500, true)) {
+			CreatureSpawner spawner = (CreatureSpawner) block.getState();
+			int spawns = spawner.getPersistentDataContainer().getOrDefault(getPlugin().getKey("spawnerspawns"), PersistentDataType.INTEGER, 0);
+			Component creature = Component.translatable(spawner.getSpawnedType().translationKey());
+			
+			p.sendActionBar(Component.text("\u00a78(" + (block.isBlockPowered() ? "\u00a7cDisabled" : "\u00a7aActive") + "\u00a78)\u00a7r This ").append(
+					creature.color(NamedTextColor.WHITE).append(Component.text(" ").append(Component.translatable(block.translationKey()))
+							.append(Component.text("\u00a7r has spawned \u00a7f" + spawns + " \u00a7r")))
+							.append(creature)).append(Component.text("(s)")).colorIfAbsent(TextColor.color(0xeeeeee)));
+			p.playSound(e.getPlayer().getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.2F, 0.8F);
+			doArmSwing(e.getPlayer());
+			return;
+		}
+		
 		// Cancel the cleansing of custom leather items
 		if (e.getAction() == Action.RIGHT_CLICK_BLOCK && block.getType() == Material.WATER_CAULDRON && e.getItem() != null && 
 				e.getItem().getItemMeta() instanceof LeatherArmorMeta && BeanItem.from(e.getItem()) != null) {
@@ -254,7 +272,6 @@ public class PlayerListener extends EventListener {
 			return;
 		}
 		
-		final Player p = e.getPlayer();
 		final Region region = getRegionAt(e.getClickedBlock().getLocation());
 		final boolean canBuild = checkRegionPermission(region, e, p, Flags.BUILD_ACCESS);
 		final Material blockMat = block.getType();
@@ -412,16 +429,10 @@ public class PlayerListener extends EventListener {
 					Bukkit.getServer().getPluginManager().callEvent(event);
 					
 					if (event.isCancelled()) return;
+					PlayerProfile.from(e.getPlayer()).getSkills().doSkillEvents(event, Skill.AGRICULTURE);
 					
 					for (ItemStack i : b.getDrops()) {
-						int amt = Math.max(1, i.getAmount() - 1);
-						// Heavy nerf to seed drops
-						if (i.getType().name().endsWith("_SEEDS"))
-							amt = rand.nextInt(2);
-						
-						if (amt < 1) continue;
-						
-						i.setAmount(amt);
+						i.setAmount(Math.max(1, i.getAmount() - 1));
 						e.getPlayer().getWorld().dropItemNaturally(b.getLocation(), i);
 					}
 					
@@ -430,8 +441,6 @@ public class PlayerListener extends EventListener {
 					e.setCancelled(true);
 					crop.setAge(0);
 					b.setBlockData(crop);
-					
-					PlayerProfile.from(e.getPlayer()).getSkills().addXp(SkillType.AGRICULTURE, BxpValues.getFarmingValue(m));
 				}
 			}
 		}
@@ -499,7 +508,7 @@ public class PlayerListener extends EventListener {
 			e.setCancelled(true);
 			return;
 		} else {
-			PlayerProfile.from(e.getPlayer()).getSkills().addXp(SkillType.AGRICULTURE, BxpValues.getFarmingValue(m));
+			PlayerProfile.from(e.getPlayer()).getSkills().doSkillEvents(e, Skill.AGRICULTURE);
 		}
 	}
 	
@@ -648,18 +657,22 @@ public class PlayerListener extends EventListener {
 						.biome(e.getHook().getLocation().getBlock().getBiome())
 						.burn(rod.getEnchantmentLevel(BeanEnchantment.SEARING) > 0)
 						.getLoot().get(0));
-			
-			SkillData sd = PlayerProfile.from(e.getPlayer()).getSkills();
-			sd.addXp(SkillType.FISHING, 43 * e.getExpToDrop());
 			break;
 		default:
 			break;
 		}
+		
+		PlayerProfile.from(e.getPlayer()).getSkills().doSkillEvents(e, Skill.FISHING);
 	}
 	
 	@EventHandler
 	public void onNPCInteract(PlayerInteractNPCEvent e) {
 		e.getPlayer().sendMessage("That's an NPC (DBID: "+e.getNPC().getDatabaseId()+")!");
+	}
+	
+	@EventHandler
+	public void onSkillLevel(SkillLevelUpEvent e) {
+		e.getPlayer().playSound(e.getPlayer(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 1F);
 	}
 	
 	private boolean hasGmPerm(Player p, GameMode gm) {

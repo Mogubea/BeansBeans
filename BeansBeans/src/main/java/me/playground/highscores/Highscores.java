@@ -2,8 +2,8 @@ package me.playground.highscores;
 
 import java.util.HashMap;
 
-import me.playground.playerprofile.skills.SkillType;
 import me.playground.playerprofile.stats.StatType;
+import me.playground.skills.Skill;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
@@ -14,8 +14,8 @@ public class Highscores {
 	final public HashMap<String, Highscore> highscores = new HashMap<String, Highscore>();
 	
 	public Highscores() {
-		for (SkillType skill : SkillType.values())
-			highscores.put(skill.getPlainName() + " XP", new HighscoreSkills(skill));
+		for (Skill skill : Skill.getRegisteredSkills())
+			highscores.put(skill.getName() + " XP", new HighscoreSkills(skill));
 		highscores.put("Total Skill XP", new HighscoreTotalSkill());
 		highscores.put("Highest Playtime", new HighscoreStat(StatType.GENERIC, "playtime"));
 	}

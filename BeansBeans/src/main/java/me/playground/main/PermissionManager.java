@@ -47,14 +47,17 @@ public class PermissionManager {
 		
 		if (isPreviewing(p)) // Override for previewing, we need access to the /op command.
 			attachment.setPermission("bean.cmd.op", true);
-			
+		
 		permissions.put(p.getUniqueId(), attachment);
+		p.updateCommands();
 	}
 	
 	public void clearPlayerPermissions(Player p) {
 		PermissionAttachment attachment = permissions.get(p.getUniqueId());
-		p.removeAttachment(attachment);
+		if (attachment != null)
+			p.removeAttachment(attachment);
 		permissions.remove(p.getUniqueId());
+		p.updateCommands();
 	}
 	
 	// /op previewrank

@@ -18,14 +18,13 @@ public class DiscordCommandStatusPost extends DiscordCommand {
 		EmbedBuilder eb = new EmbedBuilder();
 		eb.setDescription("Removed old Status Post, moving it to here..");
 			
-		e.isAcknowledged();
-			
 		e.getChannel().sendMessageEmbeds(eb.build()).queue((message) -> {
 			plugin.getConfig().set("discord.statusChannel", getDiscord().setStatusChatId(e.getChannel().getIdLong()));
 			plugin.getConfig().set("discord.statusMessage", getDiscord().setStatusMessageId(message.getIdLong()));
 			plugin.saveConfig();
 		});
 		getDiscord().updateServerStatus(true);
+		e.reply("Done.");
 	}
 	
 }

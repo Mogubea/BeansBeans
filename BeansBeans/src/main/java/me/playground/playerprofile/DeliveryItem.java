@@ -28,7 +28,7 @@ public class DeliveryItem extends DeliveryContent {
 	}
 	
 	public ItemStack getItemStack() {
-		return item;
+		return item.clone();
 	}
 
 	@Override

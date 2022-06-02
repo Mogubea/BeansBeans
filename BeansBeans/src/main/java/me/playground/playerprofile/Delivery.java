@@ -1,6 +1,7 @@
 package me.playground.playerprofile;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.bukkit.inventory.ItemStack;
@@ -53,15 +54,21 @@ public class Delivery implements Dirty {
 		}
 	}
 	
-	public static Delivery createItemDelivery(int to, int from, String title, String message, ItemStack... items) {
+	public static Delivery createItemDelivery(int to, int from, String title, String message, long timeToClaim, ItemStack... items) {
 		if (items == null) return null;
 		
-		Delivery delivery = new Delivery(-1, to, from, System.currentTimeMillis(), 0, 0, DeliveryType.PACKAGE, title, message, null);
+		long curTime = System.currentTimeMillis();
+		
+		Delivery delivery = new Delivery(-1, to, from, System.currentTimeMillis(), 0, timeToClaim < 1000 ? 0 : curTime + timeToClaim, DeliveryType.PACKAGE, title, message, null);
 		int size = items.length;
 		for (int x = -1; ++x < size;)
 			delivery.addContent(new DeliveryItem(delivery, items[x]));
 		
-		return (Datasource.registerDelivery(to, from, 0, DeliveryType.PACKAGE, title, message, delivery.getJson()) ? delivery : null);
+		return (Datasource.registerDelivery(to, from, delivery.getExpiryDate(), DeliveryType.PACKAGE, title, message, delivery.getJson()) ? delivery : null);
+	}
+	
+	public static Delivery createItemDelivery(int to, int from, String title, String message, long timeToClaim, Collection<ItemStack> items) {
+		return createItemDelivery(to, from, title, message, timeToClaim, items.toArray(new ItemStack[items.size()]));
 	}
 	
 	public int getId() {
@@ -173,6 +180,21 @@ public class Delivery implements Dirty {
 	
 	protected void addContent(DeliveryContent content) {
 		this.content.add(content);
+	}
+	
+	public void addItems(ItemStack... item) {
+		int size = item.length;
+		for (int x = -1; ++x < size;)
+			this.content.add(0, new DeliveryItem(this, item[x]));
+		this.toRemove = false;
+		setDirty(true);
+	}
+	
+	public void addItems(Collection<ItemStack> item) {
+		for (ItemStack i : item)
+			this.content.add(0, new DeliveryItem(this, i));
+		this.toRemove = false;
+		setDirty(true);
 	}
 	
 	public DeliveryType getDeliveryType() {

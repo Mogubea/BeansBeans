@@ -61,8 +61,27 @@ public class BeanGuiInbox extends BeanGui {
 		List<Delivery> deliveries = tpp.getInbox();
 		int size = deliveries.size();
 		
-		for (int x = -1; ++x < size;) {
-			Delivery delivery = deliveries.get(x);
+		// Start stuff to make the first slot become prevPage and last slot become nextPage if necessary --
+		int baseSlot = 10;
+		int maxOnPage = 28;
+		int onPrevPages = 0;
+		if (getPage() > 0) {
+			onPrevPages = 27 + ((getPage()-1) * 26);
+			maxOnPage--;
+			contents[baseSlot] = prevPage;
+			baseSlot++;
+		}
+		
+		if (size-onPrevPages > maxOnPage) {
+			contents[43] = nextPage;
+			maxOnPage--;
+		}
+		
+		final int onPage = (size-onPrevPages) > maxOnPage ? maxOnPage : (size-onPrevPages);
+		// End stuff --
+		
+		for (int x = -1; ++x < onPage;) {
+			Delivery delivery = deliveries.get(x + onPrevPages);
 			// Skip deliveries that shouldn't be visible.
 			// This allows for non-expiring deliveries to remain in the player's mailbox for as long as they want to keep it.
 			if (delivery.canExpire() && (delivery.hasExpired() || delivery.isContentClaimed())) continue;
@@ -72,7 +91,11 @@ public class BeanGuiInbox extends BeanGui {
 			ItemStack stack = type.getDisplayStack().clone();
 			List<Component> lore = new ArrayList<Component>();
 			lore.add(Component.text("\u00a77From: ").append(ProfileStore.from(delivery.getSenderId()).getColouredName()).decoration(TextDecoration.ITALIC, false));
-			lore.add(Component.text("\u00a77\""+ChatColor.translateAlternateColorCodes('&', delivery.getMessage())+"\u00a77\""));
+			
+			String[] message = delivery.getMessage().split("/n");
+			int mSize = message.length;
+			for (int m = -1; ++m < mSize;)
+				lore.add(Component.text("\u00a77\""+ChatColor.translateAlternateColorCodes('&', message[m])+"\u00a77\""));
 			lore.add(Component.empty());
 			
 			if (delivery.getContentClaimed() == 0) {
@@ -96,8 +119,10 @@ public class BeanGuiInbox extends BeanGui {
 				meta.lore(lore);
 			});
 			
-			mapping.put(10 + x + (2 * row), delivery);
-			contents[10 + x + (2 * row)] = stack;
+			int slot = baseSlot + x + (2 * row);
+			
+			mapping.put(slot, delivery);
+			contents[slot] = stack;
 		}
 		
 		contents[48] = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), "\u00a7eWhat are Deliveries?",

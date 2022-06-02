@@ -95,11 +95,11 @@ public final class Flags {
 	public static final FlagBoolean MOB_HOSTILE_SPAWNS	= register(new FlagBoolean("hostile-spawning", "Hostile Mob Spawning", true))
 			.setDescription(
 					Component.text("\u00a77Can \u00a74hostile mobs \u00a77like Creepers, Zombies etc."),
-					Component.text("\u00a77spawn inside of the region boundaries?"));
+					Component.text("\u00a77naturally spawn inside of the region boundaries?"));
 	public static final FlagBoolean MOB_PASSIVE_SPAWNS	= register(new FlagBoolean("passive-spawning", "Passive Mob Spawning", true))
 			.setDescription(
 					Component.text("\u00a77Can \u00a7apassive mobs \u00a77like Sheep, Pigs, Cows etc."),
-					Component.text("\u00a77spawn inside of the region boundaries?"));
+					Component.text("\u00a77naturally spawn inside of the region boundaries?"));
 	
 	/*
 	 * Misc

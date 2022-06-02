@@ -12,8 +12,8 @@ import org.bukkit.inventory.ItemStack;
 
 import me.playground.highscores.Highscore;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.playerprofile.skills.SkillInfo;
-import me.playground.playerprofile.skills.SkillType;
+import me.playground.skills.Skill;
+import me.playground.skills.SkillInfo;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
@@ -22,8 +22,8 @@ import net.kyori.adventure.text.format.TextDecoration;
 public class BeanGuiSkills extends BeanGui {
 	
 	private static final ItemStack blank = newItem(new ItemStack(Material.ORANGE_STAINED_GLASS_PANE, 1), "\u00a76Skills");
-	private final HashMap<Integer, SkillType> mappings = new HashMap<Integer, SkillType>();
-	private final int[] skillSlots = {20,21,22,23,24,29,30,31,32};
+	private final HashMap<Integer, Skill> mappings = new HashMap<Integer, Skill>();
+	private final int[] skillSlots = {20,21,22,23,24,29,30,31,32,33};
 	
 	public BeanGuiSkills(Player p) {
 		super(p);
@@ -46,7 +46,7 @@ public class BeanGuiSkills extends BeanGui {
 
 	@Override
 	public void onInventoryClicked(InventoryClickEvent e) {
-		SkillType skill = mappings.get(e.getRawSlot());
+		Skill skill = mappings.get(e.getRawSlot());
 		if (skill == null) return;
 		
 		new BeanGuiSkillsDetails(p, skill).openInventory();
@@ -56,28 +56,34 @@ public class BeanGuiSkills extends BeanGui {
 	public void onInventoryOpened() {
 		final ItemStack[] contents = presetInv.clone();
 		contents[4] = newItem(new ItemStack(Material.GOLDEN_PICKAXE), "\u00a76Skills");
-		SkillType[] skills = SkillType.values();
+		List<Skill> skills = Skill.getRegisteredSkills();
 		int size = skillSlots.length;
 		
 		for (int x = -1; ++x < size;) {
-			SkillType skill = skills[x];
+			Skill skill = skills.get(x);
 			SkillInfo skillInfo = tpp.getSkills().getSkillInfo(skill);
-			Highscore highscore = getPlugin().highscores.getHighscore(skill.getPlainName() + " XP");
+			Highscore highscore = getPlugin().highscores.getHighscore(skill.getName() + " XP");
 			int col = skill.getColour().value();
 			TextColor lighter = TextColor.color(col | 0x3d3d3d);
 			
-			contents[skillSlots[x]] = newItem(skill.getDisplayStack(), skill.getDisplayName(), 
+			// copium
+			int spaces = 18 - (skillInfo.getLevelXP() + "/" + skillInfo.getXPRequirement()).length();
+			String space = "";
+			for (int a = -1; ++a < spaces;)
+				space += " ";
+			
+			contents[skillSlots[x]] = newItem(skill.getDisplayStack(), skill.toComponent(), 
+					Component.text("Grade: ", lighter).append(Component.text("\u00a7f\u00a7l" + skillInfo.getGrade())),
 					Component.empty(),
-					Component.text("Level " + skillInfo.getLevel() + " ", lighter)
-					.append(Utils.getProgressBar('|', 50, skillInfo.getCurrentLevelXp(), skillInfo.getNLXPReq(), 0x454545, col))
-					.append(Component.text(" "+(skillInfo.getLevel()+1), skill.getColour())).decoration(TextDecoration.ITALIC, false),
-					Component.text("Exp: ", lighter)
-					.append(Component.text(df.format(skillInfo.getCurrentLevelXp()), TextColor.color(0xffffff)))
+					Component.text("\u00a7l" + skillInfo.getGrade() + " \u00a7r", lighter)
+					.append(Utils.getProgressBar('-', 24, skillInfo.getLevelXP(), skillInfo.getXPRequirement(), 0x454545, col))
+					.append(Component.text(" \u00a7l"+skillInfo.getNextGrade(), skill.getColour())).decoration(TextDecoration.ITALIC, false),
+					Component.text(space + df.format(skillInfo.getLevelXP()), TextColor.color(0xffffff))
 					.append(Component.text("/", lighter))
-					.append(Component.text(df.format(skillInfo.getNLXPReq()), lighter)).decoration(TextDecoration.ITALIC, false),
+					.append(Component.text(df.format(skillInfo.getXPRequirement()), lighter)).decoration(TextDecoration.ITALIC, false),
 					Component.empty(),
 					Component.text("Total Exp: ", lighter)
-					.append(Component.text(df.format(skillInfo.getXp()), TextColor.color(0xffffff))).decoration(TextDecoration.ITALIC, false),
+					.append(Component.text(df.format(skillInfo.getTotalXP()), TextColor.color(0xffffff))).decoration(TextDecoration.ITALIC, false),
 					Component.text("Server Position: ", lighter)
 					.append(Component.text("#" + highscore.getPositionOf(tpp.getId()), TextColor.color(0xffffff)))
 					.append(Component.text(" of " + highscore.getSize(), lighter)).decoration(TextDecoration.ITALIC, false),

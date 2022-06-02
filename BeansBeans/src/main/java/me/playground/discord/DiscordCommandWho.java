@@ -6,8 +6,8 @@ import me.playground.civilizations.CitizenTier;
 import me.playground.civilizations.jobs.Job;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.playerprofile.skills.SkillType;
 import me.playground.ranks.Rank;
+import me.playground.skills.Skill;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -58,11 +58,11 @@ public class DiscordCommandWho extends DiscordCommand {
 				
 				embed.addField("Playtime", d + h + m, false);
 				embed.addField("Skills", 
-						"<:mining:879514404868222976>" + pp.getSkillLevel(SkillType.MINING) +
-						"**,** <:logcutting:879514418306744441>" + pp.getSkillLevel(SkillType.LOGCUTTING) +
-						"**,** <:agriculture:879514439890657340>" + pp.getSkillLevel(SkillType.AGRICULTURE) +
-						"**,** <:fishing:879514461495525446>" + pp.getSkillLevel(SkillType.FISHING) +
-						"**,** <:combat:879518113144651816>" + pp.getSkillLevel(SkillType.COMBAT), false);
+						"<:mining:879514404868222976>" + pp.getSkillLevel(Skill.MINING) +
+						"**,** <:logcutting:879514418306744441>" + pp.getSkillLevel(Skill.FORAGING) +
+						"**,** <:agriculture:879514439890657340>" + pp.getSkillLevel(Skill.AGRICULTURE) +
+						"**,** <:fishing:879514461495525446>" + pp.getSkillLevel(Skill.FISHING) +
+						"**,** <:combat:879518113144651816>" + pp.getSkillLevel(Skill.COMBAT), false);
 				e.replyEmbeds(embed.build()).queue();
 			} else {
 				final EmbedBuilder eb = embedBuilder(0xff4455, "Sorry, we couldn't find a player by the name of **"+e.getOption("ign").getAsString()+"**, please make sure you've spelt their name correctly!");

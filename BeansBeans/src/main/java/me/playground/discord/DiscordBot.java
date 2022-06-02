@@ -58,6 +58,8 @@ public class DiscordBot extends ListenerAdapter {
 	private int lastId = -1;
 	
 	public final HashMap<Integer, Long> linkedAccounts = Datasource.grabLinkedDiscordAccounts();
+	private final Map<Long, Integer> linkCodes = new HashMap<Long, Integer>();
+	
 	
 	// Cache Icons for 30 minutes to reduce risk of rate limiting from source website.
 	// This may lead to skins not updating for a while, but that's not a big enough deal to worry about.
@@ -129,7 +131,6 @@ public class DiscordBot extends ListenerAdapter {
 	
 	private final String token;
 	private final String statusMessageTitle;
-	private final boolean isDebug;
 	
 	private long ingameChatId;
 	private long statusChatId;
@@ -154,7 +155,7 @@ public class DiscordBot extends ListenerAdapter {
 		this.suggestionChatId = plugin.getConfig().getLong("discord.suggestionChannel");
 		this.statusMessageTitle = plugin.getConfig().getString("discord.statusTitle");
 		this.statusMessageId = plugin.getConfig().getLong("discord.statusMessage");
-		this.isDebug = plugin.getConfig().getBoolean("debug", false);
+		
 		this.discordBot = buildBot();
 		if (discordBot != null) {
 			this.ingameChat = discordBot.getTextChannelById(ingameChatId);
@@ -207,10 +208,6 @@ public class DiscordBot extends ListenerAdapter {
 		eb.setColor(colour);
 		eb.appendDescription(description);
 		return eb;
-	}
-	
-	public boolean isDebug() {
-		return this.isDebug;
 	}
 	
 	//
@@ -390,7 +387,7 @@ public class DiscordBot extends ListenerAdapter {
 	 * @param pp The player's profile
 	 */
 	public void updateNickname(PlayerProfile pp) {
-		if (isDebug() || !isOnline()) return;
+		if (getPlugin().isDebugMode() || !isOnline()) return;
 		Guild g = chatChannel().getGuild();
 		try {
 			Member member = g.retrieveMemberById(linkedAccounts.getOrDefault(pp.getId(), 0L)).complete();
@@ -406,7 +403,7 @@ public class DiscordBot extends ListenerAdapter {
 	 * @param pp The player's profile
 	 */
 	public void updateRoles(PlayerProfile pp) {
-		if (isDebug() || !isOnline()) return;
+		if (getPlugin().isDebugMode() || !isOnline()) return;
 		Guild g = chatChannel().getGuild();
 		try {
 			Member member = g.retrieveMemberById(linkedAccounts.getOrDefault(pp.getId(), 0L)).complete();
@@ -450,6 +447,43 @@ public class DiscordBot extends ListenerAdapter {
 	
 	public boolean isLinked(long id) {
 		return linkedAccounts.containsKey((int)id) || linkedAccounts.containsValue(id);
+	}
+	
+	public void breakLink(int playerId) {
+		this.linkedAccounts.remove(playerId);
+		Datasource.breakDiscordLink(playerId);
+	}
+	
+	private void createLink(int playerId, long discordId) {
+		this.linkedAccounts.put(playerId, discordId);
+		Datasource.setDiscordLink(playerId, discordId);
+	}
+	
+	public int createLink(long discordId, long code) {
+		int playerId = linkCodes.getOrDefault(code, 0);
+		if (playerId == 0) return 0;
+		
+		createLink(playerId, discordId);
+		linkCodes.remove(code);
+		return playerId;
+	}
+	
+	public long generateLinkCode(int playerId) {
+		if (linkCodes.containsValue(playerId)) return getKey(linkCodes, playerId);
+		long code = 10000 + getPlugin().getRandom().nextInt(90000);
+		while (linkCodes.containsKey(code))
+				code = 10000 + getPlugin().getRandom().nextInt(90000);
+			
+		linkCodes.put(code, playerId);
+		return code;
+	}
+	
+	public Member getDiscordAccount(int playerId) {
+		try {
+			if (isLinked(playerId))
+				return chatChannel().getGuild().retrieveMemberById(linkedAccounts.getOrDefault(playerId, 0L)).complete();
+		} catch (ErrorResponseException e) {}
+		return null;
 	}
 	
 	public boolean isRank(Member member, Rank rank) {

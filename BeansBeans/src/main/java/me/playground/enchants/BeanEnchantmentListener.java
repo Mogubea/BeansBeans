@@ -5,7 +5,6 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerFishEvent.State;
@@ -13,8 +12,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
-public class BeanEnchantmentListener implements Listener {
+import me.playground.listeners.EventListener;
+import me.playground.main.Main;
+
+public class BeanEnchantmentListener extends EventListener {
 	
+	public BeanEnchantmentListener(Main plugin) {
+		super(plugin);
+	}
+
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onFishMob(PlayerFishEvent e) {
 		if (e.getState() != State.CAUGHT_ENTITY) return;

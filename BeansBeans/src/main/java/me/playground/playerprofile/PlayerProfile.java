@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -36,13 +37,13 @@ import me.playground.items.BeanItem;
 import me.playground.listeners.ConnectionListener;
 import me.playground.main.Main;
 import me.playground.playerprofile.settings.PlayerSetting;
-import me.playground.playerprofile.skills.SkillData;
-import me.playground.playerprofile.skills.SkillType;
 import me.playground.playerprofile.stats.PlayerStats;
 import me.playground.playerprofile.stats.StatType;
 import me.playground.ranks.Permission;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
+import me.playground.skills.Skill;
+import me.playground.skills.Skills;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -58,10 +59,14 @@ public class PlayerProfile {
 						public PlayerProfile load(UUID playerUUID) throws Exception { // if the key doesn't exist, request it via this method
 							PlayerProfile prof = Datasource.getOrMakeProfile(playerUUID);
 							if (prof.getPlayer()!=null) // assign bar player if online
-								prof.getSkills().assignBarPlayer(prof.getPlayer());
+								prof.getSkills().setBarPlayer();
 							return prof;
 						}
 					});
+	
+	public static Map<UUID, PlayerProfile> asMap() {
+		return profileCache.asMap();
+	}
 	
 	public static PlayerProfile from(Player p) {
 		if (p == null) return null;
@@ -139,12 +144,13 @@ public class PlayerProfile {
 	private final int 					playerId;
 	private OfflinePlayer				player;
 	
+	private final Set<Integer>			friends = new HashSet<Integer>();
 	private final ArrayList<Integer> 	ignoredPlayers = new ArrayList<Integer>();
 	private final ArrayList<Rank> 		ranks = new ArrayList<Rank>();
 	private final Set<String>			privatePermissions;
 	private long 						donorExpirationTime = 0L;
 	
-	private final SkillData 			skillData;
+	private final Skills 				skillData;
 	
 	private String 						name;
 	private String 						nickname;
@@ -208,7 +214,7 @@ public class PlayerProfile {
 		this.booleanSettings = settings;
 		
 		this.home = Datasource.loadHome(id);
-		this.skillData = Datasource.loadOrMakeBeanExperience(id);
+		this.skillData = Datasource.loadSkills(this);
 		this.armourWardrobe = Datasource.loadArmourWardrobe(id);
 		this.pickupBlacklist = Datasource.loadPickupBlacklist(id);
 		this.heirloomInventory = new HeirloomInventory(this, Datasource.loadPlayerHeirlooms(id));
@@ -468,6 +474,10 @@ public class PlayerProfile {
 			Main.getPermissionManager().updatePlayerPermissions(getPlayer());
 	}
 	
+	public Set<Integer> getFriends() {
+		return friends;
+	}
+	
 	public ArrayList<Integer> getIgnoredPlayers() {
 		return ignoredPlayers;
 	}
@@ -533,7 +543,7 @@ public class PlayerProfile {
 		return this.colouredName;
 	}
 	
-	public SkillData getSkills() {
+	public Skills getSkills() {
 		return skillData;
 	}
 	
@@ -636,15 +646,14 @@ public class PlayerProfile {
 			hoverComponents = hoverComponents.append(Component.text("\n").append(badges));*/
 		//
 		
+		Rank donorRank = getDonorRank();
 		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Rank: ").append(getHighestRank().toComponent()));
-		
-		int mins = getStat(StatType.GENERIC, "playtime") / 60;
-		int hours = mins / 60;
-		mins -= hours*60;
+		if (donorRank != null)
+			hoverComponents = hoverComponents.append(Component.text("\u00a77 (").append(donorRank.toComponent()).append(Component.text("\u00a77)")));
 		
 		if (isInCivilization() && hasJob())
 			hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Job: ").append(getJob().toComponent()));
-		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Playtime: \u00a7f" + (hours > 0 ? hours + " Hours and " : "") + mins + " Minutes"));
+		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Playtime: \u00a7f" + Utils.timeStringFromMillis(getPlaytime() * 1000)));
 		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Id: \u00a7a" + getId()));
 		
 		this.chatLine = Component.empty().append(chatLine.hoverEvent(HoverEvent.showText(hoverComponents)));
@@ -664,17 +673,28 @@ public class PlayerProfile {
 		return lastLocation[type];
 	}
 	
-	public int getSkillLevel(SkillType skill) {
-		return skillData.getSkillInfo(skill).getLevel();
+	/**
+	 * Returns this player's playtime in seconds.
+	 */
+	public int getPlaytime() {
+		return getStat(StatType.GENERIC, "playtime");
+	}
+	
+	public int getSkillLevel(Skill skill) {
+		return skillData.getLevel(skill);
 	}
 	
 	public boolean isSettingEnabled(PlayerSetting setting) {
 		return (this.booleanSettings & 1<<setting.ordinal()) != 0;
 	}
 	
-	public void flipSetting(PlayerSetting setting) {
+	/**
+	 * @return the new status of the setting
+	 */
+	public boolean flipSetting(PlayerSetting setting) {
 		this.booleanSettings ^= 1 << setting.ordinal();
 		doSettingEffect(setting);
+		return isSettingEnabled(setting);
 	}
 	
 	public void setSettingEnabled(PlayerSetting setting, boolean enabled) {
@@ -689,13 +709,26 @@ public class PlayerProfile {
 		if (!isOnline()) return;
 		final boolean enabled = isSettingEnabled(setting);
 		switch(setting) {
+		case HIDE:
+			Main.getTeamManager().updateTeam(getPlayer()); // Team
+			flagScoreboardUpdate();
+			break;
 		case SHOW_SIDEBAR:
 			if (enabled) {
 				flagScoreboardUpdate(); // flag rather than actually update since it's a spammable setting
 				showScoreboard();
 			} else
 				hideScoreboard();
-				break;
+			break;
+		case MENU_ITEM:
+			if (enabled) {
+				ItemStack prevItem = getPlayer().getInventory().getItem(9);
+				getPlayer().getInventory().setItem(9, BeanItem.PLAYER_MENU.getOriginalStack());
+				if (prevItem != null && !prevItem.equals(BeanItem.PLAYER_MENU.getOriginalStack()))
+					giveItem(prevItem);
+			} else {
+				getPlayer().getInventory().setItem(9, null);
+			}
 		default:
 			break;
 		}
@@ -703,6 +736,10 @@ public class PlayerProfile {
 	
 	public long getSettings() {
 		return this.booleanSettings;
+	}
+	
+	public boolean isHidden() {
+		return isSettingEnabled(PlayerSetting.HIDE);
 	}
 	
 	public ItemStack getSkull() {
@@ -743,10 +780,13 @@ public class PlayerProfile {
 	 */
 	public void grantAdvancement(@Nonnull String advancementKey) {
 		if (!isOnline()) return;
-		AdvancementProgress progress = getPlayer().getAdvancementProgress(Bukkit.getAdvancement(NamespacedKey.fromString(advancementKey)));
-		progress.getRemainingCriteria().forEach((c) -> progress.awardCriteria(c));
-		
-	//	Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "advancement grant " + getDisplayName() + " only " + advancementKey); // cheeky
+		Bukkit.getScheduler().runTask(Main.getInstance(), new Runnable() {
+			@Override
+			public void run() {
+				AdvancementProgress progress = getPlayer().getAdvancementProgress(Bukkit.getAdvancement(NamespacedKey.fromString(advancementKey)));
+				progress.getRemainingCriteria().forEach((c) -> progress.awardCriteria(c));
+			}
+		});
 	}
 	
 	/**
@@ -755,9 +795,13 @@ public class PlayerProfile {
 	 */
 	public void revokeAdvancement(@Nonnull String advancementKey) {
 		if (!isOnline()) return;
-		AdvancementProgress progress = getPlayer().getAdvancementProgress(Bukkit.getAdvancement(NamespacedKey.fromString(advancementKey)));
-		progress.getAwardedCriteria().forEach((c) -> progress.revokeCriteria(c));
-	//	Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "advancement revoke " + getDisplayName() + " only " + advancementKey); // cheeky
+		Bukkit.getScheduler().runTask(Main.getInstance(), new Runnable() {
+			@Override
+			public void run() {
+				AdvancementProgress progress = getPlayer().getAdvancementProgress(Bukkit.getAdvancement(NamespacedKey.fromString(advancementKey)));
+				progress.getAwardedCriteria().forEach((c) -> progress.revokeCriteria(c));
+			}
+		});
 	}
 	
 	public HeirloomInventory getHeirlooms() {
@@ -800,11 +844,11 @@ public class PlayerProfile {
 	}
 	
 	public long getLastLogin() {
-		return getStat(StatType.GENERIC, "lastLogin") * 1000000L;
+		return getStat(StatType.GENERIC, "lastLogin") * 60000L;
 	}
 	
 	public long getLastLogout() {
-		return getStat(StatType.GENERIC, "lastLogout") * 1000000L;
+		return getStat(StatType.GENERIC, "lastLogout") * 60000L;
 	}
 	
 	public void addCooldown(String id, int mili) {
@@ -937,6 +981,17 @@ public class PlayerProfile {
 		return inbox;
 	}
 	
+	public Delivery getDeliveryFrom(DeliveryType type, int fromId) {
+		int size = inbox.size();
+		for (int x = -1; ++x < size;) {
+			Delivery d = inbox.get(x);
+			if (d.getDeliveryType() != type) continue;
+			if (d.getSenderId() != fromId) continue;
+			return d;
+		}
+		return null;
+	}
+	
 	private long lastInboxUpdate;
 	public void refreshInbox() {
 		Datasource.refreshPlayerInbox(this);
@@ -945,6 +1000,15 @@ public class PlayerProfile {
 	
 	public long getLastInboxUpdate() {
 		return lastInboxUpdate;
+	}
+	
+	public Delivery giveItem(ItemStack...items) {
+		if (isOnline()) {
+			Map<Integer, ItemStack> remaining = getPlayer().getInventory().addItem(items);
+			return Delivery.createItemDelivery(playerId, 0, "Item Package", "Some items were sent to you/nwhile Your inventory was full!", 1000 * 60 * 60 * 24 * 31, remaining.values());
+		} else {
+			return Delivery.createItemDelivery(playerId, 0, "Item Package", "Some items were sent to you/nwhile you were away!", 1000 * 60 * 60 * 24 * 31, items);
+		}
 	}
 	
 	/**

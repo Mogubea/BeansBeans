@@ -34,6 +34,7 @@ public enum Rank {
 					
 			"bean.cmd.anvil",
 			"bean.cmd.hat",
+			"bean.cmd.enderchest",
 			Permission.NICKNAME_APPLY,
 			Permission.DELIVERY_CLAIMALL),
 	SENATOR(3, 0xaa32da, 100, 914921526158041089L,
@@ -78,6 +79,7 @@ public enum Rank {
 			"bean.cmd.say",
 			"bean.cmd.gamemode",
 			"bean.cmd.world",
+			"bean.cmd.celstia",
 			"bean.cmd.region.search",
 			"bean.cmd.teleport.bypass",
 			"bean.cmd.teleport.others",

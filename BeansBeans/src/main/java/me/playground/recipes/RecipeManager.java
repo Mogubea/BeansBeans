@@ -3,6 +3,7 @@ package me.playground.recipes;
 import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Keyed;
 import org.bukkit.inventory.Recipe;
 
 import me.playground.main.Main;
@@ -25,6 +26,11 @@ public class RecipeManager {
 	public Recipe addRecipe(Recipe r) {
 		recipes.add(r);
 		return r;
+	}
+	
+	public void unregisterRecipes() {
+		for (Recipe r : recipes)
+			Bukkit.removeRecipe(((Keyed)r).getKey());
 	}
 	
 }

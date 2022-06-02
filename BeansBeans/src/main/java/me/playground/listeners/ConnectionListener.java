@@ -9,15 +9,15 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.ItemStack;
 
 import me.playground.data.BanEntry;
 import me.playground.data.Datasource;
-import me.playground.gui.BeanGui;
+import me.playground.items.BeanItem;
 import me.playground.main.Main;
 import me.playground.main.PermissionManager;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileModifyRequest;
+import me.playground.playerprofile.settings.PlayerSetting;
 import me.playground.playerprofile.stats.StatType;
 import me.playground.ranks.Rank;
 import me.playground.utils.BeanColor;
@@ -82,14 +82,24 @@ public class ConnectionListener extends EventListener {
 		getPlugin().teamManager().initScoreboard(p);
 		getPlugin().npcManager().showAllNPCs(p);
 		
-		// Check for menu item
-		ItemStack menuSlot = p.getInventory().getItem(9);
-		if (menuSlot == null || !menuSlot.equals(BeanGui.menuItem))
-			p.getInventory().setItem(9, BeanGui.menuItem);
+		// Place menu item
+		if (pp.isSettingEnabled(PlayerSetting.MENU_ITEM))
+			p.getInventory().setItem(9, BeanItem.PLAYER_MENU.getOriginalStack());
 		
-		pp.getSkills().assignBarPlayer(p);
-		pp.getStats().setStat(StatType.GENERIC, "lastLogin", (int)(System.currentTimeMillis()/1000000L));
-		e.joinMessage(Component.text("» ", NamedTextColor.GREEN).append(pp.getComponentName()).append(Component.text(" joined the server!", NamedTextColor.YELLOW)));
+		pp.getSkills().setBarPlayer();
+		pp.getStats().setStat(StatType.GENERIC, "lastLogin", (int)(System.currentTimeMillis()/60000L));
+		
+		// Do hide stuff
+		getPlugin().getServer().getOnlinePlayers().forEach(player -> {
+			PlayerProfile profile = PlayerProfile.from(player);
+			if (profile.isHidden() && !pp.isRank(Rank.MODERATOR))
+				p.hidePlayer(getPlugin(), player);
+			
+			if (pp.isHidden() && !profile.isRank(Rank.MODERATOR))
+				player.hidePlayer(getPlugin(), p);
+		});
+		
+		e.joinMessage(!pp.isHidden() ? Component.text("» ", NamedTextColor.GREEN).append(pp.getComponentName()).append(Component.text(" joined the server!", NamedTextColor.YELLOW)) : null);
 		
 		// Check for Donor Rank expiriry
 		pp.getCheckDonorExpiration();
@@ -114,9 +124,9 @@ public class ConnectionListener extends EventListener {
 		permManager.clearPlayerPermissions(p);
 		permManager.stopPreviewingRank(p);
 		PlayerProfile pp = PlayerProfile.from(p);
-		pp.getStats().setStat(StatType.GENERIC, "lastLogout", (int)(System.currentTimeMillis()/1000000L));
+		pp.getStats().setStat(StatType.GENERIC, "lastLogout", (int)(System.currentTimeMillis()/60000L));
 		pp.closeBeanGui(); // Just in case
-		e.quitMessage(Component.text("« ", NamedTextColor.RED).append(pp.getComponentName()).append(Component.text(" left the server!", NamedTextColor.YELLOW)));
+		e.quitMessage(!pp.isHidden() ? Component.text("« ", NamedTextColor.RED).append(pp.getComponentName()).append(Component.text(" left the server!", NamedTextColor.YELLOW)) : null);
 		//EmbedBuilder eb = getPlugin().discord().embedBuilder(0xff7876, "**"+pp.getDisplayName()+"** left the server!");
 		//getPlugin().discord().chatChannel().sendMessageEmbeds(eb.build()).queue();
 	}
