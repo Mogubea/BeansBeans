@@ -79,7 +79,7 @@ public class BeanGuiShopCustomer extends BeanGuiShop {
 				
 				if (takeAmt > 1) {
 					p.closeInventory();
-					SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList(Component.empty(), Component.text("^^^^^^^^^^"), Component.text("\u00a7e\u00a7lPurchase Amount"), Component.text("\u00a7e(1 - "+takeAmt+")")), Material.WARPED_WALL_SIGN)
+					SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList("","^^^^^^^^^^", "\u00a7e\u00a7lPurchase Amount", "\u00a7e(1 - "+takeAmt+")"), Material.WARPED_WALL_SIGN)
 				            .reopenIfFail(true)
 				            .response((player, strings) -> {
 				                try {
@@ -144,7 +144,7 @@ public class BeanGuiShopCustomer extends BeanGuiShop {
 							refreshShopViewers();
 						} else {
 							p.closeInventory();
-							SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList(Component.empty(), Component.text("^^^^^^^^^^"), Component.text("\u00a7e\u00a7lSell Amount"), Component.text("\u00a7e(1 - "+addAmt+")")), Material.WARPED_WALL_SIGN)
+							SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList("","^^^^^^^^^^", "\u00a7e\u00a7lSell Amount", "\u00a7e(1 - "+addAmt+")"), Material.WARPED_WALL_SIGN)
 						            .reopenIfFail(true)
 						            .response((player, strings) -> {
 						                try {
@@ -263,7 +263,7 @@ public class BeanGuiShopCustomer extends BeanGuiShop {
 		final ProfileStore ps = ProfileStore.from(shop.getOwnerId());
 		
 		contents[31] = newItem(Utils.getSkullFromPlayer(ps.getUniqueId()), ps.getColouredName().append(Component.text("\u00a7e's Shop")));
-		contents[40] = newItem(icon_money, Component.text("\u00a77You currently have \u00a76" + pp.getBalance() + " Coins."));
+		contents[40] = newItem(icon_money, Component.text("\u00a77You currently have " + Utils.currencyString(Currency.COINS, pp.getBalance())));
 		
 		
 		i.setContents(contents);

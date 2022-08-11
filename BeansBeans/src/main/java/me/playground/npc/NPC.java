@@ -1,29 +1,24 @@
 package me.playground.npc;
 
-import java.util.Collection;
 import java.util.Iterator;
 
-import net.minecraft.network.protocol.game.*;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.world.entity.LivingEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.ArmorStand.LockType;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.bukkit.inventory.EquipmentSlot;
 import org.json.JSONObject;
 
 import me.playground.civilizations.Civilization;
 import me.playground.civilizations.jobs.Job;
 import me.playground.main.IPluginRef;
 import me.playground.main.Main;
-import me.playground.menushop.MenuShop;
-import me.playground.npc.interactions.NPCInteractShop;
 import me.playground.npc.interactions.NPCInteraction;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.BeanColor;
@@ -33,21 +28,22 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.PacketPlayOutEntity;
+import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
+import net.minecraft.network.protocol.game.PacketPlayOutEntityHeadRotation;
+import net.minecraft.network.protocol.game.PacketPlayOutEntityTeleport;
+import net.minecraft.server.network.PlayerConnection;
+import net.minecraft.world.entity.EntityLiving;
 
-public abstract class NPC<T extends LivingEntity> implements IPluginRef {
+public abstract class NPC<T extends EntityLiving> implements IPluginRef {
 	final private int npcId;
 	private Location location;
-	private Location baseLocation;
 	
 	protected int creatorId; // Can be set to 0.
 	protected Civilization civilization; // If the NPC belongs to a Civilization and not neccessarily an owning player.
 	protected Job job = Job.getByName("gatherer"); // If the NPC has a Job, for Interactions.
 	protected NPCInteraction interaction = NPCInteraction.getByName("base");
 	protected int titleCol = BeanColor.NPC.value();
-	
-	protected MenuShop shop;
-	
-	private boolean enabled = true;
 	
 	final protected Main plugin;
 	final protected T entity;
@@ -64,35 +60,24 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 		this.plugin = plugin;
 		this.entity = entity;
 		this.location = location;
-		this.baseLocation = location;
-		entity.moveTo(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
-
-		// Remove previous stands if they are there.
-		getLocation().getChunk().load();
-		Collection<ArmorStand> stands = getLocation().add(0, entity.getBukkitEntity().getHeight() + 0.54, 0).getNearbyEntitiesByType(ArmorStand.class, 0.1D);
-		for (ArmorStand s : stands)
-			if (s.isMarker())
-				s.remove();
-		
-		// Assign json stuff
+		entity.a(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
 		if (json != null) {
 			titleCol = json.optNumber("titleCol", BeanColor.NPC.value()).intValue();
 			String title = json.optString("title");
 			if (!title.isEmpty())
 				setTitle(Component.text(title), false);
+			
+			
 			job = Job.getByName(json.optString("job", "gatherer"));
 			interaction = NPCInteraction.getByName(json.optString("interaction", "base"));
 			String strCiv = json.optString("civilization");
 			if (!strCiv.isEmpty())
 				civilization = Civilization.getByName(strCiv);
-			if (interaction instanceof NPCInteractShop)
-				shop = plugin.menuShopManager().getOrMakeShop(json.optString("shop"));
 		}
-		
 		interaction.onInit(this);
 	}
 	
-	public abstract void showTo(Player p);
+	protected abstract void showTo(Player p);
 	protected abstract NPCType getType();
 	
 	/**
@@ -104,7 +89,6 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 		if (titleEntity != null) obj.put("title", ((TextComponent)titleEntity.customName()).content());
 		if (titleCol != BeanColor.NPC.value()) obj.put("titleCol", titleCol);
 		if (civilization != null) obj.put("civilization", civilization.getName());
-		if (shop != null) obj.put("shop", shop.getIdentifier());
 		
 		obj.put("job", job.getName());
 		obj.put("interaction", interaction.getName());
@@ -112,16 +96,16 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	}
 	
 	protected void showToAll() {
-		Bukkit.getOnlinePlayers().forEach(this::showTo);
+		Bukkit.getOnlinePlayers().forEach((p) -> { showTo(p); });
 	}
 	
 	protected void hideFrom(Player p) {
-		ServerGamePacketListenerImpl connection = ((CraftPlayer)p).getHandle().connection;
-		connection.send(new ClientboundRemoveEntitiesPacket(getEntityId()));
+		PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
+		connection.a(new PacketPlayOutEntityDestroy(getEntityId()));
 	}
 	
 	protected void hideFromAll() {
-		Bukkit.getOnlinePlayers().forEach(this::hideFrom);
+		Bukkit.getOnlinePlayers().forEach((p) -> { hideFrom(p); });
 		removeTitle(false);
 	}
 	
@@ -131,17 +115,16 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	
 	public NPC<T> teleport(Location loc, boolean dirty) {
 		location = loc;
-		baseLocation = loc;
-		entity.moveTo(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
+		entity.a(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
 		sendPacketToAll(makeTeleportPacket(loc));
-		sendPacketToAll(new ClientboundRotateHeadPacket(entity, getFixedRot(loc.getYaw())));
+		sendPacketToAll(new PacketPlayOutEntityHeadRotation(entity, getFixedRot(loc.getYaw())));
 		if (dirty)
 			setDirty();
 		return this;
 	}
 	
-	protected ClientboundTeleportEntityPacket makeTeleportPacket(Location loc) {
-		ClientboundTeleportEntityPacket packet = new ClientboundTeleportEntityPacket(entity);
+	protected PacketPlayOutEntityTeleport makeTeleportPacket(Location loc) {
+		PacketPlayOutEntityTeleport packet = new PacketPlayOutEntityTeleport(entity);
 		Utils.setPacketValue(packet, "a", getEntityId());
 		Utils.setPacketValue(packet, "b", loc.getX());
 		Utils.setPacketValue(packet, "c", loc.getY());
@@ -151,26 +134,16 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 		return packet;
 	}
 	
-	private boolean isLookingAtTarget;
-	
 	protected void lookAtTarget(Entity entity) {
-		if (entity == null) {
-			//location.setDirection(baseLocation.subtract(location).toVector());
-			isLookingAtTarget = false;
-		} else {
-			location.setDirection(entity.getLocation().subtract(location).toVector());
-			isLookingAtTarget = true;
-		}
-
-
-		sendPacketToAll(new ClientboundMoveEntityPacket.Rot(getEntityId(), getFixedRot(location.getYaw()), getFixedRot(location.getPitch()), false));
-		sendPacketToAll(new ClientboundRotateHeadPacket(this.entity, getFixedRot(location.getYaw())));
+		location.setDirection(entity.getLocation().subtract(location).toVector());
+		sendPacketToAll(new PacketPlayOutEntity.PacketPlayOutEntityLook(getEntityId(), getFixedRot(location.getYaw()), getFixedRot(location.getPitch()), false));
+		sendPacketToAll(new PacketPlayOutEntityHeadRotation(this.entity, getFixedRot(location.getYaw())));
 	}
 	
 	protected void sendPacketToAll(@SuppressWarnings("rawtypes") Packet pa) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			ServerGamePacketListenerImpl connection = ((CraftPlayer)p).getHandle().connection;
-			connection.send(pa);
+			PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
+			connection.a(pa);
 		}
 	}
 	
@@ -244,15 +217,6 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 		return interaction;
 	}
 	
-	public MenuShop getMenuShop() {
-		return shop;
-	}
-	
-	public void setMenuShop(String shop) {
-		this.shop = plugin.menuShopManager().getExistingShop(shop);
-		setDirty();
-	}
-	
 	public int getCreatorId() {
 		return creatorId;
 	}
@@ -274,7 +238,7 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	}
 	
 	public Location getLocation() {
-		return location.clone();
+		return location;
 	}
 	
 	protected byte getFixedRot(float rot) {
@@ -295,14 +259,16 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	public void setTitle(Component title, boolean dirty) {
 		if (title == null) { removeTitle(dirty); return; }
 		if (getTitleStand() != null) { titleEntity.remove(); }
-		Location loc = getLocation().add(0, entity.getBukkitEntity().getHeight() + 0.54, 0);
+		Location loc = location.clone().add(0, 0.3, 0);
 		titleEntity = (ArmorStand) location.getWorld().spawnEntity(loc, EntityType.ARMOR_STAND);
 		titleEntity.setInvisible(true);
 		titleEntity.setInvulnerable(true);
 		titleEntity.setGravity(false);
-		titleEntity.setMarker(true);
-		titleEntity.setCollidable(false);
-		titleEntity.setCanTick(false);
+		titleEntity.setBasePlate(false);
+		titleEntity.addEquipmentLock(EquipmentSlot.HEAD, LockType.REMOVING_OR_CHANGING);
+		titleEntity.addEquipmentLock(EquipmentSlot.CHEST, LockType.REMOVING_OR_CHANGING);
+		titleEntity.addEquipmentLock(EquipmentSlot.LEGS, LockType.REMOVING_OR_CHANGING);
+		titleEntity.addEquipmentLock(EquipmentSlot.FEET, LockType.REMOVING_OR_CHANGING);
 		titleEntity.customName(title.color(TextColor.color(titleCol)));
 		titleEntity.setCustomNameVisible(true);
 		if (dirty) setDirty();
@@ -329,7 +295,7 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	}
 	
 	@Override
-	public @NotNull Main getPlugin() {
+	public Main getPlugin() {
 		return plugin;
 	}
 	
@@ -339,29 +305,16 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	
 	public void onTick() {
 		// XXX: Testing
-		Iterator<Player> ents = getLocation().getNearbyPlayers(4).iterator();
-		if (!ents.hasNext()) {
-			if (isLookingAtTarget)
-				this.lookAtTarget(null);
-			return;
-		}
+		Iterator<Player> ents = entity.getBukkitEntity().getWorld().getNearbyPlayers(location, 4).iterator();
+		if (!ents.hasNext()) return;
 		this.lookAtTarget(ents.next());
-	}
-	
-	public boolean isEnabled() {
-		return enabled;
-	}
-	
-	public void setEnabled(boolean enable) {
-		this.enabled = enable;
 	}
 	
 	/**
 	 * Fires when a player right clicks this entity.
 	 */
 	public void onInteract(Player player) {
-		if (enabled)
-			interaction.onInteract(this, player);
+		interaction.onInteract(this, player);
 	}
 	
 	public void sendMessage(Player player, Component message) {

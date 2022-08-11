@@ -1,9 +1,5 @@
 package me.playground.skills;
 
-import java.util.List;
-
-import me.playground.items.lore.Lore;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Ageable;
@@ -13,13 +9,11 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerHarvestBlockEvent;
 
 import me.playground.listeners.events.PlayerRightClickHarvestEvent;
-import net.kyori.adventure.text.Component;
 
 public class SkillAgriculture extends Skill {
 	
 	protected SkillAgriculture() {
-		super("Agriculture", 0xffcc66, BarColor.YELLOW, '6', "\ud83d\udd31", Material.GOLDEN_HOE, Material.YELLOW_DYE,
-				"Earn Agriculture XP by cultivating crops and tending to animals!");
+		super("Agriculture", 0xffcc66, BarColor.YELLOW, '6', Material.GOLDEN_HOE);
 	}
 	
 	@Override
@@ -37,23 +31,14 @@ public class SkillAgriculture extends Skill {
 		int skillXP = getExperienceValue(b);
 		if (skillXP < 1) return false;
 		
-		if (b.getType() == Material.SUGAR_CANE) {
-			Location loc = b.getLocation().clone();
-			int height = 0;
-			int sugar = 0;
-			
-			if (b.getLocation().subtract(0, 1, 0).getBlock().getType() != Material.SUGAR_CANE) sugar--;
-			while(height < 3 && loc.subtract(0, 1, 0).getBlock().getType() == Material.SUGAR_CANE) height++;
-			if (!(height > 2)) height = 0;
-			while(height < 3 && loc.add(0, 1, 0).getBlock().getType() == Material.SUGAR_CANE) { height++; sugar++; }
-			
-			skillXP *= sugar;
-			if (skillXP <= 0) return false;
-		}
-		
-		if (b.getType() != Material.SUGAR_CANE && b.getBlockData() instanceof Ageable) {
+		if (b.getBlockData() instanceof Ageable) {
 			Ageable crop = (Ageable) b.getBlockData();
 			if (crop.getAge() < crop.getMaximumAge()) return false;
+			
+			// Growth Boost
+			/*if (b.getType() == Material.WHEAT || b.getType() == Material.CARROTS || b.getType() == Material.POTATOES || b.getType() == Material.BEETROOTS) {
+				crop.setAge(rand.nextInt(3));
+			}*/
 		}
 		
 		s.addExperience(this, skillXP);
@@ -87,11 +72,6 @@ public class SkillAgriculture extends Skill {
 		default: 
 			return 0;
 		}
-	}
-
-	@Override
-	public List<Component> getGUIDescription(Skills s) {
-		return null;
 	}
 	
 }

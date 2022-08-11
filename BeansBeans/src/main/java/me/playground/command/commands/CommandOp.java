@@ -6,7 +6,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import me.playground.gui.BeanGuiAdminItemValues;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
@@ -15,21 +14,17 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.TraderLlama;
 import org.bukkit.event.inventory.InventoryCloseEvent.Reason;
-import org.bukkit.inventory.AbstractHorseInventory;
 import org.bukkit.inventory.ItemStack;
 
 import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
+import me.playground.enchants.BeanEnchantment;
 import me.playground.gui.BeanGuiBeanItems;
 import me.playground.gui.BeanGuiShop;
-import me.playground.gui.BeanGuiBasicMenuShop;
 import me.playground.gui.debug.BeanGuiDebug;
 import me.playground.items.BeanItem;
 import me.playground.main.Main;
@@ -44,7 +39,6 @@ import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.minecraft.network.protocol.game.ClientboundHorseScreenOpenPacket;
 
 public class CommandOp extends BeanCommand {
 
@@ -53,7 +47,7 @@ public class CommandOp extends BeanCommand {
 		description = "Operator Command.";
 	}
 
-	final String[] subCmds = { "commands", "customitems", "debug", "itemvalues", "fixformatting", "formatchunks", "guiprofile", "lockserver", "menushop", "openserver", "pissoff", "previewrank", "shops" };
+	final String[] subCmds = { "commands", "customitems", "debug", "fixformatting", "formatchunks", "guiprofile", "lockserver", "moltentouch", "openserver", "pissoff", "previewrank", "shops" };
 	final String[] npcSubCmds = { "create", "list", "reload", "setskin", "tphere", "warpto", };
 	final String[] shopSubCmds = { "enable", "disable", "reload" };
 	
@@ -66,43 +60,9 @@ public class CommandOp extends BeanCommand {
 		
 		final String cmdStr = args[0].toLowerCase();
 		final String subcmd = args.length>1 ? args[1].toLowerCase() : "";
-
-		if ("itemvalues".equals(cmdStr)) {
-			new BeanGuiAdminItemValues(p, getPlugin().getItemValueManager(), getPlugin().getItemTrackingManager()).openInventory();
-			return true;
-		}
-
-		if ("menushop".equals(cmdStr)) {
-			new BeanGuiBasicMenuShop(p, getPlugin().menuShopManager().getExistingShop(subcmd.isEmpty() ? "test" : subcmd)).openInventory();
-			return true;
-		}
 		
 		if ("debug".equals(cmdStr) && checkPlayer(sender)) {
 			new BeanGuiDebug(p).openInventory();
-			return true;
-		}
-		
-		if ("horsegui".equals(cmdStr) && checkPlayer(sender)) {
-			TraderLlama horse = (TraderLlama) p.getWorld().spawnEntity(p.getLocation(), EntityType.TRADER_LLAMA);
-			horse.setCarryingChest(true);
-			horse.setStrength(5); // 5 * 3 = inventory space lol
-			horse.setAI(false);
-			horse.setCollidable(false);
-			horse.setInvisible(true);
-			horse.setInvulnerable(true);
-			horse.setSilent(true);
-			horse.setAge(-99);
-			horse.setAgeLock(true);
-			horse.setOwner(p);
-			horse.customName(Component.text("Pet Test GUI"));
-			horse.setCustomNameVisible(true);
-			
-			AbstractHorseInventory inv = horse.getInventory();
-			inv.setMaxStackSize(100);
-			inv.setSaddle(BeanItem.PLAYER_MENU.getItemStack());
-			
-			horse.getInventory().setItem(5, BeanItem.PLAYER_MENU.getItemStack());
-	        Bukkit.getScheduler().scheduleSyncDelayedTask(getPlugin(), () -> ((CraftPlayer)p).getHandle().connection.send(new ClientboundHorseScreenOpenPacket(2, 15, horse.getEntityId())), 2L);
 			return true;
 		}
 		
@@ -200,7 +160,7 @@ public class CommandOp extends BeanCommand {
 				StringBuilder sb = new StringBuilder();
 				sb.append(ChatColor.GRAY + "There's a total of " + ChatColor.GREEN + npcManager.getAllNPCs().size() + " NPCs" + ChatColor.GRAY + " currently loaded:\n");
 				for (NPC<?> npc : npcManager.getAllNPCs())
-					sb.append(ChatColor.DARK_GRAY + "" + npc.getEntityId() + ChatColor.GRAY + " - " + ChatColor.AQUA + npc.getEntity() .getBukkitEntity().getName() + "\n");
+					sb.append(ChatColor.DARK_GRAY + "" + npc.getEntityId() + ChatColor.GRAY + " - " + ChatColor.AQUA + npc.getEntity().getBukkitEntity().getName() + "\n");
 				sender.sendMessage(sb.toString());
 			}
 			else if ("setskin".equals(subcmd)) {
@@ -289,6 +249,12 @@ public class CommandOp extends BeanCommand {
 				sender.sendMessage(PlayerProfile.from(t).getComponentName().append(Component.text("\u00a77's Containers have been updated.")));
 			} else if ("customitems".equals(cmdStr)) {
 				new BeanGuiBeanItems(p).openInventory();
+			} else if ("moltentouch".equals(cmdStr)) {
+				ItemStack i = p.getEquipment().getItemInMainHand();
+				if (i.getType() != Material.AIR) {
+					i.addUnsafeEnchantment(BeanEnchantment.MOLTEN_TOUCH, 1);
+					BeanItem.formatItem(i);
+				}
 			} else if ("guiprofile".equals(cmdStr)) {
 				if (args.length == 1) {
 					profile.profileOverride = profile.getUniqueId();

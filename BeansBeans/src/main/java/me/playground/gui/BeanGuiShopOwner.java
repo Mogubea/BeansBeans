@@ -125,7 +125,7 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 		case 19: // Set the SELL PRICE
 			p.closeInventory();
 			
-			SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList(Component.empty(), Component.text("^^^^^^^^^^"), Component.text("\u00a7a\u00a7lSell Price"), Component.text("\u00a7afor your Shop")), Material.WARPED_WALL_SIGN)
+			SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList("","^^^^^^^^^^", "\u00a7a\u00a7lSell Price", "\u00a7afor your Shop"), Material.WARPED_WALL_SIGN)
             .reopenIfFail(true)
             .response((player, strings) -> {
                 try {
@@ -157,7 +157,7 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 		case 25: // Set the BUY PRICE
 			p.closeInventory();
 			
-			SignMenuFactory.Menu menuu = plugin.getSignMenuFactory().newMenu(Arrays.asList(Component.empty(), Component.text("^^^^^^^^^^"), Component.text("\u00a7c\u00a7lBuy Price"), Component.text("\u00a7cfor your Shop")), Material.CRIMSON_WALL_SIGN)
+			SignMenuFactory.Menu menuu = plugin.getSignMenuFactory().newMenu(Arrays.asList("","^^^^^^^^^^", "\u00a7c\u00a7lBuy Price", "\u00a7cfor your Shop"), Material.CRIMSON_WALL_SIGN)
             .reopenIfFail(true)
             .response((player, strings) -> {
                 try {
@@ -203,7 +203,7 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 				} else {
 					p.closeInventory();
 					
-					SignMenuFactory.Menu menuuu = plugin.getSignMenuFactory().newMenu(Arrays.asList(Component.empty(), Component.text("^^^^^^^^^^"), Component.text("\u00a7e\u00a7lDeposit Funds"), Component.text("\u00a7eto your Shop")), Material.JUNGLE_WALL_SIGN)
+					SignMenuFactory.Menu menuuu = plugin.getSignMenuFactory().newMenu(Arrays.asList("","^^^^^^^^^^", "\u00a7e\u00a7lDeposit Funds", "\u00a7eto your Shop"), Material.JUNGLE_WALL_SIGN)
 		            .reopenIfFail(true)
 		            .response((player, strings) -> {
 		                try {
@@ -236,7 +236,7 @@ public class BeanGuiShopOwner extends BeanGuiShop {
 				} else {
 					p.closeInventory();
 					
-					SignMenuFactory.Menu menuuu = plugin.getSignMenuFactory().newMenu(Arrays.asList(Component.empty(), Component.text("^^^^^^^^^^"), Component.text("\u00a7e\u00a7lWithdraw Funds"), Component.text("\u00a7efrom your Shop")), Material.JUNGLE_WALL_SIGN)
+					SignMenuFactory.Menu menuuu = plugin.getSignMenuFactory().newMenu(Arrays.asList("","^^^^^^^^^^", "\u00a7e\u00a7lWithdraw Funds", "\u00a7efrom your Shop"), Material.JUNGLE_WALL_SIGN)
 		            .reopenIfFail(true)
 		            .response((player, strings) -> {
 		                try {

@@ -2,32 +2,33 @@ package me.playground.playerprofile.stats;
 
 import java.util.HashMap;
 
+import javax.annotation.Nonnull;
+
 import me.playground.playerprofile.PlayerProfile;
-import org.jetbrains.annotations.NotNull;
 
 public class PlayerStats {
 	
 	final private PlayerProfile profile;
-	final private HashMap<StatType, HashMap<String, DirtyInteger>> stats = new HashMap<>();
+	final private HashMap<StatType, HashMap<String, DirtyInteger>> stats = new HashMap<StatType, HashMap<String, DirtyInteger>>();
 	
-	public PlayerStats(@NotNull PlayerProfile profile) {
+	public PlayerStats(@Nonnull PlayerProfile profile) {
 		this.profile = profile;
 		final StatType[] types = StatType.values();
 		for (StatType type : types)
-			stats.put(type, new HashMap<>());
+			stats.put(type, new HashMap<String, DirtyInteger>());
 	}
 	
-	public int getStat(@NotNull StatType type, @NotNull String name) {
+	public int getStat(@Nonnull StatType type, @Nonnull String name) {
 		if (!stats.get(type).containsKey(name)) 
 			return 0;
 		return stats.get(type).get(name).getValue();
 	}
 	
-	public void setStat(@NotNull StatType type, @NotNull String name, int value) {
+	public void setStat(@Nonnull StatType type, @Nonnull String name, int value) {
 		setStat(type, name, value, true);
 	}
 	
-	public void setStat(@NotNull StatType type, @NotNull String name, int value, boolean dirty) {
+	public void setStat(@Nonnull StatType type, @Nonnull String name, int value, boolean dirty) {
 		HashMap<String, DirtyInteger> ack = stats.get(type);
 		
 		boolean put = !ack.containsKey(name);
@@ -40,7 +41,8 @@ public class PlayerStats {
 	 * Adds the desired amount to the stat.
 	 * @return the new value
 	 */
-	public int addToStat(@NotNull StatType type, @NotNull String name, int add, boolean pokeAFK) {
+	@Nonnull 
+	public int addToStat(@Nonnull StatType type, @Nonnull String name, int add, boolean pokeAFK) {
 		if (pokeAFK)
 			profile.pokeAFK();
 		return addToStat(type, name, add);
@@ -50,7 +52,8 @@ public class PlayerStats {
 	 * Adds the desired amount to the stat.
 	 * @return the new value
 	 */
-	public int addToStat(@NotNull StatType type, @NotNull String name, int add) {
+	@Nonnull 
+	public int addToStat(@Nonnull StatType type, @Nonnull String name, int add) {
 		HashMap<String, DirtyInteger> ack = stats.get(type);
 		
 		boolean put = !ack.containsKey(name);
@@ -59,13 +62,13 @@ public class PlayerStats {
 			ack.put(name, di);
 		return di.getValue();
 	}
-
-	@NotNull
+	
+	@Nonnull
 	public HashMap<StatType, HashMap<String, DirtyInteger>> getMap() {
 		return stats;
 	}
-
-	@NotNull
+	
+	@Nonnull
 	public PlayerProfile getProfile() {
 		return profile;
 	}

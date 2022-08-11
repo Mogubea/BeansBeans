@@ -1,5 +1,6 @@
 package me.playground.listeners;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Random;
 
 import org.bukkit.Location;
@@ -7,11 +8,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Listener;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.PacketContainer;
+
 import me.playground.main.IPluginRef;
 import me.playground.main.Main;
 import me.playground.regions.Region;
 import me.playground.regions.flags.Flag;
-import org.jetbrains.annotations.NotNull;
 
 public abstract class EventListener implements Listener, IPluginRef {
 	
@@ -24,17 +28,28 @@ public abstract class EventListener implements Listener, IPluginRef {
 	}
 	
 	@Override
-	@NotNull
 	public Main getPlugin() {
 		return plugin;
 	}
 	
 	/**
-	 * Helper for getting the highest priority region at the specified location.
+	 * Get the highest priority region at the specified location.
 	 */
-	@NotNull
 	public Region getRegionAt(Location loc) {
 		return plugin.regionManager().getRegion(loc);
+	}
+	
+	/**
+	 * Swing the players arm.
+	 */
+	protected final void doArmSwing(Player p) {
+		try {
+			PacketContainer arm = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.ANIMATION);
+            arm.getEntityModifier(p.getWorld()).write(0, p);
+            ProtocolLibrary.getProtocolManager().sendServerPacket(p, arm);
+		} catch (InvocationTargetException e1) {
+			e1.printStackTrace();
+		}
 	}
 	
 	/**
@@ -46,9 +61,9 @@ public abstract class EventListener implements Listener, IPluginRef {
 	}
 	
 	/**
-	 * Check if the player has this {@link Flag} permission in the provided {@link Region}.
+	 * Check if the player has this {@link Flag} permission in the provided {@link Region}. Throws a {@link RegionPermissionException} 
 	 * and cancels the {@link Cancellable} Event if the player does not have permission.
-	 * @throws RegionPermissionException if no permission
+	 * @throws {@link RegionPermissionException} if no permission
 	 * @return whether the player has the flag permission
 	 */
 	protected final boolean enactRegionPermission(Region r, Cancellable e, Player p, Flag<?> flag, String reason) {
@@ -58,14 +73,14 @@ public abstract class EventListener implements Listener, IPluginRef {
 	/**
 	 * Similar to {@link #enactRegionPermission(Region, Cancellable, Player, Flag, String)} except we already have the permission provided as 
 	 * the first argument. Throws a {@link RegionPermissionException} and cancels the {@link Cancellable} Event if the player does not have permission.
-	 * @throws RegionPermissionException if no permission
+	 * @throws {@link RegionPermissionException} if no permission
 	 * @return whether the player has the flag permission
 	 */
-	protected boolean enactRegionPermission(boolean hasPermission, Cancellable e, Player p, String reason) {
+	protected final boolean enactRegionPermission(boolean hasPermission, Cancellable e, Player p, String reason) {
 		return enactRegionPermission(hasPermission, e, p, reason, true);
 	}
 	
-	private boolean enactRegionPermission(boolean hasPermission, Cancellable e, Player p, String reason, boolean throwException) {
+	private final boolean enactRegionPermission(boolean hasPermission, Cancellable e, Player p, String reason, boolean throwException) {
 		try {
 			if (!hasPermission) {
 				if (throwException)
@@ -78,8 +93,8 @@ public abstract class EventListener implements Listener, IPluginRef {
 		}
 	}
 	
-	private boolean enactRegionPermission(Region r, Cancellable e, Player p, Flag<?> flag, String reason, boolean throwException) {
-		return enactRegionPermission(r.doesPlayerBypass(p, flag), e, p, reason, throwException);
+	private final boolean enactRegionPermission(Region r, Cancellable e, Player p, Flag<?> flag, String reason, boolean throwException) {
+		return enactRegionPermission(r.can(p, flag), e, p, reason, throwException);
 	}
 	
 }

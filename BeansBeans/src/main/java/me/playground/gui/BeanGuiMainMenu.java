@@ -48,13 +48,13 @@ public class BeanGuiMainMenu extends BeanGui {
 	private static final ItemStack icon_region = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGYxN2E2YTlhZmFhN2IwN2U0MjE4ZmU1NTVmMjgyM2IwMjg0Y2Q2OWI0OWI2OWI5N2ZhZTY3ZWIyOTc2M2IifX19"), Component.text("Region Menu").color(BeanColor.REGION), "\u00a77\u00a7oWIP");
 	private static final ItemStack icon_heirlooms = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjE3NmE0YzQ0NmI1NGQ1MGFlM2U1YmE4ZmU2ZjQxMzE3Njg5ZmY1YTc1MjMwMjgwOTdmNjExOTUzZDFkMTI5NyJ9fX0="), Component.text("Bag o' Heirlooms").color(BeanColor.HEIRLOOM), "\u00a77\u00a7oWIP");
 	private static final ItemStack icon_bestiary = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("Bestiary", BeanColor.BESTIARY), "\u00a77\u00a7oWIP", "", "\u00a78» Disabled.");
-//	private static final ItemStack icon_support = newItem(new ItemStack(Material.CAKE), Component.text("Support Us!", BeanColor.CRYSTALS), "\u00a77Ways of supporting the server!", "", "\u00a76» \u00a7eClick to open!");
+	private static final ItemStack icon_support = newItem(new ItemStack(Material.CAKE), Component.text("Support Us!", BeanColor.SAPPHIRE), "\u00a77Ways of supporting the server!", "", "\u00a76» \u00a7eClick to open!");
 	
 	private static final ItemStack icon_resetOverride = newItem(new ItemStack(Material.BARRIER), "\u00a7cReset GUI Override", "\u00a77Go back to normal!");
 	
-	private static final ItemStack icon_echest = newItem(new ItemStack(Material.ENDER_CHEST), Component.text("Ender Chest", BeanColor.CRYSTALS), "\u00a77ye", "", "\u00a76» \u00a7eClick to open!");
-	private static final ItemStack icon_crafting = newItem(new ItemStack(Material.CRAFTING_TABLE), Component.text("Virtual Workbench", BeanColor.CRYSTALS), "\u00a77ye", "", "\u00a76» \u00a7eClick to craft!");
-	private static final ItemStack icon_anvil = newItem(new ItemStack(Material.ANVIL), Component.text("Virtual Anvil", BeanColor.CRYSTALS), "\u00a77ye", "", "\u00a76» \u00a7eClick to smith!");
+	private static final ItemStack icon_echest = newItem(new ItemStack(Material.ENDER_CHEST), Component.text("Ender Chest", BeanColor.SAPPHIRE), "\u00a77ye", "", "\u00a76» \u00a7eClick to open!");
+	private static final ItemStack icon_crafting = newItem(new ItemStack(Material.CRAFTING_TABLE), Component.text("Virtual Workbench", BeanColor.SAPPHIRE), "\u00a77ye", "", "\u00a76» \u00a7eClick to craft!");
+	private static final ItemStack icon_anvil = newItem(new ItemStack(Material.ANVIL), Component.text("Virtual Anvil", BeanColor.SAPPHIRE), "\u00a77ye", "", "\u00a76» \u00a7eClick to smith!");
 	private static final ItemStack icon_deliveries = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2RiY2E0YjY5ZWFmOGRjYjdhYzM3MjgyMjhkZThhNjQ0NDA3ODcwMTMzNDJkZGFhYmMxYjAwZWViOGVlYzFlMiJ9fX0="), Component.text("\u00a76Deliveries"));
 	
 	public BeanGuiMainMenu(Player p) {
@@ -80,7 +80,7 @@ public class BeanGuiMainMenu extends BeanGui {
 		ItemStack[] contents = presetInv.clone();
 		
 		contents[0] = icon_news;
-		//contents[1] = icon_support;
+		contents[1] = icon_support;
 		
 		if (pp.isRank(Rank.MODERATOR)) // pp since it doesn't care if overriding or not
 			contents[2] = newItem(new ItemStack(Material.ANVIL), Component.text("Moderation", BeanColor.STAFF));
@@ -201,9 +201,9 @@ public class BeanGuiMainMenu extends BeanGui {
 		case 0: // News Button
 			new BeanGuiNews(p).openInventory();
 			break;
-		//case 1: // Support Us!
-		//	new BeanGuiSupportUs(p).openInventory();
-		//	return;
+		case 1: // Support Us!
+			new BeanGuiSupportUs(p).openInventory();
+			return;
 		case 2: // Staff Menu
 			if (pp.isRank(Rank.MODERATOR))
 				new BeanGuiStaff(p).openInventory();

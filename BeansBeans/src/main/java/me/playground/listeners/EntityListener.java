@@ -3,30 +3,55 @@ package me.playground.listeners;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.playground.items.tracking.DemanifestationReason;
-import me.playground.items.tracking.ManifestationReason;
-import me.playground.playerprofile.ProfileStore;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.attribute.AttributeModifier.Operation;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
+import org.bukkit.entity.AbstractHorse;
+import org.bukkit.entity.Animals;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Cat;
+import org.bukkit.entity.Creeper;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
+import org.bukkit.entity.Parrot;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Tameable;
+import org.bukkit.entity.Villager;
+import org.bukkit.entity.Wolf;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.EntityBlockFormEvent;
-import org.bukkit.event.entity.*;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityInteractEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.ItemSpawnEvent;
+import org.bukkit.event.entity.SpawnerSpawnEvent;
+import org.bukkit.event.entity.VillagerAcquireTradeEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantRecipe;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import io.papermc.paper.event.player.PlayerTradeEvent;
+import me.playground.enchants.EnchantmentInfo;
 import me.playground.items.BeanItem;
 import me.playground.items.ItemRarity;
 import me.playground.loot.LootRetriever;
@@ -41,43 +66,34 @@ import me.playground.regions.flags.MemberLevel;
 import me.playground.skills.Skill;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
-import org.bukkit.potion.PotionData;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 
 public class EntityListener extends EventListener {
-
-	private final NamespacedKey KEY_ENTITY_LEVEL;
-	private final NamespacedKey KEY_PIGLIN_BARTERER;
+	
 	private final ArrayList<ArmorStand> damageIndicators = new ArrayList<ArmorStand>(); // unsure if needed.
 	
 	public EntityListener(Main plugin) {
 		super(plugin);
-
-		KEY_ENTITY_LEVEL = plugin.getKey("ENTITY_LEVEL");
-		KEY_PIGLIN_BARTERER = plugin.getKey("PIGLIN_BARTERER");
+		
 		spawnerCountKey = plugin.getKey("spawnerspawns");
 	}
 	
-	private void spawnDamageIndicator(Location loc, int dmg) {
-		final ArmorStand di = (ArmorStand) loc.getWorld().spawnEntity(loc, EntityType.ARMOR_STAND, SpawnReason.CUSTOM, (armorStand) -> {
-			ArmorStand stand = (ArmorStand) armorStand;
-			stand.setInvisible(true);
-			stand.setInvulnerable(true);
-			stand.setCanTick(false);
-			stand.setMarker(true);
-			stand.setCollidable(false);
-			stand.customName(Component.text(dmg, TextColor.color(16746649)));
-			stand.setCustomNameVisible(true);
-			stand.setPersistent(false);
-		});
+	private void spawnDamageIndicator(Location loc, int dmg, int col, int ticks) {
+		final ArmorStand di = (ArmorStand) loc.getWorld().spawnEntity(new Location(loc.getWorld(), 0, -10, 0), EntityType.ARMOR_STAND);
+		di.setInvisible(true);
+		di.setMarker(true);
+		di.setCollidable(false);
+		di.customName(Component.text(dmg, TextColor.color(col)));
+		di.setCustomNameVisible(true);
+		di.teleport(loc);
 		
 		damageIndicators.add(di);
-		Bukkit.getScheduler().scheduleSyncDelayedTask(getPlugin(), () -> {
-			damageIndicators.remove(di);
-			di.remove();
-		}, 14);
+		Bukkit.getScheduler().scheduleSyncDelayedTask(getPlugin(), new Runnable() {
+			@Override
+			public void run() {
+				damageIndicators.remove(di);
+				di.remove();
+			}
+		}, ticks);
 	}
 	
 	public void clearDamageIndicators() {
@@ -86,7 +102,7 @@ public class EntityListener extends EventListener {
 		damageIndicators.clear();
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.LOW)
 	public void onStupidDamage(EntityDamageByEntityEvent e) {
 		// stupid entities
 		if (isDumbEntity(e.getEntityType())) {
@@ -94,7 +110,8 @@ public class EntityListener extends EventListener {
 			if (e.getDamager() instanceof Player) {
 				enactRegionPermission(r, e, (Player)e.getDamager(), Flags.BUILD_ACCESS, "break");
 			} else if (e.getDamager() instanceof Projectile) {
-				if (((Projectile) e.getDamager()).getShooter() instanceof Player p) {
+				if (((Projectile)e.getDamager()).getShooter() instanceof Player) {
+					Player p = ((Player)((Projectile)e.getDamager()).getShooter());
 					enactRegionPermission(r, e, p, Flags.BUILD_ACCESS, "break");
 				} else {
 					e.setCancelled(true);
@@ -104,26 +121,26 @@ public class EntityListener extends EventListener {
 			}
 		}
 	}
-
-	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-	public void onEntityDamageRegionChecks(EntityDamageByEntityEvent e) {
+	
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onEntityDamage(EntityDamageByEntityEvent e) {
 		final Location loc1 = e.getDamager().getLocation();
 		final Location loc2 = e.getEntity().getLocation();
 		final Region r1 = getRegionAt(loc1);
 		final Region r2 = getRegionAt(loc2);
-
+		
 		if (e.getEntity() instanceof Player)
 			PlayerProfile.from((Player)e.getEntity()).getHeirlooms().doDamageTakenByEntityEvent(e);
 		if (e.getDamager() instanceof Player)
 			PlayerProfile.from((Player)e.getDamager()).getHeirlooms().doMeleeDamageEvent(e);
-
+		
 		// Against a Player
 		if (e.getEntity() instanceof Player && (e.getDamager() instanceof LivingEntity || e.getDamager() instanceof Projectile)) {
 			boolean fromPlayer = e.getDamager() instanceof Player;
 			// Projectile from Player
 			if ((e.getDamager() instanceof Projectile && ((Projectile)e.getDamager()).getShooter() instanceof Player))
 				fromPlayer = true;
-
+			
 			if (fromPlayer) {
 				if (!(r1.getEffectiveFlag(Flags.PVP) && r2.getEffectiveFlag(Flags.PVP))) // XXX: PVP
 					e.setCancelled(true);
@@ -132,22 +149,23 @@ public class EntityListener extends EventListener {
 				if (e.getDamage() <= 0)
 					e.setCancelled(true);
 			}
-			// Against regular entities
+		// Against regular entities
 		} else if (e.getEntity() instanceof LivingEntity) {
 			Player p = (e.getDamager() instanceof Player) ? (Player)e.getDamager() : null;
 			if ((e.getDamager() instanceof Projectile && ((Projectile)e.getDamager()).getShooter() instanceof Player))
 				p = (Player) ((Projectile)e.getDamager()).getShooter();
-
+			
+			boolean bother = true;
+			
 			// Check for Animal/Villager Protection
-			if ((e.getEntity() instanceof Villager || e.getEntity() instanceof Animals || (e.getEntity() instanceof Fish fish && fish.isFromBucket())) && r2.getEffectiveFlag(Flags.PROTECT_ANIMALS))
-				if (p == null || !r2.getMember(p).higherThan(MemberLevel.VISITOR))
+			if ((e.getEntity() instanceof Villager || e.getEntity() instanceof Animals) && r2.getEffectiveFlag(Flags.PROTECT_ANIMALS)) {
+				if (p == null || (p != null && !(r2.getMember(p).higherThan(MemberLevel.VISITOR)))) {
 					e.setDamage(0);
-
-			// Check specifically for Villager Protection
-			if (e.getEntity() instanceof Villager && !checkRegionPermission(r2, e, p, Flags.VILLAGER_ACCESS))
-				e.setDamage(0);
-
-			if (e.getDamage() > 0) {
+					bother = false;
+				}
+			}
+			
+			if (bother) {
 				e.setDamage(e.getDamage() * r2.getEffectiveFlag(Flags.MOB_DAMAGE_TO));
 				if (e.getDamage() > 0) {
 					// Prevent tameable entities from dying to anyone except the Owner
@@ -159,18 +177,12 @@ public class EntityListener extends EventListener {
 					}
 				}
 			}
-
 			if (e.getDamage() <= 0)
 				e.setCancelled(true);
-		}
-	}
-	
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onEntityDamageFinal(EntityDamageByEntityEvent e) {
-		if (!(e.getDamager() instanceof Player p)) return;
-		if (!isDumbEntity(e.getEntityType())) {
-			PlayerProfile.from(p).getSkills().doSkillEvents(e, Skill.COMBAT);
-			spawnDamageIndicator(e.getEntity().getLocation().add(-0.5 + getPlugin().getRandom().nextDouble(), e.getEntity().getHeight()-(getPlugin().getRandom().nextDouble()/2), -0.5 + getPlugin().getRandom().nextDouble()), (int)e.getDamage());
+			else if (!isDumbEntity(e.getEntityType())) {
+				PlayerProfile.from(p).getSkills().doSkillEvents(e, Skill.COMBAT);
+				spawnDamageIndicator(loc2.add(-0.5 + getPlugin().getRandom().nextDouble(), e.getEntity().getHeight()-(getPlugin().getRandom().nextDouble()/2), -0.5 + getPlugin().getRandom().nextDouble()), (int)e.getDamage(), 0xff8899, 14);
+			}
 		}
 	}
 	
@@ -218,18 +230,12 @@ public class EntityListener extends EventListener {
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onEntityDamage(EntityDamageEvent e) {
-		if (e.getEntity() instanceof Item item) {
-			// Protect Dropped Items from being blown up
-			if (e.getCause() == DamageCause.BLOCK_EXPLOSION || e.getCause() == DamageCause.ENTITY_EXPLOSION) {
+		// Protect Dropped Items from being blown up
+		if (e.getCause() == DamageCause.BLOCK_EXPLOSION || e.getCause() == DamageCause.ENTITY_EXPLOSION)
+			if (e.getEntityType() == EntityType.DROPPED_ITEM)
 				e.setCancelled(true);
-				return;
-			}
-
-			// Log the destruction of the item
-			getPlugin().getItemTrackingManager().incrementDemanifestationCount(item.getItemStack(), DemanifestationReason.DESTROYED, item.getItemStack().getAmount());
-		}
 	}
-
+	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onEntityDeath(EntityDeathEvent e) {
 		// Don't interfere with Armour Stands
@@ -265,7 +271,7 @@ public class EntityListener extends EventListener {
 			p = e.getEntity().getKiller();
 			
 			if (isMonster)
-				if (e.getEntity().fromMobSpawner() || e.getEntity().getNearbyEntities(3, 7, 3).size() > 7)
+				if (e.getEntity().fromMobSpawner() || e.getEntity().getNearbyEntities(2, 7, 2).size() > 6)
 					nerfDrops = true;
 		} else if (chargedKill || skeletonKill) {
 			nerfDrops = false;
@@ -274,15 +280,18 @@ public class EntityListener extends EventListener {
 				if (((Monster)e.getEntity()).getTarget() instanceof Player)
 					p = (Player) ((Monster)e.getEntity()).getTarget();
 		}
-
-		PlayerProfile pp = p != null ? PlayerProfile.from(p) : null;
-		int looting = p != null ? p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS) : nerfDrops ? -1 : 0;
-		float luck = p != null ? pp.getLuck() : nerfDrops ? -10 : 0;
-
-		if (p != null) {
+		
+		if (nerfDrops) {
+			// Slight nerf to grinders that require no player interaction
+			// 50% chance to drop nothing, just drop vanilla stuff otherwise, nerf XP by 50% always.
+			if (getPlugin().getRandom().nextInt(2) == 0)
+				e.getDrops().clear();
+			e.setDroppedExp((int) ((float)e.getDroppedExp()/2F));
+		} else if (p != null) {
 			// Do the magic of the custom stuff for this server.
 			// Add to the player's statistics if it's a non grinded mob, add coin drops, apply the multipliers and drop the custom loot.
 			final Region region = getRegionAt(e.getEntity().getLocation());
+			PlayerProfile pp = PlayerProfile.from(p);
 			
 			// Stats
 			pp.getStats().addToStat(StatType.KILLS, e.getEntityType().name(), 1);
@@ -302,57 +311,40 @@ public class EntityListener extends EventListener {
 			// EXP Multiplier
 			if (e.getDroppedExp() > 0) // XXX: MOB_DROP_EXP_MULTIPLIER
 				e.setDroppedExp((int) ((float)e.getDroppedExp() * region.getEffectiveFlag(Flags.MOB_DROP_EXP)));
+			
+			// Custom Loot
+			if (lootTable != null) {
+				e.getDrops().clear();
+				e.getDrops().addAll(LootRetriever.from(lootTable, RetrieveMethod.INDIVIDUAL_CHANCE, p)
+						.looting(p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS))
+						.biome(e.getEntity().getLocation().getBlock().getBiome())
+						.burn(e.getEntity().getFireTicks() > 0)
+						.skeleton(skeletonKill)
+						.entity(e.getEntity())
+						.creeper(chargedKill)
+						.luck(pp.getLuck())
+						.getLoot());
+			}
 		}
-
-		// Remove 50% xp
-		if (nerfDrops) e.setDroppedExp((int) ((float)e.getDroppedExp()/2F));
-
-		// Custom Loot
-		if (lootTable != null) {
-			e.getDrops().clear();
-
-			// 50% chance to not drop anything
-			if (nerfDrops && rand.nextBoolean()) return;
-
-			e.getDrops().addAll(LootRetriever.from(lootTable, RetrieveMethod.INDIVIDUAL_CHANCE, p)
-					.looting(looting)
-					.biome(e.getEntity().getLocation().getBlock().getBiome())
-					.burn(e.getEntity().getFireTicks() > 0)
-					.skeleton(skeletonKill)
-					.entity(e.getEntity())
-					.creeper(chargedKill)
-					.luck(luck)
-					.getLoot());
-		}
+		// Vanilla Drops otherwise.
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onExplosion(EntityExplodeEvent e) {
-		boolean cancelBlockDamage;
+		boolean cancelBlockDamage = false;
 		final Region r = getRegionAt(e.getLocation());
-
-		cancelBlockDamage = switch (e.getEntityType()) {
-			case PRIMED_TNT, MINECART_TNT -> !r.getEffectiveFlag(Flags.TNT);
-			default -> !r.getEffectiveFlag(Flags.EXPLOSIONS);
-		};
+		
+		switch(e.getEntityType()) {
+		case PRIMED_TNT: case MINECART_TNT:
+			cancelBlockDamage = !r.getEffectiveFlag(Flags.TNT);
+			break;
+		default:
+			cancelBlockDamage = !r.getEffectiveFlag(Flags.EXPLOSIONS);
+			break;
+		}
 		
 		if (cancelBlockDamage)
 			e.blockList().clear();
-
-		// Poison Cloud from Creepers
-		if (e.getEntityType() == EntityType.CREEPER) {
-			int level = e.getEntity().getPersistentDataContainer().getOrDefault(KEY_ENTITY_LEVEL, PersistentDataType.SHORT, (short)1);
-			e.getLocation().getWorld().playSound(e.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 0.5F, 0.65F);
-			e.getLocation().getWorld().spawnEntity(e.getLocation(), EntityType.AREA_EFFECT_CLOUD, SpawnReason.CUSTOM, (entity) -> {
-				AreaEffectCloud cloud = (AreaEffectCloud) entity;
-				cloud.setBasePotionData(new PotionData(PotionType.POISON));
-				cloud.addCustomEffect(new PotionEffect(PotionEffectType.POISON, 130 + level * 20, 2 + (level/5)), true);
-				cloud.setDuration(100);
-				cloud.setRadius(2F);
-				cloud.setWaitTime(15);
-				cloud.setRadiusPerTick(0.04F);
-			});
-		}
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
@@ -367,90 +359,34 @@ public class EntityListener extends EventListener {
 			PlayerProfile pp = PlayerProfile.from(((Player)e.getEntity()));
 			if (!pp.canPickupItem(e.getItem()))
 				e.setCancelled(true);
-			else if (pp.getBeanGui() != null) 
-				pp.getBeanGui().onItemPickup(e);
-		} else if (e.getEntity() instanceof Monster) {
-			if (e.getEntity() instanceof Piglin piglin) { // Track piglin barterer
-				if (e.getItem().getThrower() != null) {
-					ProfileStore ps = ProfileStore.from(e.getItem().getThrower(), true);
-					if (ps == null) return;
-
-					piglin.getPersistentDataContainer().set(KEY_PIGLIN_BARTERER, PersistentDataType.INTEGER, ps.getId());
-				}
-			} else { // Cancel hostile item pickups for now.
-				e.setCancelled(true);
-			}
+		} else if (e.getEntity() instanceof Monster) { // Cancel hostile item pickups for now.
+			e.setCancelled(true);
 		}
 	}
-
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onItemDeath(ItemDespawnEvent e) {
-		getPlugin().getItemTrackingManager().incrementDemanifestationCount(e.getEntity().getItemStack(), DemanifestationReason.DESPAWNED, e.getEntity().getItemStack().getAmount());
-	}
-
-	@EventHandler
-	public void onPiglinBarter(PiglinBarterEvent e) {
-		if (e.getEntity().getPersistentDataContainer().has(KEY_PIGLIN_BARTERER)) {
-			int id = e.getEntity().getPersistentDataContainer().getOrDefault(KEY_PIGLIN_BARTERER, PersistentDataType.INTEGER, 0);
-			PlayerProfile pp = PlayerProfile.fromIfExists(id);
-			if (pp != null) { // TODO: Temporary value
-				pp.getSkills().addExperience(Skill.TRADING, 20);
-				pp.getStats().addToStat(StatType.TRADING, "piglinBarters", 1);
-			}
-
-			e.getEntity().getPersistentDataContainer().remove(KEY_PIGLIN_BARTERER);
-		}
-
-		getPlugin().getItemTrackingManager().incrementDemanifestationCount(e.getInput(), DemanifestationReason.BARTERING, e.getInput().getAmount());
-
-		for (ItemStack item : e.getOutcome())
-			getPlugin().getItemTrackingManager().incrementManifestationCount(item, ManifestationReason.BARTERING, item.getAmount());
-	}
-
+	
 	@EventHandler(priority = EventPriority.LOW)
-	public void onVillagerTrade(PlayerTradeEvent e) {
-		// TODO: Temporary value
-		PlayerProfile pp = PlayerProfile.from(e.getPlayer());
-		pp.getSkills().addExperience(Skill.TRADING, 20);
-		pp.getStats().addToStat(StatType.TRADING, "villagerTrades", 1);
-
-		getPlugin().getItemTrackingManager().incrementManifestationCount(e.getTrade().getResult(), ManifestationReason.TRADING, e.getTrade().getResult().getAmount());
-
-		for (ItemStack cost : e.getTrade().getIngredients()) {
-			if (cost == null || cost.getType() == Material.AIR) continue;
-			getPlugin().getItemTrackingManager().incrementDemanifestationCount(cost, DemanifestationReason.TRADING, cost.getAmount());
-		}
+	public void onVillagerTrader(PlayerTradeEvent e) {
+		// TODO: /afsgndmdg
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onVillagerAcquireTrade(VillagerAcquireTradeEvent e) {
 		MerchantRecipe recipe = e.getRecipe();
 		List<ItemStack> ingredients = recipe.getIngredients();
-
-		// Nerf positive and negative effects to villager prices
-		recipe.setPriceMultiplier(recipe.getPriceMultiplier() / 3);
 		
-		// Make enchants rarer
+		// Nerf positive and negative effects to villager prices
+		recipe.setPriceMultiplier(recipe.getPriceMultiplier() / 2);
+		
+		// Make enchants rarer TODO: make more expensive
 		if (recipe.getResult().getType() == Material.ENCHANTED_BOOK) {
-			getPlugin().getEnchantmentManager().replaceEnchantments(recipe.getResult(), true); // TODO: TEMPORARY
-			ItemRarity rarity = BeanItem.getItemRarity(recipe.getResult());
+			ItemRarity rarity = EnchantmentInfo.rarityOf(((EnchantmentStorageMeta)recipe.getResult().getItemMeta()).getStoredEnchants());
 			int max = 5;
-
-			// Prevent any epic
-			if (rarity.is(ItemRarity.EPIC)) {
-				e.setCancelled(true);
-				return;
-			}
-
-			switch (rarity) {
-//			case LEGENDARY: max = 1; ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 55 + getPlugin().getRandom().nextInt(5))); ingredients.set(1, new ItemStack(Material.NETHER_STAR, 3)); break;
-//			case EPIC: max = 1; ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 23 + getPlugin().getRandom().nextInt(8))); break;
-				case RARE -> {
-					max = 3;
-					ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 24 + getPlugin().getRandom().nextInt(8)));
-				}
-				case UNCOMMON -> ingredients.set(0, new ItemStack(Material.EMERALD, 54 + getPlugin().getRandom().nextInt(10)));
-				default -> ingredients.set(0, new ItemStack(Material.EMERALD, 40 + getPlugin().getRandom().nextInt(7)));
+			switch(rarity) {
+			case LEGENDARY: max = 1; ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 55 + getPlugin().getRandom().nextInt(5))); ingredients.set(1, new ItemStack(Material.NETHER_STAR, 3)); break;
+			case EPIC: max = 1; ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 23 + getPlugin().getRandom().nextInt(8))); break;
+			case RARE: max = 2; ingredients.set(0, new ItemStack(Material.EMERALD_BLOCK, 7 + getPlugin().getRandom().nextInt(8))); break;
+			case UNCOMMON: max = 4; ingredients.set(0, new ItemStack(Material.EMERALD, 20 + getPlugin().getRandom().nextInt(10))); break;
+			default: max = 5; ingredients.set(0, new ItemStack(Material.EMERALD, 8 + getPlugin().getRandom().nextInt(7))); break;
 			}
 			recipe.setPriceMultiplier(0.01F); // Even harder nerf, this is mostly for the positive discounts which are INSANE in Vanilla.
 			recipe.setMaxUses(max);
@@ -467,12 +403,7 @@ public class EntityListener extends EventListener {
 		
 		e.setRecipe(newRecipe);
 	}
-
-	@EventHandler(priority = EventPriority.LOW)
-	public void onVillagerCareerChange(VillagerCareerChangeEvent e) {
-		e.getEntity().setVillagerExperience(2);
-	}
-
+	
 	/*@EventHandler(priority = EventPriority.LOW)
 	public void onVillagerChangeCareer(VillagerCareerChangeEvent e) {
 		List<MerchantRecipe> recipes = e.getEntity().getRecipes();
@@ -499,41 +430,24 @@ public class EntityListener extends EventListener {
 	
 	private final NamespacedKey spawnerCountKey;
 	
-	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.LOW)
 	public void onSpawnerSpawn(SpawnerSpawnEvent e) {
-		// Cancel spawner spawns if the spawner is powered.
-		if (e.getSpawner().getBlock().isBlockPowered()) {
-			e.setCancelled(true);
-			return;
-		}
-
+		e.setCancelled(e.getSpawner().getBlock().isBlockPowered());
+		if (e.isCancelled()) return;
+		
 		int count = e.getSpawner().getPersistentDataContainer().getOrDefault(spawnerCountKey, PersistentDataType.INTEGER, 0);
 		e.getSpawner().getPersistentDataContainer().set(spawnerCountKey, PersistentDataType.INTEGER, count + 1);
 		e.getSpawner().update();
-		e.getEntity().setPortalCooldown(Integer.MAX_VALUE); // Good enough
 	}
-
-	/*final int chunkEntityLimit = 300;
-	TODO: determine practicality
-	@EventHandler(priority = EventPriority.LOWEST)
-	public void preEntitySpawn(CreatureSpawnEvent e) {
-		// Cancel living entity spawning if the chunk limit is hit.
-		int amountCurrently = e.getEntity().getChunk().getEntities().length;
-		if (amountCurrently >= chunkEntityLimit)
-			e.setCancelled(true);
-	}*/
-
+	
 	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
 	public void onEntitySpawn(CreatureSpawnEvent e) {
-		// Disable ticking for player placed armor stands
-		if (e.getEntity().getType() == EntityType.ARMOR_STAND && e.getSpawnReason() == SpawnReason.DEFAULT) {
-			ArmorStand stand = (ArmorStand) e.getEntity();
-			stand.setCanTick(false);
-//			stand.setArms(true);
-			return;
+		// XXX: 2x Wither Max Health
+		if (e.getEntityType() == EntityType.WITHER) {
+			e.getEntity().getAttribute(Attribute.GENERIC_MAX_HEALTH).addModifier(new AttributeModifier("generic.max_health", 1, Operation.MULTIPLY_SCALAR_1));
+			e.getEntity().setHealth(e.getEntity().getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
 		}
-
-		// Check region flags for natural mobs
+		
 		if (e.getSpawnReason() == SpawnReason.NATURAL) {
 			final Region r = getRegionAt(e.getLocation());
 			if (e.getEntity() instanceof Monster)
@@ -542,56 +456,7 @@ public class EntityListener extends EventListener {
 				e.setCancelled(!r.getEffectiveFlag(Flags.MOB_PASSIVE_SPAWNS));
 		}
 	}
-
-	// TODO: make this more elaborate, this is merely a test
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onEntitySpawn2(CreatureSpawnEvent e) {
-		if (e.getSpawnReason() == SpawnReason.NATURAL) {
-			LivingEntity monster = e.getEntity();
-			short level = (short) (1 + rand.nextInt(5));
-
-			switch (e.getEntityType()) {
-				// Remove armour equipment for now
-				case SKELETON, ZOMBIE -> {
-					ItemStack hand = monster.getEquipment().getItemInMainHand();
-					monster.getEquipment().clear();
-
-					monster.getEquipment().setItemInMainHand(hand);
-				}
-				// Increase the movement speed of Spiders and Creepers
-				case SPIDER, CAVE_SPIDER, CREEPER -> {
-					if (level > 1) {
-						AttributeInstance attribute = monster.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
-						attribute.addModifier(new AttributeModifier(Attribute.GENERIC_MOVEMENT_SPEED.translationKey(), (level-1) * 0.002, Operation.ADD_NUMBER));
-					}
-				}
-				case WITHER_SKELETON, SILVERFISH -> { }
-				case WITHER -> {
-					AttributeInstance attribute = monster.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-					attribute.addModifier(new AttributeModifier(Attribute.GENERIC_MAX_HEALTH.translationKey(), 1, Operation.MULTIPLY_SCALAR_1));
-					return;
-				}
-				default -> { return; }
-			}
-
-			monster.getPersistentDataContainer().set(KEY_ENTITY_LEVEL, PersistentDataType.SHORT, level);
-
-			// Increase the HP of mobs above level 1
-			if (level > 1) {
-				AttributeInstance attribute = monster.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-				attribute.addModifier(new AttributeModifier(Attribute.GENERIC_MAX_HEALTH.translationKey(), level-1 * 0.1, Operation.MULTIPLY_SCALAR_1));
-			}
-
-			// Increase the armour of mobs above level 3
-			if (level > 3) {
-				AttributeInstance attribute = monster.getAttribute(Attribute.GENERIC_ARMOR);
-				if (attribute == null)
-					monster.registerAttribute(Attribute.GENERIC_ARMOR);
-				attribute.addModifier(new AttributeModifier(Attribute.GENERIC_ARMOR.translationKey(), 2 + rand.nextInt(level), Operation.ADD_NUMBER));
-			}
-		}
-	}
-
+	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onEntityTrample(EntityInteractEvent e) {
 		if (e.getBlock().getType() == Material.FARMLAND)

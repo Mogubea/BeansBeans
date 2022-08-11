@@ -3,7 +3,6 @@ package me.playground.data;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import me.playground.worlds.WorldManager;
 import org.bukkit.World;
 
 import me.playground.main.Main;
@@ -51,7 +50,6 @@ public abstract class PrivateDatasource {
 	/**
 	 * Save all of the relevant objects this datasource is managing the data of.
 	 */
-	public abstract void saveAll() throws Exception;
-
+	public abstract void saveAll();
 	
 }

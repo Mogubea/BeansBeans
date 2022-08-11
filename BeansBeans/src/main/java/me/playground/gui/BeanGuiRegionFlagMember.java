@@ -97,20 +97,20 @@ public class BeanGuiRegionFlagMember extends BeanGuiRegion {
 		ItemStack item = new ItemStack(Material.CHAINMAIL_HELMET);
 		ItemMeta meta = item.getItemMeta();
 		meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
-		ArrayList<Component> lore = new ArrayList<>();
+		ArrayList<Component> lore = new ArrayList<Component>();
 		
-		final boolean isInherited = getRegion().getFlag(flag, true) == null;
+		final boolean isInherited = getRegion().getFlag(flag) == null;
 		meta.displayName(Component.text(flag.getDisplayName() + (isInherited ? "\u00a77 (default)" : "")).colorIfAbsent(BeanColor.REGION).decoration(TextDecoration.ITALIC, false));
 		
-		MemberLevel level = getRegion().getEffectiveFlag(flag);
-		switch (level) {
-			case MASTER -> item.setType(Material.BARRIER);
-			case OWNER -> item.setType(Material.NETHERITE_HELMET);
-			case OFFICER -> item.setType(Material.DIAMOND_HELMET);
-			case TRUSTED -> item.setType(Material.GOLDEN_HELMET);
-			case MEMBER -> item.setType(Material.IRON_HELMET);
-			case VISITOR -> item.setType(Material.LEATHER_HELMET);
-			case NONE -> item.setType(Material.TURTLE_HELMET);
+		MemberLevel level = getRegion().getEffectiveFlag((FlagMember)flag);
+		switch(level) {
+		case MASTER: item.setType(Material.BARRIER); break;
+		case OWNER: item.setType(Material.NETHERITE_HELMET); break;
+		case OFFICER: item.setType(Material.DIAMOND_HELMET); break;
+		case TRUSTED: item.setType(Material.GOLDEN_HELMET); break;
+		case MEMBER: item.setType(Material.IRON_HELMET); break;
+		case VISITOR: item.setType(Material.LEATHER_HELMET); break;
+		case NONE: item.setType(Material.TURTLE_HELMET); break;
 		}
 		lore.add(Component.text("Level: \u00a7f" + level.toString()).colorIfAbsent(BeanColor.REGION).decoration(TextDecoration.ITALIC, false));
 		

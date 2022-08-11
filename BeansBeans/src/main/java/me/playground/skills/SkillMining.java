@@ -1,10 +1,5 @@
 package me.playground.skills;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import me.playground.items.lore.Lore;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
@@ -16,22 +11,10 @@ import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.event.block.BlockEvent;
 import org.bukkit.inventory.ItemStack;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
-
 public class SkillMining extends Skill {
 	
 	protected SkillMining() {
-		super("Mining", 0x77cacf, BarColor.BLUE, '3', "\u26cf", Material.DIAMOND_PICKAXE, Material.CYAN_DYE,
-				"Earn Mining XP by excavating worlds of their many valuable ores and minerals!");
-		addPerk(0, 2, SkillPerk.MINING_TEST13); // S Tier
-		addPerk(1, 1, SkillPerk.MINING_TEST10).addPerk(1, 2, SkillPerk.MINING_TEST11).addPerk(1, 3, SkillPerk.MINING_TEST12); // A Tier
-		addPerk(2, 2, SkillPerk.MINING_TEST13); // B Tier
-		addPerk(3, 2, SkillPerk.MINING_TEST13); // C Tier
-		addPerk(4, 2, SkillPerk.MINING_TEST13); // D Tier
-		addPerk(5, 2, SkillPerk.MINING_TEST13); // E Tier
-		addPerk(6, 2, SkillPerk.MINING_PROFICIENCY); // F Tier
+		super("Mining", 0x77aaff, BarColor.BLUE, 'b', Material.DIAMOND_PICKAXE);
 	}
 	
 	@Override
@@ -126,21 +109,5 @@ public class SkillMining extends Skill {
 			return 0;
 		}
 	}
-
-	@Override
-	public List<Component> getGUIDescription(Skills s) {
-		List<Component> desc = new ArrayList<>();
-		
-		
-		int proficiency = s.getPerkLevel(SkillPerk.MINING_PROFICIENCY);
-		desc.add(Component.text("• ").append(Component.text(proficiency + "%", proficiency < 100 ? NamedTextColor.RED : NamedTextColor.GREEN)).append(Component.text(" Pickaxe Proficiency \u26a1", TextColor.color(0xaaaa11))));
-		desc.add(Component.text("Pickaxe Proficiency affects the amount of", NamedTextColor.DARK_GRAY));
-		desc.add(Component.text("\u00a77\u00a7oDurability \u00a78\u00a7oand \u00a76\u00a7oHunger \u00a78\u00a7oconsumed when using"));
-		desc.add(Component.text("Pickaxes. Your current Pickaxe proficiency equates to;", NamedTextColor.DARK_GRAY));
-		desc.add(Component.text("• ").append(Component.text(proficiency + "%", proficiency < 100 ? NamedTextColor.RED : NamedTextColor.GREEN)).append(Component.text(" Durability Usage")));
-		desc.add(Component.text("• ").append(Component.text(proficiency + "%", proficiency < 100 ? NamedTextColor.RED : NamedTextColor.GREEN)).append(Component.text(" Hunger Drain")));
-		
-		return desc;
-	}
-
+	
 }

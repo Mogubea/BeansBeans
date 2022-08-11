@@ -7,8 +7,8 @@ import me.playground.celestia.logging.Celestia;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.stats.StatType;
-import me.playground.discord.voting.VoteEvent;
-import me.playground.discord.voting.VoteService;
+import me.playground.voting.VoteEvent;
+import me.playground.voting.VoteService;
 
 public class VoteListener extends EventListener {
 
@@ -26,7 +26,7 @@ public class VoteListener extends EventListener {
 			
 			pp.getStats().addToStat(StatType.VOTING, "votes", 1);
 			
-			int totalCrystals = service.getCrystalReward();
+			int totalSapphire = service.getSapphireReward();
 			int totalCoins = service.getCoinReward();
 			
 			try {
@@ -40,7 +40,7 @@ public class VoteListener extends EventListener {
 					pp.getStats().setStat(StatType.VOTING, "voteStreak", 0);
 				} else if (daysSinceLastVote == 1) { // First vote of the day, continuing a streak, bonus of 1/2/3 sapphire
 					pp.getStats().addToStat(StatType.VOTING, "voteStreak", daysSinceLastVote);
-					totalCrystals += Math.min(3, (pp.getStat(StatType.VOTING, "voteStreak") + 1) / 2);
+					totalSapphire += Math.min(3, (pp.getStat(StatType.VOTING, "voteStreak") + 1) / 2);
 				}
 				
 				pp.getStats().addToStat(StatType.VOTING, "voteStreak", 1); // Add to streak
@@ -49,9 +49,9 @@ public class VoteListener extends EventListener {
 				return;
 			}
 			
-			pp.addToCrystals(totalCrystals);
+			pp.addToSapphire(totalSapphire);
 			pp.addToBalance(totalCoins, "Voting on " + service.getServiceName());
-			pp.getStats().addToStat(StatType.VOTING, "sapphireEarned", totalCrystals);
+			pp.getStats().addToStat(StatType.VOTING, "sapphireEarned", totalSapphire);
 			if (pp.isOnline()) { // Notify them via fake advancement pop up
 				pp.grantAdvancement(notifAdv);
 				// Need to delay slightly or the toast won't show up

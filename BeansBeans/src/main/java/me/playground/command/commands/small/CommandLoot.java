@@ -8,8 +8,10 @@ import javax.annotation.Nullable;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import me.playground.command.BeanCommand;
+import me.playground.gui.BeanGuiBestiaryEntity;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.TabCompleter;
@@ -34,7 +36,7 @@ public class CommandLoot extends BeanCommand {
 			getPlugin().lootManager().reload();
 			sender.sendMessage("\u00a77Loaded " + getPlugin().lootManager().getAllEntries().size() + " Loot Entries.");
 		} else if (isPlayer(sender)) {
-			//new BeanGuiBestiaryEntity((Player)sender).openInventory();
+			new BeanGuiBestiaryEntity((Player)sender).openInventory();
 		}
 		return true;
 	}

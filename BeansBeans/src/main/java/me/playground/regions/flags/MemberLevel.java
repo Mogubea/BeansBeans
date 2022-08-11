@@ -12,7 +12,7 @@ public enum MemberLevel {
 	
 	final String niceName;
 	MemberLevel() {
-		niceName = this.name().charAt(0) + name().substring(1).toLowerCase();
+		niceName = this.name().substring(0, 1) + name().substring(1).toLowerCase();
 	}
 	
 	public boolean higherThan(MemberLevel that) {

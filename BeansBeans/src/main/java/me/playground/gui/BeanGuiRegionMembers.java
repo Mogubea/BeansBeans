@@ -40,7 +40,7 @@ public class BeanGuiRegionMembers extends BeanGuiRegion {
 				null,null,null,null,null,null,null,null,null,
 				null,null,null,null,null,null,null,null,null,
 				null,null,null,null,null,null,null,null,null,
-				rBlank,rBlank,rBlank,whatIsThis,goBack,rBlank,rBlank,rBlank,rBlank
+				rBlank,rBlank,rBlank,rBlank,goBack,rBlank,rBlank,rBlank,rBlank
 		};
 	}
 	
@@ -72,7 +72,7 @@ public class BeanGuiRegionMembers extends BeanGuiRegion {
 			
 			p.closeInventory();
 			
-			SignMenuFactory.Menu menu = Main.getInstance().getSignMenuFactory().newMenu(Arrays.asList(Component.empty(), Component.text("^^^^^^^^^^"), Component.text("\u00a7aAdd as a"), Component.text("\u00a7a" + toAddLevel.toString())), Material.WARPED_WALL_SIGN)
+			SignMenuFactory.Menu menu = Main.getInstance().getSignMenuFactory().newMenu(Arrays.asList("","^^^^^^^^^^", "\u00a7aAdd as a", "\u00a7a" + toAddLevel.toString()), Material.WARPED_WALL_SIGN)
             .reopenIfFail(true)
             .response((player, strings) -> {
                 try {

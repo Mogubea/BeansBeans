@@ -164,7 +164,6 @@ public class HeirloomInventory {
 			if (modifier.getOperation() != AttributeModifier.Operation.ADD_NUMBER) return;
 			if (!visualModifiers.containsKey(attribute)) return; // Valid Attribute
 			double newAmt = visualModifiers.get(attribute) + modifier.getAmount();
-
 			visualModifiers.put(attribute, newAmt);
 			if (profile.isOnline() && !profile.getPlayer().getAttribute(attribute).getModifiers().contains(modifier)) // Bukkit throws an error if the modifier already exists..
 				profile.getPlayer().getAttribute(attribute).addModifier(modifier);

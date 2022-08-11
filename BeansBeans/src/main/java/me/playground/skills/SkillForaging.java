@@ -1,20 +1,15 @@
 package me.playground.skills;
 
-import java.util.List;
-
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockBreakEvent;
 
-import net.kyori.adventure.text.Component;
-
 public class SkillForaging extends Skill {
 	
 	protected SkillForaging() {
-		super("Foraging", 0x45eeaa, BarColor.GREEN, 'a', "\ud83e\ude93", Material.DARK_OAK_SAPLING, Material.LIME_DYE,
-				"Earn Foraging XP by chopping down forests and harvesting flowers!");
+		super("Foraging", 0x45eeaa, BarColor.GREEN, 'a', Material.DARK_OAK_SAPLING);
 	}
 	
 	@Override
@@ -75,11 +70,6 @@ public class SkillForaging extends Skill {
 		default: 
 			return 0;
 		}
-	}
-
-	@Override
-	public List<Component> getGUIDescription(Skills s) {
-		return null;
 	}
 	
 }

@@ -15,7 +15,7 @@ import net.kyori.adventure.text.format.TextColor;
 public class BeanGuiNews extends BeanGui {
 	
 	protected static final ItemStack blank = newItem(new ItemStack(Material.BROWN_STAINED_GLASS_PANE, 1), "");
-	private final HashMap<Integer, UpdateEntry> mappings = new HashMap<>();
+	private final HashMap<Integer, UpdateEntry> mappings = new HashMap<Integer, UpdateEntry>();
 	private final ArrayList<UpdateEntry> entries = UpdateEntry.getUpdateEntries();
 	
 	public BeanGuiNews(Player p) {

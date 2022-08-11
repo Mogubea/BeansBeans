@@ -2,7 +2,6 @@ package me.playground.listeners;
 
 import java.util.ArrayList;
 
-import me.playground.regions.Region;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,7 +28,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 public class ConnectionListener extends EventListener {
 
 	private final PermissionManager permManager;
-
+	
 	public ConnectionListener(Main plugin) {
 		super(plugin);
 		permManager = getPlugin().permissionManager();
@@ -70,10 +69,6 @@ public class ConnectionListener extends EventListener {
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent e) {
 		final Player p = e.getPlayer();
-		final PlayerProfile pp = PlayerProfile.from(p);
-		final Region region = getRegionAt(p.getLocation());
-		pp.updateCurrentRegion(region);
-
 		permManager.updatePlayerPermissions(p);
 		
 		p.sendPlayerListHeader(
@@ -81,7 +76,7 @@ public class ConnectionListener extends EventListener {
 				+ "\u00a77 on \u00a73Day " + Calendar.getDay(p.getWorld().getFullTime()) 
 				+ "\n\n\u00a7fOnline Players:"));
 		
-
+		PlayerProfile pp = PlayerProfile.from(p);
 		pp.updateShownNames(false); // Done here due to requiring an existing player.
 		pp.pokeAFK();
 		getPlugin().teamManager().initScoreboard(p);
@@ -106,7 +101,7 @@ public class ConnectionListener extends EventListener {
 		
 		e.joinMessage(!pp.isHidden() ? Component.text("» ", NamedTextColor.GREEN).append(pp.getComponentName()).append(Component.text(" joined the server!", NamedTextColor.YELLOW)) : null);
 		
-		// Check for Donor Rank expiry
+		// Check for Donor Rank expiriry
 		pp.getCheckDonorExpiration();
 		
 		// Staff Messages

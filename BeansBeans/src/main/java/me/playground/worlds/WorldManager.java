@@ -11,7 +11,7 @@ import me.playground.main.Main;
 
 public class WorldManager {
 	private final WorldDatasource datasource;
-	private final BiMap<Integer, World> idToWorld = HashBiMap.create();
+	private final BiMap<Integer, World> idToWorld = HashBiMap.create(8);
 	
 	public WorldManager(Main plugin) {
 		datasource = new WorldDatasource(plugin, this);

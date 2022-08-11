@@ -1,20 +1,15 @@
 package me.playground.skills;
 
-import java.util.List;
-
 import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
-import net.kyori.adventure.text.Component;
-
 public class SkillCombat extends Skill {
 	
 	protected SkillCombat() {
-		super("Combat", 0xff4455, BarColor.RED, 'c', "\ud83c\udff9", Material.SHIELD, Material.RED_DYE,
-				"Earn Combat XP by fighting hostile mobs and bosses!");
+		super("Combat", 0xff4455, BarColor.RED, 'c', Material.SHIELD);
 	}
 	
 	@Override
@@ -72,10 +67,4 @@ public class SkillCombat extends Skill {
 			return false;
 		}
 	}
-
-	@Override
-	public List<Component> getGUIDescription(Skills s) {
-		return null;
-	}
-
 }

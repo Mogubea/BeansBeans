@@ -6,9 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import me.playground.entity.CustomEntityType;
-import me.playground.playerprofile.PlayerProfile;
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.util.BlockVector;
 import org.dynmap.markers.AreaMarker;
@@ -57,25 +54,7 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 				int id = r.getInt("id");
 				World w = wm.getWorld(r.getInt("world"));
 				if (w == null) continue; // Entirely possible that a world could be deleted, don't bother loading the regions if so.
-				RegionType type = RegionType.fromIdentifier(r.getString("type"));
-				if (type == null) continue; // Should never be null realistically.
-				Region reg;
-
-				switch (type) {
-					case PLAYER ->
-							reg = new PlayerRegion(manager, r.getInt("creatorId"), id, r.getString("name"), w,
-							new BlockVector(r.getDouble("minX"), r.getDouble("minY"), r.getDouble("minZ")),
-							new BlockVector(r.getDouble("maxX"), r.getDouble("maxY"), r.getDouble("maxZ")),
-							new BlockVector(r.getDouble("originX"), r.getDouble("originY"), r.getDouble("originZ")));
-
-					case DEFINED ->
-							reg = new Region(manager, id, r.getInt("creatorId"), r.getInt("priority"), r.getString("name"), w,
-							r.getInt("minX"), r.getInt("minY"), r.getInt("minZ"),
-							r.getInt("maxX"), r.getInt("maxY"), r.getInt("maxZ"));
-
-					default -> { continue; }
-				}
-
+				Region reg = new Region(manager, id, r.getInt("creatorId"), r.getInt("priority"), r.getString("name"), w, r.getInt("minX"), r.getInt("minY"), r.getInt("minZ"), r.getInt("maxX"), r.getInt("maxY"), r.getInt("maxZ"));
 				updateMarker(reg);
 				count++;
 			}
@@ -108,7 +87,7 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 				final int size = region.getDirtyFlags().size();
 				for (int x = -1; ++x < size;) {
 					T flag = (T) region.getDirtyFlags().get(x);
-					V val = region.getFlag(flag, true);
+					V val = region.getFlag(flag);
 					if (val == null)
 						removeRegionFlag(region.getRegionId(), flag.getName());
 					else
@@ -159,40 +138,6 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 			ResultSet rs = s.getGeneratedKeys();
 			rs.next();
 			reg = new Region(manager, rs.getInt(1), creator, priority, parent, name, world, min, max);
-			updateMarker(reg);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return reg;
-	}
-
-	public PlayerRegion createPlayerRegion(PlayerProfile owner, World world, BlockVector min, BlockVector max, BlockVector origin) {
-		PlayerRegion reg = null;
-		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO regions (name, type, priority, parent, creatorId, world, minX, minY, minZ, maxX, maxY, maxZ, originX, originY, originZ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
-			String name = "%player."+owner.getId()+"."+(manager.getRegionsMadeBy(owner.getId()).size()+1);
-			int idx = 0;
-
-			s.setString(++idx, name);
-			s.setString(++idx, RegionType.PLAYER.getIdentifier());
-			s.setInt(++idx, 0);
-			s.setInt(++idx, 0);
-			s.setInt(++idx, owner.getId());
-			s.setInt(++idx, wm.getWorldId(world));
-			s.setInt(++idx, min.getBlockX());
-			s.setInt(++idx, min.getBlockY());
-			s.setInt(++idx, min.getBlockZ());
-			s.setInt(++idx, max.getBlockX());
-			s.setInt(++idx, max.getBlockY());
-			s.setInt(++idx, max.getBlockZ());
-			s.setDouble(++idx, origin.getX());
-			s.setDouble(++idx, origin.getY());
-			s.setDouble(++idx, origin.getZ());
-			s.executeUpdate();
-
-			ResultSet rs = s.getGeneratedKeys();
-			rs.next();
-			reg = new PlayerRegion(manager, owner.getId(), rs.getInt(1), name, world, min, max, origin);
-			CustomEntityType.REGION_CRYSTAL.spawn(new Location(world, origin.getBlockX() + 0.5, origin.getBlockY() + 0.2, origin.getBlockZ() + 0.5)).setRegion(reg);
 			updateMarker(reg);
 		} catch (SQLException e) {
 			e.printStackTrace();

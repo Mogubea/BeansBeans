@@ -1,47 +1,57 @@
 package me.playground.listeners;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import me.playground.enchants.BEnchantment;
-import me.playground.items.*;
-import me.playground.items.tracking.DemanifestationReason;
-import me.playground.items.tracking.ManifestationReason;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.block.Chest;
-import org.bukkit.block.Hopper;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.block.BlockCookEvent;
+import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
-import org.bukkit.event.inventory.*;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.InventoryType.SlotType;
+import org.bukkit.event.inventory.PrepareAnvilEvent;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.world.LootGenerateEvent;
-import org.bukkit.inventory.*;
+import org.bukkit.inventory.AnvilInventory;
+import org.bukkit.inventory.GrindstoneInventory;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.SmithingInventory;
+import org.bukkit.inventory.SmithingRecipe;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.metadata.Metadatable;
+import org.bukkit.inventory.meta.Repairable;
+import org.jetbrains.annotations.Nullable;
 
 import com.destroystokyo.paper.event.inventory.PrepareResultEvent;
 
+import me.playground.enchants.BeanEnchantment;
 import me.playground.gui.BeanGui;
-import me.playground.gui.BeanGuiLivingHopper;
 import me.playground.gui.BeanGuiMainMenu;
 import me.playground.gui.BeanGuiShulker;
+import me.playground.items.BItemDurable;
+import me.playground.items.BeanItem;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.ranks.Permission;
+import me.playground.skills.Skill;
 import net.kyori.adventure.text.Component;
 
 public class ContainerListener extends EventListener {
-
-	private final List<Player> slowdown = new ArrayList<>();
-
+	
 	public ContainerListener(Main plugin) {
 		super(plugin);
 	}
@@ -49,43 +59,17 @@ public class ContainerListener extends EventListener {
 	@EventHandler
 	public void onCraft(PrepareResultEvent e) {
 		final Inventory inv = e.getInventory();
-		if (e.getResult() == null) return;
-
-		// Deny the cleansing of Enchantments that cannot be cleansed while also forcing the default enchantments of custom items to stay.
-		if (inv instanceof GrindstoneInventory gInv) {
-			ItemStack result = e.getResult();
-			ItemStack item1 = gInv.getUpperItem() == null ? gInv.getLowerItem() : gInv.getUpperItem();
-			ItemStack item2 = gInv.getLowerItem();
-			BeanItem bi = BeanItem.from(result);
-
-			// Grab all the combined Enchantments.
-			Map<Enchantment, Integer> totalEnchants = new HashMap<>(item1.getEnchantments());
-			if (item2 != null && item1 != item2) {
-				item2.getEnchantments().forEach((enchantment, level) -> {
-					if (totalEnchants.get(enchantment) >= level) return;
-					totalEnchants.put(enchantment, level);
-				});
+		if (inv instanceof AnvilInventory) return; // Handled later in the class.
+		
+		// Cancel the cleansing of tools that can't be cleansed.
+		if (inv instanceof GrindstoneInventory) {
+			BeanItem bi = BeanItem.from(e.getResult());
+			if (bi instanceof BItemDurable && !((BItemDurable)bi).isCleansable()) {
+				e.setResult(null);
+				return;
 			}
-
-			result.addUnsafeEnchantments(totalEnchants);
-
-			// Upgrade any Enchantments whose Default Enchantments levels exceed what's currently on the item (Although this is incredibly unlikely).
-			// Also add any Default Enchantments that aren't on the item yet.
-			if (bi != null && bi.hasDefaultEnchantments()) {
-				bi.getDefaultEnchantments().forEach((enchantment, level) -> {
-					if (result.getEnchantmentLevel(enchantment) < level)
-						result.addUnsafeEnchantment(enchantment, level);
-				});
-			}
-
-			// Remove any Cleanse-able Enchantments from the result.
-			totalEnchants.forEach((enchantment, integer) -> {
-				if (BEnchantment.from(enchantment).isCleansable())
-					result.removeEnchantment(enchantment);
-			});
 		}
-
-		// Update the formatting of any item that's being crafted, assuming it isn't null.
+		
 		ItemStack i = e.getResult();
 		if (i == null) return;
 		if (!(inv instanceof SmithingInventory)) {
@@ -94,9 +78,9 @@ public class ContainerListener extends EventListener {
 		}
 		
 		SmithingRecipe sr = ((SmithingRecipe)((SmithingInventory)inv).getRecipe());
-
+		
 		if (sr.willCopyNbt()) {
-			// Dumb that I have to do this. willCopyNbt is necessary but removes nbt from the result before overriding, so we need to force a "merge" of nbt.
+			// Dumb that I gotta do this. willCopyNbt is necessary but removes nbt from the result before overriding, so we need to force a "merge" of nbt.
 			BeanItem bi = BeanItem.from(sr.getResult());
 			if (bi != null && bi != BeanItem.from(i))
 				i = BeanItem.convert(i, bi);
@@ -123,8 +107,8 @@ public class ContainerListener extends EventListener {
 	}
 	
 	@EventHandler
-	public void preCraft(PrepareItemCraftEvent e) {
-		if (e.getInventory() instanceof SmithingInventory) return;
+	public void onCraft(PrepareItemCraftEvent e) {
+		if (e.getInventory() instanceof AnvilInventory || e.getInventory() instanceof SmithingInventory) return;
 		if (e.getRecipe() == null) return;
 		
 		// All Bukkit recipe instances implement Keyed.
@@ -134,13 +118,6 @@ public class ContainerListener extends EventListener {
 				e.getInventory().setResult(null);
 			e.getView().getPlayer().sendActionBar(Component.text("\u00a7cYou have not unlocked this recipe."));
 			return;
-		} else {
-			// Prevent crafting vanilla items using custom items.
-			int size = e.getInventory().getMatrix().length;
-			for (int x = -1; ++x < size;)
-				if (BeanItem.from(e.getInventory().getMatrix()[x]) != null) {
-					e.getInventory().setResult(null);
-				}
 		}
 		
 		ItemStack i = e.getInventory().getResult();
@@ -155,87 +132,52 @@ public class ContainerListener extends EventListener {
 			e.getInventory().setResult(BeanItem.formatItem(i));
 		}
 	}
-
-	/**
-	 * For some stupid reason bukkit decided it'd be funny to just make this an Inventory Click Event and not actually check if this was a valid craft or not.
-	 */
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onItemCraft(CraftItemEvent e) {
-		Inventory botInv = e.getView().getBottomInventory();
-		ItemStack result = e.getInventory().getResult().clone(); // Never null
-		ItemStack cursor = e.getCursor(); // Never null
-
-		// Left-clicking the slot.
-		if (e.getAction().name().startsWith("PICKUP_")) {
-			if (cursor.getType() == Material.AIR || cursor.isSimilar(result) && ((cursor.getAmount() + result.getAmount()) < cursor.getMaxStackSize()))
-				doManifestationStuff(e.getRecipe(), 1, result);
-			else {
-				e.setCancelled(true);
-			}
-		}
-
-		// Dropping items immediately out of the result slot. This can only be done if the cursor is AIR.
-		else if (e.getAction() == InventoryAction.DROP_ONE_SLOT || e.getAction() == InventoryAction.DROP_ALL_SLOT) {
-			if (cursor.getType() == Material.AIR) {
-				doManifestationStuff(e.getRecipe(), 1, result);
-			} else {
-				e.setCancelled(true);
-			}
-		}
-
-		// Any other action such as shift clicking, just calculate the inventory.
-		else {
-			int amountBefore = countItem(botInv, result) + (cursor.isSimilar(result) ? cursor.getAmount() : 0);
-
-			slowdown.add((Player) e.getView().getPlayer()); // Prevent any other interactions by this player while this is calculating.
-			getPlugin().getServer().getScheduler().runTask(getPlugin(), () -> {
-				int amountNow = countItem(botInv, result) + (cursor.isSimilar(result) ? cursor.getAmount() : 0);
-				int crafts = (amountNow - amountBefore) / result.getAmount();
-				doManifestationStuff(e.getRecipe(), crafts, result);
-				slowdown.remove((Player) e.getView().getPlayer());
+	
+	// TODO: Create a proper custom enchantment method.
+	
+	@EventHandler
+	public void onEnchant(EnchantItemEvent e) {
+		BeanItem bi = BeanItem.from(e.getItem());
+		if (bi != null && bi instanceof BItemDurable) {
+			BItemDurable tool = ((BItemDurable)bi);
+			if (!tool.isEnchantable()) { e.setCancelled(true); return; }
+			if (!tool.hasForbiddenEnchantments()) { return; }
+			
+			Map<Enchantment, Integer> enchants = new HashMap<Enchantment, Integer>(e.getEnchantsToAdd());
+			
+			enchants.forEach((enchant, level) -> {
+				if (!tool.isEnchantAllowed(enchant)) {
+					// Remove bad enchant
+					e.getEnchantsToAdd().remove(enchant);
+					
+					List<Enchantment> possibilities = new ArrayList<Enchantment>(tool.getValidEnchantments());
+					
+					// Remove current enchants
+					possibilities.removeAll(e.getEnchantsToAdd().keySet());
+					
+					// Remove custom enchantments with a minimum level requirement too low
+					List<Enchantment> clone = new ArrayList<Enchantment>(possibilities);
+					for (Enchantment possibility : clone)
+						if (possibility instanceof BeanEnchantment)
+							if (e.getExpLevelCost() < ((BeanEnchantment)enchant).getLevelRequirement())
+								possibilities.remove(enchant);
+						
+					if (possibilities.isEmpty())
+						return;
+					
+					int fromMax = enchant.getMaxLevel() - level;
+					Enchantment replacement = possibilities.get(getPlugin().getRandom().nextInt(tool.getValidEnchantments().size()));
+					level = replacement.getMaxLevel() - fromMax;
+					if (level < 1) level = 1;
+					
+					e.getEnchantsToAdd().put(replacement, level);
+				}
 			});
 		}
+		
+		Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> BeanItem.formatItem(e.getItem()));
 	}
-
-	private void doManifestationStuff(Recipe recipe, int crafts, ItemStack result) {
-		if (crafts < 0 || result == null) return;
-
-		getPlugin().getItemTrackingManager().incrementManifestationCount(result, ManifestationReason.CRAFTING, (long) crafts * result.getAmount());
-
-		if (recipe instanceof ShapedRecipe shapedRecipe) {
-			shapedRecipe.getIngredientMap().forEach((str, item) -> {
-				if (item == null) return;
-				getPlugin().getItemTrackingManager().incrementDemanifestationCount(item, DemanifestationReason.CRAFTING, (long) crafts * item.getAmount());
-			});
-		} else if (recipe instanceof ShapelessRecipe shapelessRecipe) {
-			shapelessRecipe.getIngredientList().forEach((item) -> {
-				if (item == null) return;
-				getPlugin().getItemTrackingManager().incrementDemanifestationCount(item, DemanifestationReason.CRAFTING, (long) crafts * item.getAmount());
-			});
-		}
-	}
-
-	private int countItem(Inventory i, ItemStack itemStack) {
-		int size = i.getStorageContents().length;
-		int count = 0;
-		ItemStack[] contents = i.getStorageContents();
-		for (int x = -1; ++x < size;)
-			if (itemStack.isSimilar(contents[x]))
-				count += contents[x].getAmount();
-		return count;
-	}
-
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onItemFuel(FurnaceBurnEvent e) {
-		getPlugin().getItemTrackingManager().incrementDemanifestationCount(e.getFuel(), DemanifestationReason.FUEL, e.getFuel().getAmount());
-	}
-
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onItemSmelt(BlockCookEvent e) {
-		getPlugin().getItemTrackingManager().incrementDemanifestationCount(e.getSource(), DemanifestationReason.COOKING, e.getSource().getAmount());
-		getPlugin().getItemTrackingManager().incrementManifestationCount(e.getResult(), ManifestationReason.COOKING, e.getResult().getAmount());
-	}
-
+	
 	@EventHandler
 	public void preEnchant(PrepareItemEnchantEvent e) {
 		BeanItem bi = BeanItem.from(e.getItem());
@@ -251,55 +193,182 @@ public class ContainerListener extends EventListener {
 		
 		PlayerProfile pp = PlayerProfile.from((Player) list.get(0));
 		if (pp.getBeanGui() != null) {
-			try {
-				pp.getBeanGui().onInventoryClosed(e);
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			} finally {
-				pp.closeBeanGui();
+			pp.getBeanGui().onInventoryClosed(e);
+			pp.closeBeanGui();
+		}
+		
+		customRepairHold.remove(pp.getUniqueId());
+	}
+	
+	// Store the custom repair remaining item so it can be put back after automatically taken by anvil logic.
+	private HashMap<UUID, ItemStack> customRepairHold = new HashMap<UUID, ItemStack>();
+	
+	@EventHandler
+	public void onAnvilPrepare(PrepareAnvilEvent e) {
+		final ItemStack[] contents = e.getInventory().getContents();
+		ItemStack result = e.getResult();
+		final BeanItem biOne = BeanItem.from(contents[0]);
+		final boolean isEnchantBook = contents[1] != null && contents[1].getType() == Material.ENCHANTED_BOOK;
+		boolean customRepairFound = false;
+		float newCost = e.getInventory().getRepairCost();
+		
+		// Check for custom repair materials, gotta check even if there's already a result since renaming exists..
+		if (biOne != null && biOne instanceof BItemDurable) {
+			BItemDurable bid = ((BItemDurable)biOne);
+			if (!isEnchantBook) {
+				// Sort out durability
+				final float repairPerc = bid.getRepairPercentage(contents[1]);
+				if (repairPerc > 0f) {
+					final int stackSize = contents[1].getAmount();
+					final float totalRepair = repairPerc * stackSize;
+					
+					result = contents[0].clone();
+					customRepairFound = true;
+					
+					// Increase cost based on the amount of items needed to do the repair
+					final int maxAmount =  (int) (((BeanItem.getMaxDurability(contents[0]) - BeanItem.getDurability(contents[0])) / repairPerc) + 1);
+					final int amountUsed = Math.min(stackSize, maxAmount);
+					newCost += amountUsed;
+					
+					// Store the resulting item in the second slot after repair
+					ItemStack remaining = contents[1].clone();
+					remaining.setAmount((int) (remaining.getAmount() - amountUsed));
+					customRepairHold.put(e.getView().getPlayer().getUniqueId(), remaining);
+					
+					BeanItem.addDurability(result, (int) ((totalRepair/100F) * bid.getMaxDurability())); // Values over the max are sorted in #addDurability
+				}
 			}
 		}
+		
+		// Forget the rest.
+		if (result == null) return;
+		
+		// Prevent a result from appearing if a player is trying to combine different custom items or a custom item with a non custom item.
+		// But still trying to allow every other typical result (eg. custom pickaxe + repair material)
+		if (!customRepairFound && !isEnchantBook) { // Don't bother if it's an enchantment book.
+			if (contents[1] != null) {
+				BeanItem bi2 = BeanItem.from(contents[1]);
+				if (!(biOne == null && bi2 == null)) {
+					if (contents[0].getType().equals(contents[1].getType())) {
+						e.setResult(null);
+						return;
+					}
+				}
+			}
+		}
+		
+		BeanItem bi = BeanItem.from(result);
+		if (bi != null && bi instanceof BItemDurable) {
+			BItemDurable bid = ((BItemDurable)bi);
+			// Prevent any forbidden enchantments, remove 1 RepairCost per enchantment removed if it's an item with durability.
+			if (bid.hasForbiddenEnchantments()) {
+				List<Enchantment> forbidden = bid.getForbiddenEnchantments();
+				final int size = forbidden.size();
+				for (int x = -1; ++x < size;) {
+					if (!result.containsEnchantment(forbidden.get(x))) continue;
+					result.removeEnchantment(forbidden.get(x));
+					
+					if (!(result.getItemMeta() instanceof Repairable)) continue;
+					Repairable meta = (Repairable) result.getItemMeta();
+					if (meta.hasRepairCost()) {
+						meta.setRepairCost(meta.getRepairCost() - 1);
+						result.setItemMeta((@Nullable ItemMeta) meta);
+					}
+				}
+			}
+		}
+		
+		// Set durability for other instances.
+		if (!customRepairFound) {
+			float duraPerc = ((float)result.getType().getMaxDurability() - (float)((Damageable)result.getItemMeta()).getDamage()) / (float)result.getType().getMaxDurability();
+			BeanItem.setDurability(result, (int) (duraPerc * ((float)BeanItem.getMaxDurability(result))));
+		}
+		
+		// Re-format the item to address new changes.
+		BeanItem.formatItem(result);
+		
+		// Prevent a result from appearing, similarly to vanilla, if the result item is exactly the same.
+		if ((contents[0] != null && contents[0].isSimilar(result))) {
+			e.setResult(null);
+			return;
+		}
+		
+		// Update the result.
+		e.setResult(result);
+		
+		// Increase the cost of forging based on rarity.
+		switch (BeanItem.getItemRarity(result)) {
+		case UNCOMMON: newCost *= 1.1; break;
+		case RARE: newCost *= 1.2; break;
+		case EPIC: newCost *= 1.35; break;
+		case LEGENDARY: newCost *= 1.5; break;
+		case MYTHIC: newCost *= 2; break;
+		case IRIDESCENT: newCost *= 3; break;
+		default: break;
+		}
+		
+		// Reduce the cost of forging based on level.
+		/*final SkillInfo skillInfo = PlayerProfile.from(e.getView().getPlayer()).getSkills().getSkillInfo(SkillType.REPAIR);
+		if (skillInfo.getLevel() >= 10) {
+			final AnvilInventory inv = e.getInventory();
+			
+			if (inv.getContents()[1] != null) {
+				final int finalCost = (int) Math.max(1, newCost - Math.min(15, ((float)skillInfo.getLevel() / 80F)));
+				
+				Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> { inv.setMaximumRepairCost(100); inv.setRepairCost(finalCost); });
+			}
+		}*/
 	}
 	
 	@EventHandler
 	public void onInventoryDrag(InventoryDragEvent e) {
+		// Cancel item drags if it drags over any part of the custom gui.
 		PlayerProfile pp = PlayerProfile.from(e.getWhoClicked());
-		if (pp.getBeanGui() != null)
-			pp.getBeanGui().onInventoryDrag(e);
-	}
-	
-	@EventHandler
-	public void onInventoryClick(InventoryClickEvent e) {
-		Player p = (Player) e.getView().getPlayer();
-		if (slowdown.contains(p)) {
-			p.sendActionBar(Component.text("\u00a7cYour action was cancelled. Slow down."));
-			e.setCancelled(true);
-			return;
-		}
-
-		// TODO: Just make a custom UI for Grindstone
-
-		// Prevent the ability to place custom items with only default or non-cleans-able enchantments into the Grindstone.
-		if (e.getView().getTopInventory() instanceof GrindstoneInventory) {
-			ItemStack cringe = e.getSlotType() != SlotType.CRAFTING && e.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY ? e.getCurrentItem() : e.getCursor();
-			if (!cringe.getEnchantments().isEmpty()) {
-				if (BeanItem.func(cringe, (custom) -> {
-					if (!custom.hasDefaultEnchantments()) return false;
-					// Cheap check since it's impossible to remove the Default Enchantments anyway...
-					if (cringe.getEnchantments().size() > custom.getDefaultEnchantments().size()) return false;
-					for (Enchantment ench : cringe.getEnchantments().keySet())
-						if (!BEnchantment.from(ench).isCleansable()) return true;
-					return true;
-				})) {
+		if (pp.getBeanGui() != null) {
+			for (int i : e.getRawSlots()) {
+				if (i < pp.getBeanGui().getInventory().getSize()) {
 					e.setCancelled(true);
 					return;
 				}
 			}
 		}
+	}
+	
+	@EventHandler
+	public void onInventoryClick(InventoryClickEvent e) {
+		if (e.getSlotType() == SlotType.RESULT) {
+			if (e.getInventory() instanceof AnvilInventory) {
+				if (e.getCurrentItem() == null || e.getCurrentItem().getType() == Material.AIR) return; // prevents getting infinite repair xp by clicking empty slot
+				AnvilInventory inv = (AnvilInventory) e.getInventory();
+				
+				Player p = (Player) e.getView().getPlayer();
+				
+				if (inv.getContents()[1] != null) {
+					int cost = inv.getRepairCost();
+					
+					if (cost < 1) return;
+					
+					int playerXp = p.getLevel();
+					if (playerXp >= cost)
+						PlayerProfile.from(p).getSkills().addExperience(Skill.FORGING, cost*200); 
+				}
+				
+				
+				// If there was a custom repair, mimick default anvil functionality and place back the remaining quantity
+				if (this.customRepairHold.containsKey(p.getUniqueId())) {
+					Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> {
+						inv.setSecondItem(this.customRepairHold.getOrDefault(p.getUniqueId(), new ItemStack(Material.AIR)));
+						customRepairHold.remove(p.getUniqueId());
+					});
+				}
+			}
+			return;
+		}
 		
 		if (e.getSlotType() != SlotType.CONTAINER && e.getSlotType() != SlotType.QUICKBAR) return;
 		
 		final ItemStack stack = e.getCurrentItem();
+		final Player p = (Player) e.getView().getPlayer();
 		final PlayerProfile pp = PlayerProfile.from(p);
 		final BeanGui bui = pp.getBeanGui();
 		
@@ -311,7 +380,7 @@ public class ContainerListener extends EventListener {
 						if (p.hasPermission(Permission.QUICK_SHULKER_BOX)) {
 							e.setCancelled(true); // Schedule the task so client side doesn't end up with a ghost item.
 							if (bui instanceof BeanGuiShulker && ((BeanGuiShulker)bui).getShulkerSlot() == e.getSlot()) return;
-							Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> new BeanGuiShulker(p, stack, e.getSlot()).openInventory());
+							Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> { new BeanGuiShulker(p, stack, e.getSlot()).openInventory(); });
 						}
 						return;
 					}
@@ -321,8 +390,8 @@ public class ContainerListener extends EventListener {
 			// Main Menu Item
 			if (stack.equals(BeanItem.PLAYER_MENU.getOriginalStack())) {
 				e.setCancelled(true);
-				if (!(bui instanceof BeanGuiMainMenu)) { // Schedule the task so client side doesn't end up with a ghost item.
-					Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> new BeanGuiMainMenu(p).openInventory());
+				if (bui == null || !(bui instanceof BeanGuiMainMenu)) { // Schedule the task so client side doesn't end up with a ghost item.
+					Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> { new BeanGuiMainMenu(p).openInventory(); });
 					return;
 				}
 			}
@@ -331,92 +400,11 @@ public class ContainerListener extends EventListener {
 		if (bui != null && !bui.preInventoryClick(e))
 			bui.onInventoryClicked(e);
 	}
-
-	// TODO: in the future customise all loot generation. For now, just remove the enchants we don't want to see.
-	@EventHandler
-	public void onLootGeneration(LootGenerateEvent e) {
-		for (ItemStack i : e.getLoot()) {
-
-			// If mending, refine it instead :)
-			if (i.containsEnchantment(Enchantment.MENDING)) {
-				i.removeEnchantment(Enchantment.MENDING);
-				if (BItemDurable.canBeRefined(i))
-					BItemDurable.setRefinementTier(i, 1 + rand.nextInt(3), true);
-			}
-
-			// Remove cringe
-			if (i.containsEnchantment(Enchantment.BINDING_CURSE))
-				i.removeEnchantment(Enchantment.BINDING_CURSE);
-			if (i.containsEnchantment(Enchantment.VANISHING_CURSE))
-				i.removeEnchantment(Enchantment.VANISHING_CURSE);
-
-			getPlugin().getEnchantmentManager().replaceEnchantments(i, true); // formats for us
-		}
-	}
 	
 	@EventHandler
-	public void onHopperTransfer(InventoryMoveItemEvent e) {
-		// Deny any transaction if the container has the noHopper tag.
-		if (e.getDestination().getHolder() instanceof Metadatable && ((Metadatable)e.getDestination().getHolder()).hasMetadata("noHopper")) {
-			e.setCancelled(true);
-			return;
-		}
-		
-		if (e.getDestination().getHolder() instanceof Hopper hopper) {
-			BeanBlock custom = BeanBlock.from(hopper);
-			if (custom instanceof BItemLivingHopper) {
-				ItemStack[] whitelist = ((BItemLivingHopper)custom).getFilterContents(hopper);
-				boolean allowed = true; // All allowed by default
-				for (int x = -1; ++x < whitelist.length;) {
-					if (whitelist[x] == null) continue;
-					allowed = false; // If there's a non null item in the filter, disallow all by default
-					if (whitelist[x].getType() == e.getItem().getType()) {
-						BeanItem itemCustom = BeanItem.from(whitelist[x]);
-						
-						if (itemCustom == null || BeanItem.is(e.getItem(), itemCustom)) {
-							allowed = true; // Allow if match
-							break;
-						}
-					}
-				}
-				
-				if (allowed) {
-					hopper.setMetadata("noHopper", new FixedMetadataValue(getPlugin(), true));
-					Bukkit.getScheduler().runTask(getPlugin(), () ->  {
-						BeanGuiLivingHopper.updateViewerInventory(hopper, null);
-						hopper.removeMetadata("noHopper", getPlugin());
-					});
-				}
-				else
-					e.setCancelled(true);
-			}
-		}
-		
-		if (e.getDestination().getHolder() instanceof Chest chest) {
-			BeanBlock custom = BeanBlock.from(chest);
-			if (custom instanceof BItemBigChest customChest) {
-				e.setCancelled(true);
-				Inventory i = customChest.createInventorySnapshot(chest);
-				Map<Integer, ItemStack> stacks = i.addItem(e.getItem());
-				e.getSource().removeItem(e.getItem());
-				if (!stacks.isEmpty())
-					e.getSource().addItem(stacks.get(0));
-				customChest.saveInventory(chest, i.getContents(), true);
-				e.calledGetItem = false;
-				e.calledSetItem = false;
-			}
-		}
-		
-		if (e.getSource().getHolder() instanceof Hopper hopper) {
-			BeanBlock custom = BeanBlock.from(hopper);
-			if (custom instanceof BItemLivingHopper) {
-				hopper.setMetadata("noHopper", new FixedMetadataValue(getPlugin(), true));
-				Bukkit.getScheduler().runTask(getPlugin(), () ->  {
-					BeanGuiLivingHopper.updateViewerInventory(hopper, null);
-					hopper.removeMetadata("noHopper", getPlugin());
-				});
-			}
-		}
+	public void onLootGeneration(LootGenerateEvent e) {
+		for (ItemStack i : e.getLoot())
+			BeanItem.formatItem(i);
 	}
 	
 }

@@ -1,9 +1,7 @@
 package me.playground.gui;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -14,16 +12,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import net.kyori.adventure.text.Component;
 
-/**
- * TODO: Add functions to this and, in general, make it better.
- */
 public abstract class BeanGuiConfirm extends BeanGui {
 	
 	protected static final ItemStack confirm = newItem(new ItemStack(Material.LIME_STAINED_GLASS_PANE, 1), "\u00a7aConfirm Action");
 	protected static final ItemStack cancel = newItem(new ItemStack(Material.RED_STAINED_GLASS_PANE, 1), "\u00a7cCancel Action");
 	
 	protected final List<Component> confirmationInfo;
-
+	
 	public BeanGuiConfirm(Player p, List<Component> confirmationInfo) {
 		super(p);
 		
@@ -38,6 +33,11 @@ public abstract class BeanGuiConfirm extends BeanGui {
 	}
 
 	@Override
+	public void onInventoryClosed(InventoryCloseEvent e) {
+		
+	}
+
+	@Override
 	public void onInventoryClicked(InventoryClickEvent e) {
 		final int slot = e.getRawSlot();
 		e.setCancelled(true);
@@ -47,11 +47,9 @@ public abstract class BeanGuiConfirm extends BeanGui {
 		
 		if (e.getRawSlot() % 9 < 3) {
 			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
-			close();
 			onAccept();
 		} else if (e.getRawSlot() % 9 > 5) {
 			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
-			close();
 			onDecline();
 		}
 	}
@@ -69,6 +67,16 @@ public abstract class BeanGuiConfirm extends BeanGui {
 		contents[13] = book;
 		
 		i.setContents(contents);
+	}
+	
+	@Override
+	public void openInventory() {
+		if (confirmationInfo != null) {
+			super.openInventory();
+		} else {
+			p.sendActionBar(Component.text("\u00a7cThere was a problem opening the confirmation screen! Report this!"));
+			onDecline();
+		}
 	}
 	
 	public abstract void onAccept();

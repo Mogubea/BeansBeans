@@ -6,7 +6,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import me.playground.enchants.BEnchantment;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
@@ -25,8 +24,6 @@ import me.playground.utils.TabCompleter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.inventory.meta.EnchantmentStorageMeta;
-import org.jetbrains.annotations.NotNull;
 
 public class CommandEnchant extends BeanCommand {
 
@@ -42,36 +39,28 @@ public class CommandEnchant extends BeanCommand {
 		
 		if (i.getType() == Material.AIR)
 			throw new CommandException(sender, "You cannot enchant your hand!");
-
+		
 		final boolean canUnsafeEnchant = profile.hasPermission("bean.cmd.enchant.unsafe");
-		BEnchantment e = BEnchantment.getByName(args[0]);
-
+		Enchantment e = Enchantment.getByKey(NamespacedKey.minecraft(args[0]));
+		
+		if (e == null)
+			e = Enchantment.getByKey(getPlugin().getKey(args[0]));
 		if (e == null)
 			throw new CommandException(sender, "Unknown enchantment '"+args[0]+"'");
 		
 		final int level = args.length > 1 ? toIntMinMax(sender, args[1] , 0, canUnsafeEnchant ? 127 : e.getMaxLevel()) : 1;
-		final boolean isBook = i.getType() == Material.ENCHANTED_BOOK;
 		
 		if (level < 1) {
-			if (isBook)
-				i.editMeta(meta -> ((EnchantmentStorageMeta)meta).removeStoredEnchant(e));
-			else
-				i.removeEnchantment(e);
+			i.removeEnchantment(e);
 			BeanItem.formatItem(i);
-			p.sendMessage(e.displayName().append(Component.text("\u00a77 has been \u00a7cremoved\u00a77 from \u00a7f")).append(toHover(i)));
+			p.sendMessage(e.displayName(level).color(BeanColor.ENCHANT).append(Component.text("\u00a77 has been \u00a7cremoved\u00a77 from \u00a7f")).append(toHover(i)));
 		} else {
 			if (canUnsafeEnchant) {
-				if (isBook)
-					i.editMeta(meta -> ((EnchantmentStorageMeta)meta).addStoredEnchant(e, level, true));
-				else
-					i.addUnsafeEnchantment(e, level);
+				i.addUnsafeEnchantment(e, level);
 			} else try {
-				if (isBook)
-					i.editMeta(meta -> ((EnchantmentStorageMeta)meta).addStoredEnchant(e, level, false));
-				else
-					i.addEnchantment(e, level);
+				i.addEnchantment(e, level);
 			} catch (Exception ee) {
-				throw new CommandException(sender, e.displayName(level).append(Component.text("\u00a7c cannot be added to \u00a7f")).append(toHover(i)));
+				throw new CommandException(sender, e.displayName(level).color(BeanColor.ENCHANT).append(Component.text("\u00a7c cannot be added to \u00a7f")).append(toHover(i)));
 			}
 			BeanItem.formatItem(i);
 			p.sendMessage(e.displayName(level).color(BeanColor.ENCHANT).append(Component.text("\u00a77 has been \u00a7aadded \u00a77to \u00a7f")).append(toHover(i)));
@@ -83,7 +72,7 @@ public class CommandEnchant extends BeanCommand {
 	@Override
 	public @Nullable List<String> runTabComplete(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		if (args.length == 1)
-			return TabCompleter.completeObject(args[0], e -> e.getKey().getKey(), Enchantment.values());
+			return TabCompleter.completeObject(args[0], e -> ((Enchantment)e).getKey().getKey(), Enchantment.values());
 		if (args.length == 2) {
 			Enchantment e = Enchantment.getByKey(NamespacedKey.minecraft(args[0]));
 			if (e == null || e.getMaxLevel() < 2)
@@ -100,7 +89,7 @@ public class CommandEnchant extends BeanCommand {
 	};
 	
 	@Override
-	public Component getUsage(@NotNull CommandSender sender, @NotNull String str, String @NotNull [] args) {
+	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
 		return Component.text("\u00a7cUsage: \u00a7f/"+str+" ").append(usageArguments[0]).append(usageArguments[1]);
 	}
 

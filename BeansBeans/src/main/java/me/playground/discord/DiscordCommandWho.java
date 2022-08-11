@@ -58,11 +58,11 @@ public class DiscordCommandWho extends DiscordCommand {
 				
 				embed.addField("Playtime", d + h + m, false);
 				embed.addField("Skills", 
-						"<:mining:879514404868222976> **" + pp.getSkillGrade(Skill.MINING) +
-						"**, <:logcutting:879514418306744441> **" + pp.getSkillGrade(Skill.FORAGING) +
-						"**, <:agriculture:879514439890657340> **" + pp.getSkillGrade(Skill.AGRICULTURE) +
-						"**, <:fishing:879514461495525446> **" + pp.getSkillGrade(Skill.FISHING) +
-						"**, <:combat:879518113144651816> **" + pp.getSkillGrade(Skill.COMBAT), false);
+						"<:mining:879514404868222976>" + pp.getSkillLevel(Skill.MINING) +
+						"**,** <:logcutting:879514418306744441>" + pp.getSkillLevel(Skill.FORAGING) +
+						"**,** <:agriculture:879514439890657340>" + pp.getSkillLevel(Skill.AGRICULTURE) +
+						"**,** <:fishing:879514461495525446>" + pp.getSkillLevel(Skill.FISHING) +
+						"**,** <:combat:879518113144651816>" + pp.getSkillLevel(Skill.COMBAT), false);
 				e.replyEmbeds(embed.build()).queue();
 			} else {
 				final EmbedBuilder eb = embedBuilder(0xff4455, "Sorry, we couldn't find a player by the name of **"+e.getOption("ign").getAsString()+"**, please make sure you've spelt their name correctly!");

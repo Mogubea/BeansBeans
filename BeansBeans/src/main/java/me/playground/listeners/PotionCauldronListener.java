@@ -88,8 +88,9 @@ public class PotionCauldronListener extends EventListener {
 			stand = s;
 			break;
 		}
-		/*
-		Handle right-clicking with nothing, take a little taste.
+		
+		/**
+		 * Handle right clicking with nothing, take a little taste.
 		 */
 		if (itemType == null && stand != null) {
 			PlayerProfile pp = PlayerProfile.from(p);
@@ -97,14 +98,14 @@ public class PotionCauldronListener extends EventListener {
 			pp.getStats().addToStat(StatType.GENERIC, "cauldronSips", 1);
 			PersistentDataContainer pdc = stand.getPersistentDataContainer();
 			PotionType cpType = PotionType.valueOf(pdc.get(potKey, PersistentDataType.STRING));
-			byte[] potInfo = pdc.getOrDefault(potInfoKey, PersistentDataType.BYTE_ARRAY, new byte[3]);
+			byte[] potInfo = pdc.get(potInfoKey, PersistentDataType.BYTE_ARRAY);
 			if (cpType.isInstant() || cpType == PotionType.LUCK) return; // Can't taste luck or instant potions
 			p.addPotionEffect(new PotionEffect(cpType.getEffectType(), 60, potInfo[1]));
-			doCauldronEffectLocal(p, b, cpType);
-		/*
-		Handle potions being put into the cauldron
+			doCauldronEffectLocal(p, b, stand, cpType);
+		/**
+		 * Handle potions being put into the cauldron
 		 */
-		} else if (itemType != null && itemType.name().endsWith("POTION")) {
+		} else if (itemType.name().endsWith("POTION")) {
 			PotionMeta meta = (PotionMeta) e.getItem().getItemMeta();
 			PotionType type = meta.getBasePotionData().getType();
 			
@@ -121,8 +122,8 @@ public class PotionCauldronListener extends EventListener {
 			// Disallow custom potions for now
 			if (meta.hasCustomEffects()) return;
 			
-			/*
-			If there is no armour stand, create one from the potion being put into it.
+			/**
+			 * If there is no armour stand, create one from the potion being put into it.
 			 */
 			if (stand == null) {
 				stand = (ArmorStand) world.spawnEntity(loc.subtract(0, 50.6, 0), EntityType.ARMOR_STAND);
@@ -149,18 +150,18 @@ public class PotionCauldronListener extends EventListener {
 						p.getInventory().setItem(EquipmentSlot.HAND, new ItemStack(Material.GLASS_BOTTLE));
 					} else {
 						HashMap<Integer, ItemStack> stacks = p.getInventory().addItem(new ItemStack(Material.GLASS_BOTTLE));
-						stacks.forEach((idx, item) -> world.dropItem(loc, item));
+						stacks.forEach((idx, item) -> {world.dropItem(loc, item);});
 					}
 				}
 				doFinalEffect(p, b, stand, type, 1);
-			/*
-			Handle placing more potions into the cauldron.
-			Trying to place a different type of potion (including same types but upgraded when the original wasn't) in won't work.
+			/**
+			 * Handle placing more potions into the cauldron.
+			 * Trying to place a different type of potion (including same types but upgraded when the original wasn't) in won't work.
 			 */
 			} else {
 				PersistentDataContainer pdc = stand.getPersistentDataContainer();
 				PotionType cpType = PotionType.valueOf(pdc.get(potKey, PersistentDataType.STRING));
-				byte[] potInfo = pdc.getOrDefault(potInfoKey, PersistentDataType.BYTE_ARRAY, new byte[3]);
+				byte[] potInfo = pdc.get(potInfoKey, PersistentDataType.BYTE_ARRAY);
 				
 				if (potInfo[2] >= 8) {
 					p.sendActionBar(Component.text("This cauldron cannot hold anymore potions."));
@@ -177,7 +178,7 @@ public class PotionCauldronListener extends EventListener {
 						p.getInventory().setItem(EquipmentSlot.HAND, new ItemStack(Material.GLASS_BOTTLE));
 					} else {
 						HashMap<Integer, ItemStack> stacks = p.getInventory().addItem(new ItemStack(Material.GLASS_BOTTLE));
-						stacks.forEach((idx, item) -> world.dropItem(loc, item));
+						stacks.forEach((idx, item) -> {world.dropItem(loc, item);});
 					}
 				}
 				
@@ -185,54 +186,54 @@ public class PotionCauldronListener extends EventListener {
 				pdc.set(potInfoKey, PersistentDataType.BYTE_ARRAY, potInfo);
 				doFinalEffect(p, b, stand, type, potInfo[2]);
 			}
-		/*
-		Handle obtaining the potion from the cauldron using a glass bottle.
+		/**
+		 * Handle obtaining the potion from the cauldron using a glass bottle.
 		 */
 		} else if (itemType == Material.GLASS_BOTTLE) {
 			if (stand == null) return;
 			PersistentDataContainer pdc = stand.getPersistentDataContainer();
-			byte[] potInfo = pdc.getOrDefault(potInfoKey, PersistentDataType.BYTE_ARRAY, new byte[3]);
+			byte[] potInfo = pdc.get(potInfoKey, PersistentDataType.BYTE_ARRAY);
 			
 			if (potInfo[2] < 1) { 
 				stand.remove(); 
 				return; 
 			}
-
-			ItemStack potion = new ItemStack(Material.POTION);
-			PotionMeta pMeta = (PotionMeta) potion.getItemMeta();
-			PotionType type = PotionType.valueOf(pdc.get(potKey, PersistentDataType.STRING));
-			pMeta.setBasePotionData(new PotionData(type, potInfo[1] == 1, potInfo[0] == 1));
-			potion.setItemMeta(pMeta);
+			
+			if (potInfo[2] >= 1) {
+				ItemStack potion = new ItemStack(Material.POTION);
+				PotionMeta pMeta = (PotionMeta) potion.getItemMeta();
+				PotionType type = PotionType.valueOf(pdc.get(potKey, PersistentDataType.STRING));
+				pMeta.setBasePotionData(new PotionData(type, potInfo[1] == 1, potInfo[0] == 1));
+				potion.setItemMeta(pMeta);
 				
-			e.getItem().subtract(1);
-			HashMap<Integer, ItemStack> stacks = p.getInventory().addItem(potion);
-			stacks.forEach((idx, item) -> world.dropItem(loc, potion));
+				e.getItem().subtract(1);
+				HashMap<Integer, ItemStack> stacks = p.getInventory().addItem(potion);
+				stacks.forEach((idx, item) -> {world.dropItem(loc, potion);});
 				
-			potInfo[2]--;
-			pdc.set(potInfoKey, PersistentDataType.BYTE_ARRAY, potInfo);
-			doFinalEffect(p, b, stand, type, potInfo[2]);
-
-		/*
-		Cancel bucket crap when there's a potion already in the "cauldron"
+				potInfo[2]--;
+				pdc.set(potInfoKey, PersistentDataType.BYTE_ARRAY, potInfo);
+				doFinalEffect(p, b, stand, type, potInfo[2]);
+			}
+		/**
+		 * Cancel bucket crap when there's a potion already in the "cauldron"
 		 */
-		} else if (itemType != null && itemType.name().endsWith("BUCKET")) {
+		} else if (itemType.name().endsWith("BUCKET")) {
 			if (stand != null)
 				e.setCancelled(true);
-
-		/*
-		Tipped Arrow magic
+		/**
+		 * Tipped Arrow magic
 		 */
 		} else if (itemType == Material.ARROW) {
 			if (stand == null) return;
 			PersistentDataContainer pdc = stand.getPersistentDataContainer();
-			byte[] potInfo = pdc.getOrDefault(potInfoKey, PersistentDataType.BYTE_ARRAY, new byte[3]);
+			byte[] potInfo = pdc.get(potInfoKey, PersistentDataType.BYTE_ARRAY);
 			
 			if (potInfo[2] < 1) { 
 				stand.remove(); 
 				return;
 			}
 			int count = e.getItem().getAmount();
-			count = Math.min(count, 8);
+			count = count > 8 ? 8 : count;
 			
 			ItemStack arrow = new ItemStack(Material.TIPPED_ARROW, count);
 			PotionMeta pMeta = (PotionMeta) arrow.getItemMeta();
@@ -242,7 +243,7 @@ public class PotionCauldronListener extends EventListener {
 			
 			e.getItem().subtract(count);
 			HashMap<Integer, ItemStack> stacks = p.getInventory().addItem(arrow);
-			stacks.forEach((idx, item) -> world.dropItem(loc, arrow));
+			stacks.forEach((idx, item) -> {world.dropItem(loc, arrow);});
 			
 			potInfo[2]--;
 			pdc.set(potInfoKey, PersistentDataType.BYTE_ARRAY, potInfo);
@@ -258,7 +259,7 @@ public class PotionCauldronListener extends EventListener {
 				PersistentDataContainer pdc = s.getPersistentDataContainer();
 				if (pdc.isEmpty()) continue;
 				if (!pdc.has(potKey)) continue;
-				byte[] potInfo = pdc.getOrDefault(potInfoKey, PersistentDataType.BYTE_ARRAY, new byte[3]);
+				byte[] potInfo = pdc.get(potInfoKey, PersistentDataType.BYTE_ARRAY);
 				AreaEffectCloud cloud = (AreaEffectCloud) s.getWorld().spawnEntity(e.getBlock().getLocation().add(0.5, 0.1, 0.5), EntityType.AREA_EFFECT_CLOUD);
 				cloud.getWorld().playSound(cloud.getLocation(), Sound.ITEM_BUCKET_EMPTY, 0.4F, 1.0F);
 				cloud.setBasePotionData(new PotionData(PotionType.valueOf(pdc.get(potKey, PersistentDataType.STRING)), potInfo[1] == 1, potInfo[0] == 1));
@@ -304,7 +305,7 @@ public class PotionCauldronListener extends EventListener {
 		}
 	}
 	
-	private void doPistonMagic(Location l, BlockFace face) {
+	private final void doPistonMagic(Location l, BlockFace face) {
 		Collection<ArmorStand> stands = l.add(0.5, -0.3, 0.5).getNearbyEntitiesByType(ArmorStand.class, 0.8D);
 		for (ArmorStand s : stands) {
 			PersistentDataContainer pdc = s.getPersistentDataContainer();
@@ -316,8 +317,8 @@ public class PotionCauldronListener extends EventListener {
 		}
 	}
 	
-	private void doFinalEffect(Player p, Block b, ArmorStand stand, PotionType type, int newSize) {
-		p.swingMainHand();
+	private final void doFinalEffect(Player p, Block b, ArmorStand stand, PotionType type, int newSize) {
+		doArmSwing(p);
 		Color col = type.getEffectType().getColor();
 		Location l = b.getLocation().add(0.5, -0.3, 0.5);
 		stand.getWorld().playSound(l, Sound.ITEM_BOTTLE_FILL, 0.7F, 1.0F);
@@ -329,8 +330,8 @@ public class PotionCauldronListener extends EventListener {
 			stand.remove();
 	}
 	
-	private void doCauldronEffectLocal(Player p, Block b, PotionType type) {
-		p.swingMainHand();
+	private final void doCauldronEffectLocal(Player p, Block b, ArmorStand stand, PotionType type) {
+		doArmSwing(p);
 		p.playSound(b.getLocation().add(0.5, -0.3, 0.5), Sound.ITEM_BOTTLE_FILL, 0.5F, 0.8F);
 		Color col = type.getEffectType().getColor();
 		for (int x = -1; ++x < 3;)
@@ -339,21 +340,26 @@ public class PotionCauldronListener extends EventListener {
 	}
 	
 	private Material potTypeToGlass(PotionType type) {
-		return switch (type) {
-			case FIRE_RESISTANCE -> Material.ORANGE_STAINED_GLASS;
-			case INSTANT_DAMAGE -> Material.BLACK_STAINED_GLASS;
-			case INSTANT_HEAL, STRENGTH -> Material.RED_STAINED_GLASS;
-			case INVISIBILITY -> Material.LIGHT_GRAY_STAINED_GLASS;
-			case JUMP -> Material.LIME_STAINED_GLASS;
-			case LUCK, POISON -> Material.GREEN_STAINED_GLASS;
-			case REGEN -> Material.PINK_STAINED_GLASS;
-			case SLOWNESS, WEAKNESS -> Material.GRAY_STAINED_GLASS;
-			case SLOW_FALLING -> Material.WHITE_STAINED_GLASS;
-			case SPEED -> Material.LIGHT_BLUE_STAINED_GLASS;
-			case TURTLE_MASTER -> Material.PURPLE_STAINED_GLASS;
-			case UNCRAFTABLE -> Material.MAGENTA_STAINED_GLASS;
-			default -> Material.BLUE_STAINED_GLASS;
-		};
+		switch(type) {
+		case FIRE_RESISTANCE: return Material.ORANGE_STAINED_GLASS;
+		case INSTANT_DAMAGE: return Material.BLACK_STAINED_GLASS;
+		case INSTANT_HEAL: return Material.RED_STAINED_GLASS;
+		case INVISIBILITY: return Material.LIGHT_GRAY_STAINED_GLASS;
+		case JUMP: return Material.LIME_STAINED_GLASS;
+		case LUCK: return Material.GREEN_STAINED_GLASS;
+		case NIGHT_VISION: return Material.BLUE_STAINED_GLASS;
+		case POISON: return Material.GREEN_STAINED_GLASS;
+		case REGEN: return Material.PINK_STAINED_GLASS;
+		case SLOWNESS: return Material.GRAY_STAINED_GLASS;
+		case SLOW_FALLING: return Material.WHITE_STAINED_GLASS;
+		case SPEED: return Material.LIGHT_BLUE_STAINED_GLASS;
+		case STRENGTH: return Material.RED_STAINED_GLASS;
+		case TURTLE_MASTER: return Material.PURPLE_STAINED_GLASS;
+		case UNCRAFTABLE: return Material.MAGENTA_STAINED_GLASS;
+		case WATER_BREATHING: return Material.BLUE_STAINED_GLASS;
+		case WEAKNESS: return Material.GRAY_STAINED_GLASS;
+		default: return Material.BLUE_STAINED_GLASS;
+		}
 	}
 	
 }

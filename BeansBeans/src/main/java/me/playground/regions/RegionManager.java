@@ -1,26 +1,24 @@
 package me.playground.regions;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 
-import me.playground.playerprofile.PlayerProfile;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.util.BlockVector;
 
 import me.playground.main.Main;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class RegionManager {
 	private final RegionDatasource datasource;
 	
-	private final HashMap<UUID, Region> worldRegions = new HashMap<>();
-	private final HashMap<UUID, RegionMap<Region>> worldMaps = new HashMap<>();
-	private final HashMap<String, Region> allRegionsByName = new HashMap<>();
-	private final HashMap<Integer, Region> allRegionsById = new HashMap<>();
-	private final HashMap<Integer, Set<Region>> regionsByCreatorId = new HashMap<>();
-
-	private final float BLOCK_COST = 8; // Base block cost when expanding region
+	private final HashMap<UUID, Region> worldRegions = new HashMap<UUID, Region>();
+	private final HashMap<UUID, RegionMap<Region>> worldMaps = new HashMap<UUID, RegionMap<Region>>();
+	private final HashMap<String, Region> allRegionsByName = new HashMap<String, Region>();
+	private final HashMap<Integer, Region> allRegionsById = new HashMap<Integer, Region>();
 	
 	public RegionManager(Main plugin) {
 		datasource = new RegionDatasource(plugin, this);
@@ -28,23 +26,20 @@ public class RegionManager {
 	}
 	
 	public void initWorldRegion(World world) {
-		worldMaps.put(world.getUID(), new RegionMap<>(world));
+		worldMaps.put(world.getUID(), new RegionMap<Region>(world));
 		Region nwr = new Region(this, -datasource.getWorldManager().getWorldId(world), world);
 		worldRegions.put(world.getUID(), nwr);
 		registerRegion(nwr);
 	}
-
-	@NotNull
-	protected RegionMap<Region> getRegionMap(World world) {
+	
+	public RegionMap<Region> getRegionMap(World world) {
 		return worldMaps.get(world.getUID());
 	}
-
-	@Nullable
+	
 	public Region getRegion(String name) {
 		return allRegionsByName.get(name);
 	}
-
-	@Nullable
+	
 	public Region getRegion(int id) {
 		return allRegionsById.get(id);
 	}
@@ -55,35 +50,22 @@ public class RegionManager {
 		worldMaps.clear();
 		allRegionsByName.clear();
 		allRegionsById.clear();
-		regionsByCreatorId.clear();
 		datasource.loadAll();
 	}
 	
 	/**
-	 * Attempts to create a new {@link Region}.
-	 * @return The newly created region or null.
+	 * Create a new region.
 	 */
-	@Nullable
 	public Region createRegion(int creator, int priority, int parent, String name, World world, BlockVector min, BlockVector max) {
 		return datasource.createNewRegion(creator, priority, parent, name, world, min, max);
 	}
-
-	/**
-	 * Attempts to create a new {@link PlayerRegion}.
-	 * @return The newly created region or null.
-	 */
-	@Nullable
-	public PlayerRegion createPlayerRegion(PlayerProfile owner, World world, BlockVector min, BlockVector max, BlockVector origin) {
-		return datasource.createPlayerRegion(owner, world, min, max, origin);
-	}
-
+	
 	protected void registerRegion(Region region) {
 		if (!region.isWorldRegion() && region.getWorld() != null)
 			getRegionMap(region.getWorld()).add(region);
 		
 		this.allRegionsByName.put(region.getName().toLowerCase(), region);
 		this.allRegionsById.put(region.getRegionId(), region);
-		addUnderRegionCreator(region);
 	}
 	
 	public void refreshRegion(Region region) {
@@ -100,52 +82,17 @@ public class RegionManager {
 		getRegionMap(region.getWorld()).remove(region);
 		allRegionsByName.remove(region.getName().toLowerCase());
 		allRegionsById.remove(region.getRegionId());
-		if (regionsByCreatorId.containsKey(region.getCreatorId()))
-			regionsByCreatorId.get(region.getCreatorId()).remove(region);
 		datasource.deleteRegion(region);
 	}
-
-	private void addUnderRegionCreator(Region region) {
-		Set<Region> regions = regionsByCreatorId.get(region.getCreatorId());
-		if (regions == null) {
-			regionsByCreatorId.put(region.getCreatorId(), new HashSet<>());
-			regions = regionsByCreatorId.get(region.getCreatorId());
-		}
-		regions.add(region);
-	}
-
-	@NotNull
-	public Set<Region> getRegionsMadeBy(int creatorId) {
-		if (!regionsByCreatorId.containsKey(creatorId))
-			regionsByCreatorId.put(creatorId, new HashSet<>());
-		return regionsByCreatorId.getOrDefault(creatorId, new HashSet<>());
-	}
-
-	/**
-	 * Gets the {@link World}'s region.
-	 * @return The world's region.
-	 */
-	@NotNull
+	
 	public Region getWorldRegion(World world) {
 		return worldRegions.get(world.getUID());
 	}
-
-	/**
-	 * Gets the highest priority {@link Region} at the provided location.
-	 * If there is no regular region, the {@link World}'s region will be returned instead.
-	 * @return A region at the given location.
-	 */
-	@NotNull
+	
 	public Region getRegion(Location location) {
 		return getRegion(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
 	}
-
-	/**
-	 * Gets the highest priority {@link Region} at the provided location.
-	 * If there is no regular region, the {@link World}'s region will be returned instead.
-	 * @return A region at the given location.
-	 */
-	@NotNull
+	
 	public Region getRegion(World world, int x, int y, int z) {
 		Region dominantRegion = getWorldRegion(world);
 		List<Region> regions = getRegions(world, x, y, z);
@@ -156,36 +103,17 @@ public class RegionManager {
 		
 		return dominantRegion;
 	}
-
-	@NotNull
-	public List<Region> getRegions(Location location, int range) {
-		List<Region> regions = new ArrayList<>();
-		for (int x = location.getBlockX() - range; x < location.getBlockX() + range; x+=4) {
-			for (int y = location.getBlockY() - range; y < location.getBlockY() + range; y+=4) {
-				for (int z = location.getBlockZ() - range; z < location.getBlockZ() + range; z+=4) {
-					getRegionMap(location.getWorld()).getRegions(x, y, z).forEach(region -> {
-						if (!regions.contains(region))
-							regions.add(region);
-					});
-				}
-			}
-		}
-		return regions;
-	}
-
-	@NotNull
+	
 	public List<Region> getRegions(Location location) {
 		return getRegions(location.getWorld(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
 	}
-
-	@NotNull
+	
 	public List<Region> getRegions(World world, int x, int y, int z) {
 		return getRegionMap(world).getRegions(x, y, z);
 	}
-
-	@NotNull
+	
 	public ArrayList<Region> getAllRegions() {
-		return new ArrayList<>(allRegionsByName.values());
+		return new ArrayList<Region>(allRegionsByName.values());
 	}
 	
 	public int countRegions() {

@@ -33,7 +33,7 @@ public class CommandVote extends BeanCommand {
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		if (args.length > 0 && sender.hasPermission("bean.loot") && args[0].equalsIgnoreCase("reload")) {
 			getPlugin().voteManager().reloadServiceList();
-			sender.sendMessage(Component.text("\u00a77Reloaded available \u00a7rVoting Services.").colorIfAbsent(BeanColor.CRYSTALS));
+			sender.sendMessage(Component.text("\u00a77Reloaded available \u00a7rVoting Services.").colorIfAbsent(BeanColor.SAPPHIRE));
 		} else if (isPlayer(sender)) {
 			((Player)sender).openBook(getPlugin().voteManager().getVoteBook());
 		}

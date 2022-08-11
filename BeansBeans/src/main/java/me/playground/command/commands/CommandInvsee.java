@@ -6,7 +6,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import me.playground.gui.BeanGuiShulker;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -29,10 +28,7 @@ public class CommandInvsee extends BeanCommand {
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		final Player target = toPlayer(sender, args[0], false);
-
-		// TODO: Create a custom GUI where we can view a player's inventory safely.
-		if (PlayerProfile.from(target).getBeanGui() instanceof BeanGuiShulker) return false;
-
+		
 		((Player)sender).openInventory(target.getInventory());
 		return true;
 	}

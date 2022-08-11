@@ -12,12 +12,11 @@ import org.dynmap.DynmapAPI;
 
 import me.playground.main.IPluginRef;
 import me.playground.main.Main;
-import org.jetbrains.annotations.NotNull;
 
 public class DatasourceCore implements IPluginRef {
 	
 	private final DynmapAPI dynmap;
-	private final Set<PrivateDatasource> registeredSources = new HashSet<>();
+	private final Set<PrivateDatasource> registeredSources = new HashSet<PrivateDatasource>();
 	
 	private final Main plugin;
 	private final String host, database, username, password;
@@ -45,7 +44,9 @@ public class DatasourceCore implements IPluginRef {
 				connection = getNewConnection();
 				pl.getSLF4JLogger().info("Successfully established an MySQL Connection!");
 			}
-		} catch (SQLException | ClassNotFoundException e) {
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
@@ -58,7 +59,7 @@ public class DatasourceCore implements IPluginRef {
 		try {
 			if (connection != null)
 				connection.close();
-			connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false&character_set_server=utf8mb4", username, password);
+			connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false", username, password);
 		} catch (SQLException e) {
 			getPlugin().getSLF4JLogger().error("Could not establish a new MySQL Connection instance.");
 			e.printStackTrace();
@@ -96,7 +97,7 @@ public class DatasourceCore implements IPluginRef {
 	}
 	
 	@Override
-	public @NotNull Main getPlugin() {
+	public Main getPlugin() {
 		return plugin;
 	}
 	
@@ -123,14 +124,7 @@ public class DatasourceCore implements IPluginRef {
 	 * Save everything.
 	 */
 	public void saveAll() {
-		registeredSources.forEach(datasource -> {
-			try {
-				datasource.saveAll();
-			} catch (Exception e) {
-				plugin.getSLF4JLogger().error("There was a problem with saving " + datasource.getClass().getPackageName());
-				e.printStackTrace();
-			}
-		});
+		registeredSources.forEach(datasource -> { datasource.saveAll(); });
 	}
 	
 }

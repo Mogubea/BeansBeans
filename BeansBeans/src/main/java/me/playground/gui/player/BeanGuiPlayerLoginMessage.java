@@ -64,7 +64,7 @@ public class BeanGuiPlayerLoginMessage extends BeanGuiPlayer {
 			
 			close();
 			
-			SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList(Component.empty(), Component.text("\u00a78^^^^^^^^^^"), Component.text("\u00a7fEnter HEX Value for your new"), Component.text("\u00a7fName Colour (eg. #ff33af)!")), Material.OAK_WALL_SIGN)
+			SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList("","\u00a78^^^^^^^^^^", "\u00a7fEnter HEX Value for your new", "\u00a7fName Colour (eg. #ff33af)!"), Material.OAK_WALL_SIGN)
             .reopenIfFail(true)
             .response((player, strings) -> {
                 try {

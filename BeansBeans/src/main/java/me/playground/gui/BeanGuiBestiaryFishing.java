@@ -10,7 +10,7 @@ import net.kyori.adventure.text.Component;
 
 public class BeanGuiBestiaryFishing extends BeanGuiBestiary {
 	
-	//protected final ItemStack missingLoot = newItem(notUnlocked, "\u00a7c???", "\u00a78Unlock information about this unknown", "\u00a78piece of loot by fishing it up first!");
+	protected final ItemStack missingLoot = newItem(notUnlocked, "\u00a7c???", "\u00a78Unlock information about this unknown", "\u00a78piece of loot by fishing it up first!");
 	protected final ItemStack whatIsThis = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("What is the Bestiary?", BeanColor.BESTIARY), "", 
 			"\u00a77The \u00a72Bestiary\u00a77 is an interface where",
 			"\u00a77you can view information about various",

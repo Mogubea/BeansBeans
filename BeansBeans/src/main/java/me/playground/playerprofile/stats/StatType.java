@@ -13,9 +13,6 @@ public enum StatType {
 	CRATES_OPENED(7, "crate", "crates", "cratesopened"),
 	OCCUPATION(8, "job", "jobs"),
 	VOTING(9, "vote", "votes"),
-	CURRENCY(10, "currency", "currencies"),
-	ATTRIBUTE_SOURCES(11, "attributesource", "attributes", "attributesources"),
-	TRADING(12, "trading", "barters")
 	
 	
 	;

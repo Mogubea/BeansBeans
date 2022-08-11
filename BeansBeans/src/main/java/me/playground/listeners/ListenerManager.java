@@ -1,11 +1,10 @@
 package me.playground.listeners;
 
-import me.playground.entity.CustomEntityListener;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 
 import me.playground.celestia.logging.CelestiaListener;
-import me.playground.enchants.EnchantmentListener;
+import me.playground.enchants.BeanEnchantmentListener;
 import me.playground.main.Main;
 
 public class ListenerManager {
@@ -15,8 +14,7 @@ public class ListenerManager {
 	public ListenerManager(Main pl) {
 		this.plugin = pl;
 		PluginManager pm = pl.getServer().getPluginManager();
-		pm.registerEvents(new CustomEntityListener(pl, pl.getCustomEntityManager()), pl);
-
+		
 		pm.registerEvents(new ConnectionListener(pl), pl);
 		pm.registerEvents(new WorldListener(pl), pl);
 		pm.registerEvents(new PlayerListener(pl), pl);
@@ -25,14 +23,13 @@ public class ListenerManager {
 		pm.registerEvents(new BlockListener(pl), pl);
 		pm.registerEvents(new ShopListener(pl), pl);
 
-		pm.registerEvents(new RedstoneListener(pl, pl.getRedstoneManager()), pl);
+		pm.registerEvents(new JobListener(pl), pl);
+		pm.registerEvents(new BeanEnchantmentListener(pl), pl);
 		
 		pm.registerEvents(new CelestiaListener(pl), pl);
 		pm.registerEvents(new VoteListener(pl), pl);
 		
 		pm.registerEvents(new PotionCauldronListener(pl), pl);
-//		pm.registerEvents(new JobListener(pl), pl);
-		pm.registerEvents(new EnchantmentListener(pl), pl);
 	}
 	
 	public void unregisterEvents() {

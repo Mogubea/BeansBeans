@@ -1,10 +1,7 @@
 package me.playground.main;
 
-import org.jetbrains.annotations.NotNull;
-
-public interface IPluginRef {
-
-	@NotNull
-	Main getPlugin();
+public abstract interface IPluginRef {
+	
+	public abstract Main getPlugin();
 	
 }

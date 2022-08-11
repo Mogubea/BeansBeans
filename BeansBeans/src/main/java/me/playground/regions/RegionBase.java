@@ -6,12 +6,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bukkit.World;
 
 import me.playground.regions.flags.Flag;
-import org.jetbrains.annotations.NotNull;
 
 public abstract class RegionBase {
 	
@@ -21,7 +21,7 @@ public abstract class RegionBase {
 	protected int priority;
 	
 	protected ConcurrentMap<Flag<?>, Object> flags = new ConcurrentHashMap<>();
-	protected List<Flag<?>> dirtyFlags = new ArrayList<>();
+	protected List<Flag<?>> dirtyFlags = new ArrayList<Flag<?>>();
 	
 	public RegionBase(RegionManager rm, int id, World world) {
 		this.rm = rm;
@@ -40,31 +40,14 @@ public abstract class RegionBase {
 	public Map<Flag<?>, Object> getFlags() {
 		return this.flags;
 	}
-
-	/**
-	 * Gets this region's flag value. Ignores inheritance. But considers defaults.
-	 */
-	@NotNull
+	
+	@SuppressWarnings("unchecked")
 	public <T extends Flag<V>, V> V getFlag(T flag) {
-		return getFlag(flag, false);
-	}
-
-	/**
-	 * Gets this region's flag value. Ignores inheritance.
-	 * @param ignoreDefaults Whether to ignore the flag's default values or not.
-	 */
-	@SuppressWarnings("unchecked")
-	public <T extends Flag<V>, V> V getFlag(T flag, boolean ignoreDefaults) {
 		Object obj = flags.get(flag);
-		if (ignoreDefaults) return (obj != null ? (V)obj : null);
-		return obj != null ? (V)obj : isWorldRegion() ? flag.getWorldDefault() : flag.getDefault();
+		return (obj != null ? (V)obj : null);
 	}
-
-	/**
-	 * Gets this region's flag value. Considers inheritance and defaults.
-	 */
-	@NotNull
-	@SuppressWarnings("unchecked")
+	
+	@SuppressWarnings("unchecked") @Nonnull
 	public <T extends Flag<V>, V> V getEffectiveFlag(T flag) {
 		V val = (V) flags.get(flag);
 		boolean world = isWorldRegion();
@@ -82,7 +65,7 @@ public abstract class RegionBase {
 	
 	@SuppressWarnings("unchecked")
 	public <T extends Flag<V>, V> V setFlag(T flag, @Nullable Object val, boolean markDirty) {
-		if (val == null || val.equals(isWorldRegion() ? flag.getWorldDefault() : flag.getDefault()))
+		if (val == null)
 			flags.remove(flag);
 		else
 			flags.put(flag, flag.validateValue((V)val));
@@ -107,8 +90,5 @@ public abstract class RegionBase {
 	public abstract String getName();
 	
 	public abstract boolean isWorldRegion();
-
-	@NotNull
-	protected abstract RegionType getRegionType();
 	
 }

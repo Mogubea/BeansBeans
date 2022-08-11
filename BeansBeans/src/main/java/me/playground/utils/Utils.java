@@ -4,17 +4,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.text.DecimalFormat;
-import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import me.playground.discord.DiscordBot;
-import me.playground.main.Main;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -76,6 +70,10 @@ public class Utils {
 		return (str.charAt(0) + "").toUpperCase() + str.substring(1).toLowerCase();
 	}
 
+	public static String currencyString(Currency type, long amount) {
+		return type.getColour() + numberFormat.format(amount) + " " + type.getFriendlyString();
+	}
+
 	public static void setPacketValue(Object obj, String name, Object value) {
 		try {
 			Field field = obj.getClass().getDeclaredField(name);
@@ -128,9 +126,7 @@ public class Utils {
 	}
 	
 	public static String itemStackArrayToBase64(ItemStack[] items) throws IllegalStateException {
-    	if (items == null) return null;
-		
-		try {
+    	try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
             
@@ -151,8 +147,6 @@ public class Utils {
     }
 	
 	public static ItemStack[] itemStackArrayFromBase64(String data) {
-		if (data == null) return null;
-		
     	try {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(data));
             BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
@@ -234,8 +228,8 @@ public class Utils {
 		}
 	}
 	
-	public static TextComponent getProgressBar(char symbol, int amount, long value, long maxvalue, int baseColor, int filledColor) {
-		TextComponent component = Component.empty();
+	public static Component getProgressBar(char symbol, int amount, long value, long maxvalue, int baseColor, int filledColor) {
+		Component component = Component.empty();
 		int todo = (int)(((float)value/(float)maxvalue) * (float)amount);
 		
 		for (int c = -1; ++c < 2;) {
@@ -256,41 +250,6 @@ public class Utils {
 			if (!pp.isRank(rank)) return;
 			player.sendActionBar(message);
 		});
-	}
-
-	public static void sendMessage(Rank rank, Component message) {
-		Bukkit.getOnlinePlayers().forEach((player) -> {
-			me.playground.playerprofile.PlayerProfile pp = me.playground.playerprofile.PlayerProfile.from(player);
-			if (!pp.isRank(rank)) return;
-			player.sendMessage(message);
-		});
-	}
-
-	/**
-	 * Notify all online staff + attempt async discord staff channel
-	 */
-	public static void notifyAllStaff(TextComponent message, String embedTitle, String plainDescription) {
-		sendMessage(Rank.MODERATOR, Component.text("\u26a0 ", BeanColor.STAFF).append(message).colorIfAbsent(NamedTextColor.AQUA));
-
-		if (plainDescription == null) return;
-		if (Bukkit.getServer().isStopping()) {
-			doDiscordStaffMsg(embedTitle, plainDescription);
-		} else {
-			Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
-				doDiscordStaffMsg(embedTitle, plainDescription);
-			});
-		}
-	}
-
-	private static void doDiscordStaffMsg(String embedTitle, String plainDescription) {
-		DiscordBot bot = Main.getInstance().getDiscord();
-		if (!bot.isOnline()) return;
-		EmbedBuilder eb = new EmbedBuilder();
-		eb.setAuthor("Staff Notification" + (embedTitle != null ? " - " + embedTitle : ""), null, "https://img.icons8.com/nolan/344/error.png");
-		eb.setColor(BeanColor.STAFF.value());
-		eb.setTimestamp(Instant.now());
-		eb.setDescription(plainDescription);
-		bot.getStaffChannel().sendMessageEmbeds(eb.build()).queue();
 	}
 	
 	public static String timeStringFromNow(long timeInMillis) {
@@ -323,7 +282,7 @@ public class Utils {
 		return timeStringFromNow(timeInMillis + cur);
 	}
 	
-	private final static TreeMap<Integer, String> map = new TreeMap<>();
+	private final static TreeMap<Integer, String> map = new TreeMap<Integer, String>();
 
     static {
 
@@ -343,7 +302,7 @@ public class Utils {
 
     }
 
-    public static String toRoman(int number) {
+    public final static String toRoman(int number) {
         int l =  map.floorKey(number);
         if ( number == l ) {
             return map.get(number);

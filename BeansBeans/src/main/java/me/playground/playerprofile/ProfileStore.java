@@ -19,7 +19,7 @@ import net.kyori.adventure.text.format.TextColor;
  */
 public class ProfileStore {
 	
-	private final static HashMap<Integer, ProfileStore> players = new HashMap<>();
+	private final static HashMap<Integer, ProfileStore> players = new HashMap<Integer, ProfileStore>();
 	
 	static {
 		Datasource.loadProfileCache();
@@ -31,15 +31,15 @@ public class ProfileStore {
 	private String nickname;
 	private TextColor nameColour;
 	private TextComponent colouredName;
-	private final UUID uuid;
-	private final int dbid;
+	private UUID uuid;
+	private int dbid;
 	
 	public ProfileStore(int id, UUID uuid, String realName, String displayName, int nameColour) {
 		this.realName = realName;
 		this.nameColour = TextColor.color(nameColour);
-		TextComponent name = Component.text(displayName, this.nameColour);
+		Component name = Component.text(displayName, this.nameColour);
 		this.nickname = displayName;
-		this.colouredName = name;
+		this.colouredName = (TextComponent) name;
 		this.uuid = uuid;
 		this.dbid = id;
 	}
@@ -81,6 +81,10 @@ public class ProfileStore {
 		return dbid;
 	}
 
+	public void setDBID(int dbid) {
+		this.dbid = dbid;
+	}
+
 	public static Collection<ProfileStore> getEntries() {
 		return players.values();
 	}
@@ -95,10 +99,6 @@ public class ProfileStore {
 	
 	public static ProfileStore from(int id, boolean forceNull) {
 		return players.getOrDefault(id, forceNull ? null : players.get(-1));
-	}
-
-	public static ProfileStore fromIfExists(int id) {
-		return id > 0 ? players.get(id) : null;
 	}
 	
 	public static ProfileStore from(UUID id, boolean forceNull) {

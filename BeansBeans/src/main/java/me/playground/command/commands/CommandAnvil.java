@@ -6,7 +6,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import me.playground.gui.stations.BeanGuiAnvil;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -25,7 +24,7 @@ public class CommandAnvil extends BeanCommand {
 	
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
-		new BeanGuiAnvil((Player)sender, null).openInventory();
+		((Player)sender).openAnvil(((Player)sender).getLocation(), true);
 		return true;
 	}
 

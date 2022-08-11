@@ -58,18 +58,6 @@ public class CommandReload extends BeanCommandParent {
 		sender.sendMessage(Component.text((forceChunks ? "Force loaded chunks and reloaded " : "Reloaded ") + getPlugin().shopManager().countShops() + " shops.", NamedTextColor.GREEN));
 	}
 	
-	@SubCommand(permissionString = "bean.cmd.reload.menushops")
-	public void menushops(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull String[] args) {
-		getPlugin().menuShopManager().reload();
-		sender.sendMessage(Component.text("Reloaded " + getPlugin().menuShopManager().getPurchaseOptions().size() + " PurchaseOptions in Menu Shops.", NamedTextColor.GREEN));
-	}
-	
-	@SubCommand(permissionString = "bean.cmd.reload.npcs")
-	public void npcs(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull String[] args) {
-		getPlugin().npcManager().reload();
-		sender.sendMessage(Component.text("Reloaded " + getPlugin().npcManager().getAllNPCs().size() + " NPCs.", NamedTextColor.GREEN));
-	}
-	
 	@SubCommand(permissionString = "bean.cmd.reload.all")
 	public void all(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull String[] args) {
 		if (!getPlugin().isDebugMode()) throw new CommandException(sender, "Full reloads are disabled on the live server.");

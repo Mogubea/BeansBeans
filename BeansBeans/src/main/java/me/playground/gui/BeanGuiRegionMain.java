@@ -25,21 +25,20 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 	public BeanGuiRegionMain(Player p) {
 		super(p);
 		
-		setName("Region");
+		setName("Regions");
 		this.presetInv = new ItemStack[] {
-				rBlank,rBlank,bBlank,bBlank,regionSkull,bBlank,bBlank,rBlank,rBlank,
-				rBlank,blanc,blanc,blanc,blanc,blanc,blanc,blanc,rBlank,
-				bBlank,icon_name,blanc,icon_members,blanc,icon_flags,blanc,icon_priority,bBlank,
-				bBlank,blanc,blanc,blanc,blanc,blanc,blanc,blanc,bBlank,
-				bBlank,blanc,blanc,blanc,blanc,blanc,blanc,blanc,bBlank,
-				rBlank,rBlank,rBlank,whatIsThis,goBack,rBlank,rBlank,rBlank,rBlank
+				rBlank,rBlank,bBlank,bBlank,null,bBlank,bBlank,rBlank,rBlank,
+				rBlank,null,null,null,null,null,null,null,rBlank,
+				bBlank,icon_name,null,icon_members,null,icon_flags,null,icon_priority,bBlank,
+				bBlank,null,null,null,null,null,null,null,bBlank,
+				bBlank,null,null,null,null,null,null,null,bBlank,
+				rBlank,rBlank,rBlank,rBlank,goBack,rBlank,rBlank,rBlank,rBlank
 		};
 	}
 	
 	protected BeanGuiRegionMain(Player p, int regionIdx) {
 		this(p);
 		this.regionIdx = regionIdx;
-		updateRegionItems();
 	}
 
 	@Override
@@ -49,16 +48,16 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 	@Override
 	public void onInventoryClicked(InventoryClickEvent e) {
 		final int slot = e.getRawSlot();
-		if (slot > 25) return;
+		if (slot < 19 || slot > 25) return;
 		final boolean canEdit = getRegion().canModify(p) && !getRegion().isWorldRegion();
 		
 		switch(slot) {
-		case 19: // Rename Button - Costs 5000 coins, requires a permission so it's revokable if someone's a twat.
+		case 19: // Rename Button - Costs 500 coins, requires a permission so it's revokable if someone's a twat.
 			if (!canEdit) return;
 			if (p.hasPermission("bean.region.modifyothers")) {
 				// can
 			} else if (p.hasPermission("bean.region.rename")) {
-				if (pp.getBalance() < 5000) {
+				if (pp.getBalance() < 500) {
 					p.sendActionBar(Component.text("\u00a7cYou don't have enough coins to rename the region!"));
 					p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
 					return;
@@ -71,13 +70,13 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 			
 			p.closeInventory();
 			
-			SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList(Component.empty(), Component.text("^^^^^^^^^^"), Component.text("\u00a7bNew Name for"), Component.text("\u00a7b" + getRegion().getName())), Material.WARPED_WALL_SIGN)
+			SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList("","^^^^^^^^^^", "\u00a7bNew Name for", "\u00a7b" + getRegion().getName()), Material.WARPED_WALL_SIGN)
             .reopenIfFail(true)
             .response((player, strings) -> {
                 try {
                 	String regionName = strings[0];
                 	
-                	if (pp.getBalance() < 5000) // just in case they delay it and their coin count changes
+                	if (pp.getBalance() < 500) // just in case they delay it and their coin count changes
     					throw new RuntimeException("You don't have enough coins to rename a region!");
                 	
                 	if (regionName.length() < 3)
@@ -93,7 +92,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
         			getRegion().setName(p, regionName);
         			
         			if (!p.hasPermission("bean.region.modifyothers"))
-        				pp.addToBalance(-5000, "Renamed region '"+oldName+"'" + " to '"+regionName+"'");
+        				pp.addToBalance(-500, "Renamed region '"+oldName+"'" + " to '"+regionName+"'");
         			p.sendMessage(Component.text("\u00a77Renamed \u00a7f"+oldName+" \u00a77to ").append(getRegion().toComponent()));
         			refreshRegionViewers();
                 	
@@ -119,7 +118,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 			
 			p.closeInventory();
 			
-			SignMenuFactory.Menu menu2 = plugin.getSignMenuFactory().newMenu(Arrays.asList(Component.empty(), Component.text("^^^^^^^^^^"), Component.text("\u00a7bRegion Priority for"), Component.text("\u00a7b" + getRegion().getName())), Material.WARPED_WALL_SIGN)
+			SignMenuFactory.Menu menu2 = plugin.getSignMenuFactory().newMenu(Arrays.asList("","^^^^^^^^^^", "\u00a7bRegion Priority for", "\u00a7b" + getRegion().getName()), Material.WARPED_WALL_SIGN)
             .reopenIfFail(true)
             .response((player, strings) -> {
                 try {
@@ -144,7 +143,6 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 			menu2.open(p);
 			return;	
 		default:
-			super.onInventoryClicked(e);
 			return;
 		}
 		
@@ -178,11 +176,6 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 		
 		i.setContents(contents);
 		super.onInventoryOpened();
-	}
-
-	@Override
-	public void onBackPress() {
-		new BeanGuiMainMenu(p).openInventory();
 	}
 	
 }

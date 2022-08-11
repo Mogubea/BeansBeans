@@ -133,26 +133,23 @@ public class ShopDatasource extends DynmapDatasource<Shop> {
 			e.printStackTrace();
 		}
 	}
-
-	/**
-	 * Asynchronous.
-	 */
-	public void logShopAction(int shopId, int playerId, String comment, String data) {
-		getPlugin().getServer().getScheduler().runTaskAsynchronously(getPlugin(), task -> {
-			try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO shops_log (shopId,playerId,comment,data) VALUES (?,?,?,?)")) {
-				s.setInt(1, shopId);
-				s.setInt(2, playerId);
-				s.setString(3, comment);
-				s.setString(4, data);
-				s.executeUpdate();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		});
+	
+	public boolean logShopAction(int shopId, int playerId, String comment, String data) {
+		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO shops_log (shopId,playerId,comment,data) VALUES (?,?,?,?)")) {
+			s.setInt(1, shopId);
+			s.setInt(2, playerId);
+			s.setString(3, comment);
+			s.setString(4, data);
+			s.executeUpdate();
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	public ArrayList<ShopLog> loadShopLogs(Integer shopId) {
-		final ArrayList<ShopLog> logList = new ArrayList<>();
+		final ArrayList<ShopLog> logList = new ArrayList<ShopLog>();
 		
 		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("SELECT time,playerId,comment,data FROM shops_log WHERE shopId = ?")){
 			s.setInt(1, shopId);

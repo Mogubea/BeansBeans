@@ -5,10 +5,7 @@ import org.bukkit.command.CommandSender;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
-import java.io.Serial;
-
 public class CommandException extends RuntimeException {
-	@Serial
 	private static final long serialVersionUID = 7387538523632048868L;
 	private final CommandSender sender;
 	private final Component c;

@@ -25,7 +25,7 @@ import me.playground.playerprofile.PlayerProfile;
 
 public abstract class BeanCommandParent extends BeanCommand {
 	
-	private final Map<String, Method> subCmds = new HashMap<>();
+	private final Map<String, Method> subCmds = new HashMap<String, Method>();
 	private final int size;
 	
 	public BeanCommandParent(final Main plugin, String... aliases) {
@@ -47,14 +47,13 @@ public abstract class BeanCommandParent extends BeanCommand {
 	public BeanCommandParent(final Main plugin, String permissionString, boolean canConsoleRun, int minArguments, @Nonnull String... aliases) {
 		super(plugin, permissionString, canConsoleRun, minArguments, aliases);
 		
-	    final List<Method> allMethods = new ArrayList<>(Arrays.asList(getClass().getDeclaredMethods()));
+	    final List<Method> allMethods = new ArrayList<Method>(Arrays.asList(getClass().getDeclaredMethods()));
 	    int size = allMethods.size();
 	    for (int x = -1; ++x < size;) {
 	    	final Method method = allMethods.get(x);
 	    	if (method.isAnnotationPresent(SubCommand.class))
 	    		subCmds.put(method.getName().toLowerCase(), method);
 	    }
-
 	    this.size = subCmds.size();
 	}
 	
@@ -88,7 +87,7 @@ public abstract class BeanCommandParent extends BeanCommand {
 	@Override
 	public @Nullable List<String> runTabComplete(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		if (size < 1 || args.length != 1) return Collections.emptyList();
-		final List<String> subs = new ArrayList<>();
+		final List<String> subs = new ArrayList<String>();
 		subCmds.forEach((string, method) -> {
 			String permString = method.getAnnotation(SubCommand.class).permissionString();
 			if (sender.hasPermission(permString)) 

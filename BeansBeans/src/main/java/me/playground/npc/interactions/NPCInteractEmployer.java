@@ -89,11 +89,11 @@ public class NPCInteractEmployer extends NPCInteraction {
 				if (!pp.setJob(job, false))
 					npc.sendMessage(p, Component.text("\u00a7cLooks like there was a problem updating your job.."));
 				else {
-//					Bukkit.getOnlinePlayers().forEach(player -> {
-//						if (PlayerProfile.from(player).isSettingEnabled(PlayerSetting.SHOW_JOB_MESSAGES)) {
-//							player.sendMessage(Component.text("\u00a7b» ").append(pp.getComponentName()).append(Component.text("\u00a77 is now a ")).append(job.toComponent(pp)));
-//							}
-//						});
+					Bukkit.getOnlinePlayers().forEach(player -> { 
+						if (PlayerProfile.from(player).isSettingEnabled(PlayerSetting.SHOW_JOB_MESSAGES)) { 
+							player.sendMessage(Component.text("\u00a7b» ").append(pp.getComponentName()).append(Component.text("\u00a77 is now a ")).append(job.toComponent(pp))); 
+							}
+						});
 				}
 			}
 

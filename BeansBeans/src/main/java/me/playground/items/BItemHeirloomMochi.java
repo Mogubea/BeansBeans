@@ -2,10 +2,8 @@ package me.playground.items;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
-import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
@@ -26,7 +24,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 
 public class BItemHeirloomMochi extends BeanItemHeirloom {
 
-	private final Random rand = new Random();
+	private Random rand = new Random();
 	
 	public BItemHeirloomMochi(int numeric, String identifier, String name, ItemRarity rarity) {
 		super(numeric, identifier, name, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjkzNTUzYmU2ODMwMjJmODU5NTljNmMyMTdiNGE1NmJmMzNkZWZiZjUyYTZhODRjNjlkMmNiZGI1MTY0M2IifX19", rarity);
@@ -34,8 +32,8 @@ public class BItemHeirloomMochi extends BeanItemHeirloom {
 	}
 	
 	@Override
-	public List<TextComponent> getCustomLore(ItemStack item) {
-		final List<TextComponent> lore = new ArrayList<>();
+	public ArrayList<Component> getCustomLore(ItemStack item) {
+		final ArrayList<Component> lore = new ArrayList<Component>();
 		lore.addAll(Arrays.asList(
 				Component.text("\"\u3082\u3050\u3082\u3050\u3082\u3050\u3082\u3050\"", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false),
 				Component.text("Mogu Counter: ", NamedTextColor.GRAY).append(Component.text(item.getItemMeta().getPersistentDataContainer().getOrDefault(KEY_COUNTER, PersistentDataType.INTEGER, 0), NamedTextColor.WHITE)).decoration(TextDecoration.ITALIC, false)));

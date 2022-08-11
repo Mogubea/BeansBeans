@@ -6,7 +6,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import me.playground.data.Datasource;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -33,12 +32,8 @@ public class CommandSethome extends BeanCommand {
 		final Location loc = p.getLocation();
 		if (!isSafe(loc))
 			throw new CommandException(p, "You can't set your home here!");
-
-		if (!Datasource.setHome(p, p.getLocation()))
-			throw new CommandException(p, "There was a problem setting your home.");
-
 		profile.setHome(p.getLocation());
-		p.sendMessage(Component.text("\u00a77Successfully updated your ").append(commandInfo("home")).append(Component.text("\u00a77 location!")));
+		sender.sendMessage(Component.text("\u00a77Successfully updated your ").append(commandInfo("home")).append(Component.text("\u00a77 location!")));
 		return true;
 	}
 

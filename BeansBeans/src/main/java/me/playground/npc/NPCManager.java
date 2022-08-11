@@ -5,15 +5,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.LivingEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_18_R2.CraftServer;
 import org.bukkit.craftbukkit.v1_18_R2.CraftWorld;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import com.mojang.authlib.GameProfile;
@@ -21,7 +17,10 @@ import com.mojang.authlib.GameProfile;
 import me.playground.main.IPluginRef;
 import me.playground.main.Main;
 import net.minecraft.server.dedicated.DedicatedServer;
+import net.minecraft.server.level.EntityPlayer;
+import net.minecraft.server.level.WorldServer;
 import net.minecraft.world.entity.Entity.RemovalReason;
+import net.minecraft.world.entity.EntityLiving;
 
 public class NPCManager implements IPluginRef {
 	private final NPCDatasource datasource;
@@ -35,7 +34,6 @@ public class NPCManager implements IPluginRef {
 	public NPCManager(Main plugin) {
 		this.plugin = plugin;
 		this.datasource = new NPCDatasource(plugin, this);
-		datasource.loadAll();
 		
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			@Override
@@ -49,8 +47,7 @@ public class NPCManager implements IPluginRef {
 	
 	public void showAllNPCs(Player p) {
 		npcsByEntityId.values().forEach((npc) -> {
-			if (npc.getLocation().getWorld() == p.getWorld())
-				npc.showTo(p);
+			npc.showTo(p);
 		});
 	}
 	
@@ -101,14 +98,16 @@ public class NPCManager implements IPluginRef {
 	}
 	
 	@Override
-	public @NotNull Main getPlugin() {
+	public Main getPlugin() {
 		return plugin;
 	}
 	
 	public void reload() {
 		this.hideAllNPCsFromAll();
 		datasource.saveAll();
-		this.npcsByDBID.forEach((id, npc) -> npc.getEntity().remove(RemovalReason.DISCARDED));
+		this.npcsByDBID.forEach((id, npc) -> {
+			npc.getEntity().a(RemovalReason.c);
+		});
 		this.npcsByEntityId.clear();
 		this.npcsByDBID.clear();
 		datasource.loadAll();
@@ -139,8 +138,8 @@ public class NPCManager implements IPluginRef {
 	private NPC<?> createNPC(int creatorId, Location location, NPCType type, String name, int id, JSONObject json) {
 		NPC<?> ack = null;
 		final DedicatedServer server = ((CraftServer)Bukkit.getServer()).getServer();
-		final ServerLevel world = ((CraftWorld)location.getWorld()).getHandle();
-		LivingEntity entityNpc = null;
+		final WorldServer world = ((CraftWorld)location.getWorld()).getHandle();
+		EntityLiving entityNpc = null;
 		
 		switch(type) {
 		case HUMAN:
@@ -149,9 +148,9 @@ public class NPCManager implements IPluginRef {
 				uuid = UUID.fromString(json.getString("uuid"));
 			
 			GameProfile profile = new GameProfile(uuid, name);
-			entityNpc = new ServerPlayer(server, world, profile);
-			((ServerPlayer) entityNpc).spawnIn(world);
-			ack = new NPCHuman(creatorId, id, getPlugin(), ((ServerPlayer) entityNpc), location, json);
+			entityNpc = new EntityPlayer(server, world, profile);
+			((EntityPlayer) entityNpc).spawnIn(world);
+			ack = new NPCHuman(creatorId, id, getPlugin(), ((EntityPlayer) entityNpc), location, json);
 			break;
 		default:
 			throw new RuntimeException("Invalid NPCType provided, cannot create NPC.");

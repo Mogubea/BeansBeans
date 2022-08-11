@@ -52,6 +52,7 @@ public class WhateverChat extends WebSocketServer {
 			getPlugin().getSLF4JLogger().warn("[WEBCHAT] Failure initialising Web Chat.");
 			e.printStackTrace();
 			this.enabled = false;
+			return;
 		}
 	}
 	
