@@ -12,7 +12,7 @@ public class LootTable {
 	
 	private final String name;
 	private final LootManager manager;
-	private final ArrayList<LootEntry> entries = new ArrayList<LootEntry>();
+	private final ArrayList<LootEntry> entries = new ArrayList<>();
 	
 	public LootTable(LootManager lm, String name) {
 		this.manager = lm;
@@ -29,7 +29,7 @@ public class LootTable {
 	
 	public LootTable setEntries(ArrayList<LootEntry> entries) {
 		this.entries.clear();
-		setEntries(entries);
+		this.entries.addAll(entries);
 		totalChances.clear();
 		getTotalChance(0);
 		return this;
@@ -43,7 +43,7 @@ public class LootTable {
 		return this;
 	}
 	
-	private final Map<Float, Integer> totalChances = new HashMap<Float, Integer>();
+	private final Map<Float, Integer> totalChances = new HashMap<>();
 	public float getTotalChance(float luck) {
 		if (totalChances.containsKey(luck)) 
 			return totalChances.get(luck);
