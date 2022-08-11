@@ -26,6 +26,7 @@ public class DatasourceCore implements IPluginRef {
 	private Connection connection;
 	
 	public DatasourceCore(Main pl) {
+		DynmapAPI dynmap1;
 		host = pl.getConfig().getString("host");
 		port = pl.getConfig().getInt("port");
 		username = pl.getConfig().getString("username");
@@ -33,10 +34,13 @@ public class DatasourceCore implements IPluginRef {
 		password = pl.getConfig().getString("password");
 		plugin = pl;
 		
-		dynmap = (DynmapAPI) pl.getServer().getPluginManager().getPlugin("dynmap");
-		if (dynmap == null)
-			pl.getSLF4JLogger().warn("DynmapAPI was not found, attempting to continue without DynmapAPI features.");
-		
+		dynmap1 = (DynmapAPI) pl.getServer().getPluginManager().getPlugin("dynmap");
+		if (dynmap1 == null || !dynmap1.markerAPIInitialized()) {
+			pl.getSLF4JLogger().warn("DynmapAPI was not found, continuing without Dynmap...");
+			dynmap1 = null;
+		}
+
+		dynmap = dynmap1;
 		try {
 			synchronized (pl) {
 				if (connection != null && !connection.isClosed()) return;
