@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nonnull;
 
+import me.playground.entity.EntityRegionCrystal;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -25,6 +26,7 @@ import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import org.jetbrains.annotations.NotNull;
 
 public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	
@@ -34,11 +36,13 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	private String name;
 	private int parentId;
 	private boolean dirty;
+
+	private List<EntityRegionCrystal> crystals = new ArrayList<>();
+
+	protected Component componentName;
 	
-	private Component componentName;
-	
-	private final LinkedHashMap<Integer, MemberLevel> members = new LinkedHashMap<Integer, MemberLevel>(); // Member ID, Permission Level
-	private final List<Integer> regionKeys = new ArrayList<Integer>(); // Region Keys, to remove upon deletion
+	private final LinkedHashMap<Integer, MemberLevel> members = new LinkedHashMap<>(); // Member ID, Permission Level
+	private final List<Integer> regionKeys = new ArrayList<>(); // Region Keys, to remove upon deletion
 	
 	public Region(RegionManager rm, int id, int creator, int priority,  String name, World world, int mx, int my, int mz, int max, int may, int maz) {
 		this(rm, id, creator, priority, name, world, new BlockVector(mx,my,mz), new BlockVector(max,may,maz));
@@ -134,13 +138,17 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 		
 		return this.members.getOrDefault(PlayerProfile.getDBID(p), MemberLevel.NONE);
 	}
+
+	public MemberLevel getTrueMemberLevel(int id) {
+		return this.members.getOrDefault(id, MemberLevel.NONE);
+	}
 	
 	public LinkedHashMap<Integer, MemberLevel> getMembers() {
 		return this.members;
 	}
 	
 	public Collection<Integer> getMembersOf(MemberLevel level) {
-		ArrayList<Integer> members = new ArrayList<Integer>();
+		ArrayList<Integer> members = new ArrayList<>();
 		for (Entry<Integer, MemberLevel> member : getMembers().entrySet()) {
 			if (member.getValue() == level)
 				members.add(member.getKey());
@@ -158,8 +166,6 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	
 	/**
 	 * Player parameter is required for {@link Celestia}
-	 * @param p
-	 * @param name
 	 */
 	public void setName(@Nonnull Player p, @Nonnull String name) {
 		rm.renameRegion(this.name, name);
@@ -173,7 +179,7 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 		return this.name;
 	}
 	
-	private final void updateColouredName() {
+	private void updateColouredName() {
 		componentName = Component.text(name, getColour());
 	}
 	
@@ -238,9 +244,9 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 		for (MemberLevel level : seek) {
 			ArrayList<Integer> members = (ArrayList<Integer>) getMembersOf(level);
 			if (members.size() > 0) {
-				text = text.append(Component.text("\n\u00a77" + level.toString() + "s: "));
-				for (int x = 0; x < Math.min(5, members.size()); x++)
-					text = text.append(PlayerProfile.getDisplayName(members.get((int)x)).append(Component.text("\u00a78" + (x+1<5? ", " : "..."))));
+				text = text.append(Component.text("\n\u00a77" + level + "s: "));
+				for (int x = -1; ++x < Math.min(5, members.size());)
+					text = text.append(PlayerProfile.getDisplayName(members.get(x)).append(Component.text("\u00a78" + (x+1<5? ", " : "..."))));
 			}
 		}
 		return text;
@@ -287,15 +293,29 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	public int compareTo(Region otherRegion) {
 		return Integer.compare(otherRegion.getPriority(), getPriority());
 	}
-	
-	public boolean can(Player p, Flag<?> flag) {
+
+	public boolean doesPlayerBypass(Player p, Flag<?> flag) {
 		MemberLevel level = getMember(p);
 		
 		if (flag instanceof FlagMember)
 			return getEffectiveFlag((FlagMember)flag).lowerOrEqTo(level);
 		if (flag instanceof FlagBoolean)
-			return getEffectiveFlag((FlagBoolean)flag).booleanValue() ? level.higherThan(MemberLevel.VISITOR) : true;
+			return !getEffectiveFlag((FlagBoolean) flag) || level.higherThan(MemberLevel.VISITOR);
 		return false;
+	}
+
+	@Override
+	@NotNull
+	protected RegionType getRegionType() {
+		return RegionType.DEFINED;
+	}
+
+	public void addCrystal(EntityRegionCrystal crystal) {
+		this.crystals.add(crystal);
+	}
+
+	public void removeCrystal(EntityRegionCrystal crystal) {
+		this.crystals.remove(crystal);
 	}
 	
 }

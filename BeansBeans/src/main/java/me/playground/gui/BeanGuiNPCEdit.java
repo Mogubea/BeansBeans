@@ -1,8 +1,5 @@
 package me.playground.gui;
 
-import java.util.Arrays;
-
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -11,11 +8,12 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 
 import me.playground.civilizations.jobs.Job;
+import me.playground.items.BeanItem;
 import me.playground.npc.NPCHuman;
 import me.playground.npc.interactions.NPCInteractEmployer;
+import me.playground.npc.interactions.NPCInteractShop;
 import me.playground.npc.interactions.NPCInteraction;
 import me.playground.utils.BeanColor;
-import me.playground.utils.SignMenuFactory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -39,11 +37,11 @@ public class BeanGuiNPCEdit extends BeanGui {
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
 				bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,blank,null,
-				bBlank,icon_name,null,icon_title,null,icon_interaction,bBlank,blank,null,
-				bBlank,null,null,icon_titleCol,null,null,bBlank,blank,null,
-				bBlank,null,null,null,null,null,bBlank,blank,null,
-				bBlank,null,icon_civilization,null,icon_employment,null,bBlank,blank,null,
-				icon_refresh,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,blank,null
+				bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,blank,null,
+				bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,blank,null,
+				bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,blank,null,
+				bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,blank,null,
+				bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,blank,null,
 		};
 		this.npc = npc;
 	}
@@ -69,7 +67,7 @@ public class BeanGuiNPCEdit extends BeanGui {
 				String mat = item.getType().name();
 				for (int x = -1; ++x < 6;) {
 					int aSlot = 8 + (x * 9);
-					if ((x < 4 ? mat.endsWith(slotChecks[x]) : true) && i.getItem(aSlot) == null) {
+					if ((x >= 4 || mat.endsWith(slotChecks[x])) && i.getItem(aSlot) == null) {
 						i.setItem(aSlot, item); // Duplicate the item by shift clicking, only admins can get into this gui anyway
 						p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.6F, 1);
 						return;
@@ -95,50 +93,25 @@ public class BeanGuiNPCEdit extends BeanGui {
 				onInventoryOpened();
 				return;
 			}
+
+			getPlugin().getSignMenuFactory().requestSignResponse(p, Material.BIRCH_WALL_SIGN, (strings) -> {
+				if (strings[0] == null && strings[1] == null)
+	            	npc.removeTitle(true);
+	            npc.setTitle(Component.text(strings[0] + strings[1]), true);
 			
-			p.closeInventory();
+			}, true, "NPC Title");
 			
-			SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList("","", "^^^^^^^^^^", "\u00a7bTitle for NPC"), Material.WARPED_WALL_SIGN)
-            .reopenIfFail(true)
-            .response((player, strings) -> {
-                try {
-                	if (strings[0] == null && strings[1] == null)
-                		Bukkit.getScheduler().runTaskLater(plugin, () -> npc.removeTitle(true), 1L);
-                	Bukkit.getScheduler().runTaskLater(plugin, () -> npc.setTitle(Component.text(strings[0] + strings[1]), true), 1L);
-                	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
-                } catch (RuntimeException ex) {
-                	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
-                }
-            	
-                Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiNPCEdit(p, npc).openInventory(), 1L);
-                return true;
-            });
-			menu.open(p);
-			return;
 		// Interaction Change
 		} else if (slot == 14) {
-			p.closeInventory();
+			getPlugin().getSignMenuFactory().requestSignResponse(p, Material.BIRCH_WALL_SIGN, (strings) -> {
+				NPCInteraction interaction = NPCInteraction.getByName(strings[0]);
+            	if (interaction == null) {
+            		p.sendActionBar(Component.text("\u00a7cYou provided an invalid interaction script!"));
+            		throw new RuntimeException("Invalid interaction script.");
+            	}
+            	npc.setInteraction(interaction);
+			}, true, "Interaction ID", "for this NPC");
 			
-			SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList("", "^^^^^^^^^^", "\u00a7bSpecify an interaction", "\u00a7bscript for the NPC"), Material.BIRCH_WALL_SIGN)
-            .reopenIfFail(true)
-            .response((player, strings) -> {
-                try {
-                	NPCInteraction interaction = NPCInteraction.getByName(strings[0]);
-                	if (interaction == null) {
-                		p.sendActionBar(Component.text("\u00a7cYou provided an invalid interaction script!"));
-                		throw new RuntimeException("Invalid interaction script.");
-                	}
-                	Bukkit.getScheduler().runTaskLater(plugin, () -> npc.setInteraction(interaction), 1L);
-                	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
-                } catch (Exception ex) {
-                	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
-                }
-            	
-                Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiNPCEdit(p, npc).openInventory(), 1L);
-                return true;
-            });
-			menu.open(p);
-			return;
 		// Title Colour Change
 		} else if (slot == 21) {
 			if (npc.getInteraction().hasLockedTitle()) return;
@@ -148,49 +121,31 @@ public class BeanGuiNPCEdit extends BeanGui {
 				onInventoryOpened();
 				return;
 			}
-			
-			p.closeInventory();
-			
-			SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList("","^^^^^^^^^^", "\u00a7bTitle Colour", "\u00a7bfor NPC"), Material.WARPED_WALL_SIGN)
-            .reopenIfFail(true)
-            .response((player, strings) -> {
-                try {
-                	Bukkit.getScheduler().runTaskLater(plugin, () -> npc.setTitleColour(Integer.parseInt(strings[0])), 1L);
-                	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
-                } catch (Exception ex) {
-                	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
-                }
+
+			getPlugin().getSignMenuFactory().requestSignResponse(p, Material.BIRCH_WALL_SIGN, (strings) -> {
+				String sCol = strings[0];
+            	if (!sCol.startsWith("#")) {
+					sCol = "#" + sCol;
+				}
             	
-                Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiNPCEdit(p, npc).openInventory(), 1L);
-                return true;
-            });
-			menu.open(p);
-			return;
+            	npc.setTitleColour(Integer.decode(strings[0]));
+			}, true, "HEX Title Colour", "for this NPC");
+			
 		// Employment Job Change
 		} else if (slot == 40) {
-			p.closeInventory();
+			getPlugin().getSignMenuFactory().requestSignResponse(p, Material.BIRCH_WALL_SIGN, (strings) -> {
+				Job job = Job.getByName(strings[0]);
+            	if (job == null) {
+            		p.sendActionBar(Component.text("\u00a7cYou provided an invalid job!"));
+            		throw new RuntimeException("Invalid job.");
+            	}
+            	npc.setJob(job);
+            	npc.getInteraction().onInit(npc);
+			}, true, "Specify a Job", "for this NPC");
 			
-			SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList("", "^^^^^^^^^^", "\u00a7bSpecify a job", "\u00a7bfor the NPC"), Material.BIRCH_WALL_SIGN)
-            .reopenIfFail(true)
-            .response((player, strings) -> {
-                try {
-                	Job job = Job.getByName(strings[0]);
-                	if (job == null) {
-                		p.sendActionBar(Component.text("\u00a7cYou provided an invalid job!"));
-                		throw new RuntimeException("Invalid job.");
-                	}
-                	npc.setJob(job);
-                	Bukkit.getScheduler().runTaskLater(plugin, () -> npc.getInteraction().onInit(npc), 1L);
-                	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
-                } catch (RuntimeException ex) {
-                	p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
-                }
-            	
-                Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiNPCEdit(p, npc).openInventory(), 1L);
-                return true;
-            });
-			menu.open(p);
-			return;
+		// Set Shop
+		} else if (slot == 41 && npc.getInteraction() instanceof NPCInteractShop) {
+			getPlugin().getSignMenuFactory().requestSignResponse(p, Material.BIRCH_WALL_SIGN, (strings) -> npc.setMenuShop(strings[0] + strings[1]), true, "NPC MenuShop ID");
 		} else if (slot == 45) {
 			
 		}
@@ -212,6 +167,9 @@ public class BeanGuiNPCEdit extends BeanGui {
 		contents[14] = newItem(icon_interaction, Component.text("NPC Interaction Script", BeanColor.NPC), "\u00a7f" + npc.getInteraction().getName());
 		contents[40] = newItem(icon_employment, Component.text("NPC Occupation", BeanColor.NPC), npc.getJob().toComponent());
 		
+		if (npc.getInteraction() instanceof NPCInteractShop)
+			contents[41] = newItem(BeanItem.GOLDEN_CHEST.getItemStack(), Component.text("\u00a7eNPC Shop"), Component.text("\u00a77The MenuShop that will open when"), Component.text("\u00a77a player clicks this NPC.."), Component.empty(), npc.getMenuShop() == null ? Component.text("\u00a7cNo MenuShop set.") : Component.text("\u00a77MenuShop: \u00a76" + npc.getMenuShop().getIdentifier()));
+		
 		i.setContents(contents);
 	}
 	
@@ -223,5 +181,4 @@ public class BeanGuiNPCEdit extends BeanGui {
 		}
 		return false;
 	}
-	
 }

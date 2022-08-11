@@ -24,6 +24,7 @@ import net.kyori.adventure.text.Component;
  * but for the sake of readability and debug ability of the server project, this is better, even if it's not the most optimal route taken.
  * Furthermore, it creates a sense of independence for the {@link Job} system.
  */
+@Deprecated
 public class JobListener extends EventListener {
 
 	public JobListener(Main plugin) {

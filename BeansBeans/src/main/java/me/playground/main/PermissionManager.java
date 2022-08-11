@@ -63,11 +63,12 @@ public class PermissionManager {
 	// /op previewrank
 	
 	public void previewRankFor(Player p, Rank rank) {
-		final ArrayList<Rank> preview = new ArrayList<Rank>();
+		final ArrayList<Rank> preview = new ArrayList<>();
 		preview.add(rank);
 		
 		final PlayerProfile pp = PlayerProfile.from(p);
-		this.rankPreviewers.put(p.getUniqueId(), new ArrayList<>(pp.getRanks()));
+		if (!rankPreviewers.containsKey(p.getUniqueId())) // Don't override
+			this.rankPreviewers.put(p.getUniqueId(), new ArrayList<>(pp.getRanks()));
 		pp.setRanks(preview);
 	}
 	

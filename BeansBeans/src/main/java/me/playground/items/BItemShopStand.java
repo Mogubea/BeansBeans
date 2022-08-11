@@ -28,7 +28,7 @@ public class BItemShopStand extends BeanItem {
 	}
 	
 	@Override
-	public void onInteract(PlayerInteractEvent e) {
+	public boolean onInteract(PlayerInteractEvent e) {
 		if (e.getHand() == EquipmentSlot.HAND && e.getAction() == Action.RIGHT_CLICK_BLOCK) {
 			e.setCancelled(true);
 			final Location l = e.getClickedBlock().getLocation().add(e.getBlockFace().getDirection().toLocation(e.getClickedBlock().getWorld()));
@@ -57,5 +57,6 @@ public class BItemShopStand extends BeanItem {
 				}
 			}
 		}
+		return true;
 	}
 }

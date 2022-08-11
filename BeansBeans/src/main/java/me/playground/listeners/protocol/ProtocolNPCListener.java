@@ -22,12 +22,12 @@ import me.playground.npc.NPCHuman;
 import me.playground.playerprofile.PlayerProfile;
 
 public class ProtocolNPCListener {
-	
+
 	final Main plugin;
-	
+
 	public ProtocolNPCListener(Main plugin) {
 		this.plugin = plugin;
-		
+
 		ProtocolManager manager = ProtocolLibrary.getProtocolManager();
 		manager.addPacketListener(new PacketAdapter(plugin, ListenerPriority.NORMAL, PacketType.Play.Client.USE_ENTITY) {
 
@@ -38,32 +38,33 @@ public class ProtocolNPCListener {
                 final PacketContainer packet = e.getPacket();
                 final int id = packet.getIntegers().getValues().get(0);
                 final WrappedEnumEntityUseAction action = packet.getEnumEntityUseActions().getValues().get(0);
-                
+
                 // These checks are stupid
                 if (action.getAction() == EntityUseAction.INTERACT_AT && action.getHand() == Hand.MAIN_HAND) {
                 	 final NPC<?> npc = getMainPlugin().npcManager().getEntityNPC(id);
                      if (npc == null) return;
-                     
+
                      // Call Sync from Async
                      if (PlayerProfile.from(p).onCdElseAdd("npcInteract", 500, true)) return;
                      Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> {
                     	 if (npc instanceof NPCHuman && p.isSneaking() && p.hasPermission("bean.npc.edit")) {
                     		 new BeanGuiNPCEdit(p, (NPCHuman)npc).openInventory();
+							 e.setCancelled(true); // Cancel to prevent item interactions
                     		 return;
                     	 }
-                    	 
-                    	 final PlayerInteractNPCEvent event = new PlayerInteractNPCEvent(p, npc);
-                    	 Bukkit.getPluginManager().callEvent(event);
-                    	 if (!event.isCancelled())
-                    		 npc.onInteract(p);
+
+                    	 if (new PlayerInteractNPCEvent(p, npc).callEvent()) {
+							 npc.onInteract(p);
+							 e.setCancelled(true); // Cancel to prevent item interactions
+						 }
                      });
                 }
             }
 		});
 	}
-	
+
 	public Main getMainPlugin() {
 		return plugin;
 	}
-	
+
 }

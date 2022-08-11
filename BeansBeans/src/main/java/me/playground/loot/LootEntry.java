@@ -72,6 +72,7 @@ public class LootEntry {
 	private byte maxStack = 1;
 	private float chance;
 	private float luckEffectiveness;
+	private boolean requiresPlayer = false;
 	private boolean dirty;
 	
 	private ArrayList<Biome> requiredBiome = new ArrayList<Biome>();
@@ -146,6 +147,13 @@ public class LootEntry {
 		this.dirty = true;
 		return this;
 	}
+
+	public LootEntry setRequiresPlayer(boolean player, boolean dirty) {
+		this.requiresPlayer = player;
+		if (dirty)
+			this.dirty = true;
+		return this;
+	}
 	
 	/**
 	 * Generates the ItemStack reward with factors such as looting, luck, min and max stacks, random enchantments etc. etc.
@@ -170,7 +178,7 @@ public class LootEntry {
 			clone.setAmount(minStack);
 		else
 			clone.setAmount(minStack + getRandom().nextInt(maxStack - minStack + 1));
-		
+
 		if (!this.possibleEnchants.isEmpty()) {
 			int size = possibleEnchants.size();
 			EnchantmentStorageMeta meta = (clone.getType() == Material.ENCHANTED_BOOK) ? (EnchantmentStorageMeta) clone.getItemMeta() : null;
@@ -198,7 +206,7 @@ public class LootEntry {
 		return clone;
 	}
 	
-	public final ItemStack getDisplayStack() {
+	public ItemStack getDisplayStack() {
 		return baseStack;
 	}
 	
@@ -253,6 +261,10 @@ public class LootEntry {
 	 */
 	public boolean requiresChargedCreeper() {
 		return (flags & 1<<FLAG_CHARGED_CREEPER_KILL) != 0;
+	}
+
+	public boolean requiresPlayer() {
+		return requiresPlayer;
 	}
 	
 	public ArrayList<Biome> getRequiredBiomes() {

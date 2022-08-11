@@ -115,8 +115,8 @@ public abstract class DiscordCommand {
 	protected MessageEmbed rankEmbed(Rank rank) {
 		final EmbedBuilder embed = new EmbedBuilder();
 		embed.setColor(rank.getRankHex());
-		embed.setTitle(Utils.firstCharUpper(rank.lowerName()));
-			
+		embed.setTitle(rank.getNiceName());
+
 		String rankType = "Playtime";
 		
 		embed.setThumbnail("https://emoji.gg/assets/emoji/9286-writtenbook.gif");
@@ -125,7 +125,7 @@ public abstract class DiscordCommand {
 			embed.setThumbnail("https://images-ext-1.discordapp.net/external/w0Ic-2tPONSmBuIeKW7QZp8N7pgnLcWERLC8qpinLNs/https/emoji.gg/assets/emoji/1201-modcheck.png");
 			rankType = "Staff";
 		} else if (rank.isDonorRank()) {
-			embed.setThumbnail("https://images-ext-1.discordapp.net/external/buhY3rQciXfJICqn89S4EMB74NzzDOOAoaf3Iqfy6dI/https/emoji.gg/assets/emoji/8253_RaphtaliaPat.png");
+			embed.setThumbnail("https://img.icons8.com/nolan/2x/like.png");
 			rankType = "Supporter";
 		}
 		
@@ -141,11 +141,13 @@ public abstract class DiscordCommand {
 						+ (rank.getPlaytimeRequirement() > 60 * 60 * 23 ? " *("+(df.format(rank.getPlaytimeRequirement()/60/60))+" Hours)*": ""), false);
 		} else if (rank.isDonorRank()) {
 			if (rank == Rank.PLEBEIAN)
-				embed.addField("How to Obtain", "Temporary Sapphire or Purchase (£10.00)", false);
+				embed.addField("How to Obtain", "Temporary Crystal Reward or One-Time Purchase (\u00a310.99) \nhttps://ko-fi.com/s/8942a1ff39", false);
 			else if (rank == Rank.PATRICIAN)
-				embed.addField("How to Obtain", "Purchase Only (£25.00)", false);
+				embed.addField("How to Obtain", "One-Time Purchase Only (\u00a326.99) \nhttps://ko-fi.com/s/d132ff6aa0", false);
 			else if (rank == Rank.SENATOR)
-				embed.addField("How to Obtain", "Purchase Only (£50.00)", false);
+				embed.addField("How to Obtain", "One-Time Purchase Only (\u00a354.99) \nhttps://ko-fi.com/s/639ae2b69e", false);
+			else if (rank == Rank.VIP)
+				embed.addField("How to Obtain", "Requires Senator and Subscription Purchase (\u00a37.99/m)", false);
 		}
 		return embed.build();
 	}

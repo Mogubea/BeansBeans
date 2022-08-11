@@ -1,22 +1,18 @@
 package me.playground.main;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.playground.items.ItemRarity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import me.playground.civilizations.Civilization;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.playerprofile.settings.PlayerSetting;
 import me.playground.ranks.Rank;
-import me.playground.regions.Region;
-import me.playground.regions.flags.MemberLevel;
-import me.playground.utils.ChatColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -24,6 +20,34 @@ import net.kyori.adventure.text.format.NamedTextColor;
  * Maybe remove in the future as it only ever interacts with PlayerProfile anyway.
  */
 public class TeamManager {
+	
+	public enum ScoreboardFlag {
+		TITLE,
+		COINS(true),
+		CRYSTALS(true),
+		RANK,
+		REGION,
+		TIME,
+		REDSTONE(true),
+		TPS(true);
+		
+		final boolean instant;
+		ScoreboardFlag() {
+			this.instant = false;
+		}
+		
+		ScoreboardFlag(boolean instant) {
+			this.instant = instant;
+		}
+		
+		public boolean isInstant() {
+			return instant;
+		}
+		
+		public static int all() {
+			return 127;
+		}
+	}
 	
 	public static TeamManager instance;
 	private final Main plugin;
@@ -37,17 +61,25 @@ public class TeamManager {
 		loadTeamsFor(p);
 		updateTeam(p);
 		
-		if (PlayerProfile.from(p).isSettingEnabled(PlayerSetting.SHOW_SIDEBAR))
-			updateSidebar(p);
+		PlayerProfile pp = PlayerProfile.from(p);
+		pp.flagFullScoreboardUpdate();
+		pp.updateSidebar();
 	}
 	
-	private Scoreboard createScoreboard(Player p) {
+	private void createScoreboard(Player p) {
 		Scoreboard playerBoard = plugin.getServer().getScoreboardManager().getNewScoreboard();
 		Objective obj = playerBoard.registerNewObjective("showhealth", "health", Component.text("\u00a7c\u2764"));
 		obj.setDisplaySlot(DisplaySlot.BELOW_NAME);
 		obj.getScore(p).setScore((int)p.getHealth());
+
+		for (ItemRarity rarity : ItemRarity.values()) {
+			if (rarity.is(ItemRarity.UNCOMMON)) {
+				Team team = playerBoard.registerNewTeam("itemRarity_" + rarity.name());
+				team.color(NamedTextColor.nearestTo(rarity.getColour()));
+			}
+		}
+
 		p.setScoreboard(playerBoard);
-		return playerBoard;
 	}
 	
 	/**
@@ -56,13 +88,13 @@ public class TeamManager {
 	public void updateTeam(Player p) {
 		final PlayerProfile pp = PlayerProfile.from(p);
 		
-		List<String> flags = new ArrayList<String>();
+		List<String> flags = new ArrayList<>();
 		if (pp.isHidden()) flags.add("HIDE");
 		if (pp.isAFK()) flags.add("AFK");
 		
 		Component pprefix = !flags.isEmpty() ? Component.text("" + flags, NamedTextColor.GRAY) : Component.empty();
 		final Component prefix = pprefix.append(pp.isRank(Rank.MODERATOR) ? Component.text("\u24E2 ", Rank.MODERATOR.getRankColour()) : flags.isEmpty() ? Component.empty() : Component.text(" "));
-		final Component suffix = pp.isRank(Rank.PLEBEIAN) ? Component.text(" \u272d", pp.getDonorRank().getRankColour()) : Component.empty();
+		final Component suffix = pp.isRank(Rank.PLEBEIAN) ? Component.text(" \u2b50", pp.getDonorRank().getRankColour()) : Component.empty();
 		final NamedTextColor color = NamedTextColor.nearestTo(pp.getNameColour());
 		
 		// This is required due to how scoreboards function per player
@@ -90,13 +122,13 @@ public class TeamManager {
 	private void loadTeamsFor(Player p) {
 		plugin.getServer().getOnlinePlayers().forEach((player) -> {
 			final PlayerProfile pp = PlayerProfile.from(player);
-			List<String> flags = new ArrayList<String>();
+			List<String> flags = new ArrayList<>();
 			if (pp.isHidden()) flags.add("HIDE");
 			if (pp.isAFK()) flags.add("AFK");
 			
 			Component pprefix = !flags.isEmpty() ? Component.text("" + flags, NamedTextColor.GRAY) : Component.empty();
 			final Component prefix = pprefix.append(pp.isRank(Rank.MODERATOR) ? Component.text("\u24E2 ", Rank.MODERATOR.getRankColour()) : flags.isEmpty() ? Component.empty() : Component.text(" "));
-			final Component suffix = pp.isRank(Rank.PLEBEIAN) ? Component.text(" \u272d", pp.getDonorRank().getRankColour()) : Component.empty();
+			final Component suffix = pp.isRank(Rank.PLEBEIAN) ? Component.text(" \u2b50", pp.getDonorRank().getRankColour()) : Component.empty();
 			final NamedTextColor color = NamedTextColor.nearestTo(pp.getNameColour());
 			
 			String id = "id" + pp.getId() + "-" + PlayerProfile.from(p).getId();
@@ -110,96 +142,5 @@ public class TeamManager {
 			team.suffix(suffix);
 		});
 	}
-	
-	public void hideSidebar(Player p) {
-		Objective obj = p.getScoreboard().getObjective("id" + PlayerProfile.from(p).getId() + "-side");
-		if (obj != null) obj.setDisplaySlot(null);
-	}
-	
-	public void showSidebar(Player p) {
-		Objective obj = p.getScoreboard().getObjective("id" + PlayerProfile.from(p).getId() + "-side");
-		if (obj != null) obj.setDisplaySlot(DisplaySlot.SIDEBAR);
-	}
-	
-	// TODO: micro optimize and neaten up
-	public void updateSidebar(Player p) {
-		PlayerProfile pp = PlayerProfile.from(p);
-		
-		Scoreboard playerBoard = p.getScoreboard();
-		
-		Objective obj = playerBoard.getObjective("id"+pp.getId()+"-side");
-		if (obj != null) obj.unregister();
-		
-		List<String> flags = new ArrayList<String>();
-		if (pp.isHidden()) flags.add("HIDE");
-		if (pp.isAFK()) flags.add("AFK");
-		
-		obj = playerBoard.registerNewObjective("id"+pp.getId()+"-side", "dummy", pp.getColouredName().append(!flags.isEmpty() ? Component.text("\u00a77 " + flags) : Component.empty()));
-		obj.setDisplaySlot(DisplaySlot.SIDEBAR);
-		
-		Region r = pp.getCurrentRegion();
-		String c = "\u00a7" + ChatColor.charOf(pp.getHighestRank().getRankColour());
-		String rc = "\u00a7" + ChatColor.charOf(pp.getHighestRank().getRankColour());
-		
-		List<String> scores = new ArrayList<String>();
-		scores.add("      ");
-		
-		scores.add(c + "\u25D9 \u00a7fRank: " + rc + pp.getHighestRank().getNiceName());
-		
-		if (pp.getDonorRank() != null) {
-			rc = "\u00a7" + ChatColor.charOf(pp.getDonorRank().getRankColour());
-			scores.add(c + "\u25D9 \u00a7fSupp: " + rc + pp.getDonorRank().getNiceName());
-		}
-		
-		scores.add(c + "\u25D9 \u00a7fCoins: \u00a76" + df.format(pp.getBalance()) + " \u26C2");
-		scores.add(c + "\u25D9 \u00a7fSapphire: \u00a79" + df.format(pp.getSapphire()) + " \u2666");
-		
-		if (pp.isInCivilization()) {
-			scores.add(" ");
-			Civilization civ = pp.getCivilization();
-			scores.add("\u00a72\u25D9 \u00a7fCiv:\u00a72 " + civ.getName());
-			String jc = "\u00a7" + (pp.hasJob() ? ChatColor.charOf(pp.getJob().toComponent().color()) + pp.getJob().getNiceName() : "2Citizen");
-			scores.add("\u00a72\u25D9 \u00a7fJob: " + jc);
-		}
-		
-		scores.add("");
-		
-		if (r != null && !r.isWorldRegion()) {
-			String rName = r.getName();
-			if (rName.length() > 7)
-				rName = rName.substring(0, 8) + "..";
-			
-			scores.add("\u00a7b\u25D9 \u00a7fRegion: \u00a79" + rName);
-			MemberLevel level = r.getMember(p);
-			scores.add("\u00a7b\u25D9 \u00a7fPerms: \u00a7b" + level.toString());
-		} else {
-			String rName = p.getWorld().getName();
-			if (rName.length() > 7)
-				rName = rName.substring(0, 8) + "..";
-			
-			scores.add("\u00a7b\u25D9 \u00a7fWorld: \u00a72" + rName);
-		}
-		
-		// TODO: add a toggle.
-		if (pp.isRank(Rank.ADMINISTRATOR)) {
-			scores.add("        ");
-			scores.add("\u00a78\u25D9 " + getTPS());
-		}
-		
-		int size = scores.size();
-		for (int x = -1; ++x < size;)
-			obj.getScore(scores.get(x)).setScore(size - x - 1);
-	}
-	
-	private String getTPS() {
-		double[] tps = plugin.getServer().getTPS();
-		String tpString = "\u00a77TPS:";
-		for (int x = -1; ++x < tps.length;)
-			tpString += (tps[x]>=19.5 ? "\u00a72" : (tps[x] >= 12 ? "\u00a76" : "\u00a74")) + " " + tpsf.format(tps[x]);
-		return tpString;
-	}
-	
-	private final DecimalFormat df = new DecimalFormat("#,###");
-	private final DecimalFormat tpsf = new DecimalFormat("#.#");
 	
 }

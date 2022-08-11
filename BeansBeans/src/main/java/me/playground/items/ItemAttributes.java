@@ -8,11 +8,14 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 
+import me.playground.enchants.BEnchantment;
+
 public enum ItemAttributes {
 	
 	NIL(Material.AIR, 0, 0, 0),
 	
 	FISHING_ROD(Material.FISHING_ROD, 0, 0),
+	SHEARS(Material.SHEARS, 0, 0),
 	
 	WOODEN_SWORD(Material.WOODEN_SWORD, 4, 1.6),
 	GOLDEN_SWORD(Material.GOLDEN_SWORD, 4, 1.6),
@@ -75,7 +78,7 @@ public enum ItemAttributes {
 	
 	private final Material material;
 	private final double values[];
-	private Set<Enchantment> allowedEnchantments = new HashSet<Enchantment>();
+	private Set<BEnchantment> allowedEnchantments = new HashSet<>();
 	
 	/**
 	 * Attack Damage and Attack Speed for tools
@@ -85,18 +88,18 @@ public enum ItemAttributes {
 		this.material = material;
 		this.values = values;
 		
-		Enchantment[] enchants = Enchantment.values();
+		BEnchantment[] enchants = BEnchantment.values();
 		final int size = enchants.length;
 		for (int x = -1; ++x < size;) {
-			Enchantment enchant = enchants[x];
-			if (enchant == Enchantment.BINDING_CURSE || enchant == Enchantment.VANISHING_CURSE)
+			BEnchantment enchant = enchants[x];
+			if (enchant == BEnchantment.BINDING_CURSE || enchant == BEnchantment.VANISHING_CURSE)
 				continue;
-			if (enchant.getItemTarget().includes(getMaterial()))
+			if (enchant.getEnchantmentTarget().includes(getMaterial()))
 				addValidEnchantment(enchant);
 		}
 		lockSet();
 	}
-	
+
 	public double getAttackDamage() {
 		return values[0];
 	}
@@ -138,7 +141,7 @@ public enum ItemAttributes {
 	/**
 	 * @return An unmodifiable set of valid {@link Enchantment}s for this item.
 	 */
-	public Set<Enchantment> getValidEnchantments() {
+	public Set<BEnchantment> getValidEnchantments() {
 		return allowedEnchantments;
 	}
 	
@@ -146,7 +149,7 @@ public enum ItemAttributes {
 		return material;
 	}
 	
-	private void addValidEnchantment(Enchantment enchant) {
+	private void addValidEnchantment(BEnchantment enchant) {
 		this.allowedEnchantments.add(enchant);
 	}
 	

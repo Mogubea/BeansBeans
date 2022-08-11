@@ -107,4 +107,9 @@ public class BeanGuiHeirlooms extends BeanGui {
 		i.setContents(contents);
 	}
 	
+	@Override
+	protected void playOpenSound() {
+		p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.4F, 1.0F);
+	}
+	
 }

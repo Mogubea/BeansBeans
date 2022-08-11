@@ -6,23 +6,32 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import me.playground.main.Main;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 
 public class BItemDurable extends BeanItem {
-	
-	private List<Enchantment> incompatibleEnchants = new ArrayList<Enchantment>();
-	private List<Enchantment> validEnchants = new ArrayList<Enchantment>(ItemAttributes.fromMaterial(material).getValidEnchantments());
-	private final Map<String, Float> repairItems = new LinkedHashMap<String, Float>();
-	private boolean cleansable = true;
-	
+
+	public static final NamespacedKey KEY_REFINEMENT = Main.getInstance().getKey("REFINEMENT_TIER");
+
+	private List<Enchantment> incompatibleEnchants = new ArrayList<>();
+	private List<Enchantment> validEnchants = new ArrayList<>(ItemAttributes.fromMaterial(material).getValidEnchantments());
+	private final Map<String, Float> repairItems = new LinkedHashMap<>();
+	private boolean isRefineable = true;
+
 	protected BItemDurable(int numeric, String identifier, String name, Material material, ItemRarity rarity, int modelDataInt, int durability) {
 		super(numeric, identifier, name, material, rarity, modelDataInt, durability);
+		setTrackCreation(true);
 	}
 	
 	protected BItemDurable(int numeric, String identifier, String name, ItemStack material, ItemRarity rarity, int modelDataInt, int durability) {
 		super(numeric, identifier, name, material, rarity, modelDataInt, durability);
+		setTrackCreation(true);
 	}
 	
 	public boolean isEnchantAllowed(Enchantment enchant) {
@@ -65,6 +74,10 @@ public class BItemDurable extends BeanItem {
 		validEnchants = Collections.unmodifiableList(validEnchants);
 		incompatibleEnchants = Collections.unmodifiableList(incompatibleEnchants);
 	}
+
+	public void onItemDamage(PlayerItemDamageEvent e) {
+
+	}
 	
 	protected void addRepairMaterial(BeanItem item, float durabilityPercentage) {
 		this.addRepairMaterial(item.getIdentifier(), durabilityPercentage);
@@ -82,24 +95,62 @@ public class BItemDurable extends BeanItem {
 		repairItems.put(identifier, durabilityPercentage);
 	}
 	
-	/**
-	 * Set whether this item can have its enchantments removed via match-crafting or grindstone.
-	 */
-	protected void setCleansable(boolean can) {
-		this.cleansable = can;
-	}
-	
-	public boolean isCleansable() {
-		return this.cleansable;
-	}
-	
 	public float getRepairPercentage(ItemStack item) {
 		if (item == null || item.getType() == Material.AIR) return 0f;
 		final BeanItem bi = from(item);
 		
-		if (bi != null && bi.is(this)) return 6.75f + ((float)getDurability(item) / (float)getMaxDurability()) * 100f;
+		if (bi != null && bi.is(this)) return 6.75f + ((float)getDurability(item) / (float)getMaxDurability(item)) * 100f;
 		String identifier = bi != null ? bi.getIdentifier() : item.getType().name();
 		return repairItems.getOrDefault(identifier, 0f);
 	}
-	
+
+	/**
+	 * Check whether this {@link BItemDurable} can be refined. Most vanilla tools and
+	 * armours can be refined by default.
+	 * @return true or false.
+	 */
+	public boolean canBeRefined() {
+		return isRefineable;
+	}
+
+	public static boolean canBeRefined(ItemStack item) {
+		BItemDurable custom = BeanItem.from(item, BItemDurable.class);
+		if (custom != null) return custom.canBeRefined();
+		if (item.getType().getMaxDurability() < 1) return false;
+
+		return switch (item.getType()) {
+			case SHEARS, FISHING_ROD, ELYTRA, FLINT_AND_STEEL, CARROT_ON_A_STICK, SHIELD, WARPED_FUNGUS_ON_A_STICK -> false;
+			default -> true;
+		};
+	}
+
+	public static int getRefinementTier(ItemStack item) {
+		if (!item.hasItemMeta()) return 0;
+		PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+		return pdc.getOrDefault(KEY_REFINEMENT, PersistentDataType.BYTE, (byte)0);
+	}
+
+	public static void setRefinementTier(ItemStack item, int level, boolean adjustDurability) {
+		if (level < 0) level = 0;
+		else if (level > Byte.MAX_VALUE) level = Byte.MAX_VALUE;
+		final int newLevel = level;
+		float duraPerc = 0;
+		if (adjustDurability)
+			duraPerc = ((float)getDurability(item) / (float)getMaxDurability(item)) * 100f;
+
+		item.editMeta(meta -> {
+			PersistentDataContainer pdc = meta.getPersistentDataContainer();
+			pdc.set(KEY_REFINEMENT, PersistentDataType.BYTE, (byte)newLevel);
+		});
+
+		BeanItem.formatItem(item);
+
+		if (adjustDurability) {
+			if (duraPerc > 100f)
+				duraPerc = 100f; // Precaution
+			setDurability(item, (int) ((float)getMaxDurability(item) * (duraPerc/100f)));
+		}
+
+	}
+
 }

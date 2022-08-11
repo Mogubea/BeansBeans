@@ -1,5 +1,6 @@
 package me.playground.listeners;
 
+import org.bukkit.Bukkit;
 import org.bukkit.World.Environment;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.world.WorldSaveEvent;
@@ -15,8 +16,12 @@ public class WorldListener extends EventListener {
 
 	@EventHandler
 	public void onWorldSave(WorldSaveEvent e) {
-		if (e.getWorld().getEnvironment() == Environment.NETHER)
-			Datasource.saveAll();
+		if (e.getWorld().getEnvironment() == Environment.NETHER) {
+			if (getPlugin().isEnabled())
+				Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), Datasource::saveAll);
+			else
+				Datasource.saveAll();
+		}
 	}
 	
 }

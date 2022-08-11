@@ -97,13 +97,13 @@ public class CommandModify extends BeanCommand {
 				try {
 					rank0 = Rank.fromString(value);
 					if (rank0 == Rank.OWNER || rank0 == Rank.ADMINISTRATOR) {
-						if (p instanceof Player) {
+						if (p != null) {
 							sender.sendMessage("\u00a7cYou don't have permission to add this rank.");
 							return true;
 						}
 					}
 					
-					if (!pp.isRank(rank0)) {
+					if (!pp.getRanks().contains(rank0)) {
 						pp.addRank(rank0);
 						sender.sendMessage(pp.getComponentName().append(Component.text("\u00a77 is now a ")).append(rank0.toComponent()).append(Component.text("\u00a77!")));
 						
@@ -128,7 +128,7 @@ public class CommandModify extends BeanCommand {
 						}
 					}
 					
-					if (pp.isRank(rank1)) {
+					if (pp.getRanks().contains(rank1)) {
 						pp.removeRank(rank1);
 						sender.sendMessage(pp.getComponentName().append(Component.text("\u00a77 is \u00a7cno longer \u00a77a ")).append(rank1.toComponent()).append(Component.text("\u00a77!")));
 						

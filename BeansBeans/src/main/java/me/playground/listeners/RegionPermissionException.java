@@ -5,7 +5,10 @@ import org.bukkit.event.Cancellable;
 
 import net.kyori.adventure.text.Component;
 
+import java.io.Serial;
+
 public class RegionPermissionException extends RuntimeException {
+	@Serial
 	private static final long serialVersionUID = 6293204585885190346L;
 	
 	public RegionPermissionException(Player p, Cancellable e, String reason) {

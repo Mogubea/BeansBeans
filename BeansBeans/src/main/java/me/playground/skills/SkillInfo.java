@@ -9,7 +9,7 @@ public class SkillInfo {
 	private int curLvlXp;
 	
 	private short skillPoints;
-	private byte[] perkLevels = new byte[14];
+	private int[] perkLevels = new int[18];
 	
 	public SkillInfo() {
 	}
@@ -24,6 +24,11 @@ public class SkillInfo {
 		this.totalXp = totalXp;
 	}
 	
+	public int getPerkLevel(int idx) {
+		if (idx >= perkLevels.length || idx < 0) idx = 0;
+		return perkLevels[idx];
+	}
+	
 	public int getSkillPoints() {
 		return skillPoints;
 	}
@@ -33,6 +38,20 @@ public class SkillInfo {
 		curLvlXp+=amt;
 		if (curLvlXp>=getXPRequirement(level))
 			calculateLevel();
+		else if (curLvlXp<0)
+			calculateLevel();
+	}
+	
+	protected void setLevel(int level) {
+		if (level < 0) level = 0;
+		if (level > 30) level = 30;
+		long xpReq = 0;
+		for (int lv = level; --lv > -1;)
+			xpReq += getXPRequirement(lv);
+		
+		this.totalXp = xpReq;
+		this.curLvlXp = 0;
+		this.level = (byte) level;
 	}
 	
 	public long getTotalXP() {
@@ -86,5 +105,11 @@ public class SkillInfo {
 	public int getLevelXP() {
 		return curLvlXp;
 	}
-	
+
+	public static String getGrade(int level) {
+		if (level < 0) return levelTitles[0];
+		if (level >= levelTitles.length) return levelTitles[levelTitles.length-1];
+		return levelTitles[level];
+	}
+
 }

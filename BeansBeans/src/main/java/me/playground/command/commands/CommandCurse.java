@@ -24,9 +24,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 public class CommandCurse extends BeanCommand {
-	
-	private static Set<Player> cursedPlayers = new HashSet<Player>();
-	
+
 	public CommandCurse(Main plugin) {
 		super(plugin, "bean.cmd.curse", true, 1, "curse");
 		description = "Impending doom from the curse...";
@@ -35,7 +33,14 @@ public class CommandCurse extends BeanCommand {
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		Player target = toPlayer(sender, args[0], true);
-		cursedPlayers.add(target);
+
+		getPlugin().getServer().getScheduler().runTaskLater(getPlugin(), () -> {
+			if (target != null) {
+				target.setHealth(0);
+				target.sendMessage(Component.text("\u00a77Remember that curse? Yeah.. it got ya."));
+			}
+		}, getRandom().nextLong(20L * 2000));
+
 		target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 0));
 		target.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 40, 1));
 		target.damage(0);
@@ -58,14 +63,6 @@ public class CommandCurse extends BeanCommand {
 	@Override
 	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
 		return Component.text("\u00a7cUsage: \u00a7f/"+str+" ").append(usageArguments[0]);
-	}
-	
-	public static void performCurse() {
-		cursedPlayers.forEach(player -> {
-			player.setHealth(0);
-			player.sendMessage(Component.text("\u00a77Remember that curse? Yeah.. it got ya."));
-		});
-		cursedPlayers.clear();
 	}
 	
 }

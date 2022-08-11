@@ -7,13 +7,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -38,10 +33,6 @@ import me.playground.civilizations.structures.Structure;
 import me.playground.civilizations.structures.Structure.Status;
 import me.playground.civilizations.structures.Structures;
 import me.playground.gui.UpdateEntry;
-import me.playground.items.BeanItem;
-import me.playground.loot.LootEntry;
-import me.playground.loot.LootManager;
-import me.playground.loot.LootTable;
 import me.playground.main.Main;
 import me.playground.playerprofile.Delivery;
 import me.playground.playerprofile.DeliveryType;
@@ -58,7 +49,7 @@ import me.playground.skills.Skill;
 import me.playground.skills.SkillInfo;
 import me.playground.skills.Skills;
 import me.playground.utils.Utils;
-import me.playground.voting.VoteService;
+import me.playground.discord.voting.VoteService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -101,7 +92,7 @@ public class Datasource {
 		try {
 			if (connection != null)
 				connection.close();
-			connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false", username,
+			connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false&character_set_server=utf8mb4", username,
 					password);
 		} catch (SQLException e) {
 			Main.getInstance().getSLF4JLogger().error("Could not establish a new MySQL Connection instance.");
@@ -116,65 +107,6 @@ public class Datasource {
 	
 	private static int getWorldId(World world) {
 		return Main.getInstance().getWorldManager().getWorldId(world);
-	}
-	
-	public static boolean hasProfile(UUID playerUUID) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet r = null;
-		try {
-			c = getNewConnection();
-			statement = connection.prepareStatement("SELECT id FROM " + table_profiles + " WHERE uuid = ?");
-			statement.setString(1, playerUUID.toString());
-			r = statement.executeQuery();
-			return r.next();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(r, c, statement);
-		}
-		return false;
-	}
-	
-	public static PlayerProfile getProfileFromName(String nameOrNickname) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet r = null;
-		try {
-			c = getNewConnection();
-			statement = connection
-					.prepareStatement("SELECT * FROM " + table_profiles + " WHERE name = ? OR nickname = ?");
-			statement.setString(1, nameOrNickname);
-			statement.setString(2, nameOrNickname);
-			r = statement.executeQuery();
-			if (r.next())
-				return forgeProfileUsingResultSet(r);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(r, c, statement);
-		}
-		return null;
-	}
-	
-	public static PlayerProfile getProfileFromId(int databaseId) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet r = null;
-		try {
-			c = getNewConnection();
-			statement = connection
-					.prepareStatement("SELECT * FROM " + table_profiles + " WHERE id = ?");
-			statement.setInt(1, databaseId);
-			r = statement.executeQuery();
-			if (r.next())
-				return forgeProfileUsingResultSet(r);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(r, c, statement);
-		}
-		return null;
 	}
 
 	public static PlayerProfile getOrMakeProfile(UUID playerUUID) {
@@ -210,15 +142,15 @@ public class Datasource {
 
 	private static PlayerProfile forgeProfileUsingResultSet(ResultSet rs) {
 		try {
-			final ArrayList<Rank> ranks = new ArrayList<Rank>();
-			final HashSet<String> perms = new HashSet<String>();
+			final ArrayList<Rank> ranks = new ArrayList<>();
+			final HashSet<String> perms = new HashSet<>();
 			
 			String[] ranksStr;
 			ranksStr = rs.getString("ranks").split(",");
 			for (String rankStr : ranksStr) {
 				try {
 					ranks.add(Rank.fromString(rankStr));
-				} catch (IllegalArgumentException e) {
+				} catch (IllegalArgumentException ignored) {
 				}
 			}
 			
@@ -226,8 +158,7 @@ public class Datasource {
 			String permz = rs.getString("permissions");
 			if (permz != null) {
 				String[] permsStr = permz.split(",");
-				for (String permStr : permsStr)
-					perms.add(permStr);
+				Collections.addAll(perms, permsStr);
 			}
 			
 			final Civilization civ = Civilization.getById(rs.getInt("civilization"));
@@ -257,7 +188,7 @@ public class Datasource {
 					+ "namecolour = ?, nickname = ?, booleanSettings = ?, warpCount = ?, civilization = ?, job = ?, donorRankExpiration = ? WHERE id = ?");
 			byte idx = 1;
 
-			statement.setLong(idx++, pp.getBalance());
+			statement.setDouble(idx++, pp.getBalance());
 			statement.setString(idx++, Utils.toString(pp.getRanks(), true, ","));
 			statement.setString(idx++, Utils.toString(pp.getPrivatePermissions(), true, ","));
 			statement.setInt(idx++, pp.getNameColour().value());
@@ -283,16 +214,15 @@ public class Datasource {
 		savePickupBlacklist(pp.getId());
 		savePlayerHeirlooms(pp);
 		savePlayerStats(pp);
+		setHome(pp.getOfflinePlayer(), pp.getHome());
 		refreshPlayerInbox(pp);
 	}
 
+	/**
+	 * Asynchronous.
+	 */
 	public static void saveProfileColumn(int playerId, String column, Object value) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		try {
-			c = getNewConnection();
-			statement = connection
-					.prepareStatement("UPDATE " + table_profiles + " SET " + column + " = ? WHERE id = ?");
+		try(Connection c = getNewConnection(); PreparedStatement statement = c.prepareStatement("UPDATE " + table_profiles + " SET " + column + " = ? WHERE id = ?")) {
 			if (value instanceof Character) // stupid
 				statement.setString(1, ((Character)value).toString());
 			else
@@ -302,8 +232,6 @@ public class Datasource {
 			statement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			close(c, statement);
 		}
 	}
 
@@ -338,22 +266,21 @@ public class Datasource {
 		return null;
 	}
 
-	public static void saveSkills(int databaseId, Skills sd) {
+	private static void saveSkills(int databaseId, Skills sd) {
 		Connection c = null;
 		PreparedStatement statement = null;
 		try {
 			c = getNewConnection();
 
-			String statementStr = "UPDATE " + table_experience + " SET ";
+			StringBuilder statementStr = new StringBuilder("UPDATE " + table_experience + " SET ");
 			int max = Skill.getRegisteredSkills().size();
 			for (Skill src : Skill.getRegisteredSkills()) {
 				max--;
-				statementStr += src.getName() + " = ?," + src.getName() + "_xp = ?"
-						+ (max > 0 ? "," : "");
+				statementStr.append(src.getName()).append(" = ?,").append(src.getName()).append("_xp = ?").append(max > 0 ? "," : "");
 			}
 
-			statementStr += " WHERE playerId = ?";
-			statement = connection.prepareStatement(statementStr);
+			statementStr.append(" WHERE playerId = ?");
+			statement = connection.prepareStatement(statementStr.toString());
 			int idx = 1;
 
 			for (Skill src : Skill.getRegisteredSkills()) {
@@ -371,31 +298,31 @@ public class Datasource {
 		}
 	}
 
-	public static void logTransaction(int playerId, long amount, String log) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		try {
-			c = getNewConnection();
-			statement = connection.prepareStatement(
-					"INSERT INTO " + table_moneylogs + " (time,playerId,amount,source) VALUES (?,?,?,?)");
-			statement.setLong(1, System.currentTimeMillis() / 1000);
-			statement.setInt(2, playerId);
-			statement.setLong(3, amount);
-			statement.setString(4, log);
-			statement.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(c, statement);
-		}
+	/**
+	 * Asynchronous.
+	 */
+	public static void logTransaction(int playerId, double amount, String log) {
+		Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), task -> {
+			try(Connection c = getNewConnection(); PreparedStatement statement = c.prepareStatement("INSERT INTO " + table_moneylogs + " (time,playerId,amount,source) VALUES (?,?,?,?)")) {
+				statement.setLong(1, System.currentTimeMillis() / 1000);
+				statement.setInt(2, playerId);
+				statement.setDouble(3, amount);
+				statement.setString(4, log);
+				statement.executeUpdate();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		});
 	}
 	
 	public static void saveAll() {
 		long then = System.currentTimeMillis();
-		PlayerProfile.asMap().values().forEach(profile -> saveProfile(profile));
+		PlayerProfile.asMap().values().forEach(profile -> {
+			saveProfile(profile);
+			profile.invalidateIfOffline();
+		});
 		Main.getInstance().getDatasourceCore().saveAll();
-		saveDirtyLootEntries();
-		Utils.sendActionBar(Rank.ADMINISTRATOR, Component.text("\u00a7dSaved everything in roughly \u00a75" + (System.currentTimeMillis()-then) + "ms"));
+		Utils.sendActionBar(Rank.ADMINISTRATOR, Component.text("\u00a7dSaved data to Database (" + (System.currentTimeMillis()-then) + "ms)"));
 	}
 
 	public static void close(Object... c) {
@@ -420,7 +347,7 @@ public class Datasource {
 		}
 	}
 	
-	public static void setHome(OfflinePlayer p, Location loc) {
+	public static boolean setHome(OfflinePlayer p, Location loc) {
 		Connection c = null;
 		PreparedStatement statement = null;
 		
@@ -436,18 +363,20 @@ public class Datasource {
 			statement.setFloat(3, (float)loc.getX());
 			statement.setFloat(4, (float)loc.getY());
 			statement.setFloat(5, (float)loc.getZ());
-			statement.setFloat(6, (float)loc.getYaw());
-			statement.setFloat(7, (float)loc.getPitch());
+			statement.setFloat(6, loc.getYaw());
+			statement.setFloat(7, loc.getPitch());
 			
 			statement.executeUpdate();
 			statement.close();
 			
 			pp.setHome(loc);
+			return true;
 		} catch (Throwable e) {
 			e.printStackTrace();
 		} finally {
 			close(c, statement);
 		}
+		return false;
 	}
 	
 	public static Location loadHome(int playerid) {
@@ -495,7 +424,7 @@ public class Datasource {
 		return null;
 	}
 	
-	public static void savePlayerStats(PlayerProfile pp) {
+	private static void savePlayerStats(PlayerProfile pp) {
 		Connection c = null;
 		PreparedStatement statement = null;
 		
@@ -553,7 +482,7 @@ public class Datasource {
 		return stats;
 	}
 	
-	public static void savePlayerHeirlooms(PlayerProfile pp) {
+	private static void savePlayerHeirlooms(PlayerProfile pp) {
 		Connection c = null;
 		PreparedStatement statement = null;
 		
@@ -586,8 +515,10 @@ public class Datasource {
 			
 			r = statement.executeQuery();
 			
-			while(r.next())
-				stacks = Utils.itemStackArrayFromBase64(r.getString("compressedArmorInventory"));
+			while(r.next()) {
+				ItemStack[] stackz = Utils.itemStackArrayFromBase64(r.getString("compressedArmorInventory"));
+				if (stackz != null) stacks = stackz;
+			}
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -598,16 +529,18 @@ public class Datasource {
 		return stacks;
 	}
 	
-	public static void saveArmourWardrobe(PlayerProfile pp) {
+	private static void saveArmourWardrobe(PlayerProfile pp) {
 		Connection c = null;
 		PreparedStatement statement = null;
+		
+		String armour = Utils.itemStackArrayToBase64(pp.getArmourWardrobe());
 		
 		try {
 			c = getNewConnection();
 			statement = c.prepareStatement("INSERT INTO wardrobes (playerId,compressedArmorInventory) VALUES (?,?) ON DUPLICATE KEY UPDATE compressedArmorInventory = VALUES(compressedArmorInventory)");
 			
 			statement.setInt(1, pp.getId());
-			statement.setString(2, Utils.itemStackArrayToBase64(pp.getArmourWardrobe()));
+			statement.setString(2, armour);
 			
 			statement.executeUpdate();
 			statement.close();
@@ -630,7 +563,7 @@ public class Datasource {
 			statement.setString(2, stat);
 			ResultSet rs = statement.executeQuery();
 			
-			map = new LinkedHashMap<Integer, Long>();
+			map = new LinkedHashMap<>();
 			
 			while(rs.next())
 				map.put(rs.getInt("playerId"), rs.getLong("value"));
@@ -655,7 +588,7 @@ public class Datasource {
 			statement = c.prepareStatement("SELECT playerId,"+skill.getName()+"_xp FROM "+table_experience+" ORDER BY "+skill.getName()+"_xp ASC");
 			ResultSet rs = statement.executeQuery();
 			
-			map = new LinkedHashMap<Integer, Long>();
+			map = new LinkedHashMap<>();
 			
 			while(rs.next())
 				map.put(rs.getInt("playerId"), rs.getLong(skill.getName()+"_xp"));
@@ -688,7 +621,7 @@ public class Datasource {
 			statement = c.prepareStatement(st);
 			ResultSet rs = statement.executeQuery();
 			
-			map = new LinkedHashMap<Integer, Long>();
+			map = new LinkedHashMap<>();
 			
 			while(rs.next())
 				map.put(rs.getInt("playerId"), rs.getLong("totalxp"));
@@ -816,41 +749,35 @@ public class Datasource {
 	public static void logCelestia(CelestiaAction action, LivingEntity entity, Location location, String data) {
 		logCelestia(action, entity instanceof Player ? PlayerProfile.from(((Player)entity)).getId() : 0, location, data);
 	}
-	
-	public static void logCelestia(CelestiaAction action, int id, Location loc, String data) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO celestia (playerId, action, world, x, y, z, data) VALUES (?,?,?,?,?,?,?)");
-			
-			if (loc == null)
-				loc = new Location(Bukkit.getWorlds().get(0), 0, 80, 0);
-			
-			data = data.replaceAll("[\\p{C}]", "?");
-			
-			statement.setInt(1, id);
-			statement.setInt(2, action.ordinal());
-			statement.setInt(3, getWorldId(loc.getWorld()));
-			statement.setShort(4, (short)loc.getX());
-			statement.setShort(5, (short)loc.getY());
-			statement.setShort(6, (short)loc.getZ());
-			statement.setString(7, data);
-			
-			statement.executeUpdate();
-		} catch (Throwable e) {
-			e.printStackTrace();
-		} finally {
-			close(c, statement);
-		}
+
+	/**
+	 * @apiNote Due to how often this is called, it will always be run Asynchronously.
+	 */
+	public static void logCelestia(final CelestiaAction action, final int id, final Location loc, final String data) {
+		Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), task -> {
+			try(Connection c = getNewConnection(); PreparedStatement statement = c.prepareStatement("INSERT INTO celestia (playerId, action, world, x, y, z, data) VALUES (?,?,?,?,?,?,?)")) {
+				Location location = loc == null ? new Location(Bukkit.getWorlds().get(0), 0, 0, 0) : loc;
+				int idx = 0;
+				statement.setInt(++idx, id);
+				statement.setString(++idx, action.getIdentifier());
+				statement.setInt(++idx, getWorldId(location.getWorld()));
+				statement.setShort(++idx, (short)location.getX());
+				statement.setShort(++idx, (short)location.getY());
+				statement.setShort(++idx, (short)location.getZ());
+				statement.setString(++idx, data);
+
+				statement.executeUpdate();
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		});
 	}
 	
 	public static ArrayList<String> loadPickupBlacklist(int playerId) {
 		Connection c = null;
 		PreparedStatement statement = null;
 		ResultSet r = null;
-		final ArrayList<String> array = new ArrayList<String>();
+		final ArrayList<String> array = new ArrayList<>();
 		
 		try {
 			c = getNewConnection();
@@ -880,7 +807,7 @@ public class Datasource {
 		Connection c = null;
 		PreparedStatement statement = null;
 		ResultSet r = null;
-		final ArrayList<UpdateEntry> array = new ArrayList<UpdateEntry>();
+		final ArrayList<UpdateEntry> array = new ArrayList<>();
 		
 		try {
 			c = getNewConnection();
@@ -888,7 +815,7 @@ public class Datasource {
 			r = statement.executeQuery();
 			
 			while(r.next()) {
-				ArrayList<Component> stuff = new ArrayList<Component>();
+				ArrayList<Component> stuff = new ArrayList<>();
 				
 				final String[] pages = r.getString("contents").replace("\r", "").split("`");
 				
@@ -922,168 +849,26 @@ public class Datasource {
 		return array;
 	}
 	
-	public static void savePickupBlacklist(int playerId) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		
-		try {
-			final PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
+	private static void savePickupBlacklist(int playerId) {
+		final PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
+		if (pp == null) return;
+
+		try(Connection c = getNewConnection(); PreparedStatement statement = c.prepareStatement("INSERT INTO pickup_blacklists (playerId, blacklist) VALUES (?,?) ON DUPLICATE KEY UPDATE blacklist = VALUES(blacklist)")) {
+
 			StringBuilder sb = new StringBuilder();
 			for (String entry : pp.getPickupBlacklist())
 				sb.append(entry + ",");
-			
-			
-			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO pickup_blacklists (playerId, blacklist) VALUES (?,?) ON DUPLICATE KEY UPDATE blacklist = VALUES(blacklist)");
+
 			statement.setInt(1, playerId);
 			statement.setString(2, sb.toString());
 			
 			statement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			close(c, statement);
 		}
 	}
 	
 	// XXX: Loot
-	
-	public static void loadAllLoot() {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet r = null;
-		
-		final LootManager lm = Main.getInstance().lootManager();
-		long then = System.currentTimeMillis();
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("SELECT * FROM loot");
-			r = statement.executeQuery();
-			
-			while(r.next()) {
-				final String itemType = r.getString("itemType");
-				final String compressedStack = r.getString("compressedStack");
-				final LootTable table = lm.getOrCreateTable(r.getString("tableName"));
-				ItemStack i = null;
-				
-				if (compressedStack != null) {
-					i = Utils.itemStackFromBase64(compressedStack);
-				} else {
-					try {
-						i = new ItemStack(Material.valueOf(itemType));
-					} catch (Exception e) {
-						BeanItem bi = BeanItem.from(itemType);
-						if (bi == null)
-							i = new ItemStack(Material.DIAMOND);
-						else
-							i = bi.getItemStack();
-					}
-				}
-				
-				String s = r.getString("data");
-				Material cookedType = null;
-				try {
-					cookedType = Material.valueOf(r.getString("cookedType"));
-				} catch (Exception e) {
-				}
-				
-				table.addEntry(new LootEntry(r.getInt("id"), table, i, cookedType, r.getInt("minStack"), r.getInt("maxStack"), r.getFloat("chance"), r.getFloat("chanceLuckChange"), s == null ? null : new JSONObject(s)).setFlags(r.getByte("flags")));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(r, c, statement);
-			Main.getInstance().getLogger().info("Loaded " + lm.getAllEntries().size() + " Loot Entries in " + (System.currentTimeMillis()-then) + "ms");
-		}
-	}
-	
-	public static void saveDirtyLootEntries() {
-		final ArrayList<LootEntry> entries = Main.getInstance().lootManager().getAllEntries();
-		final int size = entries.size();
-		
-		for (int x = -1; ++x < size;) {
-			LootEntry entry = entries.get(x);
-			if (!entry.isDirty()) continue;
-			updateLootEntry(entry);
-			entry.setDirty(false);
-		}
-	}
-	
-	public static void updateLootEntry(LootEntry entry) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("UPDATE loot SET tableName = ?, chance = ?, chanceLuckChange = ?, minStack = ?, maxStack = ?, itemType = ?, flags = ?, compressedStack = ?, data = ?, cookedType = ? WHERE id = ?");
-			statement.setString(1, entry.getTable().getName());
-			statement.setFloat(2, entry.getChance());
-			statement.setFloat(3, entry.getLuckEffectiveness());
-			statement.setInt(4, entry.getMinStackSize());
-			statement.setInt(5, entry.getMaxStackSize());
-			
-			String s = entry.getDisplayStack().getType().name();
-			BeanItem bi = BeanItem.from(entry.getDisplayStack());
-			if (bi != null)
-				s = bi.getIdentifier();
-			
-			statement.setString(6, s);
-			statement.setByte(7, entry.getFlags());
-			
-			if (entry.shouldCompress())
-				statement.setString(8, Utils.toBase64(entry.getDisplayStack()));
-			else
-				statement.setString(8, null);
-			
-			statement.setInt(9, entry.getId());
-			
-			JSONObject data = entry.getJsonData(); // Additional json information such as enchantments, levels and chances.
-			statement.setString(9, data != null ? data.toString() : null);
-			statement.setString(10, entry.getCookedMaterial().name());
-			statement.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(c, statement);
-		}
-	}
-	
-	public static LootEntry registerLootEntry(LootTable table, ItemStack itemStack, int min, int max, int chance, int luckEffectiveness, byte flags) throws SQLException {
-		Connection c = null;
-		ResultSet rs = null;
-		PreparedStatement statement = null;
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO loot (tableName, chance, chanceLuckChange, minStack, maxStack, itemType, flags) VALUES (?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
-			statement.setString(1, table.getName());
-			statement.setFloat(2, chance);
-			statement.setFloat(3, luckEffectiveness);
-			statement.setInt(4, min);
-			statement.setInt(5, max);
-			
-			String s = itemStack.getType().name();
-			BeanItem bi = BeanItem.from(itemStack);
-			if (bi != null)
-				s = bi.getIdentifier();
-			
-			statement.setString(6, s);
-			statement.setByte(7, flags);
-			
-			statement.executeUpdate();
-			rs = statement.getGeneratedKeys();
-			if (rs.next())
-				return new LootEntry(rs.getInt(1), table, itemStack, min, max, chance, luckEffectiveness).setFlags(flags);
-			else
-				throw new SQLException("Could not create new Loot Entry.");
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(c, rs, statement);
-		}
-		return null;
-	}
 	
 	public static HashMap<Integer, Long> grabLinkedDiscordAccounts() {
 		Connection c = null;
@@ -1311,13 +1096,9 @@ public class Datasource {
 					}
 					if (job instanceof IHuntingJob) {
 						EntityType m = EntityType.valueOf(object.toUpperCase());
-						if (m != null) {
-							job.addPayment(m.name(), pay);
-							continue;
-						}
+						job.addPayment(m.name(), pay);
 					}
-				} catch (Exception e) {
-					continue;
+				} catch (Exception ignored) {
 				}
 			}
 		} catch (SQLException e) {
@@ -1387,7 +1168,7 @@ public class Datasource {
 		PreparedStatement statement = null;
 		ResultSet rs = null;
 		
-		HashMap<String, VoteService> services = new LinkedHashMap<String, VoteService>();
+		HashMap<String, VoteService> services = new LinkedHashMap<>();
 		
 		try {
 			c = getNewConnection();

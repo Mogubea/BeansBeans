@@ -14,6 +14,7 @@ public abstract class NPCInteraction {
 	static {
 		new NPCInteractBase();
 		new NPCInteractEmployer();
+		new NPCInteractShop();
 	}
 	
 	@Nullable

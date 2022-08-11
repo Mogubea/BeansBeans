@@ -14,10 +14,11 @@ public enum PlayerSetting {
 	DISCORD("Null Setting", false, "This setting is empty for now."),
 	SHOW_ACHIEVEMENTS("Achievements in Chat", true, "\u00a77Display whenever a player gets an \u00a76Achievement\u00a77."),
 	SHOW_DEATH_MESSAGES("Death Messages in Chat", true, "\u00a77Display whenever a player kicks the bucket."),
-	SHOW_JOB_MESSAGES("Job Messages in Chat", true, "\u00a77Display whenever a player changes their job."),
+	SHOW_JOB_MESSAGES("Skill Level Up Messages in Chat", true, "\u00a77Display whenever a player levels up", "\u00a77a skill."),
 	QUICK_WOOL_DYE("Quick Wool Dye (Plebeian+)", Permission.QUICK_WOOL_DYE, true, "\u00a77Right Click a Block of Wool or Carpet","\u00a77with a dye to change its colour."),
 	SHOW_SIDEBAR("Show Sidebar", true, "\u00a77Display the Sidebar on the right."),
-	HIDE("Hide Test", "bean.cmd.hide", false, "\u00a7b/hide\u00a77 toggle test.")
+	HIDE("Hide Test", "bean.cmd.hide", false, "\u00a7b/hide\u00a77 toggle test."),
+	SKILL_EXPERIENCE_SOUND("Skill Experience Sounds", true, "\u00a77Play a subtle experience sound", "\u00a77when obtaining \u00a7bSkill XP\u00a77.")
 	;
 	
 	final private static long defaultSetting;

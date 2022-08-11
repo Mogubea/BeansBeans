@@ -35,6 +35,7 @@ import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	
@@ -141,13 +142,9 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	public String getDescription() {
 		return description;
 	}
-	
-	public void enable() {
-		this.enabled = true;
-	}
-	
-	public void disable() {
-		this.enabled = false;
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 	
 	public boolean isEnabled() {
@@ -157,9 +154,13 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	public String[] getAliases() {
 		return aliases;
 	}
+
+	public String getName() {
+		return aliases[0];
+	}
 	
 	@Override
-	public Main getPlugin() {
+	public @NotNull Main getPlugin() {
 		return plugin;
 	}
 	
@@ -174,12 +175,10 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	protected ItemStack toItemStack(CommandSender sender, String str, int amount) {
 		final BeanItem bi = BeanItem.from(str);
 		
-		ItemStack i = null;
+		ItemStack i;
 		if (bi == null) {
 			try {
 				Material m = Material.valueOf(str.toUpperCase());
-				if (m == null)
-					throw new IllegalArgumentException();
 				i = BeanItem.formatItem(new ItemStack(m));
 			} catch (IllegalArgumentException e) {
 				throw new CommandException(sender, "Unknown item '"+str+"'");
@@ -293,9 +292,10 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	}
 	
 	protected boolean isRank(CommandSender sender, Rank rank) {
-		return isPlayer(sender) ? PlayerProfile.from((Player)sender).isRank(rank) : true;
+		return !isPlayer(sender) || PlayerProfile.from((Player) sender).isRank(rank);
 	}
-	
+
+	@NotNull
 	protected Rank getRank(CommandSender sender) {
 		return isPlayer(sender) ? PlayerProfile.from((Player)sender).getHighestRank() : Rank.OWNER;
 	}
@@ -305,24 +305,22 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 			return true;
 		if (getPlugin().permissionManager().isPreviewing(target)) // Prevent bs
 			return false;
-		final boolean ra = isPlayer(sender) ? getRank(sender).power() > getRank(target).power() : true;
+		final boolean ra = !isPlayer(sender) || getRank(sender).power() > getRank(target).power();
 		if (!ra)
 			throw new CommandException(sender, err);
 		return ra;
 	}
 	
 	protected boolean checkRank(CommandSender sender, Rank rank) {
-		final boolean ra = isRank(sender, rank);
-		if (!ra)
+		if (!isRank(sender, rank))
 			throw new CommandException(sender, "You don't have permission to do that.");
-		return ra;
+		return true;
 	}
 	
 	protected boolean checkPlayer(CommandSender sender) {
-		final boolean ra = isPlayer(sender);
-		if (!ra)
+		if (!isPlayer(sender))
 			throw new CommandException(sender, "You must be in-game to do that.");
-		return ra;
+		return true;
 	}
 	
 	protected boolean checkSubPerm(CommandSender sender, String subCmd) {
@@ -334,9 +332,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	}
 	
 	protected boolean isSafe(Location loc) {
-		if (loc.getBlock().getType() == Material.LAVA || (loc.subtract(0,0.2,0).getBlock().isEmpty()))
-			return false;
-		return true;
+		return loc.getBlock().getType() != Material.LAVA && (!loc.subtract(0, 0.2, 0).getBlock().isEmpty());
 	}
 	
 	protected boolean noGM(CommandSender sender, GameMode mode) {
@@ -387,5 +383,6 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	}
 	
 	protected final DecimalFormat df = new DecimalFormat("#,###");
+	protected final DecimalFormat dec = new DecimalFormat("#,###.##");
 	
 }

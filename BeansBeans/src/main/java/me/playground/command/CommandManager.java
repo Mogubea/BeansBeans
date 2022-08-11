@@ -2,10 +2,9 @@ package me.playground.command;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
+import me.playground.command.commands.*;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.PluginCommand;
@@ -15,46 +14,6 @@ import org.bukkit.plugin.SimplePluginManager;
 
 import me.lucko.commodore.Commodore;
 import me.lucko.commodore.CommodoreProvider;
-import me.playground.command.commands.CommandAFK;
-import me.playground.command.commands.CommandAnvil;
-import me.playground.command.commands.CommandCivilization;
-import me.playground.command.commands.CommandCurse;
-import me.playground.command.commands.CommandEnchant;
-import me.playground.command.commands.CommandEnderchest;
-import me.playground.command.commands.CommandGamemode;
-import me.playground.command.commands.CommandHat;
-import me.playground.command.commands.CommandHeal;
-import me.playground.command.commands.CommandHide;
-import me.playground.command.commands.CommandHome;
-import me.playground.command.commands.CommandHug;
-import me.playground.command.commands.CommandI;
-import me.playground.command.commands.CommandInvsee;
-import me.playground.command.commands.CommandModify;
-import me.playground.command.commands.CommandMoney;
-import me.playground.command.commands.CommandOp;
-import me.playground.command.commands.CommandPerform;
-import me.playground.command.commands.CommandPickupfilter;
-import me.playground.command.commands.CommandPlugin;
-import me.playground.command.commands.CommandRandomTp;
-import me.playground.command.commands.CommandRegion;
-import me.playground.command.commands.CommandReload;
-import me.playground.command.commands.CommandReport;
-import me.playground.command.commands.CommandReturn;
-import me.playground.command.commands.CommandSapphire;
-import me.playground.command.commands.CommandSay;
-import me.playground.command.commands.CommandSendItem;
-import me.playground.command.commands.CommandSethome;
-import me.playground.command.commands.CommandSkull;
-import me.playground.command.commands.CommandStats;
-import me.playground.command.commands.CommandSun;
-import me.playground.command.commands.CommandTeleport;
-import me.playground.command.commands.CommandToCoord;
-import me.playground.command.commands.CommandWarp;
-import me.playground.command.commands.CommandWhisper;
-import me.playground.command.commands.CommandWho;
-import me.playground.command.commands.CommandWorkbench;
-import me.playground.command.commands.CommandWorld;
-import me.playground.command.commands.CommandWorldSpawn;
 import me.playground.command.commands.small.CommandCSpawn;
 import me.playground.command.commands.small.CommandFly;
 import me.playground.command.commands.small.CommandGod;
@@ -72,11 +31,12 @@ import me.playground.command.commands.small.CommandWarps;
 import me.playground.main.Main;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.jetbrains.annotations.NotNull;
 
 public class CommandManager {
-	
-	public List<String> disabledCommands = new ArrayList<String>();
-	private List<Command> myCommands = new ArrayList<Command>();
+
+	private final List<Command> myCommands = new ArrayList<>();
+	private Map<String, BeanCommand> myCommandsCustom = new LinkedHashMap<>();
 	
 	private final Main plugin;
 	private final Commodore commodore;
@@ -88,7 +48,7 @@ public class CommandManager {
 	public CommandManager(Main plugin) {
 		this.plugin = plugin;
 		this.commodore = CommodoreProvider.getCommodore(plugin);
-		long mili = System.currentTimeMillis();
+		long millis = System.currentTimeMillis();
 		unregisterAnnoyingBukkit();
 		
 		// Warping Commands
@@ -121,7 +81,7 @@ public class CommandManager {
 		registerCommand(new CommandWho(plugin));
 		registerCommand(new CommandRegion(plugin));
 		registerCommand(new CommandMoney(plugin));
-		registerCommand(new CommandSapphire(plugin));
+		registerCommand(new CommandCrystals(plugin));
 		registerCommand(new CommandOp(plugin));
 		registerCommand(new CommandModify(plugin));
 		registerCommand(new CommandEnchant(plugin));
@@ -150,8 +110,11 @@ public class CommandManager {
 		registerCommand(new CommandStats(plugin));
 		registerCommand(new CommandInvsee(plugin));
 		registerCommand(new CommandHide(plugin));
+		registerCommand(new CommandValue(plugin));
+
+		myCommandsCustom = Map.copyOf(myCommandsCustom);
 		
-		plugin.getLogger().info("Registered " + myCommands.size() + " commands in " + (System.currentTimeMillis()-mili) + "ms");
+		plugin.getLogger().info("Registered " + myCommands.size() + " commands in " + (System.currentTimeMillis()-millis) + "ms");
 	}
 	
 	/**
@@ -193,11 +156,12 @@ public class CommandManager {
 		command.setDescription(cmd.getDescription());
 		command.setExecutor(cmd);
 		Bukkit.getCommandMap().register(plugin.getDescription().getName(), command);
-		
+
 		if (cmd instanceof ICommodore)
 			commodore.register(((ICommodore)cmd).getCommodore());
 		
 		myCommands.add(command);
+		myCommandsCustom.put(aliases[0], cmd);
 	}
 	
 	public void unregisterCommands() {
@@ -205,9 +169,18 @@ public class CommandManager {
 		for (int x = -1; ++x < size;)
 			myCommands.get(x).unregister(Bukkit.getCommandMap());
 	}
-	
+
+	@NotNull
 	public List<Command> getMyCommands() {
 		return myCommands;
+	}
+
+	/**
+	 * Grab an unmodifiable map of the custom {@link BeanCommand}s.
+	 */
+	@NotNull
+	public Map<String, BeanCommand> getMyBeanCommands() {
+		return myCommandsCustom;
 	}
 	
 }

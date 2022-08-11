@@ -12,10 +12,11 @@ public abstract class DirtyVal<T> {
 	public T getValue() {
 		return value;
 	}
-	
+
 	public DirtyVal<T> setValue(T newValue) {
+		boolean dirty = !value.equals(newValue);
 		value = newValue;
-		return setDirty(true);
+		return setDirty(isDirty() || dirty);
 	}
 	
 	public boolean isDirty() {

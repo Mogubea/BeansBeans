@@ -67,7 +67,7 @@ public class BeanGuiPlayerMain extends BeanGuiPlayer {
 			close();
 			
 			SignMenuFactory.Menu menu = plugin.getSignMenuFactory().newMenu(Arrays.asList(
-					"","\u00a78^^^^^^^^^^", "\u00a7fEnter " + (pp.isOverridingProfile() ? tpp.getDisplayName() + "'s" : "your") + " new", "\u00a7fnickname above!"), Material.OAK_WALL_SIGN)
+					Component.empty(), Component.text("\u00a78^^^^^^^^^^"), Component.text("\u00a7fEnter " + (pp.isOverridingProfile() ? tpp.getDisplayName() + "'s" : "your") + " new"), Component.text("\u00a7fnickname above!")), Material.OAK_WALL_SIGN)
             .reopenIfFail(true)
             .response((player, strings) -> {
                 try {
