@@ -3,9 +3,23 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>BeansBeans</groupId>
   <artifactId>BeansBeans</artifactId>
-  <version>0.3.1-ALPHA</version>
+  <version>0.4.5-ALPHA</version>
   <build>
     <plugins>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.2</version>
+        <configuration>
+          <outputDirectory>${user.home}/Desktop/Minecraft Server/Bukkit Server/plugins/</outputDirectory>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <release>17</release>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.2.1</version>
@@ -15,8 +29,38 @@
             <goals>
               <goal>shade</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>net.md-5</groupId>
+        <artifactId>specialsource-maven-plugin</artifactId>
+        <version>1.2.3</version>
+        <executions>
+          <execution>
+            <id>remap-obf</id>
+            <phase>package</phase>
+            <goals>
+              <goal>remap</goal>
+            </goals>
             <configuration>
-              <outputDirectory>../../../../Bukkit Server/plugins</outputDirectory>
+              <srgIn>org.spigotmc:minecraft-server:${spigotversion}:txt:maps-mojang</srgIn>
+              <reverse>true</reverse>
+              <remappedDependencies>org.spigotmc:spigot:${spigotversion}:jar:remapped-mojang</remappedDependencies>
+              <remappedArtifactAttached>true</remappedArtifactAttached>
+              <remappedClassifierName>remapped-obf</remappedClassifierName>
+            </configuration>
+          </execution>
+          <execution>
+            <id>remap-spigot</id>
+            <phase>package</phase>
+            <goals>
+              <goal>remap</goal>
+            </goals>
+            <configuration>
+              <inputFile>${project.build.directory}/${project.artifactId}-${project.version}-remapped-obf.jar</inputFile>
+              <srgIn>org.spigotmc:minecraft-server:${spigotversion}:csrg:maps-spigot</srgIn>
+              <remappedDependencies>org.spigotmc:spigot:${spigotversion}:jar:remapped-obf</remappedDependencies>
             </configuration>
           </execution>
         </executions>
@@ -27,6 +71,10 @@
     <repository>
       <id>papermc</id>
       <url>https://papermc.io/repo/repository/maven-public/</url>
+    </repository>
+    <repository>
+      <id>spigot-repo</id>
+      <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
     </repository>
     <repository>
       <id>protocollib</id>
@@ -49,12 +97,16 @@
       <name>jcenter</name>
       <url>https://jcenter.bintray.com</url>
     </repository>
+    <repository>
+      <id>minecraft-repo</id>
+      <url>https://libraries.minecraft.net/</url>
+    </repository>
   </repositories>
   <dependencies>
     <dependency>
       <groupId>io.papermc.paper</groupId>
       <artifactId>paper-api</artifactId>
-      <version>1.17.1-R0.1-SNAPSHOT</version>
+      <version>1.18.2-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -86,7 +138,15 @@
           <groupId>it.unimi.dsi</groupId>
         </exclusion>
         <exclusion>
+          <artifactId>log4j-api</artifactId>
+          <groupId>org.apache.logging.log4j</groupId>
+        </exclusion>
+        <exclusion>
           <artifactId>adventure-api</artifactId>
+          <groupId>net.kyori</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>adventure-text-minimessage</artifactId>
           <groupId>net.kyori</groupId>
         </exclusion>
         <exclusion>
@@ -102,8 +162,12 @@
           <groupId>net.kyori</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>log4j-api</artifactId>
-          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>adventure-text-logger-slf4j</artifactId>
+          <groupId>net.kyori</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>checker-qual</artifactId>
+          <groupId>org.checkerframework</groupId>
         </exclusion>
         <exclusion>
           <artifactId>asm</artifactId>
@@ -116,9 +180,106 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.spigotmc</groupId>
+      <artifactId>spigot</artifactId>
+      <version>1.18.2-R0.1-SNAPSHOT</version>
+      <classifier>remapped-mojang</classifier>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>spigot-api</artifactId>
+          <groupId>org.spigotmc</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jline</artifactId>
+          <groupId>jline</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>log4j-iostreams</artifactId>
+          <groupId>org.apache.logging.log4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>oshi-core</artifactId>
+          <groupId>com.github.oshi</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>authlib</artifactId>
+          <groupId>com.mojang</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>datafixerupper</artifactId>
+          <groupId>com.mojang</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>javabridge</artifactId>
+          <groupId>com.mojang</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>logging</artifactId>
+          <groupId>com.mojang</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-io</artifactId>
+          <groupId>commons-io</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-all</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jopt-simple</artifactId>
+          <groupId>net.sf.jopt-simple</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-lang3</artifactId>
+          <groupId>org.apache.commons</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>log4j-core</artifactId>
+          <groupId>org.apache.logging.log4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>log4j-slf4j18-impl</artifactId>
+          <groupId>org.apache.logging.log4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>sqlite-jdbc</artifactId>
+          <groupId>org.xerial</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>mysql-connector-java</artifactId>
+          <groupId>mysql</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>maven-resolver-provider</artifactId>
+          <groupId>org.apache.maven</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>maven-resolver-connector-basic</artifactId>
+          <groupId>org.apache.maven.resolver</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>maven-resolver-transport-http</artifactId>
+          <groupId>org.apache.maven.resolver</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>asm</artifactId>
+          <groupId>org.ow2.asm</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>fastutil</artifactId>
+          <groupId>it.unimi.dsi</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>json-simple</artifactId>
+          <groupId>com.googlecode.json-simple</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
       <groupId>com.comphenix.protocol</groupId>
       <artifactId>ProtocolLib</artifactId>
-      <version>4.7.0</version>
+      <version>4.8.0</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -130,7 +291,7 @@
     <dependency>
       <groupId>com.sk89q.worldedit</groupId>
       <artifactId>worldedit-bukkit</artifactId>
-      <version>7.2.6-SNAPSHOT</version>
+      <version>7.2.10</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -158,7 +319,7 @@
     <dependency>
       <groupId>us.dynmap</groupId>
       <artifactId>dynmap-api</artifactId>
-      <version>3.2-beta-1</version>
+      <version>3.4-beta-2</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -173,7 +334,8 @@
     </dependency>
   </dependencies>
   <properties>
-    <maven.compiler.target>16</maven.compiler.target>
-    <maven.compiler.source>16</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <spigotversion>1.18.2-R0.1-SNAPSHOT</spigotversion>
   </properties>
 </project>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteRepositoriesConfiguration">
+    <remote-repository>
+      <option name="id" value="dynmap" />
+      <option name="name" value="dynmap" />
+      <option name="url" value="https://repo.mikeprimm.com" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="central" />
+      <option name="name" value="Central Repository" />
+      <option name="url" value="https://repo.maven.apache.org/maven2" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="papermc" />
+      <option name="name" value="papermc" />
+      <option name="url" value="https://papermc.io/repo/repository/maven-public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="JDA" />
+      <option name="name" value="JDA" />
+      <option name="url" value="https://m2.dv8tion.net/releases" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="spigot-repo" />
+      <option name="name" value="spigot-repo" />
+      <option name="url" value="https://hub.spigotmc.org/nexus/content/repositories/snapshots/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="protocollib" />
+      <option name="name" value="protocollib" />
+      <option name="url" value="https://repo.dmulloy2.net/repository/public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="worldedit" />
+      <option name="name" value="worldedit" />
+      <option name="url" value="https://maven.enginehub.org/repo/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="central" />
+      <option name="name" value="Maven Central repository" />
+      <option name="url" value="https://repo1.maven.org/maven2" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="jboss.community" />
+      <option name="name" value="JBoss Community repository" />
+      <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="bintray-jcenter" />
+      <option name="name" value="jcenter" />
+      <option name="url" value="https://jcenter.bintray.com" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="minecraft-repo" />
+      <option name="name" value="minecraft-repo" />
+      <option name="url" value="https://libraries.minecraft.net/" />
+    </remote-repository>
+  </component>
+</project>

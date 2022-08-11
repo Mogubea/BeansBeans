@@ -1,5 +1,6 @@
 package me.playground.playerprofile;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,18 +11,27 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
+import me.playground.listeners.RedstoneManager;
+import me.playground.regions.PlayerRegion;
+import net.dv8tion.jda.api.entities.Member;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
+import org.bukkit.advancement.Advancement;
 import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.CreativeCategory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -36,36 +46,43 @@ import me.playground.gui.BeanGui;
 import me.playground.items.BeanItem;
 import me.playground.listeners.ConnectionListener;
 import me.playground.main.Main;
+import me.playground.main.TeamManager.ScoreboardFlag;
 import me.playground.playerprofile.settings.PlayerSetting;
 import me.playground.playerprofile.stats.PlayerStats;
 import me.playground.playerprofile.stats.StatType;
 import me.playground.ranks.Permission;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
+import me.playground.regions.flags.MemberLevel;
 import me.playground.skills.Skill;
 import me.playground.skills.Skills;
+import me.playground.utils.Calendar;
+import me.playground.utils.ChatColor;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.TextColor;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 public class PlayerProfile {
 	
-	public static LoadingCache<UUID, PlayerProfile> profileCache = CacheBuilder.from("maximumSize=500,expireAfterAccess=15m")
+	public static LoadingCache<UUID, PlayerProfile> profileCache = CacheBuilder.from("maximumSize=500,expireAfterAccess=6m")
 			.build(
-					new CacheLoader<UUID, PlayerProfile>() {
-						public PlayerProfile load(UUID playerUUID) throws Exception { // if the key doesn't exist, request it via this method
+					new CacheLoader<>() {
+						public PlayerProfile load(@NotNull UUID playerUUID) { // if the key doesn't exist, request it via this method
 							PlayerProfile prof = Datasource.getOrMakeProfile(playerUUID);
-							if (prof.getPlayer()!=null) // assign bar player if online
-								prof.getSkills().setBarPlayer();
+							if (prof != null)
+								if (prof.isOnline()) // assign bar player if online
+									prof.getSkills().setBarPlayer();
 							return prof;
 						}
 					});
-	
+
 	public static Map<UUID, PlayerProfile> asMap() {
-		return profileCache.asMap();
+		return Map.copyOf(profileCache.asMap());
 	}
 	
 	public static PlayerProfile from(Player p) {
@@ -110,7 +127,7 @@ public class PlayerProfile {
 	
 	public static PlayerProfile fromIfExists(int playerId) {
 		try {
-			ProfileStore ps = ProfileStore.from(playerId, true);
+			ProfileStore ps = ProfileStore.fromIfExists(playerId);
 			if (ps == null) return null;
 			return profileCache.get(ps.getUniqueId());
 		} catch (ExecutionException e) {
@@ -142,11 +159,11 @@ public class PlayerProfile {
 	// XXX: Class Begins
 	
 	private final int 					playerId;
-	private OfflinePlayer				player;
+	private final OfflinePlayer			player;
 	
-	private final Set<Integer>			friends = new HashSet<Integer>();
-	private final ArrayList<Integer> 	ignoredPlayers = new ArrayList<Integer>();
-	private final ArrayList<Rank> 		ranks = new ArrayList<Rank>();
+	private final Set<Integer>			friends = new HashSet<>();
+	private final ArrayList<Integer> 	ignoredPlayers = new ArrayList<>();
+	private final ArrayList<Rank> 		ranks = new ArrayList<>();
 	private final Set<String>			privatePermissions;
 	private long 						donorExpirationTime = 0L;
 	
@@ -155,21 +172,22 @@ public class PlayerProfile {
 	private String 						name;
 	private String 						nickname;
 	private TextComponent   			colouredName;
-	private int 						nameColour = Rank.NEWBEAN.getRankHex();
+	private int 						nameColour;
 	
-	private long 						coins = 500;
+	private double 						coins;
 	private short						warpCount;
 	
-	private UUID 						playerUUID;
+	private final UUID 					playerUUID;
 	
 	private Location					home;
-	private ItemStack[] 				armourWardrobe;
+	private final ItemStack[] 			armourWardrobe;
 	private final HeirloomInventory		heirloomInventory;
 	private final PlayerStats			stats;
-	private List<String> 				pickupBlacklist = new ArrayList<String>();
-	private List<Delivery>				inbox = new ArrayList<Delivery>();
+	private final List<String> 			pickupBlacklist;
+	private final List<Delivery>		inbox = new ArrayList<>();
+	private final List<PlayerRegion>    ownedRegions = new ArrayList<>();
 	
-	private long 						booleanSettings = PlayerSetting.getDefaultSettings();
+	private long 						booleanSettings;
 	
 	// Saved for performance
 	private Civilization				civilization;
@@ -178,18 +196,20 @@ public class PlayerProfile {
 	// Not Saved
 	private final long					loadTime; // Time when the profile was loaded.
 	private int							warpLimit;
+	private int							regionLimit;
 	/**
 	 * This should always be exactly the same as the online player's permission set.
 	 * This exists to minimise or eradicate the use of {@link #isRank(Rank)}. As a 
 	 * permission based system is far more reliable.
 	 */
-	private Set<String>					permissions = new HashSet<String>(); 
-	private ArrayList<String>			recentWarps = new ArrayList<String>(10);
-	private HashMap<String, Long>  		cooldowns = new HashMap<String, Long>();
+	private final Set<String>			permissions = new HashSet<>();
+	private final ArrayList<String>		recentWarps = new ArrayList<>(10);
+	private final HashMap<String, Long> cooldowns = new HashMap<>();
 	private BeanGui			 			currentlyViewedGUI;
 	private TextComponent 				chatLine;
-	private Location[] 					lastLocation = new Location[2];
+	private final Location[] 			lastLocation = new Location[2];
 	private Region 						currentRegion;
+	private Objective					scoreboardObj;
 	
 	// Admin
 	public UUID profileOverride;
@@ -224,80 +244,117 @@ public class PlayerProfile {
 		refreshInbox();
 		//Bukkit.getConsoleSender().sendMessage(Component.text("Profile was loaded for " + (hasNickname() ? getNickname() + " ("+getRealName()+")" : getRealName())));
 	}
-	
-	public boolean isOnline() {
-		return getPlayer()!=null;
+
+	/**
+	 * Remove this {@link PlayerProfile} from the cache if the {@link #player} is currently offline.
+	 */
+	public void invalidateIfOffline() {
+		if (!isOnline())
+			profileCache.invalidate(playerUUID);
 	}
-	
+
+	/**
+	 * Check if the {@link #player} is currently online.
+	 * @return Whether the player is online or not.
+	 */
+	public boolean isOnline() {
+		return getPlayer() != null;
+	}
+
+	/**
+	 * Get the online version of the {@link #player}.
+	 *
+	 * {@link #isOnline()} should be checked first.
+ 	 * @return The player if online, otherwise null.
+	 */
+	@Nullable
 	public Player getPlayer() {
 		return player.getPlayer();
 	}
-	
+
+	/**
+	 * Get the offline version of the {@link #player}.
+	 * @return The offline player.
+	 */
+	@NotNull
 	public OfflinePlayer getOfflinePlayer() {
 		return player;
 	}
-	
+
+	@NotNull
 	public UUID getUniqueId() {
 		return playerUUID;
 	}
-	
+
+	/**
+	 * Get the database ID of this {@link PlayerProfile}.
+	 * @return The database ID.
+	 */
 	public int getId() {
 		return playerId;
 	}
-	
-	public long getBalance() {
+
+	/**
+	 * Get the coin balance.
+	 * @return The coin balance.
+	 */
+	public double getBalance() {
 		return coins;
 	}
 	
-	public void setBalance(long amount, String log) {
+	public void setBalance(double amount, String log) {
 		coins = amount;
 		Datasource.logTransaction(playerId, amount, log);
-		flagScoreboardUpdate();
+		flagScoreboardUpdate(ScoreboardFlag.COINS);
 	}
 	
-	public void addToBalance(long amount, String log) {
+	public void addToBalance(double amount, String log) {
 		addToBalance(amount);
 		Datasource.logTransaction(playerId, amount, log);
 	}
 	
-	public void addToBalance(long amount) {
+	public void addToBalance(double amount) {
 		coins+=amount;
-		if (this.isOnline())
-			getPlayer().sendActionBar(Component.text("\u00a76" + getBalance() + " Coins \u00a77( " + (amount>-1 ? "\u00a7a+" : "\u00a7c") + amount + "\u00a77 )"));
-		flagScoreboardUpdate();
+		if (this.isOnline() && amount != 0)
+			getPlayer().sendActionBar(Component.text("\u00a76" + df.format(getBalance()) + " Coins \u00a77( " + (amount>-1 ? "\u00a7a+" : "\u00a7c") + df.format(amount) + "\u00a77 )"));
+		flagScoreboardUpdate(ScoreboardFlag.COINS);
 	}
 	
+	public int getCrystals() {
+		return getStat(StatType.CURRENCY, "crystal");
+	}
+	
+	public void addToCrystals(int amount) {
+		stats.addToStat(StatType.CURRENCY, "crystal", amount);
+		flagScoreboardUpdate(ScoreboardFlag.CRYSTALS);
+	}
+	
+	public void setCrystals(int amount) {
+		stats.setStat(StatType.CURRENCY, "crystal", amount);
+		flagScoreboardUpdate(ScoreboardFlag.CRYSTALS);
+	}
+
 	/**
-	 * A player's Sapphire count is stored within the voting {@link #StatType}.
-	 * @return the player's Sapphire
+	 * Similar to {@link Player#hasPermission(String)} since both the profile and player have the same permissions.
+	 * @return If the player has permission.
 	 */
-	public int getSapphire() {
-		return getStat(StatType.VOTING, "sapphire");
-	}
-	
-	/**
-	 * A player's Sapphire count is stored within the voting {@link #StatType}.
-	 * <br>Add to a player's sapphire count.
-	 */
-	public void addToSapphire(int amount) {
-		stats.addToStat(StatType.VOTING, "sapphire", amount);
-		flagScoreboardUpdate();
-	}
-	
-	public void setSapphire(int amount) {
-		stats.setStat(StatType.VOTING, "sapphire", amount);
-		flagScoreboardUpdate();
-	}
-	
 	public boolean hasPermission(String permissionString) {
 		if (permissionString == null || permissionString.isEmpty()) return true;
 		return this.permissions.contains("*") || this.permissions.contains(permissionString);
 	}
-	
+
+	/**
+	 * Get the permissions exclusive to this profile.
+	 * @return The list of permissions.
+	 */
 	public Set<String> getPrivatePermissions() {
 		return this.privatePermissions;
 	}
-	
+
+	/**
+	 * Get the list of permissions.
+	 * @return The list of permissions.
+	 */
 	public Set<String> getPermissions() {
 		return permissions;
 	}
@@ -373,8 +430,11 @@ public class PlayerProfile {
 		}
 		return c;
 	}
-	
-	public PlayerProfile addRank(Rank rank) {
+
+	/**
+	 * Adds the specified {@link Rank} to this profile.
+	 */
+	public void addRank(Rank rank) {
 		if (!ranks.contains(rank)) {
 			boolean colourIsRank = this.nameColour == getHighestRank().getRankHex();
 			ranks.add(rank);
@@ -382,12 +442,16 @@ public class PlayerProfile {
 			if (colourIsRank)
 				this.nameColour = getHighestRank().getRankHex();
 			
+			flagScoreboardUpdate(ScoreboardFlag.RANK);
 			Main.getInstance().getDiscord().updateRoles(this);
 		}
-		return this;
 	}
-	
-	public PlayerProfile removeRank(Rank... rankz) {
+
+	/**
+	 * Removes the specified {@link Rank}(s) from this profile. Do note that playtime ranks
+	 * will automatically be re-added if this profile playtime requirements demands it.
+	 */
+	public void removeRank(Rank... rankz) {
 		boolean update = false;
 		for (Rank rank : rankz) {
 			if (ranks.contains(rank)) {
@@ -403,29 +467,27 @@ public class PlayerProfile {
 			updateRanksPerms();
 			Main.getInstance().getDiscord().updateRoles(this);
 		}
-		
-		return this;
 	}
 	
 	/**
-	 * Sets the players ranks. This method does not call the {@link DiscordBot#updateRoles()} method 
+	 * Sets the players ranks. This method does not call the {@link DiscordBot} method
 	 * as it's not usually used in situations where ranks are updated, but rather previewed or loaded.
 	 * @param ranks The new ranks of the player.
 	 */
 	public void setRanks(List<Rank> ranks) {
 		this.ranks.clear();
-		ranks.forEach((rank) -> { this.ranks.add(rank); });
+		this.ranks.addAll(ranks);
 		updateRanksPerms();
 	}
 	
 	/**
 	 * Organise the current rank list into the correct order, stores the highest of each rank category,
-	 * calculates the current {@link #getWarpLimit()}, update the player's names with {@link #updateShownNames()} 
+	 * calculates the current {@link #getWarpLimit()}, update the player's names with {@link #updateShownNames(boolean)}
 	 * and then update permissions based on current Ranks.
 	 */
 	private void updateRanksPerms() {
 		// Order the Ranks and do Warp Limit
-		List<Rank> rankz = new ArrayList<Rank>(ranks);
+		List<Rank> rankz = new ArrayList<>(ranks);
 		this.warpLimit = 0;
 		this.ranks.clear();
 		this.permissions.clear();
@@ -447,6 +509,7 @@ public class PlayerProfile {
 				
 			ranks.add(rank);
 			warpLimit += rank.getWarpBonus();
+			regionLimit += rank.getRegionBonus();
 		}
 		
 		// Update store.
@@ -491,11 +554,10 @@ public class PlayerProfile {
 		ignoredPlayers.removeAll(new ArrayList<Integer>(id));
 	}
 	
-	public String setNickname(String nickname) {
+	public void setNickname(String nickname) {
 		this.nickname = (nickname.equals(name)) ? null : nickname;
 		Main.getInstance().getDiscord().updateNickname(this);
 		updateShownNames(true);
-		return nickname;
 	}
 	
 	public void setNameColour(int colour) {
@@ -518,35 +580,41 @@ public class PlayerProfile {
 	}
 	
 	/**
-	 * This method is only called in {@link ConnectionListener#onPlayerPreLogin()} to update this player's {@link #name} upon login.
+	 * This method is only called in {@link ConnectionListener} to update this player's {@link #name} upon login.
 	 */
 	public void updateRealName(String name) {
-		if (this.name != name) {
+		if (!this.name.equals(name)) {
 			this.name = name;
 			Datasource.saveProfileColumn(getId(), "name", name);
 		}
 	}
-	
+
+	@NotNull
 	public TextColor getNameColour() {
 		return TextColor.color(nameColour);
 	}
-	
+
+	@NotNull
 	public String getDisplayName() {
 		return (nickname==null?name:nickname);
 	}
-	
+
+	@NotNull
 	public String getRealName() {
 		return name;
 	}
-	
+
+	@NotNull
 	public TextComponent getColouredName() {
 		return this.colouredName;
 	}
-	
+
+	@NotNull
 	public Skills getSkills() {
 		return skillData;
 	}
-	
+
+	@Nullable
 	public Location getHome() {
 		return this.home;
 	}
@@ -554,20 +622,21 @@ public class PlayerProfile {
 	public void setHome(Location location) {
 		this.home = location;
 	}
-	
+
+	@NotNull
 	public ItemStack[] getArmourWardrobe() {
 		return this.armourWardrobe;
 	}
 	
-	public boolean performWardrobeSwap(int id) {
-		if (!isOnline()) return false;
+	public void performWardrobeSwap(int id) {
+		if (!isOnline()) return;
 		
 		final Player p = this.getPlayer();
 		final int offset = (id-1)*4;
 		final ItemStack[] armor = p.getInventory().getArmorContents().clone();
 		final ItemStack[] oldStored = new ItemStack[]
 				{
-				this.armourWardrobe[offset + 0],
+				this.armourWardrobe[offset],
 				this.armourWardrobe[offset + 1],
 				this.armourWardrobe[offset + 2],
 				this.armourWardrobe[offset + 3],
@@ -577,12 +646,10 @@ public class PlayerProfile {
 		p.getInventory().setArmorContents(oldStored);
 		
 		// Save stored armor
-		for (int x = 0; x < 4; x++)
-			this.armourWardrobe[offset + x] = armor[x];
+		System.arraycopy(armor, 0, this.armourWardrobe, offset, 4);
 		
 		//Datasource.saveArmourWardrobe(this); saved with full profile
 		p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_IRON, 3, 1);
-		return true;
 	}
 	
 	public void withdrawWardrobe(int id) {
@@ -613,7 +680,7 @@ public class PlayerProfile {
 					prof.setName(getDisplayName());
 					getPlayer().setPlayerProfile(prof);
 				}
-				flagScoreboardUpdate();
+				flagFullScoreboardUpdate();
 				getPlayer().displayName(getColouredName()); // Display Name
 				Main.getTeamManager().updateTeam(getPlayer()); // Team, Tab list etc.
 			}
@@ -647,18 +714,21 @@ public class PlayerProfile {
 		//
 		
 		Rank donorRank = getDonorRank();
-		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Rank: ").append(getHighestRank().toComponent()));
+		hoverComponents = hoverComponents.append(Component.text("\n\u00a77 • Rank: ").append(getHighestRank().toComponent()));
 		if (donorRank != null)
 			hoverComponents = hoverComponents.append(Component.text("\u00a77 (").append(donorRank.toComponent()).append(Component.text("\u00a77)")));
-		
-		if (isInCivilization() && hasJob())
-			hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Job: ").append(getJob().toComponent()));
-		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Playtime: \u00a7f" + Utils.timeStringFromMillis(getPlaytime() * 1000)));
-		hoverComponents = hoverComponents.append(Component.text("\n\u00a77- Id: \u00a7a" + getId()));
+
+		hoverComponents = hoverComponents.append(Component.text("\n\u00a77 • Playtime: \u00a7f" + Utils.timeStringFromMillis(getPlaytime() * 1000L)));
+		hoverComponents = hoverComponents.append(Component.text("\n\u00a77 • Id: \u00a7a" + getId()));
 		
 		this.chatLine = Component.empty().append(chatLine.hoverEvent(HoverEvent.showText(hoverComponents)));
 	}
-	
+
+	/**
+	 * Gets the detailed {@link TextComponent} name for the {@link Player} of this profile.
+	 * @return The component name.
+	 */
+	@NotNull
 	public TextComponent getComponentName() {
 		if (chatLine == null)
 			updateComponentName();
@@ -679,9 +749,14 @@ public class PlayerProfile {
 	public int getPlaytime() {
 		return getStat(StatType.GENERIC, "playtime");
 	}
-	
+
 	public int getSkillLevel(Skill skill) {
-		return skillData.getLevel(skill);
+		return skill != null ? skillData.getLevel(skill) : 0;
+	}
+
+	@Contract("null -> null")
+	public String getSkillGrade(Skill skill) {
+		return skill != null ? skillData.getSkillInfo(skill).getGrade() : null;
 	}
 	
 	public boolean isSettingEnabled(PlayerSetting setting) {
@@ -706,19 +781,19 @@ public class PlayerProfile {
 	}
 	
 	private void doSettingEffect(PlayerSetting setting) {
-		if (!isOnline()) return;
+		if (!isOnline() || setting == null) return;
 		final boolean enabled = isSettingEnabled(setting);
 		switch(setting) {
 		case HIDE:
 			Main.getTeamManager().updateTeam(getPlayer()); // Team
-			flagScoreboardUpdate();
+			flagScoreboardUpdate(ScoreboardFlag.TITLE);
 			break;
 		case SHOW_SIDEBAR:
 			if (enabled) {
-				flagScoreboardUpdate(); // flag rather than actually update since it's a spammable setting
-				showScoreboard();
+				flagFullScoreboardUpdate(); // flag rather than actually update since it's a spammable setting
+				showSidebar();
 			} else
-				hideScoreboard();
+				hideSidebar();
 			break;
 		case MENU_ITEM:
 			if (enabled) {
@@ -741,19 +816,30 @@ public class PlayerProfile {
 	public boolean isHidden() {
 		return isSettingEnabled(PlayerSetting.HIDE);
 	}
-	
+
+	/**
+	 * Get this player's skull.
+	 * @return This player's skull.
+	 */
 	public ItemStack getSkull() {
 		return Utils.getSkullFromPlayer(Bukkit.getOfflinePlayer(this.getUniqueId()));
 	}
-	
+
+	/**
+	 * Get the currently viewed {@link BeanGui} instance.
+	 * @return The gui.
+	 */
 	public BeanGui getBeanGui() {
 		return this.currentlyViewedGUI;
 	}
-	
-	public BeanGui setBeanGui(BeanGui gui) {
-		if (!this.isOnline()) // Shouldn't happen.
-			return null;
-		return this.currentlyViewedGUI = gui;
+
+	/**
+	 * Sets the currently viewed {@link BeanGui} instance.
+	 * This does not open up a gui, just tells the profile what is being viewed.
+	 */
+	public void setBeanGui(BeanGui gui) {
+		if (!this.isOnline()) return; // Shouldn't ever happen.
+		this.currentlyViewedGUI = gui;
 	}
 	
 	public void closeBeanGui() {
@@ -766,7 +852,6 @@ public class PlayerProfile {
 	
 	/**
 	 * While in a BeanGUI
-	 * @param i
 	 */
 	public void clearOverridingProfile() {
 		this.profileOverride = this.getUniqueId();
@@ -780,12 +865,13 @@ public class PlayerProfile {
 	 */
 	public void grantAdvancement(@Nonnull String advancementKey) {
 		if (!isOnline()) return;
-		Bukkit.getScheduler().runTask(Main.getInstance(), new Runnable() {
-			@Override
-			public void run() {
-				AdvancementProgress progress = getPlayer().getAdvancementProgress(Bukkit.getAdvancement(NamespacedKey.fromString(advancementKey)));
-				progress.getRemainingCriteria().forEach((c) -> progress.awardCriteria(c));
-			}
+		NamespacedKey key = NamespacedKey.fromString(advancementKey);
+		if (key == null) return;
+		Advancement advancement = Bukkit.getAdvancement(key);
+		if (advancement == null) return;
+		Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+			AdvancementProgress progress = getPlayer().getAdvancementProgress(advancement);
+			progress.getRemainingCriteria().forEach(progress::awardCriteria);
 		});
 	}
 	
@@ -795,12 +881,13 @@ public class PlayerProfile {
 	 */
 	public void revokeAdvancement(@Nonnull String advancementKey) {
 		if (!isOnline()) return;
-		Bukkit.getScheduler().runTask(Main.getInstance(), new Runnable() {
-			@Override
-			public void run() {
-				AdvancementProgress progress = getPlayer().getAdvancementProgress(Bukkit.getAdvancement(NamespacedKey.fromString(advancementKey)));
-				progress.getAwardedCriteria().forEach((c) -> progress.revokeCriteria(c));
-			}
+		NamespacedKey key = NamespacedKey.fromString(advancementKey);
+		if (key == null) return;
+		Advancement advancement = Bukkit.getAdvancement(key);
+		if (advancement == null) return;
+		Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+			AdvancementProgress progress = getPlayer().getAdvancementProgress(advancement);
+			progress.getAwardedCriteria().forEach(progress::revokeCriteria);
 		});
 	}
 	
@@ -867,16 +954,16 @@ public class PlayerProfile {
 		return isCd;
 	}
 	
-	public boolean onCdElseAdd(String id, int mili) {
-		return onCdElseAdd(id, mili, false);
+	public boolean onCdElseAdd(String id, int milli) {
+		return onCdElseAdd(id, milli, false);
 	}
 	
-	public boolean onCdElseAdd(String id, int mili, boolean force) {
+	public boolean onCdElseAdd(String id, int milli, boolean force) {
 		if (!force && hasPermission(Permission.BYPASS_COOLDOWNS))
 			return false;
 		boolean onCd = onCooldown(id);
 		if (!onCd)
-			addCooldown(id, mili);
+			addCooldown(id, milli);
 		return onCd;
 	}
 	
@@ -887,7 +974,7 @@ public class PlayerProfile {
 	}
 	
 	/**
-	 * Pretty much only used in {@link BeanCommand#onCommand()}
+	 * Pretty much only used in {@link BeanCommand}
 	 * @param id Cooldown identifier
 	 * @return the time when this cooldown expires.
 	 */
@@ -919,15 +1006,27 @@ public class PlayerProfile {
 	public void downWarpCount() {
 		this.warpCount--;
 	}
-	
+
+	public int getRegionLimit() {
+		return regionLimit;
+	}
+
+	public Set<Region> getRegions() {
+		return Main.getRegionManager().getRegionsMadeBy(getId());
+	}
+
 	/**
-	 * Updates every 1.5 seconds in {@link Main#startMainServerLoop()}
+	 * Updates every 1.5 seconds in {@link Main}. This is never null if the player is online.
 	 * @return last region entered
 	 */
+	@Nullable
 	public Region getCurrentRegion() {
 		return currentRegion;
 	}
-	
+
+	/**
+	 * Sets the current region the player is located in.
+	 */
 	public Region updateCurrentRegion(Region region) {
 		return this.currentRegion = region;
 	}
@@ -935,7 +1034,8 @@ public class PlayerProfile {
 	public int getCivilizationId() {
 		return civilization == null ? 0 : civilization.getId();
 	}
-	
+
+	@Nullable
 	public Civilization getCivilization() {
 		return civilization;
 	}
@@ -953,6 +1053,7 @@ public class PlayerProfile {
 	 * @return the player's current {@link Job}. Through conventional methods, this 
 	 * will usually return null if the player is not in a {@link Civilization}.
 	 */
+	@Nullable
 	public Job getJob() {
 		return job;
 	}
@@ -976,11 +1077,13 @@ public class PlayerProfile {
 		this.job = job;
 		return true;
 	}
-	
+
+	@NotNull
 	public List<Delivery> getInbox() {
 		return inbox;
 	}
-	
+
+	@Nullable
 	public Delivery getDeliveryFrom(DeliveryType type, int fromId) {
 		int size = inbox.size();
 		for (int x = -1; ++x < size;) {
@@ -1001,18 +1104,21 @@ public class PlayerProfile {
 	public long getLastInboxUpdate() {
 		return lastInboxUpdate;
 	}
-	
+
+	@Nullable
 	public Delivery giveItem(ItemStack...items) {
 		if (isOnline()) {
 			Map<Integer, ItemStack> remaining = getPlayer().getInventory().addItem(items);
-			return Delivery.createItemDelivery(playerId, 0, "Item Package", "Some items were sent to you/nwhile Your inventory was full!", 1000 * 60 * 60 * 24 * 31, remaining.values());
+			if (remaining.values().size() > 0)
+				return Delivery.createItemDelivery(playerId, 0, "Item Package", "Some items were sent to you/nwhile Your inventory was full!", 1000L * 60 * 60 * 24 * 31, remaining.values());
+			return null;
 		} else {
-			return Delivery.createItemDelivery(playerId, 0, "Item Package", "Some items were sent to you/nwhile you were away!", 1000 * 60 * 60 * 24 * 31, items);
+			return Delivery.createItemDelivery(playerId, 0, "Item Package", "Some items were sent to you/nwhile you were away!", 1000L * 60 * 60 * 24 * 31, items);
 		}
 	}
-	
+
 	/**
-	 * Inefficient ban check, make better in future.
+	 * Inefficient ban check, make better in the future.
 	 * @return whether the player is banned or not.
 	 */
 	public boolean isBanned() {
@@ -1044,7 +1150,7 @@ public class PlayerProfile {
 		this.lastAFK = System.currentTimeMillis();
 		this.AFKReason = reason;
 		this.stats.addToStat(StatType.GENERIC, "afk", 1);
-		flagScoreboardUpdate();
+		flagScoreboardUpdate(ScoreboardFlag.TITLE);
 		Main.getTeamManager().updateTeam(getPlayer()); // Team
 		getPlayer().sendActionBar(Component.text("\u00a77You are now AFK."));
 	}
@@ -1061,7 +1167,7 @@ public class PlayerProfile {
 		
 		this.isAFK = false;
 		this.lastRTK = millis;
-		flagScoreboardUpdate();
+		flagScoreboardUpdate(ScoreboardFlag.TITLE);
 		Main.getTeamManager().updateTeam(getPlayer()); // Team
 		getPlayer().sendActionBar(Component.text("\u00a77You are no longer AFK."));
 	}
@@ -1084,7 +1190,17 @@ public class PlayerProfile {
 	public long getLastAFK() {
 		return lastAFK;
 	}
-	
+
+	/**
+	 * If discord is enabled and the player has linked an account, attempt to grab their {@link Member}.
+	 * @return Their member or null.
+	 */
+	@Nullable
+	public Member getDiscordMember() {
+		if (!Main.getInstance().getDiscord().isOnline()) return null;
+		return Main.getInstance().getDiscord().getDiscordAccount(getId());
+	}
+
 	/**
 	 * @return time in millis when this profile instance was loaded.
 	 */
@@ -1092,29 +1208,180 @@ public class PlayerProfile {
 		return loadTime;
 	}
 	
-	private void showScoreboard() {
-		Main.getTeamManager().showSidebar(getPlayer());
+	// XXX: Scoreboard
+	private void showSidebar() {
+		if (!isOnline()) return;
+		scoreboardObj.setDisplaySlot(DisplaySlot.SIDEBAR);
 	}
 	
-	private void hideScoreboard() {
-		Main.getTeamManager().hideSidebar(getPlayer());
+	private void hideSidebar() {
+		if (!isOnline()) return;
+		scoreboardObj.setDisplaySlot(null);
 	}
 	
 	public void updateScoreboard() {
 		if (!isOnline()) return;
 		if (!isSettingEnabled(PlayerSetting.SHOW_SIDEBAR)) return;
 		
-		Main.getTeamManager().updateSidebar(getPlayer());
-		this.scoreboardFlag = false;
+		updateSidebar();
+		this.scoreboardFlag = 0;
 	}
 	
-	private boolean scoreboardFlag;
-	public void flagScoreboardUpdate() {
-		this.scoreboardFlag = true;
+	private byte scoreboardFlag;
+	public void flagScoreboardUpdate(ScoreboardFlag flag) {
+		this.scoreboardFlag |= 1 << flag.ordinal();
+		if (flag.isInstant())
+			updateScoreboard();
+	}
+	
+	public void flagFullScoreboardUpdate() {
+		this.scoreboardFlag = (byte) ScoreboardFlag.all();
 	}
 	
 	public boolean needsScoreboardUpdate() {
-		return this.scoreboardFlag;
+		return this.scoreboardFlag != 0;
 	}
+	
+	/**
+	 * Keep scoreboard score information here for easy and optimal replacement rather than having to sift through searching for them.
+	 */
+	private final Map<Integer, String> scoreboardScores = new HashMap<>();
+	
+	/**
+	 * Update this player's sidebar.
+	 */
+	public void updateSidebar() {
+		if (!isOnline()) return;
+		
+		Scoreboard scoreboard = getPlayer().getScoreboard();
+		String c = "\u00a7" + ChatColor.charOf(getHighestRank().getRankColour());
+		String rc = "\u00a7" + ChatColor.charOf(getHighestRank().getRankColour());
+
+		if ((scoreboardFlag & 1 << ScoreboardFlag.TITLE.ordinal()) != 0) {
+			List<String> flags = new ArrayList<>();
+			if (isHidden()) flags.add("HIDE");
+			if (isAFK()) flags.add("AFK");
+			
+			if (scoreboardObj == null) {
+				scoreboardObj = scoreboard.getObjective("id"+getId()+"-side");
+				if (scoreboardObj == null)
+					scoreboardObj = scoreboard.registerNewObjective("id"+getId()+"-side", "dummy", getColouredName());
+				if (isSettingEnabled(PlayerSetting.SHOW_SIDEBAR))
+					showSidebar();
+
+				setScoreboardLine(7, "\u00a78\u258E  ");
+				setScoreboardLine(3, " ");
+				setScoreboardLine(0, "\u00a78beansbeans.net");
+			}
+
+			setScoreboardLine(12, !flags.isEmpty() ? c + "\u258E \u00a77 " + flags : null);
+			scoreboardObj.displayName(getColouredName()/*.append(!flags.isEmpty() ? Component.text("\u00a77 " + flags) : Component.empty())*/);
+		}
+		
+		if ((scoreboardFlag & 1 << ScoreboardFlag.RANK.ordinal()) != 0) {
+			setScoreboardLine(11, c + "\u258E \u00a7f\u2606 " + rc + getHighestRank().getNiceName());
+
+			if (getDonorRank() != null)
+				rc = "\u00a7" + ChatColor.charOf(getDonorRank().getRankColour());
+			setScoreboardLine(10, getDonorRank() != null ? c + "\u258E \u00a7f\u2b50 " + rc + getDonorRank().getNiceName() : null);
+		}
+		
+		if ((scoreboardFlag & 1 << ScoreboardFlag.COINS.ordinal()) != 0)
+			setScoreboardLine(9, c + "\u258E\u00a76 \u20BF " + df.format(getBalance()));
+		if ((scoreboardFlag & 1 << ScoreboardFlag.CRYSTALS.ordinal()) != 0)
+			setScoreboardLine(8, c + "\u258E\u00a7d \u2756 " + df.format(getCrystals()));
+		
+		/*if (isInCivilization()) {
+			scores.add(" ");
+			Civilization civ = getCivilization();
+			scores.add("\u00a72\u25D9 \u00a7fCiv:\u00a72 " + civ.getName());
+			String jc = "\u00a7" + (hasJob() ? ChatColor.charOf(getJob().toComponent().color()) + getJob().getNiceName() : "2Citizen");
+			scores.add("\u00a72\u25D9 \u00a7fJob: " + jc);
+		}*/
+		
+		if ((scoreboardFlag & 1 << ScoreboardFlag.REGION.ordinal()) != 0) {
+			Region r = getCurrentRegion();
+			if (r != null && !r.isWorldRegion()) {
+				String rName = r.getName();
+				if (rName.length() > 9)
+					rName = rName.substring(0, 10) + "..";
+				
+				setScoreboardLine(6, "\u00a7b\u258E \u00a7f\u06e9 \u00a79" + rName);
+				MemberLevel level = r.getMember(getPlayer());
+				setScoreboardLine(5, "\u00a7b\u258E \u00a7f\u272a \u00a7b" + level.toString());
+			} else {
+				String rName = getPlayer().getWorld().getName();
+				if (rName.length() > 9)
+					rName = rName.substring(0, 10) + "..";
+				
+				setScoreboardLine(6, "\u00a7b\u258E \u00a7f\u2742 \u00a72" + rName);
+				setScoreboardLine(5, "\u00a7b\u258E \u00a7f\u272a \u00a7aWilderness");
+			}
+		}
+		
+		if ((scoreboardFlag & 1 << ScoreboardFlag.TIME.ordinal()) != 0) {
+			int hour = (Calendar.getTime(getPlayer().getWorld())+6000) / 1000;
+			boolean night = hour < 6 || hour > 18;
+			
+			String symbol = night ? "\u00a79\u263d" : "\u00a7e\u2600";
+			if (getPlayer().getWorld().hasStorm()) {
+				if (getPlayer().getWorld().isThundering())
+					symbol = night ? "\u00a79\u26a1" : "\u00a76\u26a1";
+				else
+					symbol = night ? "\u00a79\u2602" : "\u00a7b\u2602";
+			}
+			setScoreboardLine(4, "\u00a7b\u258E " + symbol + "\u00a77 " + Calendar.getTimeString(Calendar.getTime(getPlayer().getWorld()), true));
+		}
+
+		if ((scoreboardFlag & 1 << ScoreboardFlag.REDSTONE.ordinal()) != 0) {
+			float avg = redstoneManager.getAverageRedstoneActions(getPlayer().getChunk());
+
+			// Hold redstone to show it
+			if (avg < 1 || getPlayer().getInventory().getItemInMainHand().getType().getCreativeCategory() != CreativeCategory.REDSTONE) {
+				setScoreboardLine(2, null);
+			} else {
+				float max = redstoneManager.getMaximumActions();
+				float percentUsed = (avg / max) * 100;
+				String col = percentUsed < 50 ? "\u00a7a" : percentUsed < 95 ? "\u00a7e" : "\u00a7c";
+
+				setScoreboardLine(2, "\u00a78\u258E \u00a74\ud83d\udd25 \u00a7cWiring: " + col + (int)percentUsed + "%");
+			}
+		}
+
+		if ((scoreboardFlag & 1 << ScoreboardFlag.TPS.ordinal()) != 0) {
+			if (isRank(Rank.ADMINISTRATOR)) {
+				setScoreboardLine(1, "\u00a78\u258E " + getScoreboardTPS());
+			} else {
+				setScoreboardLine(1, null);
+			}
+		}
+	}
+	
+	private void setScoreboardLine(int line, String newContent) {
+		String old = scoreboardScores.getOrDefault(line, null);
+		if (old != null) {
+			if (old.equals(newContent)) return;
+			scoreboardObj.getScore(old).resetScore();
+		}
+		
+		if (newContent != null) {
+			scoreboardScores.put(line, newContent);
+			scoreboardObj.getScore(newContent).setScore(line);
+		} else {
+			scoreboardScores.remove(line);
+		}
+	}
+
+	@NotNull
+	private String getScoreboardTPS() {
+		double[] tps = Bukkit.getServer().getTPS();
+		String tpString = (tps[0] < 19.9 ? (tps[0] < 15 ? "\u00a74" : "\u00a76") : "\u00a7a") + "\u26a0 ";
+		tpString += "\u00a7f" + tpsf.format(tps[0]) + " \u00a77" + tpsf.format(tps[1]) + " \u00a78" + tpsf.format(tps[2]);
+		return tpString;
+	}
+
+	private static RedstoneManager redstoneManager = Main.getInstance().getRedstoneManager();
+	private static final DecimalFormat df = new DecimalFormat("#,###");
+	private static final DecimalFormat tpsf = new DecimalFormat("#.#");
 	
 }

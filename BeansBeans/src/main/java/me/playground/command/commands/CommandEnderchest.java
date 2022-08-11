@@ -21,7 +21,7 @@ public class CommandEnderchest extends BeanCommand {
 	
 	public CommandEnderchest(Main plugin) {
 		super(plugin, "bean.cmd.enderchest", false, "enderchest", "ec");
-		description = "View your enderchest.";
+		description = "View your Ender Chest.";
 	}
 	
 	@Override
@@ -29,7 +29,7 @@ public class CommandEnderchest extends BeanCommand {
 		final Player p = (Player)sender;
 		final Player target = args.length > 0 && sender.hasPermission("bean.cmd.enderchest.others") ? toPlayer(sender, args[0]) : p;
 		final Inventory inv = target.getEnderChest();
-		
+
 		p.openInventory(inv);
 		return true;
 	}

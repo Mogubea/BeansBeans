@@ -41,11 +41,11 @@ public class BItemPackage extends BeanItem {
 	}
 	
 	@Override
-	public void onInteract(PlayerInteractEvent e) {
+	public boolean onInteract(PlayerInteractEvent e) {
 		if (e.getHand() == EquipmentSlot.HAND && (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK)) {
 			e.setCancelled(true);
 			
-			if (getLootTable() == null) return;
+			if (getLootTable() == null) return true;
 			
 			Player p = e.getPlayer();
 			PlayerProfile pp = PlayerProfile.from(p);
@@ -70,8 +70,9 @@ public class BItemPackage extends BeanItem {
 				});
 			}
 			e.getItem().subtract();
-			pp.getStats().addToStat(StatType.CRATES_OPENED, identifier, 1, true);
+			pp.getStats().addToStat(StatType.CRATES_OPENED, getIdentifier(), 1, true);
 		}
+		return true;
 	}
 	
 	public LootTable getLootTable() {

@@ -88,7 +88,7 @@ public class CommandRegion extends BeanCommand {
 					sb.append(flag.getName() + ": null, ");
 					continue;
 				}
-				final boolean isInherit = region.getFlag(flag) == null;
+				final boolean isInherit = region.getFlag(flag, true) == null;
 				sb.append((isInherit ? "\u00a79" : "\u00a73") + flag.getName() + ": \u00a77"+ value + "\u00a78, ");
 			}
 			p.sendMessage(sb.toString());
@@ -328,7 +328,7 @@ public class CommandRegion extends BeanCommand {
 			return TabCompleter.completeString(args[1], para2);
 		
 		if (args.length == 3 && args[0].equals("setflag") && hasPermission(sender, "bean.cmd.region.setflag"))
-			return TabCompleter.completeObject(args[2], f -> ((Flag<?>)f).getName(), Flags.getRegisteredFlags());
+			return TabCompleter.completeObject(args[2], Flag::getName, Flags.getRegisteredFlags());
 		if (args.length > 2 && args[0].equals("define"))
 			return TabCompleter.completeOnlinePlayer(sender, args[args.length-1]);
 		if (args.length == 3 && args[0].equals("priority"))

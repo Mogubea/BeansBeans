@@ -4,23 +4,25 @@
   <groupId>BeansBeans</groupId>
   <artifactId>BeansBeans</artifactId>
   <version>0.4.5-ALPHA</version>
-  
+
   <properties>
-    <maven.compiler.target>17</maven.compiler.target>
-    <maven.compiler.source>17</maven.compiler.source>
+	  <maven.compiler.target>17</maven.compiler.target>
+	  <maven.compiler.source>17</maven.compiler.source>
+	  <spigotversion>1.18.2-R0.1-SNAPSHOT</spigotversion>
   </properties>
   
   <dependencies>
     <dependency>
   		<groupId>io.papermc.paper</groupId>
   		<artifactId>paper-api</artifactId>
-  		<version>1.18.2-R0.1-SNAPSHOT</version>
+  		<version>${spigotversion}</version>
    	    <scope>provided</scope>
   	</dependency>
   	<dependency>
   		<groupId>org.spigotmc</groupId>
   		<artifactId>spigot</artifactId>
-  		<version>1.18.2-R0.1-SNAPSHOT</version>
+  		<version>${spigotversion}</version>
+		<classifier>remapped-mojang</classifier>
    	    <scope>provided</scope>
   	</dependency>
   	<dependency>
@@ -104,6 +106,14 @@
   
   <build>
     <plugins>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-jar-plugin</artifactId>
+			<version>3.2.2</version>
+			<configuration>
+				<outputDirectory>${user.home}/Desktop/Minecraft Server/Bukkit Server/plugins/</outputDirectory>
+			</configuration>
+		</plugin>
     	<plugin>
     		<groupId>org.apache.maven.plugins</groupId>
     		<artifactId>maven-compiler-plugin</artifactId>
@@ -122,12 +132,42 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
-                        <configuration>
-                        	<outputFile>../../../Desktop/Minecraft Server/Bukkit Server/plugins/${project.artifactId}-${project.version}.jar</outputFile>
-                    	</configuration>
                     </execution>
                 </executions>
       </plugin>
+		<plugin>
+			<groupId>net.md-5</groupId>
+			<artifactId>specialsource-maven-plugin</artifactId>
+			<version>1.2.3</version>
+			<executions>
+				<execution>
+					<phase>package</phase>
+					<goals>
+						<goal>remap</goal>
+					</goals>
+					<id>remap-obf</id>
+					<configuration>
+						<srgIn>org.spigotmc:minecraft-server:${spigotversion}:txt:maps-mojang</srgIn>
+						<reverse>true</reverse>
+						<remappedDependencies>org.spigotmc:spigot:${spigotversion}:jar:remapped-mojang</remappedDependencies>
+						<remappedArtifactAttached>true</remappedArtifactAttached>
+						<remappedClassifierName>remapped-obf</remappedClassifierName>
+					</configuration>
+				</execution>
+				<execution>
+					<phase>package</phase>
+					<goals>
+						<goal>remap</goal>
+					</goals>
+					<id>remap-spigot</id>
+					<configuration>
+						<inputFile>${project.build.directory}/${project.artifactId}-${project.version}-remapped-obf.jar</inputFile>
+						<srgIn>org.spigotmc:minecraft-server:${spigotversion}:csrg:maps-spigot</srgIn>
+						<remappedDependencies>org.spigotmc:spigot:${spigotversion}:jar:remapped-obf</remappedDependencies>
+					</configuration>
+				</execution>
+			</executions>
+		</plugin>
     </plugins>
   </build>
 </project>

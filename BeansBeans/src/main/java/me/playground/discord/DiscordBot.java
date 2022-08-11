@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 
+import net.dv8tion.jda.api.exceptions.RateLimitedException;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -53,12 +54,12 @@ import net.kyori.adventure.text.format.TextColor;
 
 public class DiscordBot extends ListenerAdapter {
 	
-	private final Webhook hook;
-	private final WebhookClient chatClient;
+	private Webhook hook;
+	private WebhookClient chatClient;
 	private int lastId = -1;
 	
 	public final HashMap<Integer, Long> linkedAccounts = Datasource.grabLinkedDiscordAccounts();
-	private final Map<Long, Integer> linkCodes = new HashMap<Long, Integer>();
+	private final Map<Long, Integer> linkCodes = new HashMap<>();
 	
 	
 	// Cache Icons for 30 minutes to reduce risk of rate limiting from source website.
@@ -94,14 +95,12 @@ public class DiscordBot extends ListenerAdapter {
 	}
 	
 	public void sendWebhookMessage(int playerId, String message) {
-		if (!this.isOnline()) return;
+		if (!this.isOnline() || !this.isChatClientOnline()) return;
 		try {
 			if (lastId != playerId) {
 				final String name = ProfileStore.from(playerId, false).getDisplayName();
 				Icon icon = getHeadIcon(playerId);
-				hook.getManager().setName(name).setAvatar(icon).queue(woo -> {
-					chatClient.send(message);
-				});
+				hook.getManager().setName(name).setAvatar(icon).queue(woo -> chatClient.send(message));
 				lastId = playerId;
 			} else {
 				chatClient.send(message);
@@ -112,10 +111,12 @@ public class DiscordBot extends ListenerAdapter {
 	
 	public void shutdown() {
 		if (!isOnline()) return;
-		chatClient.close();
+
+		if (isChatClientOnline())
+			chatClient.close();
 		
 		updateServerStatus(false);
-		chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setDeny(Permission.MESSAGE_SEND).queue();
+//		chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setDeny(Permission.MESSAGE_SEND).queue();
 		
 		for (Webhook hook : chatChannel().retrieveWebhooks().complete())
 			hook.delete().queue();
@@ -134,6 +135,7 @@ public class DiscordBot extends ListenerAdapter {
 	
 	private long ingameChatId;
 	private long statusChatId;
+	private long staffChatId;
 	private long playerReportChatId;
 	private long statusMessageId;
 	private long suggestionChatId;
@@ -150,27 +152,41 @@ public class DiscordBot extends ListenerAdapter {
 		this.token = plugin.getConfig().getString("discord.token");
 		this.ingameChatId = plugin.getConfig().getLong("discord.ingameChannel");
 		this.statusChatId = plugin.getConfig().getLong("discord.statusChannel");
+		this.staffChatId = plugin.getConfig().getLong("discord.staffChannel");
 		this.playerReportChatId = plugin.getConfig().getLong("discord.playerReportChannel");
 		this.bugReportChatId = plugin.getConfig().getLong("discord.bugReportChannel");
 		this.suggestionChatId = plugin.getConfig().getLong("discord.suggestionChannel");
 		this.statusMessageTitle = plugin.getConfig().getString("discord.statusTitle");
 		this.statusMessageId = plugin.getConfig().getLong("discord.statusMessage");
 		
-		this.discordBot = buildBot();
+		discordBot = buildBot();
 		if (discordBot != null) {
-			this.ingameChat = discordBot.getTextChannelById(ingameChatId);
-			chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setAllow(Permission.MESSAGE_SEND).queue();
 			registerCommands();
-			
-			this.hook = chatChannel().createWebhook("Chat Webhook").complete();
-			this.chatClient = WebhookClient.withId(hook.getIdLong(), hook.getToken());
+			this.ingameChat = discordBot.getTextChannelById(ingameChatId);
+//			chatChannel().putPermissionOverride(chatChannel().getGuild().getRoleById(Rank.NEWBEAN.getDiscordId())).setAllow(Permission.MESSAGE_SEND).queue();
+			attemptChatClientConnection(true);
 		} else {
 			this.ingameChat = null;
 			this.chatClient = null;
 			this.hook = null;
 		}
 	}
-	
+
+	private void attemptChatClientConnection(boolean first) {
+		try {
+			this.hook = chatChannel().createWebhook("Chat Webhook").complete(false);
+			this.chatClient = WebhookClient.withId(hook.getIdLong(), hook.getToken());
+		} catch (RateLimitedException ex) {
+			if (first)
+				getPlugin().getSLF4JLogger().error("We are currently rate limited for " + ex.getRetryAfter() + "ms. Will attempt a new Webhook Client registration after that.");
+			else
+				getPlugin().getSLF4JLogger().error("We are still limited for " + ex.getRetryAfter() + "ms. Will attempt a new Webhook Client registration after that.");
+			getPlugin().getServer().getScheduler().runTaskLaterAsynchronously(getPlugin(), () -> {
+				attemptChatClientConnection(false);
+			}, ex.getRetryAfter() / 50);
+		}
+	}
+
 	private JDA buildBot() {
 		JDABuilder builder = JDABuilder.createDefault(token);
 		JDA bot = null;
@@ -190,6 +206,10 @@ public class DiscordBot extends ListenerAdapter {
 	public boolean isOnline() {
 		return discordBot != null;
 	}
+
+	public boolean isChatClientOnline() {
+		return chatClient != null;
+	}
 	
 	public JDA bot() {
 		return discordBot;
@@ -201,6 +221,10 @@ public class DiscordBot extends ListenerAdapter {
 	
 	public TextChannel chatChannel() {
 		return ingameChat;
+	}
+
+	public TextChannel getStaffChannel() {
+		return bot().getTextChannelById(staffChatId);
 	}
 	
 	public EmbedBuilder embedBuilder(int colour, String description) {
@@ -244,10 +268,10 @@ public class DiscordBot extends ListenerAdapter {
 	}
 	
 	// XXX: Commands
-	private final HashMap<String, DiscordCommand> discordCommands = new HashMap<String, DiscordCommand>();
+	private final HashMap<String, DiscordCommand> discordCommands = new HashMap<>();
 	
 	private void registerCommands() {
-		List<CommandData> cmds = new ArrayList<CommandData>();
+		List<CommandData> cmds = new ArrayList<>();
 		
 		cmds.add(registerCommand(new DiscordCommandOnline(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandStatusPost(getPlugin())).getCommandData());
@@ -314,7 +338,8 @@ public class DiscordBot extends ListenerAdapter {
 	
 	private final int[] cols = { 0x44ffaa, 0xbfff88, 0xee3567 };
 	private final String[] statusMsg = { "Online", "Whitelisted", "Offline" };
-	
+
+	private boolean lastOnlineCheck = false;
 	public void updateServerStatus(boolean online) {
 		if (!isOnline()) return;
 		try {
@@ -374,11 +399,15 @@ public class DiscordBot extends ListenerAdapter {
 			
 			String pString1 = (count > 0 ? count + (count > 1 ? " Players" : " Player") : "no one");
 			discordBot.getPresence().setActivity(Activity.playing("Bean's Beans (" + count + "/50 Players)"));
-			
-			if (online)
-				chatChannel().getManager().setTopic("Have a chat with the players currently on the server!\n\nThere is currently **"+pString1+"** online;\n" + playerList).queue();
-			else
-				chatChannel().getManager().setTopic("Have a chat with the players that would be on the server.. If it was open!!").queue();
+
+			if (lastOnlineCheck != online) {
+				if (online)
+					chatChannel().getManager().setTopic("Have a chat with the players currently on the server!\n\nThere is currently **"+pString1+"** online;\n" + playerList).queue();
+				else
+					chatChannel().getManager().setTopic("Have a chat with the players that would be on the server.. If it was open!!").queue();
+			}
+
+			lastOnlineCheck = online;
 		} catch (ErrorResponseException e) {}
 	}
 	
@@ -482,7 +511,7 @@ public class DiscordBot extends ListenerAdapter {
 		try {
 			if (isLinked(playerId))
 				return chatChannel().getGuild().retrieveMemberById(linkedAccounts.getOrDefault(playerId, 0L)).complete();
-		} catch (ErrorResponseException e) {}
+		} catch (ErrorResponseException ignored) {}
 		return null;
 	}
 	

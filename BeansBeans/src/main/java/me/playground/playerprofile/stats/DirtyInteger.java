@@ -10,7 +10,7 @@ public class DirtyInteger extends DirtyVal<Integer> {
 		value += add;
 		return setDirty(true);
 	}
-	
+
 	public DirtyInteger setValue(int newValue, boolean dirty) {
 		value = newValue;
 		if (dirty) setDirty(true);

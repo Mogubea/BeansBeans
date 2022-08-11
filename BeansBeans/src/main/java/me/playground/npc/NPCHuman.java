@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import net.minecraft.network.protocol.game.*;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.world.entity.EquipmentSlot;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
@@ -19,22 +23,14 @@ import com.mojang.datafixers.util.Pair;
 
 import me.playground.main.Main;
 import me.playground.utils.Utils;
-import net.minecraft.network.protocol.game.PacketPlayOutEntityEquipment;
-import net.minecraft.network.protocol.game.PacketPlayOutEntityHeadRotation;
-import net.minecraft.network.protocol.game.PacketPlayOutNamedEntitySpawn;
-import net.minecraft.network.protocol.game.PacketPlayOutPlayerInfo;
-import net.minecraft.network.protocol.game.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
-import net.minecraft.server.level.EntityPlayer;
-import net.minecraft.server.network.PlayerConnection;
-import net.minecraft.world.entity.EnumItemSlot;
 
-public class NPCHuman extends NPC<EntityPlayer> {
+public class NPCHuman extends NPC<ServerPlayer> {
 	
 	private final int invSize = 6;
 	private ItemStack[] inventory = new ItemStack[invSize];
-	private List<Pair<EnumItemSlot, net.minecraft.world.item.ItemStack>> nmsInventory = new ArrayList<Pair<EnumItemSlot, net.minecraft.world.item.ItemStack>>();
+	private final List<Pair<EquipmentSlot, net.minecraft.world.item.ItemStack>> nmsInventory = new ArrayList<>();
 	
-	public NPCHuman(int creatorId, int dbid, Main plugin, EntityPlayer entity, Location location, JSONObject json) {
+	public NPCHuman(int creatorId, int dbid, Main plugin, ServerPlayer entity, Location location, JSONObject json) {
 		super(creatorId, dbid, plugin, entity, location, json);
 		
 		if (json == null) return;
@@ -45,7 +41,7 @@ public class NPCHuman extends NPC<EntityPlayer> {
 		if (!(invArray == null || invArray.isEmpty()))
 			inventory = Utils.itemStackArrayFromBase64(invArray);
 		for (int x = -1; ++x < invSize;)
-			nmsInventory.add(new Pair<EnumItemSlot,net.minecraft.world.item.ItemStack>(EnumItemSlot.values()[x], CraftItemStack.asNMSCopy(inventory[x])));
+			nmsInventory.add(new Pair<>(EquipmentSlot.values()[x], CraftItemStack.asNMSCopy(inventory[x])));
 	}
 	
 	public ItemStack[] getEquipment() {
@@ -56,7 +52,7 @@ public class NPCHuman extends NPC<EntityPlayer> {
 		nmsInventory.clear();
 		this.inventory = equipment;
 		for (int x = -1; ++x < invSize;)
-			nmsInventory.add(new Pair<EnumItemSlot,net.minecraft.world.item.ItemStack>(EnumItemSlot.values()[x], CraftItemStack.asNMSCopy(equipment[x])));
+			nmsInventory.add(new Pair<>(EquipmentSlot.values()[x], CraftItemStack.asNMSCopy(equipment[x])));
 		
 		for (Player p : Bukkit.getOnlinePlayers())
 			showEquipment(p);
@@ -65,16 +61,16 @@ public class NPCHuman extends NPC<EntityPlayer> {
 	}
 	
 	protected void showEquipment(Player p) {
-		PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
-		connection.a(new PacketPlayOutEntityEquipment(getEntityId(), nmsInventory));
+		ServerGamePacketListenerImpl connection = ((CraftPlayer)p).getHandle().connection;
+		connection.send(new ClientboundSetEquipmentPacket(getEntityId(), nmsInventory));
 	}
 	
 	public GameProfile getGameProfile() {
-		return entity.fq();
+		return getEntity().getGameProfile();
 	}
 	
 	public UUID getUniqueId() {
-		return entity.cm();
+		return getEntity().getUUID();
 	}
 	
 	public NPCHuman setSkin(String value, String signature) {
@@ -86,19 +82,19 @@ public class NPCHuman extends NPC<EntityPlayer> {
 	
 	@Override
 	protected void showToAll() {
-		Bukkit.getOnlinePlayers().forEach((p) -> { showTo(p); });
+		Bukkit.getOnlinePlayers().forEach(this::showTo);
 	}
 	
 	@Override
-	protected void showTo(Player p) {
-		PlayerConnection connection = ((CraftPlayer)p).getHandle().b;
-		connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.a, entity)); // add npc to existence
-		connection.a(new PacketPlayOutNamedEntitySpawn(entity)); // spawn entity
-		connection.a(new PacketPlayOutEntityHeadRotation(entity, getFixedRot(getLocation().getYaw())));
-		connection.a(new PacketPlayOutEntityEquipment(getEntityId(), nmsInventory));
+	public void showTo(Player p) {
+		ServerGamePacketListenerImpl connection = ((CraftPlayer)p).getHandle().connection;
+		connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.ADD_PLAYER, getEntity())); // add npc to existence
+		connection.send(new ClientboundAddPlayerPacket(entity)); // spawn entity
+		connection.send(new ClientboundRotateHeadPacket(entity, getFixedRot(getLocation().getYaw())));
+		
 		new BukkitRunnable() {
 			public void run() {
-				connection.a(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.e, getEntity())); // remove from tab
+				connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, getEntity())); // remove from tab
 			}
 		}.runTaskAsynchronously(getPlugin());
 	}
@@ -115,7 +111,7 @@ public class NPCHuman extends NPC<EntityPlayer> {
 		obj.put("inventory", Utils.itemStackArrayToBase64(inventory));
 		
 		Object[] textures = getGameProfile().getProperties().get("textures").toArray();
-		if (textures == null || textures.length < 1)
+		if (textures.length < 1)
 			return obj;
 		Property texture = (Property) textures[0];
 		

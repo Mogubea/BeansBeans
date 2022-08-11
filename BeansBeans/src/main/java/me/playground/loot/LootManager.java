@@ -9,22 +9,21 @@ import javax.annotation.Nullable;
 
 import org.bukkit.entity.EntityType;
 
-import me.playground.data.Datasource;
 import me.playground.main.IPluginRef;
 import me.playground.main.Main;
+import org.jetbrains.annotations.NotNull;
 
 public class LootManager implements IPluginRef {
 
-	final private Main plugin;
-	final private LinkedHashMap<String, LootTable> lootTables = new LinkedHashMap<String, LootTable>();
+	private final Main plugin;
+	private final LinkedHashMap<String, LootTable> lootTables = new LinkedHashMap<>();
+	private final LootDatasource datasource;
 	
 	public LootManager(Main plugin) {
 		this.plugin = plugin;
-	}
+		this.datasource = new LootDatasource(plugin, this);
 
-	@Override
-	public @Nonnull Main getPlugin() {
-		return plugin;
+		datasource.loadAll();
 	}
 	
 	/**
@@ -33,7 +32,6 @@ public class LootManager implements IPluginRef {
 	public @Nonnull LootTable getOrCreateTable(@Nonnull String name) {
 		LootTable lt = lootTables.get(name);
 		if (lt == null) {
-//			getPlugin().getLogger().info("Created LootTable: " + name);
 			lt = new LootTable(this, name);
 			lootTables.put(name, lt);
 		}
@@ -52,7 +50,7 @@ public class LootManager implements IPluginRef {
 	}
 	
 	public ArrayList<LootEntry> getAllEntries() {
-		ArrayList<LootEntry> entries = new ArrayList<LootEntry>();
+		ArrayList<LootEntry> entries = new ArrayList<>();
 		lootTables.forEach((identifier, table) -> {
 			entries.addAll(table.getEntries());
 		});
@@ -62,11 +60,20 @@ public class LootManager implements IPluginRef {
 	public Random getRandom() {
 		return plugin.getRandom();
 	}
-	
+
+	@Override
+	@NotNull
+	public Main getPlugin() {
+		return plugin;
+	}
+
 	public void reload() {
-		Datasource.saveDirtyLootEntries();
+		try {
+			datasource.saveAll();
+		} catch (Exception ignored) {
+		}
 		lootTables.clear();
-		Datasource.loadAllLoot();
+		datasource.loadAll();
 	}
 	
 }

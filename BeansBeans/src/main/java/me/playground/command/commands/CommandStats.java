@@ -66,7 +66,7 @@ public class CommandStats extends BeanCommand {
 		}
 		
 		PlayerStats stats = target.getStats();
-		int value = stats.getStat(selected, args[baseArg + 1]);
+		int value = stats.getStat(selected, args[baseArg + 1].toUpperCase());
 		
 		sender.sendMessage(target.getComponentName().append(Component.text("'s ", NamedTextColor.GRAY)).append(
 				Component.text(args[baseArg + 1].toLowerCase(), TextColor.color(0x777777))).append(Component.text(" value: ", NamedTextColor.GRAY))

@@ -1,16 +1,24 @@
 package me.playground.discord;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import me.playground.main.Main;
 import me.playground.playerprofile.ProfileStore;
 import me.playground.ranks.Rank;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 
+/**
+ * TODO: improve this entire command class. It's crap.
+ */
 public class DiscordCommandEmbed extends DiscordCommand {
 
 	public DiscordCommandEmbed(Main plugin) {
@@ -31,18 +39,37 @@ public class DiscordCommandEmbed extends DiscordCommand {
 						.addOption(OptionType.BOOLEAN, "footerdate", "Use custom date footer format.")
 						,
 						new SubcommandData("rank", "Create a rank embed")
-						.addOptions(Rank.retrieveDiscordOptionData())));
+						.addOptions(Rank.retrieveDiscordOptionData()),
+						new SubcommandData("ranks", "Create a list of rank embeds")
+								.addOptions(new OptionData(OptionType.STRING, "category", "Rank Category", true)
+										.addChoice("Staff", "Staff").addChoice("Supporter", "Supporter").addChoice("Playtime", "Playtime"))));
 	}
 
 	@Override
 	public void onCommand(SlashCommandEvent e) {
 		EmbedBuilder eb = new EmbedBuilder();
 		eb.setColor(0xff4455);
-		
-		if (e.getSubcommandName().equalsIgnoreCase("rank")) {
-			Rank rank = null;
+
+		if (e.getSubcommandName().equalsIgnoreCase("ranks")) {
+			List<MessageEmbed> embeds = new ArrayList<>(10);
+			String category = e.getOption("category").getAsString();
+
+			for (Rank rank : Rank.values()) {
+				if (category.equalsIgnoreCase("Staff") && !rank.isStaffRank()) continue;
+				if (category.equalsIgnoreCase("Supporter") && !rank.isDonorRank()) continue;
+				if (category.equalsIgnoreCase("Playtime") && !rank.isPlaytimeRank()) continue;
+
+				embeds.add(rankEmbed(rank));
+			}
+
+			Collections.reverse(embeds); // xd
+
+			e.getChannel().sendMessageEmbeds(embeds).queue();
+			eb.appendDescription("Rank Embeds posted.");
+			eb.setColor(0x44ddff);
+		} else if (e.getSubcommandName().equalsIgnoreCase("rank")) {
 			try {
-				rank = Rank.valueOf(e.getOption("name").getAsString().toUpperCase());
+				Rank rank = Rank.valueOf(e.getOption("name").getAsString().toUpperCase());
 				e.getChannel().sendMessageEmbeds(rankEmbed(rank)).queue();
 				eb.appendDescription("Rank Embed posted.");
 				eb.setColor(0x44ddff);
@@ -89,8 +116,8 @@ public class DiscordCommandEmbed extends DiscordCommand {
 				eb.appendDescription("At the very least, specify the content of this embed.");
 			}
 		}
-		
-		e.replyEmbeds(eb.build()).queue();
+
+		e.replyEmbeds(eb.build()).setEphemeral(true).queue();
 	}
 	
 }

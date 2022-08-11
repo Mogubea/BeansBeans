@@ -93,7 +93,7 @@ public class BeanGuiWarps extends BeanGui {
 			} else {
 				final WarpType wt = typeFilter;
 				p.closeInventory();
-				SignMenuFactory.Menu menuu = plugin.getSignMenuFactory().newMenu(Arrays.asList("","^^^^^^^^^^", "\u00a7d\u00a7lWarp Name", "\u00a7dto filter for"), Material.CRIMSON_WALL_SIGN)
+				SignMenuFactory.Menu menuu = plugin.getSignMenuFactory().newMenu(Arrays.asList(Component.empty(), Component.text("^^^^^^^^^^"), Component.text("\u00a7d\u00a7lWarp Name"), Component.text("\u00a7dto filter for")), Material.CRIMSON_WALL_SIGN)
 	            .reopenIfFail(true)
 	            .response((player, strings) -> {
 	                Bukkit.getScheduler().runTaskLater(plugin, () -> new BeanGuiWarps(p, strings[0], wt).openInventory(), 1L);

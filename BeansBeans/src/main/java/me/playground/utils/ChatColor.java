@@ -30,11 +30,13 @@ public enum ChatColor {
 	YELLOW('e', 0xffff55), 
 	WHITE('f', 0xffffff);
 	
-	private final static Map<Integer, ChatColor> BY_INT = new HashMap<Integer, ChatColor>();
+	private final static Map<Integer, ChatColor> BY_INT = new HashMap<>();
+	private final static Map<Character, ChatColor> BY_CHAR = new HashMap<>();
 	
 	private final char code;
 	private final int colour;
-	private ChatColor(char code, int colour) {
+
+	ChatColor(char code, int colour) {
 		this.code = code;
 		this.colour = colour;
 	}
@@ -42,9 +44,19 @@ public enum ChatColor {
 	public static char charOf(TextColor color) {
 		return BY_INT.get(NamedTextColor.nearestTo(color).value()).code;
 	}
-	
+
+	public static ChatColor ofChar(char character) {
+		return BY_CHAR.getOrDefault(character, ChatColor.WHITE);
+	}
+
+	public static NamedTextColor namedOfChar(char character) {
+		return NamedTextColor.namedColor(ofChar(character).colour);
+	}
+
 	static {
-        for (ChatColor color : values())
-            BY_INT.put(color.colour, color);
+        for (ChatColor color : values()) {
+			BY_INT.put(color.colour, color);
+			BY_CHAR.put(color.code, color);
+		}
     }
 }

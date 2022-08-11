@@ -11,7 +11,7 @@ public class Highscores {
 	
 	public final static int UPDATE_INTERVAL = 1000 * 60 * 15;
 	
-	final public HashMap<String, Highscore> highscores = new HashMap<String, Highscore>();
+	final public HashMap<String, Highscore> highscores = new HashMap<>();
 	
 	public Highscores() {
 		for (Skill skill : Skill.getRegisteredSkills())
@@ -21,9 +21,7 @@ public class Highscores {
 	}
 	
 	public void updateStoredHighscores() {
-		highscores.forEach((name, hs) -> {
-			hs.updateScores();
-		});
+		highscores.forEach((name, hs) -> hs.updateScores());
 	}
 	
 	public Highscore getHighscore(String name) {

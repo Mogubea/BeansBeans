@@ -1,16 +1,18 @@
 package me.playground.utils;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 
+import me.playground.gui.BeanGui;
+import me.playground.gui.BeanGuiNPCEdit;
+import me.playground.playerprofile.PlayerProfile;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -20,6 +22,8 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.BlockPosition;
+
+import net.kyori.adventure.text.Component;
 
 public final class SignMenuFactory {
 	
@@ -32,11 +36,11 @@ public final class SignMenuFactory {
         this.listen();
     }
 
-    public Menu newMenu(List<String> text) {
+    public Menu newMenu(List<Component> text) {
         return new Menu(text);
     }
     
-    public Menu newMenu(List<String> text, Material sign) {
+    public Menu newMenu(List<Component> text, Material sign) {
         return new Menu(sign, text);
     }
 
@@ -65,9 +69,42 @@ public final class SignMenuFactory {
         });
     }
 
+    public void requestSignResponse(Player p, Material signType, Consumer<String[]> consumer, boolean reopenGui, String...text) {
+        BeanGui beanGui = PlayerProfile.from(p).getBeanGui();
+        p.closeInventory();
+
+        List<Component> preText = new ArrayList<>();
+        preText.add(Component.empty());
+        if (text.length < 2)
+            preText.add(Component.empty());
+        preText.add(Component.text("\u00a78^^^^^^^^^^"));
+        if (text.length > 0)
+            preText.add(Component.text(text[0]));
+        if (text.length > 1)
+            preText.add(Component.text(text[1]));
+
+        SignMenuFactory.Menu menu = newMenu(preText, signType)
+                .reopenIfFail(true)
+                .response((player, strings) -> {
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        try {
+                            consumer.accept(strings);
+                            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
+                        } catch (RuntimeException ex) {
+                            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
+                        }
+
+                        if (reopenGui && beanGui != null)
+                            beanGui.openInventory();
+                    }, 1L);
+                    return true;
+                });
+        menu.open(p);
+    }
+
     public final class Menu {
 
-        private final List<String> text;
+        private final List<Component> text;
         private final Material signMat;
 
         private BiPredicate<Player, String[]> response;
@@ -77,11 +114,11 @@ public final class SignMenuFactory {
 
         private boolean forceClose;
 
-        Menu(List<String> text) {
+        Menu(List<Component> text) {
             this(Material.OAK_SIGN, text);
         }
         
-        Menu(Material sign, List<String> text) {
+        Menu(Material sign, List<Component> text) {
         	this.text = text;
         	this.signMat = sign;
         }
@@ -96,7 +133,6 @@ public final class SignMenuFactory {
             return this;
         }
 
-        @SuppressWarnings("deprecation") // TODO: Change to Components when I care xd
 		public void open(Player player) {
         	Objects.requireNonNull(player, "player");
             if (!player.isOnline()) {
@@ -104,18 +140,19 @@ public final class SignMenuFactory {
             }
             location = player.getLocation();
             location.setY(location.getBlockY() - 4);
-
+            
             player.sendBlockChange(location, signMat.createBlockData());
-            player.sendSignChange(location, text.stream().map(this::color).toList().toArray(new String[4]));
-
+            player.sendSignChange(location, text);
+            
             PacketContainer openSign = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.OPEN_SIGN_EDITOR);
             BlockPosition position = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
             openSign.getBlockPositionModifier().write(0, position);
             try {
-                ProtocolLibrary.getProtocolManager().sendServerPacket(player, openSign);
+            	player.closeInventory();
+            	ProtocolLibrary.getProtocolManager().sendServerPacket(player, openSign);
             } catch (InvocationTargetException exception) {
-                exception.printStackTrace();
-            }
+            	exception.printStackTrace();
+            }	
 
             inputs.put(player, this);
         }
@@ -136,10 +173,6 @@ public final class SignMenuFactory {
 
         public void close(Player player) {
             close(player, false);
-        }
-
-        private String color(String input) {
-            return ChatColor.translateAlternateColorCodes('&', input);
         }
     }
 }

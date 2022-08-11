@@ -14,8 +14,9 @@ public abstract class BeanItemHeirloom extends BeanItem {
 	}
 	
 	@Override
-	public void onInteract(PlayerInteractEvent e) {
+	public boolean onInteract(PlayerInteractEvent e) {
 		e.setCancelled(true);
+		return true;
 	}
 	
 	public static BeanItemHeirloom from(ItemStack item) {

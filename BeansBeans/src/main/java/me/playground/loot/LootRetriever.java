@@ -66,15 +66,15 @@ public class LootRetriever {
 	}
 	
 	@Nonnull
-	public List<@Nonnull ItemStack> getLoot() {
+	public List<ItemStack> getLoot() {
 		final List<LootEntry> entries = table.getEntries();
-		final List<ItemStack> stacks = new ArrayList<ItemStack>();
+		final List<ItemStack> stacks = new ArrayList<>();
 		final int size = entries.size();
 		
 		switch(method) {
 		case CUMULATIVE_CHANCE:
 			final float totalChance = table.getTotalChance(luckInfluence);
-			final List<Float> chanceCache = new ArrayList<Float>(); // micro-optimization for multiple loops.
+			final List<Float> chanceCache = new ArrayList<>(); // micro-optimization for multiple loops.
 			for (int loop = -1; ++loop < loops;) {
 				float random = nextFloat(totalChance);
 				for (int x = -1; ++x < size;) {
@@ -96,6 +96,7 @@ public class LootRetriever {
 		case INDIVIDUAL_CHANCE:
 			for (int x = -1; ++x < size;) {
 				LootEntry entry = entries.get(x);
+				if (entry.requiresPlayer() && player == null) continue;
 				if (entry.requiresChargedCreeper() && !creeper) continue;
 				if (entry.requiresSkeletonShot() && !skeleton) continue;
 				if (entry.isBiomeExclusive() && biome != null && !entry.getRequiredBiomes().contains(biome)) continue;
@@ -123,8 +124,9 @@ public class LootRetriever {
 	/**
 	 * Get unique loot that's exclusive to an entity's data and isn't really plausible to be overwritten in database form...
 	 */
-	private List<@Nonnull ItemStack> getStupidEntityLoot() {
-		List<ItemStack> items = new ArrayList<ItemStack>();
+	@Nonnull
+	private List<ItemStack> getStupidEntityLoot() {
+		List<ItemStack> items = new ArrayList<>();
 		
 		// Steerable entities like Strider and Pig...
 		if (entity instanceof Steerable) {
@@ -226,7 +228,7 @@ public class LootRetriever {
 		
 		final ItemMeta meta = item.getItemMeta();
 		final Component displayName = meta.hasDisplayName() ? meta.displayName() : Component.translatable(item.translationKey());
-		
+
 		return displayName.hoverEvent(item.asHoverEvent());
 	}
 	
