@@ -62,7 +62,7 @@ public class PlayerProfileDatasource extends PrivateDatasource {
                     + "namecolour = ?, nickname = ?, booleanSettings = ?, warpCount = ?, civilization = ?, job = ?, donorRankExpiration = ? WHERE id = ?")) {
                 byte idx = 0;
 
-                s.setDouble(++idx, pp.getBalance());
+                s.setFloat(++idx, pp.getBalance());
                 s.setString(++idx, Utils.toString(pp.getRanks(), true, ","));
                 s.setString(++idx, Utils.toString(pp.getPrivatePermissions(), true, ","));
                 s.setInt(++idx, pp.getNameColour().value());

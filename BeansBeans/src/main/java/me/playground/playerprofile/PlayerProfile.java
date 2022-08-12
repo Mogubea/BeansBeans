@@ -68,6 +68,14 @@ public class PlayerProfile {
 	 * @see PlayerProfileManager#getProfile(UUID) Method Call
 	 */
 	@NotNull
+	public static PlayerProfile from(@NotNull Player p) {
+		return from(p.getUniqueId());
+	}
+
+	/**
+	 * @see PlayerProfileManager#getProfile(UUID) Method Call
+	 */
+	@NotNull
 	public static PlayerProfile from(@NotNull OfflinePlayer p) {
 		return from(p.getUniqueId());
 	}
@@ -143,7 +151,7 @@ public class PlayerProfile {
 	private TextComponent   			colouredName;
 	private int 						nameColour;
 	
-	private double 						coins;
+	private float 						coins;
 	private short						warpCount;
 	
 	private final UUID 					playerUUID;
@@ -268,22 +276,22 @@ public class PlayerProfile {
 	 * Get the coin balance.
 	 * @return The coin balance.
 	 */
-	public double getBalance() {
+	public float getBalance() {
 		return coins;
 	}
 	
-	public void setBalance(double amount, String log) {
+	public void setBalance(float amount, String log) {
 		coins = amount;
 		Datasource.logTransaction(playerId, amount, log);
 		flagScoreboardUpdate(ScoreboardFlag.COINS);
 	}
 	
-	public void addToBalance(double amount, String log) {
+	public void addToBalance(float amount, String log) {
 		addToBalance(amount);
 		Datasource.logTransaction(playerId, amount, log);
 	}
 	
-	public void addToBalance(double amount) {
+	public void addToBalance(float amount) {
 		coins+=amount;
 		if (this.isOnline() && amount != 0)
 			getPlayer().sendActionBar(Component.text("\u00a76" + df.format(getBalance()) + " Coins \u00a77( " + (amount>-1 ? "\u00a7a+" : "\u00a7c") + df.format(amount) + "\u00a77 )"));
@@ -1353,5 +1361,5 @@ public class PlayerProfile {
 	private static RedstoneManager redstoneManager = Main.getInstance().getRedstoneManager();
 	private static final DecimalFormat df = new DecimalFormat("#,###");
 	private static final DecimalFormat tpsf = new DecimalFormat("#.#");
-	
+
 }
