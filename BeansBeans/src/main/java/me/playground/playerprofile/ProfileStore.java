@@ -22,7 +22,6 @@ public class ProfileStore {
 	private final static HashMap<Integer, ProfileStore> players = new HashMap<>();
 	
 	static {
-		Datasource.loadProfileCache();
 		players.put(-1, new ProfileStore(-1, UUID.randomUUID(), "Unknown", "Unknown", NamedTextColor.DARK_GRAY.value()));
 		players.put(0, new ProfileStore(0, UUID.randomUUID(), "Server", "Server", NamedTextColor.LIGHT_PURPLE.value()));
 	}

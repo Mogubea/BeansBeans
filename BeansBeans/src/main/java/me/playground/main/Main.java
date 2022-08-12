@@ -21,6 +21,7 @@ import me.playground.main.TeamManager.ScoreboardFlag;
 import me.playground.menushop.MenuShopManager;
 import me.playground.npc.NPCManager;
 import me.playground.playerprofile.PlayerProfile;
+import me.playground.playerprofile.PlayerProfileManager;
 import me.playground.playerprofile.stats.StatType;
 import me.playground.ranks.Rank;
 import me.playground.recipes.RecipeManager;
@@ -34,6 +35,7 @@ import me.playground.threads.StatusResponseThread;
 import me.playground.threads.WhateverChat;
 import me.playground.utils.Calendar;
 import me.playground.utils.SignMenuFactory;
+import me.playground.utils.Utils;
 import me.playground.warps.WarpManager;
 import me.playground.worlds.WorldManager;
 import net.kyori.adventure.text.Component;
@@ -72,6 +74,7 @@ public class Main extends JavaPlugin {
 	private SignMenuFactory signMenuFactory;
 	private RedstoneManager redstoneManager;
 	private CustomEntityManager entityManager;
+	private PlayerProfileManager profileManager;
 
 	private ItemTrackingManager itemTrackingManager;
 	private ItemValueManager itemValueManager;
@@ -92,7 +95,9 @@ public class Main extends JavaPlugin {
 		isDebug = getConfig().getBoolean("debug", false);
 		STARTUP_TIME = System.currentTimeMillis();
 		instance = this;
-		
+
+		profileManager = new PlayerProfileManager(this);
+
 		this.protocolManager = ProtocolLibrary.getProtocolManager();
 		
 		enchantManager = new EnchantmentManager(this);
@@ -175,7 +180,7 @@ public class Main extends JavaPlugin {
 		
 		if (fullyBooted) {
 			Bukkit.getScheduler().cancelTask(mainLoop);
-			Datasource.saveAll();
+			saveAll();
 		}
 		
 		if (commandManager != null)
@@ -302,7 +307,19 @@ public class Main extends JavaPlugin {
 	public EnchantmentManager getEnchantmentManager() {
 		return enchantManager;
 	}
-	
+
+	public PlayerProfileManager getProfileManager() {
+		return profileManager;
+	}
+
+	/**
+	 * Save everything that is involved with a {@link me.playground.data.PrivateDatasource}, which should be everything.
+	 */
+	public void saveAll() {
+		long then = System.currentTimeMillis();
+		getDatasourceCore().saveAll();
+		Utils.sendActionBar(Rank.ADMINISTRATOR, Component.text("\u00a7dSaved data to Database (" + (System.currentTimeMillis()-then) + "ms)"));
+	}
 	/**
 	 * Get an online player whether it's by nickname or username.
 	 */

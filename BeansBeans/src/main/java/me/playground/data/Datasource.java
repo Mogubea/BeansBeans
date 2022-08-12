@@ -64,7 +64,6 @@ public class Datasource {
 	public static String table_profiles = "player_profiles";
 	static String table_moneylogs = "transaction_logs";
 	static String table_experience = "player_experience";
-	static String table_npcs = "npcs";
 
 	public static void init(JavaPlugin pl) {
 		host = pl.getConfig().getString("host");
@@ -165,7 +164,7 @@ public class Datasource {
 			final Job job = Job.getByName(rs.getString("job"));
 			final Timestamp donoExpiry = rs.getTimestamp("donorRankExpiration");
 			final long donoExpiration = donoExpiry == null ? 0L : donoExpiry.getTime();
-			final PlayerProfile pp = new PlayerProfile(rs.getInt("id"), UUID.fromString(rs.getString("uuid")), ranks, perms,
+			final PlayerProfile pp = new PlayerProfile(Main.getInstance().getProfileManager(), rs.getInt("id"), UUID.fromString(rs.getString("uuid")), ranks, perms,
 					rs.getInt("namecolour"), rs.getString("name"), rs.getString("nickname"),
 					rs.getLong("coins"), rs.getLong("booleanSettings"), rs.getShort("warpCount"));
 			pp.setDonorExpiration(donoExpiration);
@@ -177,45 +176,6 @@ public class Datasource {
 			e.printStackTrace();
 		}
 		return null;
-	}
-
-	public static void saveProfile(PlayerProfile pp) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		try {
-			c = getNewConnection();
-			statement = connection.prepareStatement("UPDATE " + table_profiles + " SET " + "coins = ?, ranks = ?, permissions = ?,"
-					+ "namecolour = ?, nickname = ?, booleanSettings = ?, warpCount = ?, civilization = ?, job = ?, donorRankExpiration = ? WHERE id = ?");
-			byte idx = 1;
-
-			statement.setDouble(idx++, pp.getBalance());
-			statement.setString(idx++, Utils.toString(pp.getRanks(), true, ","));
-			statement.setString(idx++, Utils.toString(pp.getPrivatePermissions(), true, ","));
-			statement.setInt(idx++, pp.getNameColour().value());
-			statement.setString(idx++, pp.getNickname());
-			statement.setLong(idx++, pp.getSettings());
-			statement.setShort(idx++, pp.getWarpCount());
-			statement.setInt(idx++, pp.getCivilizationId());
-			statement.setString(idx++, pp.getJob() == null ? null : pp.getJob().getName());
-			
-			long exp = pp.getCheckDonorExpiration(); // Needed since 0 isn't allowed apparently....?
-			statement.setTimestamp(idx++, (exp > 60000 * 60 * 24) ? new Timestamp(exp) : null);
-			
-			statement.setInt(idx++, pp.getId());
-
-			statement.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(c, statement);
-		}
-		saveSkills(pp.getId(), pp.getSkills());
-		saveArmourWardrobe(pp);
-		savePickupBlacklist(pp.getId());
-		savePlayerHeirlooms(pp);
-		savePlayerStats(pp);
-		setHome(pp.getOfflinePlayer(), pp.getHome());
-		refreshPlayerInbox(pp);
 	}
 
 	/**
@@ -235,69 +195,6 @@ public class Datasource {
 		}
 	}
 
-	public static Skills loadSkills(PlayerProfile profile) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet r = null;
-
-		try {
-			c = getNewConnection();
-			statement = connection.prepareStatement("SELECT * FROM " + table_experience + " WHERE playerId = ?");
-			statement.setInt(1, profile.getId());
-			r = statement.executeQuery();
-			if (r.next()) {
-				HashMap<Skill, SkillInfo> xpSources = new HashMap<Skill, SkillInfo>();
-				for (Skill skill : Skill.getRegisteredSkills())
-					xpSources.put(skill, new SkillInfo(r.getLong(skill.getName() + "_xp")));
-				return new Skills(profile, xpSources);
-			} else {
-				close(c, statement);
-				c = getNewConnection();
-				statement = connection.prepareStatement("INSERT INTO " + table_experience + "(playerId) VALUES (?)");
-				statement.setInt(1, profile.getId());
-				statement.executeUpdate();
-				return new Skills(profile);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(r, c, statement);
-		}
-		return null;
-	}
-
-	private static void saveSkills(int databaseId, Skills sd) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		try {
-			c = getNewConnection();
-
-			StringBuilder statementStr = new StringBuilder("UPDATE " + table_experience + " SET ");
-			int max = Skill.getRegisteredSkills().size();
-			for (Skill src : Skill.getRegisteredSkills()) {
-				max--;
-				statementStr.append(src.getName()).append(" = ?,").append(src.getName()).append("_xp = ?").append(max > 0 ? "," : "");
-			}
-
-			statementStr.append(" WHERE playerId = ?");
-			statement = connection.prepareStatement(statementStr.toString());
-			int idx = 1;
-
-			for (Skill src : Skill.getRegisteredSkills()) {
-				statement.setInt(idx++, sd.getLevel(src));
-				statement.setLong(idx++, sd.getTotalExperience(src));
-			}
-
-			statement.setInt(idx++, databaseId);
-
-			statement.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(c, statement);
-		}
-	}
-
 	/**
 	 * Asynchronous.
 	 */
@@ -313,16 +210,6 @@ public class Datasource {
 				e.printStackTrace();
 			}
 		});
-	}
-	
-	public static void saveAll() {
-		long then = System.currentTimeMillis();
-		PlayerProfile.asMap().values().forEach(profile -> {
-			saveProfile(profile);
-			profile.invalidateIfOffline();
-		});
-		Main.getInstance().getDatasourceCore().saveAll();
-		Utils.sendActionBar(Rank.ADMINISTRATOR, Component.text("\u00a7dSaved data to Database (" + (System.currentTimeMillis()-then) + "ms)"));
 	}
 
 	public static void close(Object... c) {
@@ -344,210 +231,6 @@ public class Datasource {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-	}
-	
-	public static boolean setHome(OfflinePlayer p, Location loc) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		
-		try {
-			PlayerProfile pp = PlayerProfile.from(p.getUniqueId());
-			
-			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO homes (playerId, world, x, y, z, yaw, p) VALUES (?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE "
-					+ "world = VALUES(world), x = VALUES(x), y = VALUES(y), z = VALUES(z), yaw = VALUES(yaw), p = VALUES(p)");
-			
-			statement.setInt(1, pp.getId());
-			statement.setInt(2, getWorldId(loc.getWorld()));
-			statement.setFloat(3, (float)loc.getX());
-			statement.setFloat(4, (float)loc.getY());
-			statement.setFloat(5, (float)loc.getZ());
-			statement.setFloat(6, loc.getYaw());
-			statement.setFloat(7, loc.getPitch());
-			
-			statement.executeUpdate();
-			statement.close();
-			
-			pp.setHome(loc);
-			return true;
-		} catch (Throwable e) {
-			e.printStackTrace();
-		} finally {
-			close(c, statement);
-		}
-		return false;
-	}
-	
-	public static Location loadHome(int playerid) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet r = null;
-		
-		try {
-			
-			c = getNewConnection();
-			statement = c.prepareStatement("SELECT world,x,y,z,yaw,p FROM homes WHERE playerID = ?");
-			statement.setInt(1, playerid);
-			
-			r = statement.executeQuery();
-			
-			while(r.next())
-				return new Location(getWorld(r.getShort("world")), r.getFloat("x"), r.getFloat("y"), r.getFloat("z"), r.getFloat("yaw"), r.getFloat("p"));
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(r, c, statement);
-		}
-		
-		return null;
-	}
-	
-	public static JSONObject loadPlayerHeirlooms(int playerId) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet r = null;
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("SELECT heirloomData FROM player_heirlooms WHERE playerId = ?");
-			statement.setInt(1, playerId);
-			r = statement.executeQuery();
-			
-			if (r.next()) 
-				return new JSONObject(r.getString("heirloomData"));
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(r, c, statement);
-		}
-		return null;
-	}
-	
-	private static void savePlayerStats(PlayerProfile pp) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		
-		PlayerStats stats = pp.getStats();
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO stats (playerId, category, stat, value) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE value = VALUES(value)");
-			statement.setInt(1, pp.getId());
-			
-			HashMap<StatType, HashMap<String, DirtyInteger>> map = stats.getMap();
-			
-			for (Entry<StatType, HashMap<String, DirtyInteger>> ent : map.entrySet()) {
-				statement.setByte(2, ent.getKey().getId());
-				
-				for(Entry<String, DirtyInteger> entt : ent.getValue().entrySet()) {
-					if (!entt.getValue().isDirty()) continue;
-					
-					statement.setString(3, entt.getKey());
-					statement.setInt(4, entt.getValue().getValue());
-					statement.executeUpdate();
-					
-					entt.getValue().setDirty(false);
-				}
-			}
-			
-			statement.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(c, statement);
-		}
-	}
-	
-	public static PlayerStats loadPlayerStats(PlayerProfile pp) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet r = null;
-		
-		final PlayerStats stats = new PlayerStats(pp);
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("SELECT category,stat,value FROM stats WHERE playerId = ?");
-			statement.setInt(1, pp.getId());
-			r = statement.executeQuery();
-			
-			while(r.next())
-				stats.setStat(StatType.fromId(r.getByte(1)), r.getString(2), r.getInt(3), false);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(r, c, statement);
-		}
-		return stats;
-	}
-	
-	private static void savePlayerHeirlooms(PlayerProfile pp) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO player_heirlooms (playerId,heirloomData) VALUES (?,?) ON DUPLICATE KEY UPDATE heirloomData = VALUES(heirloomData)");
-			
-			statement.setInt(1, pp.getId());
-			statement.setString(2, pp.getHeirlooms().getJsonData().toString());
-			
-			statement.executeUpdate();
-			statement.close();
-		} catch (Throwable e) {
-			e.printStackTrace();
-		} finally {
-			close(c, statement);
-		}
-	}
-	
-	public static ItemStack[] loadArmourWardrobe(int playerId) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet r = null;
-		ItemStack[] stacks = new ItemStack[20];
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("SELECT compressedArmorInventory FROM wardrobes WHERE playerId = ?");
-			statement.setInt(1, playerId);
-			
-			r = statement.executeQuery();
-			
-			while(r.next()) {
-				ItemStack[] stackz = Utils.itemStackArrayFromBase64(r.getString("compressedArmorInventory"));
-				if (stackz != null) stacks = stackz;
-			}
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(r, c, statement);
-		}
-		
-		return stacks;
-	}
-	
-	private static void saveArmourWardrobe(PlayerProfile pp) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		
-		String armour = Utils.itemStackArrayToBase64(pp.getArmourWardrobe());
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO wardrobes (playerId,compressedArmorInventory) VALUES (?,?) ON DUPLICATE KEY UPDATE compressedArmorInventory = VALUES(compressedArmorInventory)");
-			
-			statement.setInt(1, pp.getId());
-			statement.setString(2, armour);
-			
-			statement.executeUpdate();
-			statement.close();
-		} catch (Throwable e) {
-			e.printStackTrace();
-		} finally {
-			close(c, statement);
 		}
 	}
 	
@@ -720,30 +403,6 @@ public class Datasource {
 		return entries;
 	}
 	
-	/**
-	 * XXX: Used for the ProfileCache class on start-up, saves having to grab a profile in order to get their display name.
-	 */
-	public static void loadProfileCache() {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet r = null;
-		try {
-			c = getNewConnection();
-			statement = connection.prepareStatement("SELECT id,uuid,namecolour,name,nickname FROM " + table_profiles);
-			r = statement.executeQuery();
-			while (r.next()) {
-				final String nick = r.getString("nickname");
-				final String name = (nick != null ? nick : r.getString("name"));
-				
-				ProfileStore.updateStore(r.getInt("id"), UUID.fromString(r.getString("uuid")), r.getString("name"), name, r.getInt("namecolour"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(r, c, statement);
-		}
-	}
-	
 	// XXX: Worlds
 	
 	public static void logCelestia(CelestiaAction action, LivingEntity entity, Location location, String data) {
@@ -771,36 +430,6 @@ public class Datasource {
 				e.printStackTrace();
 			}
 		});
-	}
-	
-	public static ArrayList<String> loadPickupBlacklist(int playerId) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet r = null;
-		final ArrayList<String> array = new ArrayList<>();
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("SELECT blacklist FROM pickup_blacklists WHERE playerId = ?");
-			statement.setInt(1, playerId);
-			
-			r = statement.executeQuery();
-			
-			while(r.next()) {
-				String string = r.getString("blacklist");
-				if (string == null || string.isEmpty())
-					break;
-				String[] list = string.split(",");
-				for (String s : list)
-					if (!s.isEmpty())
-						array.add(s);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(r, c, statement);
-		}
-		return array;
 	}
 	
 	public static ArrayList<UpdateEntry> loadNews() {
@@ -847,25 +476,6 @@ public class Datasource {
 			close(r, c, statement);
 		}
 		return array;
-	}
-	
-	private static void savePickupBlacklist(int playerId) {
-		final PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
-		if (pp == null) return;
-
-		try(Connection c = getNewConnection(); PreparedStatement statement = c.prepareStatement("INSERT INTO pickup_blacklists (playerId, blacklist) VALUES (?,?) ON DUPLICATE KEY UPDATE blacklist = VALUES(blacklist)")) {
-
-			StringBuilder sb = new StringBuilder();
-			for (String entry : pp.getPickupBlacklist())
-				sb.append(entry + ",");
-
-			statement.setInt(1, playerId);
-			statement.setString(2, sb.toString());
-			
-			statement.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	// XXX: Loot
@@ -1264,113 +874,35 @@ public class Datasource {
 			close(c, statement);
 		}
 	}
-	
-	// XXX: Delivery shit
-	
+
 	public static boolean registerDelivery(int playerId, int senderId, long expiryTime, DeliveryType type, String title, String message, JSONObject content) {
 		if (content == null || content.isEmpty()) return false;
-		
-		Connection c = null;
-		PreparedStatement statement = null;
+
 		ResultSet rs = null;
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO player_inbox (playerId, senderId, expiryDate, type, title, message, content) VALUES (?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
-			statement.setInt(1, playerId);
-			statement.setInt(2, senderId);
-			statement.setTimestamp(3, expiryTime <= 0L ? null : new Timestamp(expiryTime));
-			statement.setString(4, type.name());
-			statement.setString(5, title);
-			statement.setString(6, message);
-			statement.setString(7, content.toString());
-			
-			statement.executeUpdate();
-			rs = statement.getGeneratedKeys();
+
+		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO player_inbox (playerId, senderId, expiryDate, type, title, message, content) " +
+				"VALUES (?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
+			int idx = 0;
+
+			s.setInt(++idx, playerId);
+			s.setInt(++idx, senderId);
+			s.setTimestamp(++idx, expiryTime <= 0L ? null : new Timestamp(expiryTime));
+			s.setString(++idx, type.name());
+			s.setString(++idx, title);
+			s.setString(++idx, message);
+			s.setString(idx, content.toString());
+
+			s.executeUpdate();
+			rs = s.getGeneratedKeys();
 			rs.next();
-			
+
 			PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
 			pp.getInbox().add(new Delivery(rs.getInt(1), playerId, senderId, System.currentTimeMillis(), 0L, expiryTime, type, title, message, content));
-			
+
 			return true;
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			close(c, statement);
 		}
 		return false;
 	}
-	
-	public static void updateDelivery(Delivery delivery) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("UPDATE player_inbox SET expiryDate = ?, openDate = ?, content = ?, deleted = ? WHERE id = ?");
-			statement.setTimestamp(1, delivery.getExpiryDate() <= 0L ? null : new Timestamp(delivery.getExpiryDate()));
-			statement.setTimestamp(2, delivery.getOpenDate() <= 0L ? null : new Timestamp(delivery.getOpenDate()));
-			statement.setString(3, delivery.getJson().toString());
-			statement.setBoolean(4, delivery.toBeRemoved());
-			statement.setInt(5, delivery.getId());
-			
-			statement.executeUpdate();
-			delivery.setDirty(false);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(c, statement);
-		}
-	}
-	
-	private static List<Delivery> loadPlayerInbox(PlayerProfile profile) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet r = null;
-		final List<Delivery> deliveries = new ArrayList<Delivery>();
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("SELECT * FROM player_inbox WHERE playerId = ? AND deleted = 0 ORDER BY creationDate DESC");
-			statement.setInt(1, profile.getId());
-			
-			r = statement.executeQuery();
-			
-			while(r.next()) {
-				Timestamp tsOne = r.getTimestamp("creationDate");
-				Timestamp tsTwo = r.getTimestamp("openDate");
-				Timestamp tsThree = r.getTimestamp("expiryDate");
-				String content = r.getString("content");
-				DeliveryType type = DeliveryType.PACKAGE;
-				try {
-					type = DeliveryType.valueOf(r.getString("type"));
-				} catch (Exception e) {}
-				
-				deliveries.add(new Delivery(r.getInt("id"), r.getInt("playerId"), r.getInt("senderId"), tsOne == null ? 0L : tsOne.getTime(), tsTwo == null ? 0L : tsTwo.getTime(), 
-						tsThree == null ? 0L : tsThree.getTime(), type, r.getString("title"), r.getString("message"), content == null ? null : new JSONObject(content)));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(r, c, statement);
-		}
-		return deliveries;
-	}
-	
-	public static void savePlayerDirtyInbox(PlayerProfile profile) {
-		List<Delivery> deliveries = profile.getInbox();
-		int size = deliveries.size();
-		for (int x = -1; ++x < size;) {
-			Delivery delivery = deliveries.get(x);
-			if (delivery.isDirty())
-				updateDelivery(delivery);
-		}
-	}
-	
-	public static void refreshPlayerInbox(PlayerProfile profile) {
-		savePlayerDirtyInbox(profile);
-		profile.getInbox().clear();
-		profile.getInbox().addAll(loadPlayerInbox(profile));
-	}
-	
 }

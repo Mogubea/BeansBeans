@@ -8,6 +8,9 @@ import org.bukkit.World;
 
 import me.playground.main.Main;
 
+/**
+ * The base abstract class for Data Sources. Allows for nice organisation of Data Source files.
+ */
 public abstract class PrivateDatasource {
 	
 	protected final Main plugin;
@@ -44,14 +47,18 @@ public abstract class PrivateDatasource {
 	}
 	
 	/**
-	 * Load all of the relevant objects this datasource is managing the data of.
+	 * Load all the relevant objects this datasource is managing the data of.
 	 */
 	public abstract void loadAll();
 	
 	/**
-	 * Save all of the relevant objects this datasource is managing the data of.
+	 * Save all the relevant objects this datasource is managing the data of.
 	 */
 	public abstract void saveAll() throws Exception;
+
+	protected void close(Object...c) {
+		dc.close(c);
+	}
 
 	
 }

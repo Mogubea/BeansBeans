@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -32,10 +31,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 
 import me.playground.civilizations.Civilization;
 import me.playground.civilizations.jobs.Job;
@@ -68,72 +63,45 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public class PlayerProfile {
-	
-	public static LoadingCache<UUID, PlayerProfile> profileCache = CacheBuilder.from("maximumSize=500,expireAfterAccess=6m")
-			.build(
-					new CacheLoader<>() {
-						public PlayerProfile load(@NotNull UUID playerUUID) { // if the key doesn't exist, request it via this method
-							PlayerProfile prof = Datasource.getOrMakeProfile(playerUUID);
-							if (prof != null)
-								if (prof.isOnline()) // assign bar player if online
-									prof.getSkills().setBarPlayer();
-							return prof;
-						}
-					});
 
-	public static Map<UUID, PlayerProfile> asMap() {
-		return Map.copyOf(profileCache.asMap());
+	/**
+	 * @see PlayerProfileManager#getProfile(UUID) Method Call
+	 */
+	@NotNull
+	public static PlayerProfile from(@NotNull OfflinePlayer p) {
+		return from(p.getUniqueId());
 	}
-	
-	public static PlayerProfile from(Player p) {
-		if (p == null) return null;
-		try {
-			return profileCache.get(p.getUniqueId());
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		}
-		return null;
+
+	/**
+	 * @see PlayerProfileManager#getProfile(UUID) Method Call
+	 */
+	@NotNull
+	public static PlayerProfile from(@NotNull HumanEntity p) {
+		return from(p.getUniqueId());
 	}
-	
-	public static PlayerProfile from(HumanEntity p) {
-		if (p == null) return null;
-		try {
-			return profileCache.get(p.getUniqueId());
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		}
-		return null;
+
+	/**
+	 * @see PlayerProfileManager#getProfile(UUID) Method Call
+	 */
+	@NotNull
+	public static PlayerProfile from(@NotNull UUID playerUUID) {
+		return PlayerProfileManager.getProfile(playerUUID);
 	}
-	
-	public static PlayerProfile from(UUID playerUUID) {
-		try {
-			return profileCache.get(playerUUID);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
+
+	/**
+	 * @see PlayerProfileManager#getProfile(String) Method Call
+	 */
+	@Nullable
+	public static PlayerProfile fromIfExists(@NotNull String name) {
+		return PlayerProfileManager.getProfile(name);
 	}
-	
-	public static PlayerProfile fromIfExists(String name) {
-		try {
-			ProfileStore ps = ProfileStore.from(name, true);
-			if (ps == null) return null;
-			return profileCache.get(ps.getUniqueId());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
+
+	/**
+	 * @see PlayerProfileManager#getProfile(int) Method Call
+	 */
+	@Nullable
 	public static PlayerProfile fromIfExists(int playerId) {
-		try {
-			ProfileStore ps = ProfileStore.fromIfExists(playerId);
-			if (ps == null) return null;
-			return profileCache.get(ps.getUniqueId());
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		}
-		return null;
+		return PlayerProfileManager.getProfile(playerId);
 	}
 	
 	public static int getDBID(String name) {
@@ -157,7 +125,8 @@ public class PlayerProfile {
 	}
 	
 	// XXX: Class Begins
-	
+	private final PlayerProfileManager	manager;
+
 	private final int 					playerId;
 	private final OfflinePlayer			player;
 	
@@ -214,7 +183,8 @@ public class PlayerProfile {
 	// Admin
 	public UUID profileOverride;
 	
-	public PlayerProfile(int id, UUID uuid, ArrayList<Rank> ranks, Set<String> perms, int nameColour, String name, String nickname, long coins, long settings, short warpCount) {
+	public PlayerProfile(PlayerProfileManager manager, int id, UUID uuid, ArrayList<Rank> ranks, Set<String> perms, int nameColour, String name, String nickname, long coins, long settings, short warpCount) {
+		this.manager = manager;
 		this.loadTime = System.currentTimeMillis();
 		this.player = Bukkit.getOfflinePlayer(uuid);
 		this.playerId = id;
@@ -233,12 +203,12 @@ public class PlayerProfile {
 		
 		this.booleanSettings = settings;
 		
-		this.home = Datasource.loadHome(id);
-		this.skillData = Datasource.loadSkills(this);
-		this.armourWardrobe = Datasource.loadArmourWardrobe(id);
-		this.pickupBlacklist = Datasource.loadPickupBlacklist(id);
-		this.heirloomInventory = new HeirloomInventory(this, Datasource.loadPlayerHeirlooms(id));
-		this.stats = Datasource.loadPlayerStats(this);
+		this.home = manager.getDatasource().loadHome(id);
+		this.skillData = manager.getDatasource().loadSkills(this);
+		this.armourWardrobe = manager.getDatasource().loadArmourWardrobe(id);
+		this.pickupBlacklist = manager.getDatasource().loadPickupBlacklist(id);
+		this.heirloomInventory = new HeirloomInventory(this, manager.getDatasource().loadPlayerHeirlooms(id));
+		this.stats = manager.getDatasource().loadPlayerStats(this);
 		
 		setRanks(ranks);
 		refreshInbox();
@@ -250,7 +220,7 @@ public class PlayerProfile {
 	 */
 	public void invalidateIfOffline() {
 		if (!isOnline())
-			profileCache.invalidate(playerUUID);
+			manager.getCache().invalidate(playerUUID);
 	}
 
 	/**
@@ -1097,7 +1067,7 @@ public class PlayerProfile {
 	
 	private long lastInboxUpdate;
 	public void refreshInbox() {
-		Datasource.refreshPlayerInbox(this);
+		manager.getDatasource().refreshPlayerInbox(this);
 		lastInboxUpdate = System.currentTimeMillis();
 	}
 	

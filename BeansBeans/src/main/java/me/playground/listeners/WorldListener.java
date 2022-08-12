@@ -8,6 +8,7 @@ import org.bukkit.event.world.WorldSaveEvent;
 import me.playground.data.Datasource;
 import me.playground.main.Main;
 
+// TODO: More world things, improve saving
 public class WorldListener extends EventListener {
 	
 	public WorldListener(Main plugin) {
@@ -18,9 +19,9 @@ public class WorldListener extends EventListener {
 	public void onWorldSave(WorldSaveEvent e) {
 		if (e.getWorld().getEnvironment() == Environment.NETHER) {
 			if (getPlugin().isEnabled())
-				Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), Datasource::saveAll);
+				Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), () -> getPlugin().saveAll());
 			else
-				Datasource.saveAll();
+				getPlugin().saveAll();
 		}
 	}
 	
