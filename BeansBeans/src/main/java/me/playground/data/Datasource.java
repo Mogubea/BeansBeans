@@ -890,7 +890,7 @@ public class Datasource {
 			s.setString(++idx, type.name());
 			s.setString(++idx, title);
 			s.setString(++idx, message);
-			s.setString(idx, content.toString());
+			s.setString(++idx, content.toString());
 
 			s.executeUpdate();
 			rs = s.getGeneratedKeys();

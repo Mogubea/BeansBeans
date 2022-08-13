@@ -75,7 +75,8 @@ public class PlayerProfileDatasource extends PrivateDatasource {
 
                 long exp = pp.getCheckDonorExpiration(); // Needed since 0 isn't allowed apparently....?
                 s.setTimestamp(++idx, (exp > 60000 * 60 * 24) ? new Timestamp(exp) : null);
-                s.setInt(idx, pp.getId());
+
+                s.setInt(++idx, pp.getId());
                 s.executeUpdate();
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -155,7 +156,7 @@ public class PlayerProfileDatasource extends PrivateDatasource {
             s.setFloat(++idx, (float)loc.getY());
             s.setFloat(++idx, (float)loc.getZ());
             s.setFloat(++idx, loc.getYaw());
-            s.setFloat(idx, loc.getPitch());
+            s.setFloat(++idx, loc.getPitch());
 
             s.executeUpdate();
             s.close();
@@ -390,12 +391,14 @@ public class PlayerProfileDatasource extends PrivateDatasource {
     protected void saveSkills(@NotNull final PlayerProfile pp) {
         Skills skills = pp.getSkills();
         try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement(statement_saveskills)) {
+            int idx = 0;
+
             for (Skill src : Skill.getRegisteredSkills()) {
-                s.setInt(1, skills.getLevel(src));
-                s.setLong(2, skills.getTotalExperience(src));
+                s.setInt(++idx, skills.getLevel(src));
+                s.setLong(++idx, skills.getTotalExperience(src));
             }
 
-            s.setInt(3, pp.getId());
+            s.setInt(++idx, pp.getId());
 
             s.executeUpdate();
         } catch (SQLException e) {
