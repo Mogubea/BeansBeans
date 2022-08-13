@@ -96,8 +96,6 @@ public class Main extends JavaPlugin {
 		STARTUP_TIME = System.currentTimeMillis();
 		instance = this;
 
-		profileManager = new PlayerProfileManager(this);
-
 		this.protocolManager = ProtocolLibrary.getProtocolManager();
 		
 		enchantManager = new EnchantmentManager(this);
@@ -107,6 +105,8 @@ public class Main extends JavaPlugin {
 		
 		datasource = new DatasourceCore(this);
 		Datasource.init(this);
+
+		profileManager = new PlayerProfileManager(this);
 		
 		worldManager = new WorldManager(this); // Important to be before everything else due to a lot of things requiring the getWorld and getWorldId methods.
 		regionManager = new RegionManager(this); // Should always be after WorldManager due to dependence.

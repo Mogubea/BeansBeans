@@ -905,4 +905,19 @@ public class Datasource {
 		}
 		return false;
 	}
+
+	public static void updateDelivery(Delivery delivery) {
+		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("UPDATE player_inbox SET expiryDate = ?, openDate = ?, content = ?, deleted = ? WHERE id = ?")) {
+			s.setTimestamp(1, delivery.getExpiryDate() <= 0L ? null : new Timestamp(delivery.getExpiryDate()));
+			s.setTimestamp(2, delivery.getOpenDate() <= 0L ? null : new Timestamp(delivery.getOpenDate()));
+			s.setString(3, delivery.getJson().toString());
+			s.setBoolean(4, delivery.toBeRemoved());
+			s.setInt(5, delivery.getId());
+
+			s.executeUpdate();
+			delivery.setDirty(false);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 }

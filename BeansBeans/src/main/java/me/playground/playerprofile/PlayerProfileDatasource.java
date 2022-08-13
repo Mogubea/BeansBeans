@@ -1,6 +1,7 @@
 package me.playground.playerprofile;
 
 import jline.internal.Nullable;
+import me.playground.data.Datasource;
 import me.playground.data.PrivateDatasource;
 import me.playground.main.Main;
 import me.playground.playerprofile.stats.DirtyInteger;
@@ -402,26 +403,15 @@ public class PlayerProfileDatasource extends PrivateDatasource {
         }
     }
 
-    public void updateDelivery(Delivery delivery) {
-        try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("UPDATE player_inbox SET expiryDate = ?, openDate = ?, content = ?, deleted = ? WHERE id = ?")) {
-            s.setTimestamp(1, delivery.getExpiryDate() <= 0L ? null : new Timestamp(delivery.getExpiryDate()));
-            s.setTimestamp(2, delivery.getOpenDate() <= 0L ? null : new Timestamp(delivery.getOpenDate()));
-            s.setString(3, delivery.getJson().toString());
-            s.setBoolean(4, delivery.toBeRemoved());
-            s.setInt(5, delivery.getId());
-
-            s.executeUpdate();
-            delivery.setDirty(false);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
+    /**
+     * Load the player's delivery inbox.
+     */
+    @NotNull
     private List<Delivery> loadPlayerInbox(PlayerProfile profile) {
         Connection c = null;
         PreparedStatement statement = null;
         ResultSet r = null;
-        final List<Delivery> deliveries = new ArrayList<Delivery>();
+        final List<Delivery> deliveries = new ArrayList<>();
 
         try {
             c = getNewConnection();
@@ -453,7 +443,6 @@ public class PlayerProfileDatasource extends PrivateDatasource {
 
     /**
      * Save the player's delivery inbox.
-     * @param profile
      */
     public void savePlayerDirtyInbox(PlayerProfile profile) {
         List<Delivery> deliveries = profile.getInbox();
@@ -461,10 +450,13 @@ public class PlayerProfileDatasource extends PrivateDatasource {
         for (int x = -1; ++x < size;) {
             Delivery delivery = deliveries.get(x);
             if (delivery.isDirty())
-                updateDelivery(delivery);
+                Datasource.updateDelivery(delivery);
         }
     }
 
+    /**
+     * Refresh the player's delivery inbox.
+     */
     public void refreshPlayerInbox(PlayerProfile profile) {
         savePlayerDirtyInbox(profile);
         profile.getInbox().clear();

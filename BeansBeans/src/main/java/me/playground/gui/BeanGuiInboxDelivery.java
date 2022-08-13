@@ -133,16 +133,14 @@ public class BeanGuiInboxDelivery extends BeanGui {
 			
 			ItemStack stack = null;
 			
-			if (content instanceof DeliveryCoins) {
-				DeliveryCoins objCoin = (DeliveryCoins) content;
+			if (content instanceof DeliveryCoins objCoin) {
 				stack = newItem(icon_money, Component.text("\u00a76" + df.format(objCoin.getCoins()) + " Coins"));
-			} else if (content instanceof DeliveryItem) {
-				DeliveryItem objItem = (DeliveryItem) content;
+			} else if (content instanceof DeliveryItem objItem) {
 				stack = objItem.getItemStack();
 			}
 			
 			List<Component> lore = stack.lore();
-			if (lore == null) lore = new ArrayList<Component>();
+			if (lore == null) lore = new ArrayList<>();
 			lore.add(Component.text(content.isClaimed() ? "\u00a78» Already claimed!" : "\u00a76» \u00a7eClick to claim!"));
 			stack.lore(lore);
 			
