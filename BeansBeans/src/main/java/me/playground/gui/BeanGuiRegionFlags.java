@@ -90,12 +90,6 @@ public class BeanGuiRegionFlags extends BeanGuiRegion {
 	}
 
 	@Override
-	public void openInventory() {
-		preparePresetInventory(0);
-		super.openInventory();
-	}
-
-	@Override
 	public void pageUp() {
 		preparePresetInventory(++this.page);
 		openInventory();
