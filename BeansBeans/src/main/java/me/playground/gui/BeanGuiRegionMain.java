@@ -21,7 +21,8 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 	protected static final ItemStack icon_members = newItem(new ItemStack(Material.ACACIA_DOOR), Component.text("Members", BeanColor.REGION), "\u00a77Members of the Region");
 	protected static final ItemStack icon_flags = newItem(new ItemStack(Material.LIGHT_BLUE_BANNER), Component.text("Flags", BeanColor.REGION), "\u00a77View the Region Flags");
 	protected static final ItemStack icon_priority = newItem(new ItemStack(Material.CRIMSON_SIGN), Component.text("Priority", BeanColor.REGION));
-	
+	protected static final ItemStack icon_size = newItem(new ItemStack(Material.FILLED_MAP), Component.text("Size", BeanColor.REGION));
+
 	public BeanGuiRegionMain(Player p) {
 		super(p);
 		
@@ -30,7 +31,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 				rBlank,rBlank,bBlank,bBlank,regionSkull,bBlank,bBlank,rBlank,rBlank,
 				rBlank,blanc,blanc,blanc,blanc,blanc,blanc,blanc,rBlank,
 				bBlank,icon_name,blanc,icon_members,blanc,icon_flags,blanc,icon_priority,bBlank,
-				bBlank,blanc,blanc,blanc,blanc,blanc,blanc,blanc,bBlank,
+				bBlank,blanc,blanc,blanc,icon_size,blanc,blanc,blanc,bBlank,
 				bBlank,blanc,blanc,blanc,blanc,blanc,blanc,blanc,bBlank,
 				rBlank,rBlank,rBlank,whatIsThis,goBack,rBlank,rBlank,rBlank,rBlank
 		};
@@ -49,20 +50,15 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 	@Override
 	public void onInventoryClicked(InventoryClickEvent e) {
 		final int slot = e.getRawSlot();
-		if (slot > 25) return;
+		if (slot > 31) return;
 		final boolean canEdit = getRegion().canModify(p) && !getRegion().isWorldRegion();
 		
 		switch(slot) {
-		case 19: // Rename Button - Costs 5000 coins, requires a permission so it's revokable if someone's a twat.
+		case 19: // Rename Button - Must be a Senator? to rename your region.
 			if (!canEdit) return;
-			if (p.hasPermission("bean.region.modifyothers")) {
+
+			if (p.hasPermission("bean.region.modifyothers") || p.hasPermission("bean.region.rename")) {
 				// can
-			} else if (p.hasPermission("bean.region.rename")) {
-				if (pp.getBalance() < 5000) {
-					p.sendActionBar(Component.text("\u00a7cYou don't have enough coins to rename the region!"));
-					p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
-					return;
-				}
 			} else {
 				p.sendActionBar(Component.text("\u00a7cYou don't have permission to rename regions."));
 				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
@@ -77,9 +73,6 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
                 try {
                 	String regionName = strings[0];
                 	
-                	if (pp.getBalance() < 5000) // just in case they delay it and their coin count changes
-    					throw new RuntimeException("You don't have enough coins to rename a region!");
-                	
                 	if (regionName.length() < 3)
         				throw new RuntimeException("The region name must contain at least 3 characters.");
         			
@@ -91,9 +84,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
         			
         			String oldName = getRegion().getName();
         			getRegion().setName(p, regionName);
-        			
-        			if (!p.hasPermission("bean.region.modifyothers"))
-        				pp.addToBalance(-5000, "Renamed region '"+oldName+"'" + " to '"+regionName+"'");
+
         			p.sendMessage(Component.text("\u00a77Renamed \u00a7f"+oldName+" \u00a77to ").append(getRegion().toComponent()));
         			refreshRegionViewers();
                 	
@@ -142,7 +133,10 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
                 return true;
             });
 			menu2.open(p);
-			return;	
+			return;
+			case 31: // Size Button
+				new BeanGuiRegionExpansion(p, regionIdx).openInventory();
+				break;
 		default:
 			super.onInventoryClicked(e);
 			return;
@@ -157,10 +151,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 		final boolean isOwner = getRegion().getMember(p).higherThan(MemberLevel.OFFICER);
 		
 		ItemStack iName = newItem(new ItemStack(Material.WARPED_SIGN), Component.text("Name", getRegion().getColour()));
-		if (isOwner && !getRegion().isWorldRegion())
-			iName.lore(Arrays.asList(Component.text("\u00a7f" + getRegion().getName()), Component.empty(), Component.text("\u00a77\u00a7oClick to change" + (p.hasPermission("bean.region.modifyothers") ? "" : " for \u00a76\u00a7o500 Coins"))));
-		else
-			iName.lore(Arrays.asList(Component.text("\u00a7f" + getRegion().getName())));
+		iName.lore(Arrays.asList(Component.text("\u00a7f" + getRegion().getName())));
 		
 		contents[19] = iName;
 		

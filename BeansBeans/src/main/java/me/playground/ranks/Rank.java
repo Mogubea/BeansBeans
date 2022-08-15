@@ -39,9 +39,10 @@ public enum Rank {
 			Permission.NICKNAME_APPLY,
 			Permission.DELIVERY_CLAIMALL),
 	SENATOR(3, 0xaa32da, 100, 1, 914921526158041089L,
-			"The final tier of permanent **Supporter Rank**. This rank provides access to custom name colours "
+			"The final tier of permanent **Supporter Rank**. This rank provides access to custom name colours, the ability to rename your regions "
 					+ "and everything that <@&873916287682756668> offers!",
 			"bean.cmd.value",
+			"bean.region.rename",
 			Permission.NAMECOLOUR_CUSTOM),
 	VIP(4, 0xffffff, 0, 0, 998171528678080652L,
 			"Work in Progress. This subscription based **Supporter Rank** will not be released for a long while."),
@@ -53,8 +54,7 @@ public enum Rank {
 			"bean.cmd.region",
 			"bean.cmd.region.info",
 			"bean.cmd.teleport",
-			"bean.cmd.return",
-			"bean.region.rename"),
+			"bean.cmd.return"),
 	ROOKIE(10, 0x3fdf3f, 5, 1, 879785289642545192L, 60 * 60 * 6,
 			"The 2nd playtime rank. Light Green name!"),
 	APPRENTICE(15, 0x5fff5f, 5, 1, 879785586234384384L, 60 * 60 * 24,
