@@ -67,6 +67,7 @@ public class BeanGuiBasicMenuShop extends BeanGui {
 		
 		// Update the player's inventory to be their true inventory, which is identical but without the sell price lore
 		p.getInventory().setContents(truePlayerInventory.getContents());
+		p.updateInventory();
 	}
 	
 	@Override
@@ -81,7 +82,7 @@ public class BeanGuiBasicMenuShop extends BeanGui {
 			if (toSell == null) return;
 
 			int quantity = e.isShiftClick() ? toSell.getAmount() : 1;
-			float value = ItemValues.getTotalValue(toSell, e.isShiftClick());
+			double value = ItemValues.getTotalValue(toSell, e.isShiftClick());
 
 			if (value <= 0F) {
 				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.4F, 0.9F);
@@ -122,7 +123,7 @@ public class BeanGuiBasicMenuShop extends BeanGui {
 	
 	private ItemStack withSellValue(ItemStack item) {
 		ItemStack newItem = item.clone();
-		float valOfOne = ItemValues.getTotalValue(item, false);
+		double valOfOne = ItemValues.getTotalValue(item, false);
 
 		if (valOfOne <= 0F) return newItem;
 
@@ -134,7 +135,7 @@ public class BeanGuiBasicMenuShop extends BeanGui {
 			lore.add(Component.text("\u00a77Sell Value"));
 			lore.add(Component.text("\u00a78 • \u00a76" + dec.format(valOfOne * item.getAmount()) + " Coins"));
 			if (item.getAmount() > 1)
-				lore.add(Component.text("\u00a78 • Each worth \u00a7r" + dec.format(valOfOne) + " Coins").colorIfAbsent(TextColor.color(0xff3535)).decoration(TextDecoration.ITALIC, false));
+				lore.add(Component.text("\u00a78 • Each worth \u00a7r" + dec.format(valOfOne) + " Coins").colorIfAbsent(TextColor.color(0xcfb525)).decoration(TextDecoration.ITALIC, false));
 			lore.add(Component.empty());
 
 			if (item.getAmount() > 1) {

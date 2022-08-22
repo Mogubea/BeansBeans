@@ -166,7 +166,7 @@ public class Datasource {
 			final long donoExpiration = donoExpiry == null ? 0L : donoExpiry.getTime();
 			final PlayerProfile pp = new PlayerProfile(Main.getInstance().getProfileManager(), rs.getInt("id"), UUID.fromString(rs.getString("uuid")), ranks, perms,
 					rs.getInt("namecolour"), rs.getString("name"), rs.getString("nickname"),
-					rs.getLong("coins"), rs.getLong("booleanSettings"), rs.getShort("warpCount"));
+					rs.getDouble("coins"), rs.getLong("booleanSettings"), rs.getShort("warpCount"));
 			pp.setDonorExpiration(donoExpiration);
 			pp.setCivilization(civ);
 			pp.setJob(job, true);
@@ -319,90 +319,6 @@ public class Datasource {
 		return map;
 	}
 	
-	public static void banPlayer(int bannerId, UUID playerUUID, long dura, String reason, String notes) {
-		/*Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet rs = null;
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("INSERT INTO bans (bannedUUID) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-			
-			statement.executeUpdate();
-		} catch (Throwable e) {
-			e.printStackTrace();
-		} finally {
-			close(rs, c, statement);
-			
-		}*/
-	}
-	
-	/**
-	 * Gets a player's ban reason if they're banned.
-	 */
-	public static BanEntry getBanEntry(UUID playerUUID) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet rs = null;
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("SELECT banStart,banEnd,banReason FROM bans WHERE (disabled = 0 AND bannedUUID = ? AND (banEnd > ? OR banEnd <= ?)) ORDER BY banStart ASC");
-			statement.setString(1, playerUUID.toString());
-			statement.setLong(2, System.currentTimeMillis()/1000);
-			statement.setLong(3, 0);
-			
-			rs = statement.executeQuery();
-			
-			while(rs.next())
-				return new BanEntry(rs.getLong("banStart"), rs.getLong("banEnd"), rs.getString("banReason"));
-			
-			statement.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(rs, c, statement);
-		}
-		
-		return null;
-	}
-	
-	/**
-	 * Grab a player's ban entries
-	 */
-	public static BanEntry[] getBanEntries(UUID playerUUID) {
-		Connection c = null;
-		PreparedStatement statement = null;
-		ResultSet rs = null;
-		
-		BanEntry[] entries = null;
-		
-		try {
-			c = getNewConnection();
-			statement = c.prepareStatement("SELECT banStart,banEnd,banReason FROM bans WHERE (bannedUUID = ?) ORDER BY banStart ASC");
-			statement.setString(1, playerUUID.toString());
-			statement.setLong(2, System.currentTimeMillis()/1000);
-			statement.setLong(3, 0);
-			
-			rs = statement.executeQuery();
-			
-			entries = new BanEntry[rs.getFetchSize()];
-			
-			int i = 0;
-			
-			while(rs.next())
-				entries[i++] = new BanEntry(rs.getLong("banStart"), rs.getLong("banEnd"), rs.getString("banReason"));
-			
-			statement.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			close(rs, c, statement);
-		}
-		
-		return entries;
-	}
-	
 	// XXX: Worlds
 	
 	public static void logCelestia(CelestiaAction action, LivingEntity entity, Location location, String data) {
@@ -485,7 +401,7 @@ public class Datasource {
 		PreparedStatement statement = null;
 		ResultSet r = null;
 		
-		HashMap<Integer, Long> discords = new HashMap<Integer, Long>();
+		HashMap<Integer, Long> discords = new HashMap<>();
 		
 		try {
 			c = getNewConnection();

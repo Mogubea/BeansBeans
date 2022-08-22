@@ -141,9 +141,14 @@ public class PlayerListener extends EventListener {
 		e.setCancelled(true);
 		Player p = e.getPlayer();
 		PlayerProfile pp = PlayerProfile.from(p);
-		
+
+		if (pp.isMuted()) {
+			p.sendActionBar(Component.text("\u00a74\u26a0\u00a7c You're " + (pp.getMute().isPermanent() ? "permanently" : "currently") + " muted \u00a74\u26a0"));
+			return;
+		}
+
 		if (pp.onCdElseAdd("chat", 400)) {
-			p.sendActionBar(Component.text("\u00a7cYou are sending messages too fast!"));
+			p.sendActionBar(Component.text("\u00a7cYou're sending messages too fast!"));
 			return;
 		}
 		

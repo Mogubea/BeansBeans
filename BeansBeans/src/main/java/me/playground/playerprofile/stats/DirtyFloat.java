@@ -11,12 +11,6 @@ public class DirtyFloat extends DirtyVal<Float> {
 		return setDirty(true);
 	}
 	
-	public DirtyFloat setValue(float newValue, boolean dirty) {
-		value = newValue;
-		if (dirty) setDirty(true);
-		return this;
-	}
-	
 	@Override
 	public DirtyFloat setDirty(boolean dirty) {
 		this.dirty = dirty;

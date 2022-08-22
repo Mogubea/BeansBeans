@@ -1,77 +1,194 @@
 package me.playground.punishments;
 
-import me.playground.data.Dirty;
 import me.playground.playerprofile.PlayerProfile;
-import org.bukkit.OfflinePlayer;
+import me.playground.playerprofile.ProfileStore;
+import me.playground.utils.BeanColor;
+import me.playground.utils.Utils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
-import java.util.UUID;
+import java.util.List;
 
-public class Punishment implements Dirty {
+public abstract class Punishment<T> {
+
+    protected final PunishmentManager manager;
 
     private final int id;
     private final int punisherId;
-    private final Type type;
-    private final Category category;
+    private Type type;
 
-    // Multiple things can be punished at once.
-    private UUID punishedUUID; // Kick Mute and Ban from the Server
-    private long punishedDiscord; // Kick Mute and Ban from the Discord
-    private int punishedWebId; // Mute from posting anything
+    private final int punished;
+    private final T punishedIdentifier;
 
-    private Instant punishmentStart;
+    private final Instant punishmentStart;
     private Instant punishmentEnd;
 
     private String reason;
+    private List<String> notes; // TODO: Allow staff members to add notes to punishments.
 
     private boolean isEnabled;
-    private boolean dirty;
+    private boolean canAppeal;
 
-    protected Punishment(PunishmentManager manager, int id, int punisherId, Type type, Category category, UUID punishedUUID, long punishedDiscord, int punishedWebId, Instant punishmentStart, Instant punishmentEnd, String reason) {
+    protected Punishment(@NotNull PunishmentManager manager, int id, int punisherId, @NotNull Type type, int punished, @NotNull T punishedIdentifier, @NotNull Instant punishmentStart, @Nullable Instant punishmentEnd, @Nullable String reason, boolean enabled, boolean appealable) {
+        this.manager = manager;
+
         this.id = id;
         this.punisherId = punisherId;
         this.type = type;
-        this.category = category;
-        this.punishedUUID = punishedUUID;
-        this.punishedDiscord = punishedDiscord;
-        this.punishedWebId = punishedWebId;
+        this.punished = punished;
+        this.punishedIdentifier = punishedIdentifier;
         this.punishmentStart = punishmentStart;
         this.punishmentEnd = punishmentEnd;
         this.reason = reason;
+        this.canAppeal = appealable;
+        this.isEnabled = enabled;
+    }
+
+    public T getPunishedIdentifier() {
+        return punishedIdentifier;
+    }
+
+    public Instant getPunishmentStart() {
+        return punishmentStart;
     }
 
     public Instant getPunishmentEnd() {
         return punishmentEnd;
     }
 
+    public boolean isPermanent() {
+        return getPunishmentEnd() == null;
+    }
+
+    /**
+     * Get whether this punishment can be appealed or not. This is typically determined by an Administrator or Owner.
+     * Otherwise, a punishment is typically appeal-able.
+     */
+    public boolean canAppeal() {
+        return canAppeal;
+    }
+
     public void setPunishmentEnd(long duration) {
         this.punishmentEnd = Instant.ofEpochMilli(punishmentStart.toEpochMilli() + duration);
-        this.dirty = true;
+        setDirty(true);
     }
 
+    @Nullable
     public PlayerProfile getPunishedProfile() {
-        if (punishedUUID != null)
-            return PlayerProfile.from(punishedUUID);
-        if (punishedWebId > 0)
-            return PlayerProfile.fromIfExists(punishedWebId);
-        return null;
+        return PlayerProfile.fromIfExists(punished);
     }
 
-    public UUID getPunishedUUID() {
-        return punishedUUID;
-    }
-
+    @Nullable
     public String getReason() {
         return reason;
     }
 
-    @Override
-    public void setDirty(boolean dirty) {
-        this.dirty = dirty;
+    @NotNull
+    public String getNonnullReason() {
+        return reason == null ? "No reason given" : reason;
     }
 
-    @Override
-    public boolean isDirty() {
-        return dirty;
+    public void setReason(@Nullable String reason) {
+        this.reason = reason;
+        setDirty(true);
     }
+
+    public void setCanAppeal(boolean canAppeal) {
+        this.canAppeal = canAppeal;
+        setDirty(true);
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+        setDirty(true);
+    }
+
+    // Meh
+    public void setDirty(boolean dirty) {
+        if (dirty) manager.addDirty(this);
+        else manager.removeDirty(this);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public int getPunisherId() {
+        return punisherId;
+    }
+
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        if (isEnabled != enabled)
+            setDirty(true);
+        this.isEnabled = enabled;
+    }
+
+    /**
+     * Check if the punishment is still active.
+     * @return true if still active
+     */
+    public boolean isActive() {
+        if (getType().hasDuration() && isEnabled()) {
+            boolean enabled = getPunishmentEnd() == null || (System.currentTimeMillis() < getPunishmentEnd().toEpochMilli());
+            setEnabled(enabled);
+        }
+
+        return isEnabled();
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public boolean isBan() {
+        return type.name().endsWith("BAN");
+    }
+
+    public boolean isMute() {
+        return type.name().endsWith("MUTE");
+    }
+
+    public boolean isKick() { return type.name().endsWith("KICK"); }
+
+    public String getRemainingString() {
+        return isPermanent() ? "never" : Utils.timeStringFromNow(getPunishmentEnd().toEpochMilli());
+    }
+
+    public String getTotalString() {
+        return isPermanent() ? "Forever" : Utils.timeStringFromMillis(getPunishmentStart().toEpochMilli() - getPunishmentEnd().toEpochMilli());
+    }
+
+    public Component toComponent() {
+        Component component = Component.text("Punishment Entry", BeanColor.BAN).append(Component.text(" [#" + getId() + "]", NamedTextColor.RED).decorate(TextDecoration.ITALIC));
+        component = component.append(Component.text("\nGenerated by ", NamedTextColor.DARK_GRAY).append(Component.text(ProfileStore.from(punisherId).getDisplayName()).append(Component.text(" at " + getPunishmentStart().toString(), NamedTextColor.DARK_GRAY))));
+
+        String what = (isKick() ? "" : (isPermanent() ? "Permanently " : "Temporarily ")) + getType().getPastTense();
+
+        if (getPunishedProfile() != null) {
+            component = component.append(Component.text("\n\nThe player ", NamedTextColor.GRAY).append(getPunishedProfile().getColouredName()).append(Component.text(" was ", NamedTextColor.GRAY)));
+        } else {
+            component = component.append(Component.text("\n\nThis player was ", NamedTextColor.GRAY));
+        }
+
+        component = component.append(Component.text(what + " for:", NamedTextColor.GRAY)).append(Component.text("\n\"" + getNonnullReason() + "\"", NamedTextColor.WHITE));
+
+        if (!isPermanent()) {
+            component = component.append(Component.text("\n\nTotal Duration: ", NamedTextColor.GRAY).append(Component.text(Utils.timeStringFromMillis(getPunishmentEnd().toEpochMilli() - getPunishmentStart().toEpochMilli()), NamedTextColor.LIGHT_PURPLE)));
+            component = component.append(Component.text("\n" + (isActive() ? "Expires in: " : "Expired: "), NamedTextColor.GRAY).append(Component.text(Utils.timeStringFromNow(getPunishmentEnd().toEpochMilli()), NamedTextColor.AQUA)));
+        }
+
+        return component;
+    }
+
+    public abstract void enact();
+
+    public abstract void pardon();
 }

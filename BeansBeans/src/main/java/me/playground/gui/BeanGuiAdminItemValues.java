@@ -62,7 +62,7 @@ public class BeanGuiAdminItemValues extends BeanGui {
 
 	private int itemCategoryFilter; // Filter based on item category
 	private String nameFilter; // Filter based on item name
-	private float valueFilter = -1; // Works with valueFilterFilter
+	private double valueFilter = -1; // Works with valueFilterFilter
 	private int valueFilterFilter = 1; // Filter the valueFilter based on equal to, larger than or smaller than
 	private int enforceFilter; // Filter between enforced, not enforced or all
 
@@ -102,7 +102,7 @@ public class BeanGuiAdminItemValues extends BeanGui {
 					openInventory();
 				} else {
 					getPlugin().getSignMenuFactory().requestSignResponse(p, Material.SPRUCE_WALL_SIGN, (strings -> {
-						valueFilter = Float.parseFloat(strings[0]);
+						valueFilter = Double.parseDouble(strings[0]);
 						p.playSound(p.getLocation(), Sound.ITEM_BOOK_PUT, 0.2F, 1.0F);
 						preparePresetInventory(0);
 					}), true, "\u00a7fEnter value", "\u00a7fto search for");
@@ -175,7 +175,7 @@ public class BeanGuiAdminItemValues extends BeanGui {
 				if (identifier == null) return;
 
 				getPlugin().getSignMenuFactory().requestSignResponse(p, Material.SPRUCE_WALL_SIGN, (strings -> {
-					float value = Float.parseFloat(strings[0]);
+					double value = Double.parseDouble(strings[0]);
 					valueManager.setValue(identifier, value, pp.getId());
 					ItemStack newItem = getDisplayItem(identifier);
 					this.presetInv[slot] = newItem;
@@ -271,7 +271,7 @@ public class BeanGuiAdminItemValues extends BeanGui {
 
 			// Value Filter
 			if (valueFilter > -1) {
-				float itemValue = valueManager.getValue(itemStack);
+				double itemValue = valueManager.getValue(itemStack);
 				switch(valueFilterFilter) {
 					case 0 -> { if (!(itemValue > valueFilter)) continue; }
 					case 2 -> { if (!(itemValue < valueFilter)) continue; }
@@ -344,7 +344,7 @@ public class BeanGuiAdminItemValues extends BeanGui {
 
 		if (itemStack == null) return new ItemStack(Material.AIR);
 
-		float value = valueManager.getValue(identifier);
+		double value = valueManager.getValue(identifier);
 		boolean isEnforced = valueManager.isEnforced(identifier);
 		boolean isCalculated = !isEnforced && valueManager.isCalculated(identifier);
 

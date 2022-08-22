@@ -23,6 +23,7 @@ import me.playground.npc.NPCManager;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.PlayerProfileManager;
 import me.playground.playerprofile.stats.StatType;
+import me.playground.punishments.PunishmentManager;
 import me.playground.ranks.Rank;
 import me.playground.recipes.RecipeManager;
 import me.playground.regions.Region;
@@ -75,6 +76,7 @@ public class Main extends JavaPlugin {
 	private RedstoneManager redstoneManager;
 	private CustomEntityManager entityManager;
 	private PlayerProfileManager profileManager;
+	private PunishmentManager punishmentManager;
 
 	private ItemTrackingManager itemTrackingManager;
 	private ItemValueManager itemValueManager;
@@ -107,6 +109,8 @@ public class Main extends JavaPlugin {
 		Datasource.init(this);
 
 		profileManager = new PlayerProfileManager(this);
+
+		punishmentManager = new PunishmentManager(this);
 		
 		worldManager = new WorldManager(this); // Important to be before everything else due to a lot of things requiring the getWorld and getWorldId methods.
 		regionManager = new RegionManager(this); // Should always be after WorldManager due to dependence.
@@ -310,6 +314,10 @@ public class Main extends JavaPlugin {
 
 	public PlayerProfileManager getProfileManager() {
 		return profileManager;
+	}
+
+	public PunishmentManager getPunishmentManager() {
+		return punishmentManager;
 	}
 
 	/**

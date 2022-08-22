@@ -37,6 +37,7 @@ public enum Rank {
 			"bean.cmd.hat",
 			"bean.cmd.enderchest",
 			Permission.NICKNAME_APPLY,
+			Permission.BYPASS_MAX_PLAYERCOUNT,
 			Permission.DELIVERY_CLAIMALL),
 	SENATOR(3, 0xaa32da, 100, 1, 914921526158041089L,
 			"The final tier of permanent **Supporter Rank**. This rank provides access to custom name colours, the ability to rename your regions "
@@ -78,6 +79,12 @@ public enum Rank {
 			"If you ever need assistance with anything, don't be afraid to ask a Moderator for help!",
 			
 			Permission.NICKNAME_OVERRIDE,
+			Permission.BYPASS_MAX_PLAYERCOUNT,
+			Permission.BYPASS_MAX_DONORCOUNT,
+			"bean.cmd.ban",
+			"bean.cmd.mute",
+			"bean.cmd.pardon",
+			"bean.cmd.unmute",
 			"bean.cmd.who.extra",
 			"bean.cmd.say",
 			"bean.cmd.gamemode",

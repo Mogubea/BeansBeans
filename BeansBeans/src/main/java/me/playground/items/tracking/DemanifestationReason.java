@@ -29,6 +29,10 @@ public enum DemanifestationReason {
      */
     REPAIR("REPAIR"),
     /**
+     * When removed from existence via being used ot enchant an item.
+     */
+    ENCHANTING("ENCHANTING"),
+    /**
      * When removed from existence via being used to refine an item.
      */
     REFINEMENT("REFINEMENT"),

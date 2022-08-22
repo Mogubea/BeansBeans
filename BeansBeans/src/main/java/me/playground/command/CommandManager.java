@@ -112,6 +112,13 @@ public class CommandManager {
 		registerCommand(new CommandHide(plugin));
 		registerCommand(new CommandValue(plugin));
 
+		// Punishment Commands
+		registerCommand(new CommandBan(plugin));
+		registerCommand(new CommandKick(plugin));
+		registerCommand(new CommandMute(plugin));
+		registerCommand(new CommandPardon(plugin));
+		registerCommand(new CommandUnmute(plugin));
+
 		myCommandsCustom = Map.copyOf(myCommandsCustom);
 		
 		plugin.getLogger().info("Registered " + myCommands.size() + " commands in " + (System.currentTimeMillis()-millis) + "ms");

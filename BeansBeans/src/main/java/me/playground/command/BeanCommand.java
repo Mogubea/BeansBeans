@@ -95,12 +95,12 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 			if (isPlayer(sender)) {
 				PlayerProfile pp = PlayerProfile.from(((Player)sender));
 				if (cooldown > 0 && pp.onCdElseAdd("cmd." + cmd.getName(), cooldown)) {
-					((Player)sender).sendActionBar(Component.text("\u00a7cPlease wait " + Utils.timeStringFromNow(pp.getCooldown("cmd."+cmd.getName())) + " before using /"+str+" again."));
+					sender.sendActionBar(Component.text("\u00a7cPlease wait " + Utils.timeStringFromNow(pp.getCooldown("cmd."+cmd.getName())) + " before using /"+str+" again."));
 					return false;
 				}
 				
 				if (pp.onCdElseAdd("cmd", 600)) {
-					((Player)sender).sendActionBar(Component.text("\u00a7cYou are sending commands too fast!"));
+					sender.sendActionBar(Component.text("\u00a7cYou are sending commands too fast!"));
 					return false;
 				}
 				
@@ -284,7 +284,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	}
 	
 	protected Collection<? extends Player> onlineRank(Rank rank) {
-		ArrayList<Player> players = new ArrayList<Player>();
+		ArrayList<Player> players = new ArrayList<>();
 		for (Player p : onlinePlayers())
 			if (PlayerProfile.from(p).isRank(rank))
 				players.add(p);

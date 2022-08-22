@@ -35,7 +35,7 @@ public class ItemValueManager {
      * <b>This does not take into consideration Stack Size, Refinement Level, Potion Effects or Enchantments.</b>
      * @return the coin value.
      */
-    public float getValue(@NotNull ItemStack itemStack) {
+    public double getValue(@NotNull ItemStack itemStack) {
         return values.getItemValue(itemStack);
     }
 
@@ -44,7 +44,7 @@ public class ItemValueManager {
      * <b>This does not take into consideration Stack Size, Refinement Level, Potion Effects or Enchantments.</b>
      * @return the coin value.
      */
-    public float getValue(@NotNull String identifier) {
+    public double getValue(@NotNull String identifier) {
         return values.getItemValue(identifier);
     }
 
@@ -54,8 +54,8 @@ public class ItemValueManager {
      * @param stackSize Whether to consider the Stack Size of the {@link ItemStack}.
      * @return The true total value of the provided {@link ItemStack}.
      */
-    public float getTotalValue(@NotNull ItemStack itemStack, boolean stackSize) {
-        float value = values.getItemValue(itemStack);
+    public double getTotalValue(@NotNull ItemStack itemStack, boolean stackSize) {
+        double value = values.getItemValue(itemStack);
 
         value += tempVals.getExtraValue(itemStack);
         value *= 1 + (0.25 * BItemDurable.getRefinementTier(itemStack));
@@ -85,14 +85,14 @@ public class ItemValueManager {
      * <b>Call {@link #calculateItemValues()} to update the item values of those who's recipes involve the updated item.</b>
      * @return The old value
      */
-    public float setValue(@NotNull ItemStack itemStack, float newValue, int playerId) { return values.setItemValue(itemStack, newValue, playerId); }
+    public double setValue(@NotNull ItemStack itemStack, double newValue, int playerId) { return values.setItemValue(itemStack, newValue, playerId); }
 
     /**
      * Updates the coin value of the provided item identifier, flagging it as dirty. Value cannot be less than 0.<br><br>
      * <b>Call {@link #calculateItemValues()} to update the item values of those who's recipes involve the updated item.</b>
      * @return The old value
      */
-    public float setValue(@NotNull String identifier, float newValue, int playerId) { return values.setItemValue(identifier, newValue, playerId); }
+    public double setValue(@NotNull String identifier, double newValue, int playerId) { return values.setItemValue(identifier, newValue, playerId); }
 
     public void calculateItemValues() {
         values.calculateItemValues();

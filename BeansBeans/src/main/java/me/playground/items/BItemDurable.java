@@ -130,7 +130,12 @@ public class BItemDurable extends BeanItem {
 		return pdc.getOrDefault(KEY_REFINEMENT, PersistentDataType.BYTE, (byte)0);
 	}
 
+	/**
+	 * Refine an item if it can be refined.
+	 */
 	public static void setRefinementTier(ItemStack item, int level, boolean adjustDurability) {
+		if (!canBeRefined(item)) return;
+
 		if (level < 0) level = 0;
 		else if (level > Byte.MAX_VALUE) level = Byte.MAX_VALUE;
 		final int newLevel = level;

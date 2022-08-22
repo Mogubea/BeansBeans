@@ -8,8 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 import me.playground.items.BItemDurable;
+import me.playground.items.lore.Lore;
 import me.playground.items.tracking.DemanifestationReason;
+import me.playground.menushop.PurchaseOption;
 import me.playground.ranks.Permission;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -105,6 +108,8 @@ public class BeanGuiEnchantingTable extends BeanGui {
 	private ItemStack itemToModify = null;
 	private ItemStack displayItem = null;
 	private BItemDurable customItem = null;
+
+	private PurchaseOption confirm = null;
 	
 	private int bookPower = 0;
 	private byte lapisLevel = 0;
@@ -114,8 +119,6 @@ public class BeanGuiEnchantingTable extends BeanGui {
 	private int xpCost = 0;
 	
 	private int remainingRunicScore;
-	
-	private boolean canConfirm = false;
 	
 	private final Map<Enchantment, Integer> pendingChanges = new LinkedHashMap<>();
 	private final Map<Integer, BEnchantment> mapping = new HashMap<>();
@@ -202,40 +205,29 @@ public class BeanGuiEnchantingTable extends BeanGui {
 			e.setCancelled(false);
 			return;
 		}
-		
-		if (slot == 46) {
-			new BeanGuiEnchantingTableLapis(p, table).openInventory();
-			return;
-		}
-		
-		if (slot == 36) {
-			new BeanGuiEnchants(p, table).openInventory();
-			return;
-		}
-		
-		if (slot == 50) {
-			close();
-			return;
+
+		switch (slot) {
+			case 36 -> { new BeanGuiEnchants(p, table).openInventory(); return; }
+			case 46 -> { new BeanGuiEnchantingTableLapis(p, table).openInventory(); return; }
+			case 50 -> { close(); return; }
 		}
 		
 		if (itemToModify == null) return;
 		
 		if (slot == confirmationSlot) {
-			if (canConfirm && p.getLevel() >= xpCost && lapis >= lapisCost) { // double check
+			if (confirm != null && confirm.purchase(p, false)) {
 				i.setItem(enchantingSlot, displayItem);
 
 				if (p.getGameMode() != GameMode.CREATIVE) {
 					pp.getSkills().addExperience(Skill.ENCHANTING, xpCost * 33 + lapisCost * 100); // Only give XP if not in Creative Mode.
-					if (pp.hasPermission(Permission.BYPASS_COSTS_CREATIVE)) {
-						p.giveExpLevels(-xpCost);
+					if (pp.hasPermission(Permission.BYPASS_COSTS_CREATIVE))
 						useLapisLazuli(lapisCost);
-					}
 				}
 
 				updateEnchantSlot(); // Done by global gui update
 				p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0F, 1.0F);
 			} else {
-				p.playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 0.3F, 1.0F);
+				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.4F, 0.8F);
 			}
 			return;
 		}
@@ -572,8 +564,9 @@ public class BeanGuiEnchantingTable extends BeanGui {
 	private void updateConfirmationItems() {
 		ItemStack item = confirmEmpty;
 		ItemStack glassItem = confNone;
-		
-		canConfirm = false;
+
+		confirm = null;
+
 		remainingRunicScore = 15;
 		xpCost = 0;
 		lapisCost = 0;
@@ -581,7 +574,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 		if (itemToModify != null) {
 			displayItem = itemToModify.clone();
 			if (!pendingChanges.isEmpty()) {
-				List<Component> lore = new ArrayList<>();
+				List<TextComponent> lore = new ArrayList<>();
 				lore.add(Component.text("\u00a77Pending changes: "));
 				
 				pendingChanges.forEach((ench, level) -> {
@@ -620,45 +613,42 @@ public class BeanGuiEnchantingTable extends BeanGui {
 				});
 				
 				displayItem.getEnchantments().forEach((enchantment, level) -> remainingRunicScore -= BEnchantment.from(enchantment).getRunicValue(level));
-				
-				lore.add(Component.empty());
-				lore.add(Component.text("\u00a78----------"));
-				lore.add(Component.text("\u00a77Cost"));
+
+				// TODO: Add more information about Runic Capacity
+
+				// Confirmation Item
+				confirm = new PurchaseOption(item, item.getItemMeta().displayName(), new Lore(lore));
+				confirm.setDemanifestationReason(DemanifestationReason.ENCHANTING);
+				confirm.setPurchaseWord("enchant");
+				confirm.addFakeCost(Component.text("\u00a77Remaining \u00a7r\u274c Runic Capacity", BeanColor.ENCHANT), remainingRunicScore > 0);
+				confirm.addExperienceCost(xpCost);
+
 				if (lapisCost > 0)
-					lore.add(Component.text((lapis < lapisCost ? "\u00a7c\u274c " : "\u00a78 • ") + "\u00a77" + lapisCost + "\u00a78x\u00a7f Lapis Lazuli"));
-				if (xpCost > 0)
-					lore.add(Component.text((lapis < lapisCost ? "\u00a7c\u274c " : "\u00a78 • ")  + "\u00a7a" + xpCost + " Experience Levels"));
-				if (lapisCost <= 0 && xpCost <= 0)
-					lore.add(Component.text("\u00a7aFree"));
-				
-				lore.add(Component.empty());
-				lore.add(Component.text((remainingRunicScore < 0 ? "\u00a7c\u274c " : "") + "\u00a77Your item has \u00a7r" + remainingRunicScore + " \u269D Runic Capacity\u00a77 remaining.").colorIfAbsent(BeanColor.ENCHANT).decoration(TextDecoration.ITALIC, false));
-				
-				if (p.getLevel() < xpCost || lapis < lapisCost || remainingRunicScore < 0) {
+					confirm.addFakeCost(Component.text("" + lapisCost + " Lapis Lazuli", BeanColor.ENCHANT_LAPIS), lapis >= lapisCost);
+
+				//lore.add(Component.text((remainingRunicScore < 0 ? "\u00a7c\u274c " : "") + "\u00a77Your item has \u00a7r" + remainingRunicScore + " \u269D Runic Capacity\u00a77 remaining.").colorIfAbsent(BeanColor.ENCHANT).decoration(TextDecoration.ITALIC, false));
+
+				if (!confirm.canPurchase(p)) {
 					item = confirmCant;
 					glassItem = confRed;
-					lore.add(Component.text("\u00a7c» Insufficient Resources!"));
-					canConfirm = false;
 				} else {
 					item = confirmCan;
 					glassItem = confGreen;
-					lore.add(Component.text("\u00a73» \u00a7bClick to apply Enhancements!"));
-					canConfirm = true;
 				}
-				item = item.clone();
-				item.lore(lore);
+
+				confirm.setDisplayName(item.getItemMeta().displayName());
+				item = confirm.getDisplayItem(p);
 			}
 			
 			i.setItem(confirmationSlot + 1, BeanItem.formatItem(displayItem));
-		} else {
+		} else { // No item to modify
 			i.setItem(confirmationSlot + 1, bBlank);
 		}
-		
-		// lazy xd
+
 		for (int x = 46; ++x < 54;)
 			i.setItem(x, glassItem);
 		i.setItem(50, closeUI);
-		
+
 		i.setItem(confirmationSlot, item);
 	}
 	
@@ -677,7 +667,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 				itemToModify = i.getItem(enchantingSlot);
 				displayItem = itemToModify == null ? null : itemToModify.clone();
 				customItem = BeanItem.from(itemToModify, BItemDurable.class);
-				canConfirm = false;
+				confirm = null;
 				
 				data = 0;
 				page = 0;

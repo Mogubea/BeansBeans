@@ -7,6 +7,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import me.playground.punishments.Type;
+import me.playground.ranks.Rank;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -24,7 +26,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 
 public class CommandWhisper extends BeanCommand { // TODO:
 
-	private final HashMap<Integer, Integer> lastDMby = new HashMap<Integer, Integer>(); // TODO: change this to a cache
+	private final HashMap<Integer, Integer> lastDMby = new HashMap<>();
 	private final int ID_SERVER = 0;
 	
 	public CommandWhisper(Main plugin) {
@@ -37,15 +39,32 @@ public class CommandWhisper extends BeanCommand { // TODO:
 		final boolean isReply = str.equals("r") || str.equals("reply");
 		
 		final Player target = isReply ? toPlayerFromId(sender, lastDMby.getOrDefault(isPlayer(sender) ? profile.getId() : ID_SERVER, -2)) : toPlayer(sender, args[0], false);
-		
+		final PlayerProfile targetProfile = PlayerProfile.from(target);
+
+		// If the player is muted
+		if (profile != null && profile.isMuted()) {
+			// Disallow full muted players entirely, but allow global mutes to talk to friends, party members and staff.
+			if (profile.getMute().getType() == Type.MINECRAFT_FULL_MUTE || (!profile.isFriends(targetProfile.getId()) && !targetProfile.isRank(Rank.MODERATOR))) {
+				sender.sendActionBar(Component.text("\u00a74\u26a0\u00a7c You're " + (profile.getMute().isPermanent() ? "permanently" : "currently") + " muted \u00a74\u26a0"));
+				return true;
+			}
+		}
+
+		// If the player is being ignored or the player is ignoring target
+		if (profile != null && (profile.isIgnoring(targetProfile.getId()) || targetProfile.isIgnoring(profile.getId()))) {
+			sender.sendActionBar(Component.text("\u00a7cYou can't message this player."));
+			return true;
+		}
+
+		// If there is no message
 		if (args.length < (isReply ? 1 : 2))
-			throw new CommandException(sender, Component.text("Please type something to send to ").append(PlayerProfile.from(target).getComponentName()));
+			throw new CommandException(sender, Component.text("You must type something to send to ").append(PlayerProfile.from(target).getComponentName()));
 		
-		Component from = isPlayer(sender) ? profile.getComponentName() : Component.text("\u00a7d\u00a7oServer").hoverEvent(HoverEvent.showText(Component.text("\u00a77Server Console")));
+		Component from = profile != null ? profile.getComponentName() : Component.text("\u00a7d\u00a7oServer").hoverEvent(HoverEvent.showText(Component.text("\u00a77Server Console")));
 		
 		StringBuilder sb = new StringBuilder();
 		for (int x = isReply ? 0 : 1; x < args.length; x++)
-			sb.append(" " + args[x]);
+			sb.append(" ").append(args[x]);
 		
 		Component message = Component.text(sb.toString()).color(NamedTextColor.GRAY).decorate(TextDecoration.ITALIC);
 		target.sendMessage(Component.text("[").append(from).append(Component.text(" -> You]:")).append(message).colorIfAbsent(TextColor.color(0x6f6f6f)));

@@ -25,9 +25,11 @@ public class DiscordCommandLink extends DiscordCommand {
 
 	@Override
 	public void onCommand(SlashCommandEvent e) {
+		if (e.getMember() == null) return; // Shouldn't happen.
+
 		final EmbedBuilder eb = new EmbedBuilder();
 		eb.setColor(0xff4455);
-		
+
 		if (e.getOption("break") != null && getDiscord().isRank(e.getMember(), Rank.ADMINISTRATOR)) {
 			String targetName = e.getOption("break").getAsString();
 			ProfileStore target = ProfileStore.from(targetName, true);
@@ -37,6 +39,7 @@ public class DiscordCommandLink extends DiscordCommand {
 				eb.setColor(0x44ddff);
 				User targetUser = getBot().retrieveUserById(getDiscord().linkedAccounts.get(target.getId())).complete();
 				eb.appendDescription("**" + targetName +"** is no longer linked to " + targetUser.getAsMention());
+				eb.setThumbnail(DiscordBot.getIconURL(target.getId()));
 				getDiscord().breakLink(target.getId());
 			} else {
 				eb.appendDescription("**" + targetName + "** isn't linked to an account.");

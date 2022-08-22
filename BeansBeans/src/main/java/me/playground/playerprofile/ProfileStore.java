@@ -13,6 +13,8 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 
+import javax.annotation.Nullable;
+
 /**
  * Stores all the names and ids without having to load profiles.
  * @author Brandon
@@ -107,7 +109,9 @@ public class ProfileStore {
 		return forceNull ? null : players.get(-1);
 	}
 	
-	public static ProfileStore from(String name, boolean forceNull) {
+	public static ProfileStore from(@Nullable String name, boolean forceNull) {
+		if (name == null) return null;
+
 		for (ProfileStore cache : players.values())
 			if (cache.getDisplayName().equalsIgnoreCase(name) || cache.getRealName().equalsIgnoreCase(name))
 				return cache;

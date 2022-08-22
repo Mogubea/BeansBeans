@@ -1,7 +1,10 @@
 package me.playground.ranks;
 
 public class Permission {
-	
+
+	public final static String BYPASS_MAX_PLAYERCOUNT = "bean.bypassmaxplayercount";
+	public final static String BYPASS_MAX_DONORCOUNT = "bean.bypassmaxdonorcount";
+
 	public final static String PROFILE_OVERRIDE = "bean.canprofileoverride";
 	public final static String MODIFY_PERMISSIONS = "bean.canmodifypermissions";
 

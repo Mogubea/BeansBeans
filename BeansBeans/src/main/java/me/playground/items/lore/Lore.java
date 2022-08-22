@@ -8,6 +8,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.jetbrains.annotations.NotNull;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,11 @@ public class Lore {
 
     protected final List<TextComponent> lore;
     protected final String baseContent;
+
+    public Lore(List<TextComponent> lore) {
+        this.lore = lore;
+        this.baseContent = "";
+    }
 
     protected Lore(PersistentLoreBuilder builder) {
         lore = List.copyOf(builder.lore);

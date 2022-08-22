@@ -32,7 +32,6 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 
-import me.playground.currency.Currency;
 import me.playground.ranks.Rank;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
@@ -258,31 +257,50 @@ public class Utils {
 		});
 	}
 
-	public static void sendMessage(Rank rank, Component message) {
+	public static void sendMessage(Rank rank, Component message, boolean alertConsole) {
 		Bukkit.getOnlinePlayers().forEach((player) -> {
 			me.playground.playerprofile.PlayerProfile pp = me.playground.playerprofile.PlayerProfile.from(player);
 			if (!pp.isRank(rank)) return;
 			player.sendMessage(message);
 		});
+
+		if (alertConsole)
+			Bukkit.getConsoleSender().sendMessage(message);
+	}
+
+	/*public static void notifyOnlineStaff(TextComponent message) {
+		sendMessage(Rank.MODERATOR, Component.text("\u26a0 ", BeanColor.STAFF).append(message).colorIfAbsent(NamedTextColor.AQUA));
+	}
+
+	public static void notifyStaffDiscord(MessageEmbed embed) {
+		DiscordBot bot = Main.getInstance().getDiscord();
+		if (!bot.isOnline()) return;
+
+		if (Bukkit.getServer().isStopping())
+			bot.getStaffChannel().sendMessageEmbeds(embed).queue();
+		else
+			Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> bot.getStaffChannel().sendMessageEmbeds(embed).queue());
+	}*/
+
+	public static void notifyAllStaff(TextComponent message, String embedTitle, String plainDescription) {
+		notifyAllStaff(message, embedTitle, plainDescription, null);
 	}
 
 	/**
 	 * Notify all online staff + attempt async discord staff channel
 	 */
-	public static void notifyAllStaff(TextComponent message, String embedTitle, String plainDescription) {
-		sendMessage(Rank.MODERATOR, Component.text("\u26a0 ", BeanColor.STAFF).append(message).colorIfAbsent(NamedTextColor.AQUA));
+	public static void notifyAllStaff(TextComponent message, String embedTitle, String plainDescription, String url) {
+		sendMessage(Rank.MODERATOR, Component.text("\u26a0 ", BeanColor.STAFF).append(message).colorIfAbsent(NamedTextColor.AQUA), false);
 
 		if (plainDescription == null) return;
 		if (Bukkit.getServer().isStopping()) {
-			doDiscordStaffMsg(embedTitle, plainDescription);
+			doDiscordStaffMsg(embedTitle, plainDescription, url);
 		} else {
-			Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
-				doDiscordStaffMsg(embedTitle, plainDescription);
-			});
+			Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> doDiscordStaffMsg(embedTitle, plainDescription, url));
 		}
 	}
 
-	private static void doDiscordStaffMsg(String embedTitle, String plainDescription) {
+	private static void doDiscordStaffMsg(String embedTitle, String plainDescription, String url) {
 		DiscordBot bot = Main.getInstance().getDiscord();
 		if (!bot.isOnline()) return;
 		EmbedBuilder eb = new EmbedBuilder();
@@ -290,13 +308,13 @@ public class Utils {
 		eb.setColor(BeanColor.STAFF.value());
 		eb.setTimestamp(Instant.now());
 		eb.setDescription(plainDescription);
+		if (url != null) eb.setThumbnail(url);
 		bot.getStaffChannel().sendMessageEmbeds(eb.build()).queue();
 	}
 	
 	public static String timeStringFromNow(long timeInMillis) {
 		long cur = System.currentTimeMillis();
 		long secs = (timeInMillis > cur ? timeInMillis - cur : cur - timeInMillis) / 1000;
-		boolean tooShort = secs < 60;
 		long mins = secs / 60;
 		secs -= mins*60;
 		long hours = mins / 60;
@@ -305,17 +323,17 @@ public class Utils {
 		hours -= days*24;
 		long weeks = days / 7;
 		days -= weeks*7;
-		
-		if (tooShort) 
-			return "a few seconds";
+
 		if (weeks > 0)
 			return weeks + (weeks > 1 ? " Weeks" : " Week") + (days > 0 ? " and " + days + (days > 1 ? " Days" : " Day") : "");
 		if (days > 0)
 			return days + (days > 1 ? " Days" : " Day") + (hours > 0 ? " and " + hours + (hours > 1 ? " Hours" : " Hour") : "");
 		if (hours > 0)
 			return hours + (hours > 1 ? " Hours" : " Hour") + (mins > 0 ? " and " + mins + (mins > 1 ? " Minutes" : " Minute") : "");
-		
-		return mins + (mins > 1 ? " Minutes" : " Minute");
+		if (mins > 0)
+			return mins + (mins > 1 ? " Minutes" : " Minute") + (secs > 0 ? " and " + secs + (secs > 1 ? " Seconds" : " Second") : "");
+
+		return secs + (secs > 1 ? " Seconds" : " Second");
 	}
 	
 	public static String timeStringFromMillis(long timeInMillis) {

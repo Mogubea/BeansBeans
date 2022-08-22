@@ -3,6 +3,7 @@ package me.playground.punishments;
 import javax.annotation.Nullable;
 import java.util.*;
 
+@Deprecated
 public enum Category {
 
     OTHER("OTHER", "utilising alternate accounts to bypass punishments"),

@@ -120,7 +120,7 @@ public class PurchaseOption {
 				ItemStack a = entry.getKey().clone();
 				a.setAmount(entry.getValue());
 				toRemove[x++] = a;
-				Main.getInstance().getItemTrackingManager().incrementDemanifestationCount(a, DemanifestationReason.PURCHASE, a.getAmount());
+				Main.getInstance().getItemTrackingManager().incrementDemanifestationCount(a, demanifestationReason, a.getAmount());
 			}
 			p.getInventory().removeItem(toRemove);
 			can = true;
@@ -188,30 +188,38 @@ public class PurchaseOption {
 		if (complimentary) {
 			lore.add(Component.text("\u00a78 • \u00a7aComplimentary"));
 		} else {
+			for (Entry<Component, Boolean> fakeEntries : fakeCosts.entrySet()) {
+				boolean has = fakeEntries.getValue();
+				lore.add(Component.text("\u00a78 • ").append(fakeEntries.getKey()).append(
+						Component.text((!has ? " \u00a78(\u00a7c\u274c\u00a78)" : " \u00a78(\u00a7a\u2714\u00a78)"))).colorIfAbsent(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
+
+				if (!has) can = false;
+			}
+
 			for (Entry<ItemStack, Integer> entry : materialCost.entrySet()) {
 				boolean has = p.getInventory().containsAtLeast(entry.getKey(), entry.getValue());
 				ItemStack i = entry.getKey();
 				lore.add(Component.text("\u00a78 • \u00a77" + df.format(entry.getValue()) + "\u00a78x \u00a7f").append((i.getItemMeta().hasDisplayName() ? i.getItemMeta().displayName() : Component.translatable(i)).append(
 						Component.text((!has ? " \u00a78(\u00a7c\u274c\u00a78)" : " \u00a78(\u00a7a\u2714\u00a78)")))).colorIfAbsent(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-				if (!has)
-					can = false;
+
+				if (!has) can = false;
 			}
 
 			if (xpCost > 0) {
 				boolean xp = p.getLevel() >= xpCost;
-				lore.add(Component.text("\u00a78 • \u00a7r" + df.format(xpCost) + " Experience Levels " + (!xp ? "\u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")).colorIfAbsent(BeanColor.EXPERIENCE).decoration(TextDecoration.ITALIC, false));
+				lore.add(Component.text("\u00a78 • \u00a7r" + df.format(xpCost) + " \u25CE Experience Levels " + (!xp ? "\u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")).colorIfAbsent(BeanColor.EXPERIENCE).decoration(TextDecoration.ITALIC, false));
 				if (!xp) can = false;
 			}
 
 			if (crystalCost > 0) {
 				boolean crystal = pp.getCrystals() >= crystalCost;
-				lore.add(Component.text("\u00a78 • \u00a7r" + df.format(coinCost) + " Crystals " + (!crystal ? "\u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")).colorIfAbsent(BeanColor.CRYSTALS).decoration(TextDecoration.ITALIC, false));
+				lore.add(Component.text("\u00a78 • \u00a7r" + df.format(coinCost) + " \u2756 Crystals " + (!crystal ? "\u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")).colorIfAbsent(BeanColor.CRYSTALS).decoration(TextDecoration.ITALIC, false));
 				if (!crystal) can = false;
 			}
 				
 			if (coinCost > 0) {
 				boolean coin = pp.getBalance() >= coinCost;
-				lore.add(Component.text("\u00a78 • \u00a76" + df.format(coinCost) + " Coins " + (!coin ? "\u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")));
+				lore.add(Component.text("\u00a78 • \u00a76" + df.format(coinCost) + " \u20BF Coins " + (!coin ? "\u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")));
 				if (!coin) can = false;
 			}
 
@@ -335,6 +343,14 @@ public class PurchaseOption {
 	public void addItemCost(BeanItem item, int quantity) {
 		materialCost.put(item.getItemStack(), quantity);
 		dirty = true;
+	}
+
+	private final Map<Component, Boolean> fakeCosts = new LinkedHashMap<>();
+	/**
+	 * These are not saved and are only used for stupid things like enchant table
+	 */
+	public void addFakeCost(@NotNull Component fakeCost, boolean has) {
+		fakeCosts.put(fakeCost, has);
 	}
 
 	public void addExperienceCost(int xpLevels) {

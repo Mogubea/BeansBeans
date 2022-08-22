@@ -63,7 +63,7 @@ public class PlayerProfileDatasource extends PrivateDatasource {
                     + "namecolour = ?, nickname = ?, booleanSettings = ?, warpCount = ?, civilization = ?, job = ?, donorRankExpiration = ? WHERE id = ?")) {
                 byte idx = 0;
 
-                s.setFloat(++idx, pp.getBalance());
+                s.setDouble(++idx, pp.getBalance());
                 s.setString(++idx, Utils.toString(pp.getRanks(), true, ","));
                 s.setString(++idx, Utils.toString(pp.getPrivatePermissions(), true, ","));
                 s.setInt(++idx, pp.getNameColour().value());
@@ -95,7 +95,8 @@ public class PlayerProfileDatasource extends PrivateDatasource {
             refreshPlayerInbox(pp);
 
             // Invalidate the profile if the player is currently offline.
-            pp.invalidateIfOffline();
+            if (!pp.isOnline())
+                manager.getCache().invalidate(pp.getUniqueId());
         }
     }
 

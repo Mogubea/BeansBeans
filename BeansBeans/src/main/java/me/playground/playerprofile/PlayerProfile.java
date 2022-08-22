@@ -13,6 +13,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import me.playground.listeners.RedstoneManager;
+import me.playground.punishments.Punishment;
+import me.playground.punishments.PunishmentMinecraft;
 import me.playground.regions.PlayerRegion;
 import net.dv8tion.jda.api.entities.Member;
 import org.bukkit.Bukkit;
@@ -139,7 +141,7 @@ public class PlayerProfile {
 	private final OfflinePlayer			player;
 	
 	private final Set<Integer>			friends = new HashSet<>();
-	private final ArrayList<Integer> 	ignoredPlayers = new ArrayList<>();
+	private final List<Integer> 		ignoredPlayers = new ArrayList<>();
 	private final ArrayList<Rank> 		ranks = new ArrayList<>();
 	private final Set<String>			privatePermissions;
 	private long 						donorExpirationTime = 0L;
@@ -151,7 +153,7 @@ public class PlayerProfile {
 	private TextComponent   			colouredName;
 	private int 						nameColour;
 	
-	private float 						coins;
+	private double 						coins;
 	private short						warpCount;
 	
 	private final UUID 					playerUUID;
@@ -163,6 +165,7 @@ public class PlayerProfile {
 	private final List<String> 			pickupBlacklist;
 	private final List<Delivery>		inbox = new ArrayList<>();
 	private final List<PlayerRegion>    ownedRegions = new ArrayList<>();
+	private final List<Punishment<?>> 	punishments;
 	
 	private long 						booleanSettings;
 	
@@ -191,7 +194,7 @@ public class PlayerProfile {
 	// Admin
 	public UUID profileOverride;
 	
-	public PlayerProfile(PlayerProfileManager manager, int id, UUID uuid, ArrayList<Rank> ranks, Set<String> perms, int nameColour, String name, String nickname, long coins, long settings, short warpCount) {
+	public PlayerProfile(PlayerProfileManager manager, int id, UUID uuid, ArrayList<Rank> ranks, Set<String> perms, int nameColour, String name, String nickname, double coins, long settings, short warpCount) {
 		this.manager = manager;
 		this.loadTime = System.currentTimeMillis();
 		this.player = Bukkit.getOfflinePlayer(uuid);
@@ -217,18 +220,13 @@ public class PlayerProfile {
 		this.pickupBlacklist = manager.getDatasource().loadPickupBlacklist(id);
 		this.heirloomInventory = new HeirloomInventory(this, manager.getDatasource().loadPlayerHeirlooms(id));
 		this.stats = manager.getDatasource().loadPlayerStats(this);
+
+		this.punishments = manager.getPlugin().getPunishmentManager().loadPunishmnents(this);
+		checkPunishments();
 		
 		setRanks(ranks);
 		refreshInbox();
 		//Bukkit.getConsoleSender().sendMessage(Component.text("Profile was loaded for " + (hasNickname() ? getNickname() + " ("+getRealName()+")" : getRealName())));
-	}
-
-	/**
-	 * Remove this {@link PlayerProfile} from the cache if the {@link #player} is currently offline.
-	 */
-	public void invalidateIfOffline() {
-		if (!isOnline())
-			manager.getCache().invalidate(playerUUID);
 	}
 
 	/**
@@ -276,7 +274,7 @@ public class PlayerProfile {
 	 * Get the coin balance.
 	 * @return The coin balance.
 	 */
-	public float getBalance() {
+	public double getBalance() {
 		return coins;
 	}
 	
@@ -286,12 +284,12 @@ public class PlayerProfile {
 		flagScoreboardUpdate(ScoreboardFlag.COINS);
 	}
 	
-	public void addToBalance(float amount, String log) {
+	public void addToBalance(double amount, String log) {
 		addToBalance(amount);
 		Datasource.logTransaction(playerId, amount, log);
 	}
 	
-	public void addToBalance(float amount) {
+	public void addToBalance(double amount) {
 		coins+=amount;
 		if (this.isOnline() && amount != 0)
 			getPlayer().sendActionBar(Component.text("\u00a76" + df.format(getBalance()) + " Coins \u00a77( " + (amount>-1 ? "\u00a7a+" : "\u00a7c") + df.format(amount) + "\u00a77 )"));
@@ -362,7 +360,7 @@ public class PlayerProfile {
 				if (System.currentTimeMillis() >= this.donorExpirationTime) {
 					if (this.isOnline())
 						this.getPlayer().sendMessage(Component.text("\u00a7eYour ").append(donorRank.toComponent()).append(Component.text("\u00a7e rank has expired!")));
-					this.removeRank(Rank.PLEBEIAN, Rank.PATRICIAN, Rank.SENATOR);
+					this.removeRank(Rank.VIP);
 				}
 		}
 		return this.donorExpirationTime;
@@ -514,24 +512,75 @@ public class PlayerProfile {
 		if (isOnline() && Main.getInstance().isEnabled()) // TODO: possibly find a less static method of handling this..?
 			Main.getPermissionManager().updatePlayerPermissions(getPlayer());
 	}
-	
+
+	/**
+	 * Grab the set of friend IDs
+	 * @return An unmodifiable copy of this player's friend IDs.
+	 */
 	public Set<Integer> getFriends() {
-		return friends;
+		return Set.copyOf(friends);
 	}
-	
-	public ArrayList<Integer> getIgnoredPlayers() {
-		return ignoredPlayers;
+
+	/**
+	 * Add each other to each other's friend lists.
+	 * This also removes each other from their respective ignored lists.
+	 */
+	public void addFriend(int id) {
+		PlayerProfile target = fromIfExists(id);
+		if (target == null) return;
+
+		friends.add(id);
+		unignorePlayer(id);
+		target.friends.add(getId());
+		target.unignorePlayer(getId());
+	}
+
+	/**
+	 * Remove each other from each other's friend lists.
+	 */
+	public void removeFriend(int id) {
+		PlayerProfile target = fromIfExists(id);
+		if (target == null) return;
+
+		friends.remove(id);
+		target.friends.remove(getId());
+	}
+
+	/**
+	 * Check if this player is friends with the target profile
+	 * @return true if friends
+	 */
+	public boolean isFriends(int id) {
+		return friends.contains(id);
+	}
+
+	/**
+	 * Grab the list of ignored player IDs
+	 * @return An unmodifiable copy of this player's ignored player IDs
+	 */
+	public List<Integer> getIgnoredPlayers() {
+		return List.copyOf(ignoredPlayers);
 	}
 	
 	public void ignorePlayer(int id) {
-		if (!ignoredPlayers.contains(id))
+		if (!ignoredPlayers.contains(id)) {
 			ignoredPlayers.add(id);
+			removeFriend(id);
+		}
 	}
 	
 	public void unignorePlayer(int id) {
 		ignoredPlayers.removeAll(new ArrayList<Integer>(id));
 	}
-	
+
+	/**
+	 * Check if this player is ignoring the target profile
+	 * @return true if ignoring
+	 */
+	public boolean isIgnoring(int id) {
+		return ignoredPlayers.contains(id);
+	}
+
 	public void setNickname(String nickname) {
 		this.nickname = (nickname.equals(name)) ? null : nickname;
 		Main.getInstance().getDiscord().updateNickname(this);
@@ -1088,7 +1137,7 @@ public class PlayerProfile {
 		if (isOnline()) {
 			Map<Integer, ItemStack> remaining = getPlayer().getInventory().addItem(items);
 			if (remaining.values().size() > 0)
-				return Delivery.createItemDelivery(playerId, 0, "Item Package", "Some items were sent to you/nwhile Your inventory was full!", 1000L * 60 * 60 * 24 * 31, remaining.values());
+				return Delivery.createItemDelivery(playerId, 0, "Item Package", "Some items were sent to you/nwhile your inventory was full!", 1000L * 60 * 60 * 24 * 31, remaining.values());
 			return null;
 		} else {
 			return Delivery.createItemDelivery(playerId, 0, "Item Package", "Some items were sent to you/nwhile you were away!", 1000L * 60 * 60 * 24 * 31, items);
@@ -1096,11 +1145,71 @@ public class PlayerProfile {
 	}
 
 	/**
-	 * Inefficient ban check, make better in the future.
-	 * @return whether the player is banned or not.
+	 * Add a new punishment to this player's punishment list.
+	 */
+	public void addPunishment(Punishment<?> punishment, boolean check) {
+		this.punishments.add(punishment);
+		if (check)
+			checkPunishments();
+	}
+
+	/**
+	 * Check the list of punishments to see if one is now more relevant than another to override the ban/mute reference.
+	 * The latest expiring punishment will take priority of all non permanents. The most recent permanent will take priority over all.
+	 */
+	private void checkPunishments() {
+		int size = punishments.size();
+		for (int x = -1; ++x < size;) {
+			Punishment<?> punishment = punishments.get(x);
+
+			if (!punishment.isActive()) continue;
+			if (!(punishment instanceof PunishmentMinecraft mcPunishment)) continue;
+
+			if (mcPunishment.isBan()) {
+				if (relevantBan == null || (mcPunishment.isPermanent() ?
+						(!relevantBan.isPermanent() || mcPunishment.getPunishmentStart().isAfter(relevantBan.getPunishmentStart())) :
+						(!relevantBan.isPermanent() && relevantBan.getPunishmentEnd().isBefore(mcPunishment.getPunishmentEnd()))))
+					relevantBan = mcPunishment;
+			} else if (mcPunishment.isMute()) {
+				if (relevantMute == null || (mcPunishment.isPermanent() ?
+						(!relevantMute.isPermanent() || mcPunishment.getPunishmentStart().isAfter(relevantMute.getPunishmentStart())) :
+						(!relevantMute.isPermanent() && relevantMute.getPunishmentEnd().isBefore(mcPunishment.getPunishmentEnd()))))
+					relevantMute = mcPunishment;
+			}
+		}
+	}
+
+	private PunishmentMinecraft relevantBan;
+	private PunishmentMinecraft relevantMute;
+
+	/**
+	 * Check if the player is currently banned.
 	 */
 	public boolean isBanned() {
-		return Datasource.getBanEntry(this.playerUUID) != null;
+		if (relevantBan != null)
+			if (!relevantBan.isActive())
+				relevantBan = null;
+
+		return relevantBan != null;
+	}
+
+	/**
+	 * Check if the player is currently muted.
+	 */
+	public boolean isMuted() {
+		if (relevantMute != null)
+			if (!relevantMute.isActive())
+				relevantMute = null;
+
+		return relevantMute != null;
+	}
+
+	public PunishmentMinecraft getBan() {
+		return relevantBan;
+	}
+
+	public PunishmentMinecraft getMute() {
+		return relevantMute;
 	}
 	
 	// AFK Stuff
@@ -1247,7 +1356,7 @@ public class PlayerProfile {
 				if (isSettingEnabled(PlayerSetting.SHOW_SIDEBAR))
 					showSidebar();
 
-				setScoreboardLine(7, "\u00a78\u258E  ");
+				setScoreboardLine(7, "  ");
 				setScoreboardLine(3, " ");
 				setScoreboardLine(0, "\u00a78beansbeans.net");
 			}
@@ -1268,14 +1377,6 @@ public class PlayerProfile {
 			setScoreboardLine(9, c + "\u258E\u00a76 \u20BF " + df.format(getBalance()));
 		if ((scoreboardFlag & 1 << ScoreboardFlag.CRYSTALS.ordinal()) != 0)
 			setScoreboardLine(8, c + "\u258E\u00a7d \u2756 " + df.format(getCrystals()));
-		
-		/*if (isInCivilization()) {
-			scores.add(" ");
-			Civilization civ = getCivilization();
-			scores.add("\u00a72\u25D9 \u00a7fCiv:\u00a72 " + civ.getName());
-			String jc = "\u00a7" + (hasJob() ? ChatColor.charOf(getJob().toComponent().color()) + getJob().getNiceName() : "2Citizen");
-			scores.add("\u00a72\u25D9 \u00a7fJob: " + jc);
-		}*/
 		
 		if ((scoreboardFlag & 1 << ScoreboardFlag.REGION.ordinal()) != 0) {
 			Region r = getCurrentRegion();

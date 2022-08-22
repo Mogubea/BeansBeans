@@ -6,12 +6,12 @@ public class ItemValueLog {
 
     private final Instant time; // Time of change
     private final String identifier; // item
-    private final float oldValue; // Old Value of the item
-    private final float newValue; // New Value of the item
+    private final double oldValue; // Old Value of the item
+    private final double newValue; // New Value of the item
     private final int updaterId; // Updater
     private final boolean enforcedChange; // Whether it was an enforced or calculated change.
 
-    protected ItemValueLog(ItemValueLogger logger, String identifier, float oldValue, float newValue, int updaterId, boolean enforcedChange) {
+    protected ItemValueLog(ItemValueLogger logger, String identifier, double oldValue, double newValue, int updaterId, boolean enforcedChange) {
         this.time = Instant.now();
         this.identifier = identifier;
         this.oldValue = oldValue;
@@ -30,11 +30,11 @@ public class ItemValueLog {
         return identifier;
     }
 
-    public float getOldValue() {
+    public double getOldValue() {
         return oldValue;
     }
 
-    public float getNewValue() {
+    public double getNewValue() {
         return newValue;
     }
 

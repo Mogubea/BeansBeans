@@ -29,7 +29,6 @@ import me.playground.utils.Calendar;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Icon;
@@ -276,6 +275,7 @@ public class DiscordBot extends ListenerAdapter {
 		cmds.add(registerCommand(new DiscordCommandOnline(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandStatusPost(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandLink(getPlugin())).getCommandData());
+		cmds.add(registerCommand(new DiscordCommandForceLink(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandReport(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandSuggest(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandEmbed(getPlugin())).getCommandData());
@@ -344,7 +344,7 @@ public class DiscordBot extends ListenerAdapter {
 		if (!isOnline()) return;
 		try {
 			int count = Bukkit.getOnlinePlayers().size();
-			String playerList = "no one";
+			StringBuilder playerList = new StringBuilder("no one");
 			
 			EmbedBuilder test = new EmbedBuilder();
 			
@@ -366,19 +366,19 @@ public class DiscordBot extends ListenerAdapter {
 			test.addField("Overworld Time", Calendar.getTimeString(igtime, true), true);
 			test.addField("Minecraft Version", Bukkit.getMinecraftVersion(), true);
 			if (online) {
-				playerList = "";
+				playerList = new StringBuilder();
 				int x = 0;
 				for (Player p : Bukkit.getOnlinePlayers())
-					playerList += p.getName() + (++x < count ? ", " : "");
-				test.addField("Online Players ("+count+"/"+Bukkit.getServer().getMaxPlayers()+")", playerList, false);
+					playerList.append(p.getName()).append(++x < count ? ", " : "");
+				test.addField("Online Players ("+count+"/"+Bukkit.getServer().getMaxPlayers()+")", playerList.toString(), false);
 				
 				int hour = Calendar.getHour(igtime);
 				
 				if (hour > 18 || hour < 6) { // Night
 					test.setImage("https://i.imgur.com/f4Z0gGV.png");
-				} else if (hour >= 6 && hour <= 8) { // Dawn
+				} else if (hour <= 8) { // Dawn
 					test.setImage("https://i.imgur.com/dggMO9T.png");
-				} else if (hour > 8 && hour < 17) { // Day
+				} else if (hour < 17) { // Day
 					test.setImage("https://i.imgur.com/ROCQYbe.png");
 				} else { // Dusk
 					test.setImage("https://i.imgur.com/DwOruz2.png");
@@ -393,9 +393,7 @@ public class DiscordBot extends ListenerAdapter {
 			test.setTimestamp(Instant.now());
 			test.setAuthor("Bean's Beans Server Status", null, "https://img.icons8.com/nolan/344/ingredients-list.png");
 			
-			discordBot.getTextChannelById(statusChatId).retrieveMessageById(statusMessageId).queue((message) -> {
-				message.editMessageEmbeds(test.build()).queue();
-			});
+			discordBot.getTextChannelById(statusChatId).retrieveMessageById(statusMessageId).queue((message) -> message.editMessageEmbeds(test.build()).queue());
 			
 			String pString1 = (count > 0 ? count + (count > 1 ? " Players" : " Player") : "no one");
 			discordBot.getPresence().setActivity(Activity.playing("Bean's Beans (" + count + "/50 Players)"));
@@ -408,7 +406,7 @@ public class DiscordBot extends ListenerAdapter {
 			}
 
 			lastOnlineCheck = online;
-		} catch (ErrorResponseException e) {}
+		} catch (ErrorResponseException ignored) {}
 	}
 	
 	/**
@@ -421,7 +419,7 @@ public class DiscordBot extends ListenerAdapter {
 		try {
 			Member member = g.retrieveMemberById(linkedAccounts.getOrDefault(pp.getId(), 0L)).complete();
 			g.modifyNickname(member, pp.getDisplayName()).queue();
-		} catch (ErrorResponseException e) {
+		} catch (ErrorResponseException ignored) {
 		} catch (HierarchyException e) {
 			plugin.getSLF4JLogger().warn("Bea cannot update " + pp.getDisplayName() + "'s name on Discord due to Hierarchy.");
 		}
@@ -436,8 +434,8 @@ public class DiscordBot extends ListenerAdapter {
 		Guild g = chatChannel().getGuild();
 		try {
 			Member member = g.retrieveMemberById(linkedAccounts.getOrDefault(pp.getId(), 0L)).complete();
-			ArrayList<Role> addRoles = new ArrayList<Role>();
-			ArrayList<Role> remRoles = new ArrayList<Role>();
+			ArrayList<Role> addRoles = new ArrayList<>();
+			ArrayList<Role> remRoles = new ArrayList<>();
 			
 			// Remove any roles they don't have
 			member.getRoles().forEach(role -> {
@@ -455,7 +453,7 @@ public class DiscordBot extends ListenerAdapter {
 			});
 			
 			g.modifyMemberRoles(member, addRoles, remRoles).queue();
-		} catch (ErrorResponseException e) {
+		} catch (ErrorResponseException ignored) {
 		} catch (HierarchyException e) {
 			plugin.getSLF4JLogger().warn("Bea cannot update " + pp.getDisplayName() + "'s roles on Discord due to Hierarchy.");
 		}
@@ -481,11 +479,26 @@ public class DiscordBot extends ListenerAdapter {
 	public void breakLink(int playerId) {
 		this.linkedAccounts.remove(playerId);
 		Datasource.breakDiscordLink(playerId);
+
+		PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
+
+		// Incredibly unlikely to be null
+		if (pp == null) return;
+
+		updateNickname(pp);
+		updateRoles(pp);
 	}
 	
-	private void createLink(int playerId, long discordId) {
+	protected void createLink(int playerId, long discordId) {
+		if (isLinked(discordId))
+			breakLink(getKey(linkedAccounts, discordId));
+
 		this.linkedAccounts.put(playerId, discordId);
 		Datasource.setDiscordLink(playerId, discordId);
+	}
+
+	public int getLinkedIdFromDiscordId(long discordId) {
+		return getKey(linkedAccounts, discordId);
 	}
 	
 	public int createLink(long discordId, long code) {

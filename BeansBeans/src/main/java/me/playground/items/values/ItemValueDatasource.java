@@ -3,7 +3,7 @@ package me.playground.items.values;
 import me.playground.data.PrivateDatasource;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.playerprofile.stats.DirtyFloat;
+import me.playground.playerprofile.stats.DirtyDouble;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 
@@ -27,19 +27,19 @@ public class ItemValueDatasource extends PrivateDatasource {
     @Override
     public void loadAll() {
         long then = System.currentTimeMillis();
-        Map<String, DirtyFloat> map = new HashMap<>();
-        Map<String, DirtyFloat> map2 = new HashMap<>();
+        Map<String, DirtyDouble> map = new HashMap<>();
+        Map<String, DirtyDouble> map2 = new HashMap<>();
 
         try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("SELECT identifier,value,isEnforced FROM " + tableValues); ResultSet r = s.executeQuery()) {
             while(r.next()) {
                 String identifier = r.getString("identifier");
-                float value = r.getFloat("value");
+                double value = r.getDouble("value");
                 if (identifier == null || identifier.isEmpty() || value < 0) continue;
                 boolean isEnforced = r.getBoolean("isEnforced");
                 if (isEnforced)
-                    map.put(identifier, new DirtyFloat(value));
+                    map.put(identifier, new DirtyDouble(value));
                 else
-                    map2.put(identifier, new DirtyFloat(value));
+                    map2.put(identifier, new DirtyDouble(value));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -51,23 +51,23 @@ public class ItemValueDatasource extends PrivateDatasource {
 
     @Override
     public void saveAll() throws Exception {
-        Map<String, DirtyFloat> map = manager.getItemValues().getEnforced();
+        Map<String, DirtyDouble> map = manager.getItemValues().getEnforced();
 
         try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO " + tableValues + " (identifier, value, isEnforced) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value), isEnforced = VALUES(isEnforced)")) {
             for (int x = -1; ++x < 2;) {
                 if (x == 1) map = manager.getItemValues().getCalculated();
 
-                for (Map.Entry<String, DirtyFloat> entry : map.entrySet()) {
+                for (Map.Entry<String, DirtyDouble> entry : map.entrySet()) {
                     String identifier = entry.getKey();
-                    DirtyFloat dirtyFloat = entry.getValue();
-                    if (!dirtyFloat.isDirty()) continue;
+                    DirtyDouble dirtyDouble = entry.getValue();
+                    if (!dirtyDouble.isDirty()) continue;
 
                     s.setString(1, identifier);
-                    s.setFloat(2, dirtyFloat.getValue());
+                    s.setDouble(2, dirtyDouble.getValue());
                     s.setBoolean(3, x == 0); // isEnforced
                     s.addBatch();
 
-                    dirtyFloat.setDirty(false);
+                    dirtyDouble.setDirty(false);
                 }
             }
 
@@ -87,8 +87,8 @@ public class ItemValueDatasource extends PrivateDatasource {
 
                 s.setString(1, log.getIdentifier());
                 s.setTimestamp(2, Timestamp.from(log.getTime()));
-                s.setFloat(3, log.getNewValue());
-                s.setFloat(4, log.getOldValue());
+                s.setDouble(3, log.getNewValue());
+                s.setDouble(4, log.getOldValue());
                 s.setInt(5, log.getUpdaterId());
                 s.setBoolean(6, log.isEnforcedChange());
                 s.addBatch();

@@ -23,8 +23,11 @@ public class BeanColor implements TextColor {
 	public static final BeanColor CIVILIZATION  = new BeanColor(0x45ffaa);
 	public static final BeanColor STRUCTURE		= new BeanColor(0x88ffcc);
 	public static final BeanColor NPC			= new BeanColor(0xaccfff);
-	public static final BeanColor CRYSTALS		= new BeanColor(0xefbbff);
+	public static final BeanColor CRYSTALS		= new BeanColor(0xdf9bff);
 	public static final BeanColor STAFF			= new BeanColor(Rank.MODERATOR.getRankHex());
+
+	public static final BeanColor BAN			= new BeanColor(0xf53c3c);
+	public static final BeanColor BAN_REASON    = new BeanColor(0xffcfcf);
 	
 	final int val;
 	BeanColor(int val) {

@@ -6,17 +6,11 @@ public class DirtyDouble extends DirtyVal<Double> {
 		super(value);
 	}
 	
-	public DirtyDouble addToValue(int add) {
+	public DirtyDouble addToValue(double add) {
 		value += add;
 		return setDirty(true);
 	}
 
-	public DirtyDouble setValue(double newValue, boolean dirty) {
-		value = newValue;
-		if (dirty) setDirty(true);
-		return this;
-	}
-	
 	@Override
 	public DirtyDouble setDirty(boolean dirty) {
 		this.dirty = dirty;

@@ -340,8 +340,7 @@ public class ContainerListener extends EventListener {
 			// If mending, refine it instead :)
 			if (i.containsEnchantment(Enchantment.MENDING)) {
 				i.removeEnchantment(Enchantment.MENDING);
-				if (BItemDurable.canBeRefined(i))
-					BItemDurable.setRefinementTier(i, 1 + rand.nextInt(3), true);
+				BItemDurable.setRefinementTier(i, 1 + rand.nextInt(3), true);
 			}
 
 			// Remove cringe
