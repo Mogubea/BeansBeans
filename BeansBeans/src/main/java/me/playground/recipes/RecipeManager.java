@@ -19,13 +19,10 @@ public class RecipeManager {
 	
 	// Makes it easier to grab the cooked versions of items, which is done throughout the server in random places.
 	private final Map<Material, Material> vanillaSmeltingRecipes;
-	
-	/**
-	 * Recipes from this manager will be unlocked via the Bean's Beans Datapack
-	 * @param plugin The main server plugin
-	 */
+
 	public RecipeManager(Main plugin) {
 		new RecipesShaped(plugin, this);
+		new RecipesShapeless(plugin, this);
 		new RecipesSmithing(plugin, this);
 		
 		Map<Material, Material> furnaceRecipes = new HashMap<>();

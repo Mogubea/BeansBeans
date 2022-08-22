@@ -15,12 +15,22 @@ public class RecipesShaped {
 	public RecipesShaped(Main plugin, RecipeManager manager) {
 		this.plugin = plugin;
 		this.manager = manager;
-		
-		shapedRecipe("shop_stand_1", BeanItem.SHOP_STAND.getOriginalStack(), "GGG","GEG","WgW")
-				.setIngredient('G', Material.GLASS)
-				.setIngredient('E', Material.EMERALD)
-				.setIngredient('g', Material.GOLD_BLOCK)
-				.setIngredient('W', Material.DARK_OAK_LOG);
+
+		shapedRecipe(BeanItem.IRON_CHEST, "AAA","ABA","AAA")
+				.setIngredient('A', Material.IRON_BLOCK)
+				.setIngredient('B', Material.CHEST);
+
+		shapedRecipe(BeanItem.GOLDEN_CHEST, "AAA", "ABA", "AAA")
+				.setIngredient('A', Material.GOLD_BLOCK)
+				.setIngredient('B', BeanItem.IRON_CHEST.getOriginalStack());
+
+		shapedRecipe(BeanItem.DIAMOND_CHEST, "AAA", "ABA", "AAA")
+				.setIngredient('A', Material.DIAMOND_BLOCK)
+				.setIngredient('B', BeanItem.GOLDEN_CHEST.getOriginalStack());
+
+		shapedRecipe(BeanItem.LIVING_HOPPER, "A A", "ABA", " A ")
+				.setIngredient('A', BeanItem.LIVING_METAL_INGOT.getOriginalStack())
+				.setIngredient('B', Material.CHEST);
 	}
 	
 	private ShapedRecipe shapedRecipe(String name, ItemStack result, String...shape) {
@@ -28,6 +38,10 @@ public class RecipesShaped {
 		sr.shape(shape);
 		manager.addRecipe(sr);
 		return sr;
+	}
+
+	private ShapedRecipe shapedRecipe(BeanItem result, String... shape) {
+		return shapedRecipe(result.getIdentifier().toLowerCase(), result.getOriginalStack(), shape);
 	}
 	
 }

@@ -115,6 +115,10 @@ public class Lore {
         return new PersistentLoreBuilder(content);
     }
 
+    public static List<TextComponent> fastBuild(boolean format, int wrapLength, String... content) {
+        return new PersistentLoreBuilder(content).build().getLore();
+    }
+
     public static class PersistentLoreBuilder {
 
         private int maximumLineLength = 34;

@@ -40,7 +40,7 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 	}
 	
 	/**
-	 * Load all of the regions, including world regions.
+	 * Load all the regions, including world regions.
 	 */
 	@Override
 	public void loadAll() {
@@ -253,7 +253,7 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 	// XXX: Members
 	
 	public void setRegionMember(int regionId, int playerId, MemberLevel level) {
-		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO region_members (id, playerId, rank) VALUES (?,?,?) ON DUPLICATE KEY UPDATE rank = VALUES(rank)");) {
+		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO region_members (id, playerId, rank) VALUES (?,?,?) ON DUPLICATE KEY UPDATE rank = VALUES(rank)")) {
 			s.setInt(1, regionId);
 			s.setInt(2, playerId);
 			s.setInt(3, level.ordinal());
@@ -286,10 +286,11 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 	}
 	
 	// XXX: Markers
-	
+
 	@Override
 	public void updateMarker(Region r) {
 		if (!isDynmapEnabled()) return;
+		removeMarker(r);
 		
 		BlockVector min = r.getMinimumPoint();
 		BlockVector max = r.getMaximumPoint();
@@ -298,9 +299,10 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 				new double[] {min.getX(), max.getX()+1}, new double[] {min.getZ(), max.getZ()+1}, false);
 		
 		am.setRangeY(min.getY(), max.getY()+1);
-		am.setDescription("Region: " + r.getName() + "\nTest");
-		am.setLineStyle(1, 4, 0x5755bf84);
-		am.setFillStyle(1, 0x5755bf54);
+		am.setDescription(r.getName());
+		am.setLineStyle(1, 6, r.getFlag(Flags.DYNMAP_COLOUR));
+		am.setFillStyle(1, r.getFlag(Flags.DYNMAP_COLOUR));
+		am.setFarewellText("what", "is a farewell text");
 	}
 
 	@Override

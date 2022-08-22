@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 import me.playground.items.lore.Lore;
+import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 
@@ -213,32 +214,52 @@ public final class Flags {
 			.setNeedsPermission()
 			.setDescription(
 					Component.text("\u00a77Can players fight each-other?"));
-	
+
+	public static final FlagColour 	DYNMAP_COLOUR		= register(new FlagColour("dynmap-colour", "Dynmap Colour", 0x6655bf84, 0, false))
+			.setFlagCategory(Flag.FlagCategory.MISCELLANEOUS)
+			.setNeedsPermission()
+			.setDescription(Lore.fastBuild(false, 40, "The colour that this region will show up as on the Dynmap."));
+
+	public static final FlagColour 	NAME_COLOUR			= register(new FlagColour("name-colour", "Name Colour", BeanColor.REGION.value(), BeanColor.REGION_WORLD.value(), false))
+			.setFlagCategory(Flag.FlagCategory.MISCELLANEOUS)
+			.setNeedsPermission()
+			.setDescription(Lore.fastBuild(false, 40, "The colour that this region will show up as on the Dynmap."));
+
 	public static final FlagFloat 	MOB_DAMAGE_TO		= register(new FlagFloat("mob-damage-to", "Damage Multiplier against Mobs", 1F, 0F, 100F))
+			.setMinimumValue(0F)
+			.setMaximumValue(100F)
 			.setFlagCategory(Flag.FlagCategory.ENTITIES)
 			.setNeedsPermission()
 			.setDescription(
 					Component.text("\u00a7fMultiply \u00a77the \u00a7cdamage dealt \u00a77to"),
 					Component.text("\u00a77mobs by the specified value."));
 	public static final FlagFloat 	MOB_DAMAGE_FROM		= register(new FlagFloat("mob-damage-from", "Damage Multiplier from Mobs", 1F, 0F, 100F))
+			.setMinimumValue(0F)
+			.setMaximumValue(100F)
 			.setFlagCategory(Flag.FlagCategory.ENTITIES)
 			.setNeedsPermission()
 			.setDescription(
 					Component.text("\u00a7fMultiply \u00a77the \u00a7cdamage taken \u00a77from"),
 					Component.text("\u00a77mobs by the specified value."));
 	public static final FlagFloat 	MOB_DROP_EXP		= register(new FlagFloat("mob-exp-drop-mult", "Mob Experience Drop Multiplier", 1F, 0F, 100F))
+			.setMinimumValue(0F)
+			.setMaximumValue(100F)
 			.setFlagCategory(Flag.FlagCategory.ENTITIES)
 			.setNeedsPermission()
 			.setDescription(
 					Component.text("\u00a7fMultiply \u00a77the amount of \u00a7aexperience dropped"),
 					Component.text("\u00a77by mobs by the specified value."));
 	public static final FlagFloat 	MOB_DROP_COIN		= register(new FlagFloat("mob-coin-drop-mult", "Mob Coin Drop Multiplier", 1F, 0F, 10F))
+			.setMinimumValue(0F)
+			.setMaximumValue(10F)
 			.setFlagCategory(Flag.FlagCategory.ENTITIES)
 			.setNeedsPermission()
 			.setDescription(
 					Component.text("\u00a7fMultiply \u00a77the amount of \u00a76coins dropped"),
 					Component.text("\u00a77by mobs by the specified value."));
 	public static final FlagFloat 	MOB_DROP_ITEM		= register(new FlagFloat("mob-item-drop-mult", "Mob Item Drop Multiplier", 1F, 0F, 5F))
+			.setMinimumValue(0F)
+			.setMaximumValue(5F)
 			.setFlagCategory(Flag.FlagCategory.ENTITIES)
 			.setNeedsPermission()
 			.setDescription(

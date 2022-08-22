@@ -58,13 +58,14 @@ public class BeanGuiRegionFlagMember extends BeanGuiRegion {
 		}
 		
 		switch(slot) {
-		case 13: if (p.hasPermission("bean.region.override")) { getRegion().setFlag(flag, MemberLevel.MASTER); } break;
-		case 20: getRegion().setFlag(flag, MemberLevel.OWNER); break;
-		case 21: getRegion().setFlag(flag, MemberLevel.OFFICER); break;
-		case 22: getRegion().setFlag(flag, MemberLevel.TRUSTED); break;
-		case 23: getRegion().setFlag(flag, MemberLevel.MEMBER); break;
-		case 24: getRegion().setFlag(flag, MemberLevel.VISITOR); break;
-		case 31: getRegion().setFlag(flag, MemberLevel.NONE); break;
+			case 13 -> { if (p.hasPermission("bean.region.override")) { getRegion().setFlag(flag, MemberLevel.MASTER); }}
+			case 20 -> getRegion().setFlag(flag, MemberLevel.OWNER);
+			case 21 -> getRegion().setFlag(flag, MemberLevel.OFFICER);
+			case 22 -> getRegion().setFlag(flag, MemberLevel.TRUSTED);
+			case 23 -> getRegion().setFlag(flag, MemberLevel.MEMBER);
+			case 24 -> getRegion().setFlag(flag, MemberLevel.VISITOR);
+			case 31 -> getRegion().setFlag(flag, MemberLevel.NONE);
+			default -> { return; }
 		}
 		
 		p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
@@ -112,7 +113,7 @@ public class BeanGuiRegionFlagMember extends BeanGuiRegion {
 			case VISITOR -> item.setType(Material.LEATHER_HELMET);
 			case NONE -> item.setType(Material.TURTLE_HELMET);
 		}
-		lore.add(Component.text("Level: \u00a7f" + level.toString()).colorIfAbsent(BeanColor.REGION).decoration(TextDecoration.ITALIC, false));
+		lore.add(Component.text("Level: \u00a7f" + level).colorIfAbsent(BeanColor.REGION).decoration(TextDecoration.ITALIC, false));
 		
 		lore.add(Component.empty());
 		lore.addAll(flag.getDescription());

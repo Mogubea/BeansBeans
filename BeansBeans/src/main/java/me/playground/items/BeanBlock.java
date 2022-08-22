@@ -21,7 +21,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class BeanBlock extends BeanItem {
-	
+
+	private boolean wearable;
+
 	protected BeanBlock(int numeric, String identifier, String name, Material material, ItemRarity rarity, int modelDataInt) {
 		super(numeric, identifier, name, material, rarity, modelDataInt, 0);
 	}
@@ -84,6 +86,19 @@ public class BeanBlock extends BeanItem {
 		
 		onBlockPlace(e);
 		return id;
+	}
+
+	/**
+	 * Allow this block to be worn on player's heads. Currently only applies to skulls.
+	 * TODO: Make this work with regular blocks too.
+	 */
+	protected BeanBlock setWearable() {
+		this.wearable = true;
+		return this;
+	}
+
+	public boolean isWearable() {
+		return wearable;
 	}
 
 	/**

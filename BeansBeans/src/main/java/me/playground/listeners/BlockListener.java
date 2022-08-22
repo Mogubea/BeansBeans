@@ -52,6 +52,9 @@ public class BlockListener extends EventListener {
 				e.setCancelled(true);
 				return;
 			}
+
+			// Don't continue if the event has been cancelled.
+			if (e.isCancelled()) return;
 		}
 		
 		// Handle the custom names on containers and make the illusion that nothing changed.
@@ -307,6 +310,18 @@ public class BlockListener extends EventListener {
 	public void onSpread(BlockIgniteEvent e) {
 		if (e.getCause() == IgniteCause.SPREAD || e.getCause() == IgniteCause.LIGHTNING)
 			e.setCancelled(true);
+	}
+
+	/**
+	 * Armour being dispensed by a dispenser, attempting to auto equip
+	 */
+	@EventHandler(priority = EventPriority.LOW)
+	public void onDispenseArmour(BlockDispenseArmorEvent e) {
+		// Check for custom items that shouldn't be equipped.
+		BeanBlock bBlock = BeanBlock.from(e.getItem(), BeanBlock.class);
+		if (bBlock == null) return;
+
+		e.setCancelled(!bBlock.isWearable());
 	}
 	
 	/**

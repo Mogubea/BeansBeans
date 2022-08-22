@@ -267,7 +267,29 @@ public class ContainerListener extends EventListener {
 		if (pp.getBeanGui() != null)
 			pp.getBeanGui().onInventoryDrag(e);
 	}
-	
+
+	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+	public void onInventoryClickArmorCheck(InventoryClickEvent e) {
+		// Prevent equipping a custom skull that's considered a block to your head.
+		if (!(e.getInventory() instanceof PlayerInventory pInv)) return;
+		boolean helmetSlot = e.getRawSlot() == 5;
+		ItemStack itemToCheck = null;
+
+		if (e.isShiftClick() && pInv.getHelmet() == null) { // Check for shift clicking into the helmet slot.
+			itemToCheck = e.getCurrentItem();
+		} else if (!e.isShiftClick() && helmetSlot) { // Check for clicking the helmet slot directly without shift clicking.
+			if (e.getCursor().getAmount() > 1 && pInv.getHelmet() != null) return;
+			itemToCheck = e.getCursor();
+		}
+
+		if (itemToCheck != null) {
+			BeanBlock bBlock = BeanBlock.from(itemToCheck, BeanBlock.class);
+			if (bBlock == null) return;
+
+			e.setCancelled(!bBlock.isWearable());
+		}
+	}
+
 	@EventHandler
 	public void onInventoryClick(InventoryClickEvent e) {
 		Player p = (Player) e.getView().getPlayer();

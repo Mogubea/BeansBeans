@@ -4,6 +4,7 @@ import java.util.*;
 
 import me.playground.regions.flags.*;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
@@ -79,7 +80,9 @@ public class BeanGuiRegionFlags extends BeanGuiRegion {
 				} else if (flag instanceof FlagMember) {
 					new BeanGuiRegionFlagMember(p, regionIdx, (FlagMember)flag).openInventory();
 				} else if (flag instanceof FlagFloat) {
-					getPlugin().getSignMenuFactory().requestSignResponse(p, Material.WARPED_WALL_SIGN, (strings -> getRegion().setFlag(flag, Float.parseFloat(strings[0]))), true, "Value for Flag", flag.getDisplayName());
+					getPlugin().getSignMenuFactory().requestSignResponse(p, Material.WARPED_WALL_SIGN, (strings -> getRegion().setFlag(flag, Float.parseFloat(strings[0]))), true, "Float Value for Flag", flag.getDisplayName());
+				} else if (flag instanceof FlagInt) {
+					getPlugin().getSignMenuFactory().requestSignResponse(p, Material.WARPED_WALL_SIGN, (strings -> getRegion().setFlag(flag, Integer.decode(strings[0]))), true, "Int Value for Flag", flag.getDisplayName());
 				} else if (flag instanceof FlagString) {
 					getPlugin().getSignMenuFactory().requestSignResponse(p, Material.WARPED_WALL_SIGN, (strings -> getRegion().setFlag(flag, strings[0]+strings[1])), true, flag.getDisplayName() + " Value");
 				}
@@ -202,14 +205,19 @@ public class BeanGuiRegionFlags extends BeanGuiRegion {
 			boolean setting = getRegion().getEffectiveFlag((FlagBoolean)flag);
 			item.setType(setting ? Material.LIGHT_BLUE_DYE : Material.GRAY_DYE);
 			lore.add(Component.text("Allow: " + (setting ? "\u00a7a" : "\u00a7c") + setting).colorIfAbsent(BeanColor.REGION).decoration(TextDecoration.ITALIC, false));
-		} else if (flag instanceof FlagFloat) {
-			float setting = getRegion().getEffectiveFlag((FlagFloat)flag);
-			item.setType(Material.COMMAND_BLOCK_MINECART);
-			lore.add(Component.text("Value: \u00a7f" + setting).colorIfAbsent(BeanColor.REGION).decoration(TextDecoration.ITALIC, false));
 		} else if (flag instanceof FlagString flagString) {
-			Component setting = flagString.getComponentValue(getRegion().getEffectiveFlag(flagString));
+			Component setting = flagString.getComponentValue(getRegion().getEffectiveFlag(flagString)).color(NamedTextColor.WHITE);
 			item.setType(Material.WRITABLE_BOOK);
 			lore.add(Component.text("Value: ", BeanColor.REGION).append(setting).decoration(TextDecoration.ITALIC, false));
+		} else if (flag instanceof FlagColour flagColour) {
+			int value = getRegion().getEffectiveFlag(flagColour);
+			Component setting = Component.text(Long.toHexString(value), TextColor.color(value));
+			item.setType(Material.IRON_SHOVEL);
+			lore.add(Component.text("Value: ", BeanColor.REGION).append(setting).decoration(TextDecoration.ITALIC, false));
+		} else {
+			Object setting = getRegion().getEffectiveFlag(flag);
+			item.setType(Material.COMMAND_BLOCK_MINECART);
+			lore.add(Component.text("Value: \u00a7f" + setting).colorIfAbsent(BeanColor.REGION).decoration(TextDecoration.ITALIC, false));
 		}
 		
 		lore.add(Component.empty());

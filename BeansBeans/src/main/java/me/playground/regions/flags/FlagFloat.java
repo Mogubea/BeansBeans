@@ -4,7 +4,7 @@ import me.playground.command.CommandException;
 
 public class FlagFloat extends Flag<Float> {
 	
-	private final float min, max;
+	private float min, max;
 	
 	public FlagFloat(String name, String displayName, float def, float min, float max) {
 		super(name, displayName, def, def, true);
@@ -40,6 +40,16 @@ public class FlagFloat extends Flag<Float> {
     public float getMaximum() {
     	return this.max;
     }
+
+	public FlagFloat setMinimumValue(float min) {
+		this.min = min;
+		return this;
+	}
+
+	public FlagFloat setMaximumValue(float max) {
+		this.max = max;
+		return this;
+	}
 
 	@Override
 	public Float validateValue(Float o) {

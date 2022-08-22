@@ -263,16 +263,16 @@ public class BeanItem {
 	//public final static BeanItem JUNGLE_CRATE = new BItemPackage(19503, "JUNGLE_CRATE", "Jungle Crate", ItemRarity.UNCOMMON, "crate_jungle", 3, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmNmNWIxY2ZlZDFjMjdkZDRjM2JlZjZiOTg0NDk5NDczOTg1MWU0NmIzZmM3ZmRhMWNiYzI1YjgwYWIzYiJ9fX0=");
 	//public final static BeanItem DARK_OAK_CRATE = new BItemPackage(19504, "DARK_OAK_CRATE", "Dark Oak Crate", ItemRarity.UNCOMMON, "crate_dark_oak", 3, "");
 	
-	public final static BeanBlock SPIDER_HEAD = new BeanBlock(20000, "SPIDER_HEAD", "Spider Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzg3YTk2YThjMjNiODNiMzJhNzNkZjA1MWY2Yjg0YzJlZjI0ZDI1YmE0MTkwZGJlNzRmMTExMzg2MjliNWFlZiJ9fX0=", ItemRarity.UNCOMMON);
-	public final static BeanBlock BLAZE_HEAD = new BeanBlock(20001, "BLAZE_HEAD", "Blaze Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjc4ZWYyZTRjZjJjNDFhMmQxNGJmZGU5Y2FmZjEwMjE5ZjViMWJmNWIzNWE0OWViNTFjNjQ2Nzg4MmNiNWYwIn19fQ==", ItemRarity.RARE);
-	public final static BeanBlock PIGLIN_HEAD = new BeanBlock(20002, "PIGLIN_HEAD", "Piglin Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTBiYzlkYmI0NDA0YjgwMGY4Y2YwMjU2MjIwZmY3NGIwYjcxZGJhOGI2NjYwMGI2NzM0ZjRkNjMzNjE2MThmNSJ9fX0=", ItemRarity.RARE);
-	public final static BeanBlock PHANTOM_HEAD = new BeanBlock(20003, "PHANTOM_HEAD", "Phantom Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzQ2ODMwZGE1ZjgzYTNhYWVkODM4YTk5MTU2YWQ3ODFhNzg5Y2ZjZjEzZTI1YmVlZjdmNTRhODZlNGZhNCJ9fX0=", ItemRarity.RARE);
-	public final static BeanBlock COW_HEAD = new BeanBlock(20004, "COW_HEAD", "Cow Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2RmYTBhYzM3YmFiYTJhYTI5MGU0ZmFlZTQxOWE2MTNjZDYxMTdmYTU2OGU3MDlkOTAzNzQ3NTNjMDMyZGNiMCJ9fX0=", ItemRarity.UNCOMMON);
-	public final static BeanBlock PIG_HEAD = new BeanBlock(20005, "PIG_HEAD", "Pig Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjIxNjY4ZWY3Y2I3OWRkOWMyMmNlM2QxZjNmNGNiNmUyNTU5ODkzYjZkZjRhNDY5NTE0ZTY2N2MxNmFhNCJ9fX0=", ItemRarity.UNCOMMON);
-	public final static BeanBlock CHICKEN_HEAD = new BeanBlock(20006, "CHICKEN_HEAD", "Chicken Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTYzODQ2OWE1OTljZWVmNzIwNzUzNzYwMzI0OGE5YWIxMWZmNTkxZmQzNzhiZWE0NzM1YjM0NmE3ZmFlODkzIn19fQ==", ItemRarity.UNCOMMON);
-	public final static BeanBlock SHEEP_HEAD = new BeanBlock(20007, "SHEEP_HEAD", "Sheep Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjMxZjljY2M2YjNlMzJlY2YxM2I4YTExYWMyOWNkMzNkMThjOTVmYzczZGI4YTY2YzVkNjU3Y2NiOGJlNzAifX19", ItemRarity.UNCOMMON);
-	public final static BeanBlock DROWNED_HEAD = new BeanBlock(20008, "DROWNED_HEAD", "Drowned Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzg0ZGY3OWM0OTEwNGIxOThjZGFkNmQ5OWZkMGQwYmNmMTUzMWM5MmQ0YWI2MjY5ZTQwYjdkM2NiYmI4ZTk4YyJ9fX0=", ItemRarity.UNCOMMON);
-	public final static BeanBlock ENDERMAN_HEAD = new BeanBlock(20009, "ENDERMAN_HEAD", "Enderman Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTZjMGIzNmQ1M2ZmZjY5YTQ5YzdkNmYzOTMyZjJiMGZlOTQ4ZTAzMjIyNmQ1ZTgwNDVlYzU4NDA4YTM2ZTk1MSJ9fX0=", ItemRarity.UNCOMMON);
+	public final static BeanBlock SPIDER_HEAD = new BeanBlock(20000, "SPIDER_HEAD", "Spider Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzg3YTk2YThjMjNiODNiMzJhNzNkZjA1MWY2Yjg0YzJlZjI0ZDI1YmE0MTkwZGJlNzRmMTExMzg2MjliNWFlZiJ9fX0=", ItemRarity.UNCOMMON).setWearable();
+	public final static BeanBlock BLAZE_HEAD = new BeanBlock(20001, "BLAZE_HEAD", "Blaze Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjc4ZWYyZTRjZjJjNDFhMmQxNGJmZGU5Y2FmZjEwMjE5ZjViMWJmNWIzNWE0OWViNTFjNjQ2Nzg4MmNiNWYwIn19fQ==", ItemRarity.RARE).setWearable();
+	public final static BeanBlock PIGLIN_HEAD = new BeanBlock(20002, "PIGLIN_HEAD", "Piglin Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTBiYzlkYmI0NDA0YjgwMGY4Y2YwMjU2MjIwZmY3NGIwYjcxZGJhOGI2NjYwMGI2NzM0ZjRkNjMzNjE2MThmNSJ9fX0=", ItemRarity.RARE).setWearable();
+	public final static BeanBlock PHANTOM_HEAD = new BeanBlock(20003, "PHANTOM_HEAD", "Phantom Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzQ2ODMwZGE1ZjgzYTNhYWVkODM4YTk5MTU2YWQ3ODFhNzg5Y2ZjZjEzZTI1YmVlZjdmNTRhODZlNGZhNCJ9fX0=", ItemRarity.RARE).setWearable();
+	public final static BeanBlock COW_HEAD = new BeanBlock(20004, "COW_HEAD", "Cow Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2RmYTBhYzM3YmFiYTJhYTI5MGU0ZmFlZTQxOWE2MTNjZDYxMTdmYTU2OGU3MDlkOTAzNzQ3NTNjMDMyZGNiMCJ9fX0=", ItemRarity.UNCOMMON).setWearable();
+	public final static BeanBlock PIG_HEAD = new BeanBlock(20005, "PIG_HEAD", "Pig Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjIxNjY4ZWY3Y2I3OWRkOWMyMmNlM2QxZjNmNGNiNmUyNTU5ODkzYjZkZjRhNDY5NTE0ZTY2N2MxNmFhNCJ9fX0=", ItemRarity.UNCOMMON).setWearable();
+	public final static BeanBlock CHICKEN_HEAD = new BeanBlock(20006, "CHICKEN_HEAD", "Chicken Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTYzODQ2OWE1OTljZWVmNzIwNzUzNzYwMzI0OGE5YWIxMWZmNTkxZmQzNzhiZWE0NzM1YjM0NmE3ZmFlODkzIn19fQ==", ItemRarity.UNCOMMON).setWearable();
+	public final static BeanBlock SHEEP_HEAD = new BeanBlock(20007, "SHEEP_HEAD", "Sheep Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjMxZjljY2M2YjNlMzJlY2YxM2I4YTExYWMyOWNkMzNkMThjOTVmYzczZGI4YTY2YzVkNjU3Y2NiOGJlNzAifX19", ItemRarity.UNCOMMON).setWearable();
+	public final static BeanBlock DROWNED_HEAD = new BeanBlock(20008, "DROWNED_HEAD", "Drowned Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzg0ZGY3OWM0OTEwNGIxOThjZGFkNmQ5OWZkMGQwYmNmMTUzMWM5MmQ0YWI2MjY5ZTQwYjdkM2NiYmI4ZTk4YyJ9fX0=", ItemRarity.UNCOMMON).setWearable();
+	public final static BeanBlock ENDERMAN_HEAD = new BeanBlock(20009, "ENDERMAN_HEAD", "Enderman Head", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTZjMGIzNmQ1M2ZmZjY5YTQ5YzdkNmYzOTMyZjJiMGZlOTQ4ZTAzMjIyNmQ1ZTgwNDVlYzU4NDA4YTM2ZTk1MSJ9fX0=", ItemRarity.UNCOMMON).setWearable();
 	
 	static {
 		items = itemsByName.values().toArray(new BeanItem[0]);
@@ -1137,6 +1137,10 @@ public class BeanItem {
 			});
 		}
 		return i;
+	}
+
+	public boolean isBlock() {
+		return this instanceof BeanBlock;
 	}
 	
 	public Random getRandom() {

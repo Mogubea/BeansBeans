@@ -1344,6 +1344,7 @@ public class PlayerProfile {
 		String c = "\u00a7" + ChatColor.charOf(getHighestRank().getRankColour());
 		String rc = "\u00a7" + ChatColor.charOf(getHighestRank().getRankColour());
 
+		// Flags, name etc...
 		if ((scoreboardFlag & 1 << ScoreboardFlag.TITLE.ordinal()) != 0) {
 			List<String> flags = new ArrayList<>();
 			if (isHidden()) flags.add("HIDE");
@@ -1364,7 +1365,8 @@ public class PlayerProfile {
 			setScoreboardLine(12, !flags.isEmpty() ? c + "\u258E \u00a77 " + flags : null);
 			scoreboardObj.displayName(getColouredName()/*.append(!flags.isEmpty() ? Component.text("\u00a77 " + flags) : Component.empty())*/);
 		}
-		
+
+		// Rank Information...
 		if ((scoreboardFlag & 1 << ScoreboardFlag.RANK.ordinal()) != 0) {
 			setScoreboardLine(11, c + "\u258E \u00a7f\u2606 " + rc + getHighestRank().getNiceName());
 
@@ -1372,12 +1374,14 @@ public class PlayerProfile {
 				rc = "\u00a7" + ChatColor.charOf(getDonorRank().getRankColour());
 			setScoreboardLine(10, getDonorRank() != null ? c + "\u258E \u00a7f\u2b50 " + rc + getDonorRank().getNiceName() : null);
 		}
-		
+
+		// Currencies...
 		if ((scoreboardFlag & 1 << ScoreboardFlag.COINS.ordinal()) != 0)
 			setScoreboardLine(9, c + "\u258E\u00a76 \u20BF " + df.format(getBalance()));
 		if ((scoreboardFlag & 1 << ScoreboardFlag.CRYSTALS.ordinal()) != 0)
 			setScoreboardLine(8, c + "\u258E\u00a7d \u2756 " + df.format(getCrystals()));
-		
+
+		// Region Information...
 		if ((scoreboardFlag & 1 << ScoreboardFlag.REGION.ordinal()) != 0) {
 			Region r = getCurrentRegion();
 			if (r != null && !r.isWorldRegion()) {
@@ -1385,9 +1389,15 @@ public class PlayerProfile {
 				if (rName.length() > 9)
 					rName = rName.substring(0, 10) + "..";
 				
-				setScoreboardLine(6, "\u00a7b\u258E \u00a7f\u06e9 \u00a79" + rName);
+				setScoreboardLine(6, "\u00a7b\u258E \u00a7f\u06e9 \u00a7" + (ChatColor.charOf(r.getColour())) + rName);
+
 				MemberLevel level = r.getMember(getPlayer());
-				setScoreboardLine(5, "\u00a7b\u258E \u00a7f\u272a \u00a7b" + level.toString());
+				if (r instanceof PlayerRegion || level.higherThan(MemberLevel.NONE)) {
+					setScoreboardLine(5, "\u00a7b\u258E \u00a7f\u272a \u00a7b" + level.toString());
+				} else {
+					setScoreboardLine(5, null); // TODO: determine if this looks good or not
+				}
+
 			} else {
 				String rName = getPlayer().getWorld().getName();
 				if (rName.length() > 9)
@@ -1397,7 +1407,8 @@ public class PlayerProfile {
 				setScoreboardLine(5, "\u00a7b\u258E \u00a7f\u272a \u00a7aWilderness");
 			}
 		}
-		
+
+		// Time...
 		if ((scoreboardFlag & 1 << ScoreboardFlag.TIME.ordinal()) != 0) {
 			int hour = (Calendar.getTime(getPlayer().getWorld())+6000) / 1000;
 			boolean night = hour < 6 || hour > 18;
@@ -1412,6 +1423,7 @@ public class PlayerProfile {
 			setScoreboardLine(4, "\u00a7b\u258E " + symbol + "\u00a77 " + Calendar.getTimeString(Calendar.getTime(getPlayer().getWorld()), true));
 		}
 
+		// Redstone limit Information...
 		if ((scoreboardFlag & 1 << ScoreboardFlag.REDSTONE.ordinal()) != 0) {
 			float avg = redstoneManager.getAverageRedstoneActions(getPlayer().getChunk());
 
@@ -1427,6 +1439,7 @@ public class PlayerProfile {
 			}
 		}
 
+		// Admin TPS Information...
 		if ((scoreboardFlag & 1 << ScoreboardFlag.TPS.ordinal()) != 0) {
 			if (isRank(Rank.ADMINISTRATOR)) {
 				setScoreboardLine(1, "\u00a78\u258E " + getScoreboardTPS());

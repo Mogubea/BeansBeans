@@ -9,6 +9,8 @@ import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 
 import me.playground.entity.EntityRegionCrystal;
+import me.playground.regions.flags.*;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -18,10 +20,6 @@ import me.playground.celestia.logging.Celestia;
 import me.playground.data.Dirty;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileStore;
-import me.playground.regions.flags.Flag;
-import me.playground.regions.flags.FlagBoolean;
-import me.playground.regions.flags.FlagMember;
-import me.playground.regions.flags.MemberLevel;
 import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -37,7 +35,7 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	private int parentId;
 	private boolean dirty;
 
-	private List<EntityRegionCrystal> crystals = new ArrayList<>();
+	private final List<EntityRegionCrystal> crystals = new ArrayList<>();
 
 	protected Component componentName;
 	
@@ -190,9 +188,10 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	public boolean isWorldRegion() {
 		return this.getRegionId() < 0;
 	}
-	
-	public BeanColor getColour() {
-		return this.isWorldRegion() ? BeanColor.REGION_WORLD : BeanColor.REGION;
+
+	// TODO: Optimise.
+	public TextColor getColour() {
+		return TextColor.color(getFlag(Flags.NAME_COLOUR));
 	}
 	
 	public boolean isDirty() {
