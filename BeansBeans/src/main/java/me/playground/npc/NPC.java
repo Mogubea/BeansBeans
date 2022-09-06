@@ -299,10 +299,9 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 		titleEntity = (ArmorStand) location.getWorld().spawnEntity(loc, EntityType.ARMOR_STAND);
 		titleEntity.setInvisible(true);
 		titleEntity.setInvulnerable(true);
-		titleEntity.setGravity(false);
+		titleEntity.setCanTick(false);
 		titleEntity.setMarker(true);
 		titleEntity.setCollidable(false);
-		titleEntity.setCanTick(false);
 		titleEntity.customName(title.color(TextColor.color(titleCol)));
 		titleEntity.setCustomNameVisible(true);
 		if (dirty) setDirty();
@@ -357,7 +356,7 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	}
 	
 	/**
-	 * Fires when a player right clicks this entity.
+	 * Fires when a player right-clicks this entity.
 	 */
 	public void onInteract(Player player) {
 		if (enabled)

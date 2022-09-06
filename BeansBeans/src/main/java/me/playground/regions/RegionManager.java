@@ -14,22 +14,29 @@ import org.jetbrains.annotations.Nullable;
 public class RegionManager {
 	private final RegionDatasource datasource;
 	
-	private final HashMap<UUID, Region> worldRegions = new HashMap<>();
-	private final HashMap<UUID, RegionMap<Region>> worldMaps = new HashMap<>();
-	private final HashMap<String, Region> allRegionsByName = new HashMap<>();
-	private final HashMap<Integer, Region> allRegionsById = new HashMap<>();
-	private final HashMap<Integer, Set<Region>> regionsByCreatorId = new HashMap<>();
+	private final Map<UUID, Region> worldRegions = new HashMap<>();
+	private final Map<UUID, RegionMap<Region>> worldMaps = new HashMap<>();
+	private final Map<String, Region> allRegionsByName = new HashMap<>();
+	private final Map<Integer, Region> allRegionsById = new HashMap<>();
+	private final Map<Integer, Set<Region>> regionsByCreatorId = new HashMap<>();
 
 	private final float BLOCK_COST = 8; // Base block cost when expanding region
 	
 	public RegionManager(Main plugin) {
 		datasource = new RegionDatasource(plugin, this);
 		datasource.loadAll();
+
+		// Region Visualiser
+		plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, () -> plugin.getServer().getOnlinePlayers().forEach(player -> {
+			PlayerProfile pp = PlayerProfile.from(player);
+			pp.getVisualisedRegions().forEach((region, visualiser) -> visualiser.tick());
+
+		}), RegionVisualiser.INTERVAL, RegionVisualiser.INTERVAL);
 	}
 	
 	public void initWorldRegion(World world) {
 		worldMaps.put(world.getUID(), new RegionMap<>(world));
-		Region nwr = new Region(this, -datasource.getWorldManager().getWorldId(world), world);
+		Region nwr = new WorldRegion(this, -datasource.getWorldManager().getWorldId(world), world);
 		worldRegions.put(world.getUID(), nwr);
 		registerRegion(nwr);
 	}
@@ -58,7 +65,7 @@ public class RegionManager {
 		regionsByCreatorId.clear();
 		datasource.loadAll();
 	}
-	
+
 	/**
 	 * Attempts to create a new {@link Region}.
 	 * @return The newly created region or null.

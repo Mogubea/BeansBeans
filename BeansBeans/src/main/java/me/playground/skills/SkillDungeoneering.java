@@ -12,7 +12,7 @@ public class SkillDungeoneering extends Skill {
 
 	protected SkillDungeoneering() {
 		super("Dungeoneering", 0xff3053, BarColor.RED, '4', "\ud83d\udde1", Material.ENDER_CHEST, Material.RED_DYE,
-				"Earn Dungeoneering XP by participating in Dungeons. &cCurrently work in progress.");
+				"Earn Dungeoneering XP by participating in Dungeons. Currently work in progress.");
 	}
 
 	@Override

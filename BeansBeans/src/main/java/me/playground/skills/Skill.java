@@ -30,9 +30,9 @@ public abstract class Skill {
 	public static final SkillTrading TRADING = new SkillTrading();
 	
 	static {
-		skills = Map.copyOf(skills);
+		skills = Collections.unmodifiableMap(skills);
 		for (Skill skill : skills.values())
-			skill.perkTree = Map.copyOf(skill.perkTree);
+			skill.perkTree = Collections.unmodifiableMap(skill.perkTree);
 	}
 	
 	private final String stringName;
@@ -57,7 +57,7 @@ public abstract class Skill {
 		this.icon = icon;
 		this.displayStack = new ItemStack(displayStack);
 		this.skillTreeItem = skillTreeItem;
-		this.description = Lore.getBuilder(description).dontFormatColours().setLineLimit(30).build().getLore();
+		this.description = Lore.fastBuild(false, 30, description);
 		
 		skills.put(name.toLowerCase(), this);
 	}

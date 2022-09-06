@@ -78,7 +78,7 @@ public class BeanGuiPlayerNameColour extends BeanGuiPlayer {
                 	if (!pp.hasPermission(Permission.NAMECOLOUR_OVERRIDE)) {
 						if (baseCols == NamedTextColor.AQUA || baseCols == NamedTextColor.BLACK || baseCols == NamedTextColor.BLUE || baseCols == NamedTextColor.DARK_BLUE)
 							throw new RuntimeException("Colour is too close to a shade of blue or black (Staff only).");
-						if (baseCols == NamedTextColor.WHITE && !(pp.isRank(Rank.VIP)))
+						if (baseCols == NamedTextColor.WHITE && !(pp.isRank(Rank.VIB)))
 							throw new RuntimeException("Colour is too close to a shade of white (VIP only).");
 					}
                 	

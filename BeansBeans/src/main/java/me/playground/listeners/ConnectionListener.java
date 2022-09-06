@@ -91,13 +91,15 @@ public class ConnectionListener extends EventListener {
 				Component.text("\u00a77It is currently \u00a7b" + Calendar.getTimeString(Calendar.getTime(p.getWorld()), true)
 				+ "\u00a77 on \u00a73Day " + Calendar.getDay(p.getWorld().getFullTime()) 
 				+ "\n\n\u00a7fOnline Players:"));
-		
 
-		pp.updateShownNames(false); // Done here due to requiring an existing player.
-		pp.pokeAFK();
+		pp.updateShownNames(false); // Update names
+		pp.pokeAFK(); // Poke the afk timer
 		getPlugin().teamManager().initScoreboard(p);
 		getPlugin().npcManager().showAllNPCs(p);
-		
+
+		if (pp.isSettingEnabled(PlayerSetting.FLIGHT))
+			p.setAllowFlight(true);
+
 		// Place menu item
 		if (pp.isSettingEnabled(PlayerSetting.MENU_ITEM))
 			p.getInventory().setItem(9, BeanItem.PLAYER_MENU.getOriginalStack());

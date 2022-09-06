@@ -28,13 +28,15 @@ public class BeanGuiEnchants extends BeanGui {
 	protected static final ItemStack blank = newItem(new ItemStack(Material.LIGHT_BLUE_STAINED_GLASS_PANE), Component.text("Enchantments", BeanColor.ENCHANT));
 	protected static final ItemStack goBack2 = newItem(new ItemStack(Material.ENCHANTING_TABLE), Component.text("\u00a7cGo Back"), Component.text("\u00a77Return to Enchanting Table"));
 	protected static final ItemStack icon = newItem(new ItemStack(Material.ENCHANTING_TABLE), Component.text("Enchantment List", BeanColor.ENCHANT),
-			Component.text("\u00a77A detailed list of all \u00a7b" + BEnchantment.size() + "\u00a77 enchantments"),
+			Component.text("\u00a77A detailed list of all \u00a7b" + BEnchantment.size(false) + "\u00a77 enchantments"),
 			Component.text("\u00a77and burdens on Bean's Beans!"));
 	
 	static {
 		BEnchantment[] enchantments = BEnchantment.values();
 		for (int x = -1; ++x < enchantments.length;) {
 			BEnchantment enchant = enchantments[x];
+
+			if (enchant.isLegacy()) continue;
 			
 			List<Component> lore = new ArrayList<>(enchant.getLore(enchant.getMaxLevel()));
 			ItemStack book = new ItemStack(Material.ENCHANTED_BOOK);
@@ -58,7 +60,7 @@ public class BeanGuiEnchants extends BeanGui {
 				if (enchant.inEnchantingTable() && enchant.getBookRequirement(1) > 0)
 					lore.add(Component.text("\u00a77 • \u00a7d" + enchant.getBookRequirement(1) + " \u270e Enchanting Power"));
 				if (enchant.getExperienceCost(1) > 0)
-					lore.add(Component.text("\u00a77 • \u00a7r" + enchant.getExperienceCost(1) + " Experience Levels").colorIfAbsent(BeanColor.EXPERIENCE).decoration(TextDecoration.ITALIC, false));
+					lore.add(Component.text("\u00a77 • \u00a7r" + enchant.getExperienceCost(1) + " \u25CE Experience Levels").colorIfAbsent(BeanColor.EXPERIENCE).decoration(TextDecoration.ITALIC, false));
 
 				// List Conflicts
 				List<Enchantment> conflicts = enchant.getConflicts();

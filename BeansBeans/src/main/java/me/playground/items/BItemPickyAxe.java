@@ -32,6 +32,7 @@ public class BItemPickyAxe extends BItemDurable {
 		super(numeric, identifier, name, material, rarity, modelDataInt, durability);
 		addAttribute(Attribute.GENERIC_ATTACK_SPEED, -3.3, EquipmentSlot.HAND);
 		addAttribute(Attribute.GENERIC_ATTACK_DAMAGE, 9, EquipmentSlot.HAND);
+		setRunicCapacity(12);
 		for (Material m : potentialFavs)
 			addRepairMaterial(m, 1f);
 

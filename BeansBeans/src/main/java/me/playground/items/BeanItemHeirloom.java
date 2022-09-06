@@ -46,5 +46,10 @@ public abstract class BeanItemHeirloom extends BeanItem {
 	 * @param inv - The {@link HeirloomInventory} that holds the {@link BeanItemHeirloom}.
 	 */
 	public void onDamageFromEntity(EntityDamageByEntityEvent e, HeirloomInventory inv) { }
-	
+
+	@Override
+	protected String getRarityString() {
+		return "Heirloom";
+	}
+
 }

@@ -78,7 +78,8 @@ public class BeanGuiSkills extends BeanGui {
 			ItemStack skillItem = newItem(skill.getDisplayStack(), Component.text(skill.getNameWithIcon(), skill.getColour()));
 			skillItem.editMeta(meta -> {
 				List<Component> lore = new ArrayList<>();
-				lore.add(Component.text("Grade: ", lighter).append(Component.text("\u00a7f\u00a7l" + skillInfo.getGrade())).decoration(TextDecoration.ITALIC, false));
+				lore.add(Component.text("\u00a78 • \u00a7rGrade: ", lighter).append(Component.text("\u00a7f\u00a7l" + skillInfo.getGrade())).decoration(TextDecoration.ITALIC, false));
+				lore.add(Component.empty());
 				if (skill.getDescription() != null)
 					lore.addAll(skill.getDescription());
 				lore.add(Component.empty());
@@ -91,9 +92,9 @@ public class BeanGuiSkills extends BeanGui {
 						.append(Component.text(" (", NamedTextColor.DARK_GRAY).append(Component.text(dec.format(skillInfo.getLevelProgress() * 100) + "%", NamedTextColor.GRAY)
 						.append(Component.text(")", NamedTextColor.DARK_GRAY))))).decoration(TextDecoration.ITALIC, false));
 				lore.add(Component.empty());
-				lore.add(Component.text("Total Exp: ", NamedTextColor.GRAY)
+				lore.add(Component.text("\u00a78 • \u00a7rTotal Exp: ", NamedTextColor.GRAY)
 						.append(Component.text(df.format(skillInfo.getTotalXP()) + " XP", NamedTextColor.AQUA)).decoration(TextDecoration.ITALIC, false));
-				lore.add(Component.text("Server Position: ", NamedTextColor.GRAY)
+				lore.add(Component.text("\u00a78 • \u00a7rServer Position: ", NamedTextColor.GRAY)
 						.append(Component.text("#" + highscore.getPositionOf(tpp.getId()), TextColor.color(0xffffff)))
 						.append(Component.text(" of " + highscore.getSize(), NamedTextColor.GRAY)).decoration(TextDecoration.ITALIC, false));
 				lore.add(Component.empty());

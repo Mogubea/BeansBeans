@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import me.playground.gui.BeanGui;
 import me.playground.gui.BeanGuiNPCEdit;
 import me.playground.playerprofile.PlayerProfile;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -91,6 +92,7 @@ public final class SignMenuFactory {
                             consumer.accept(strings);
                             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
                         } catch (RuntimeException ex) {
+                            p.sendActionBar(Component.text(ex.getMessage(), NamedTextColor.RED));
                             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.8F);
                         }
 

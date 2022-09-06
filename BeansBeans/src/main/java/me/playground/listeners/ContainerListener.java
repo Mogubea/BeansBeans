@@ -261,7 +261,7 @@ public class ContainerListener extends EventListener {
 		}
 	}
 	
-	@EventHandler
+	@EventHandler(priority = EventPriority.LOW)
 	public void onInventoryDrag(InventoryDragEvent e) {
 		PlayerProfile pp = PlayerProfile.from(e.getWhoClicked());
 		if (pp.getBeanGui() != null)
@@ -275,9 +275,14 @@ public class ContainerListener extends EventListener {
 		boolean helmetSlot = e.getRawSlot() == 5;
 		ItemStack itemToCheck = null;
 
+		Player p = (Player) e.getViewers().get(0);
+		p.sendMessage("Slot: " + e.getRawSlot());
+
 		if (e.isShiftClick() && pInv.getHelmet() == null) { // Check for shift clicking into the helmet slot.
+			p.sendMessage("checking");
 			itemToCheck = e.getCurrentItem();
 		} else if (!e.isShiftClick() && helmetSlot) { // Check for clicking the helmet slot directly without shift clicking.
+			p.sendMessage("checking");
 			if (e.getCursor().getAmount() > 1 && pInv.getHelmet() != null) return;
 			itemToCheck = e.getCursor();
 		}
@@ -286,11 +291,12 @@ public class ContainerListener extends EventListener {
 			BeanBlock bBlock = BeanBlock.from(itemToCheck, BeanBlock.class);
 			if (bBlock == null) return;
 
+			p.sendMessage("is custom");
 			e.setCancelled(!bBlock.isWearable());
 		}
 	}
 
-	@EventHandler
+	@EventHandler(ignoreCancelled = true)
 	public void onInventoryClick(InventoryClickEvent e) {
 		Player p = (Player) e.getView().getPlayer();
 		if (slowdown.contains(p)) {

@@ -46,7 +46,7 @@ public class BeanGuiWarps extends BeanGui {
 	private final static ItemStack wF_Name = newItem(new ItemStack(Material.CRIMSON_SIGN), Component.text("\u00a77Name Filter: \u00a7fNone"), "", "\u00a78\u00a7oClick to filter warps by Name");
 	private final static ItemStack wF_Filter = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzY0YzBiYWFlYTM5NDU4NjQwNWUxNTU3ZjU3ZTUwNTlmNGQ0YjAzYmYwN2FhMmJhMGYyMDkzODQ3MWQyNzFhYiJ9fX0="), Component.text("\u00a77Type Filter: \u00a7fNone"), "", "\u00a7f > \u00a77None", "\u00a78> Player Warp", "\u00a78> Shop Warp", "\u00a78> Server Warp", "\u00a78\u00a7oClick to Cycle through Warp Types");
 	
-	private final Map<Integer, Warp> mapping = new HashMap<Integer, Warp>();
+	private final Map<Integer, Warp> mapping = new HashMap<>();
 	private final Map<String, Warp> warps = getPlugin().warpManager().getWarps();
 	private String nameFilter = null;
 	private WarpType typeFilter = null;
@@ -141,7 +141,7 @@ public class BeanGuiWarps extends BeanGui {
 	public void onInventoryOpened() {
 		ItemStack[] contents = i.getContents();
 		
-		final ArrayList<Warp> warpss = new ArrayList<Warp>();
+		final ArrayList<Warp> warpss = new ArrayList<>();
 		int[] door = {2,4,6};
 		if (pp.hasPermission("bean.cmd.warp.*"))
 			door = new int[]{1,3,5,7};
@@ -223,12 +223,12 @@ public class BeanGuiWarps extends BeanGui {
 		
 		int warpCount = warpss.size();
 		
-		if (page < (Math.floor(warpCount / 36)))
+		if (page < (Math.floor(warpCount / 36f)))
 			contents[52] = nextPage;
 		
 		mapping.clear();
 		
-		for (int x = 0 + (page * 36); x < Math.min(warpCount, 36 * (page + 1)); x++) {
+		for (int x = (page * 36); x < Math.min(warpCount, 36 * (page + 1)); x++) {
 			Warp w = warpss.get(x);
 			
 			ItemStack settingItem = w.getItem() != null ? new ItemStack(w.getItem()) : (w.getType() == WarpType.SHOP ? new ItemStack(shopSkull) : new ItemStack(warpSkull));
@@ -236,7 +236,7 @@ public class BeanGuiWarps extends BeanGui {
 			ItemMeta meta = settingItem.getItemMeta();
 			meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_DYE, ItemFlag.HIDE_ENCHANTS);
 			meta.displayName(Component.text(w.getName()).color(w.getType().getColor()).decoration(TextDecoration.ITALIC, false));
-			ArrayList<Component> lore = new ArrayList<Component>();
+			ArrayList<Component> lore = new ArrayList<>();
 			if (data != 0 && w.getOwnerId() > 0)
 				lore.add(Component.text("\u00a78\u00a7o(Created by ").append(PlayerProfile.getDisplayName(w.getCreatorId())).append(Component.text("\u00a78\u00a7o)")));
 			if (w.getLocation().getWorld() != null) {

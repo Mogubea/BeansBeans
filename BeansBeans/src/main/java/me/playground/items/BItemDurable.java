@@ -1,14 +1,11 @@
 package me.playground.items;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import me.playground.main.Main;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.inventory.ItemStack;
@@ -23,15 +20,18 @@ public class BItemDurable extends BeanItem {
 	private List<Enchantment> validEnchants = new ArrayList<>(ItemAttributes.fromMaterial(material).getValidEnchantments());
 	private final Map<String, Float> repairItems = new LinkedHashMap<>();
 	private boolean isRefineable = true;
+	private int runicCap;
 
 	protected BItemDurable(int numeric, String identifier, String name, Material material, ItemRarity rarity, int modelDataInt, int durability) {
 		super(numeric, identifier, name, material, rarity, modelDataInt, durability);
 		setTrackCreation(true);
+		this.runicCap = super.getBaseRunicCapacity();
 	}
 	
 	protected BItemDurable(int numeric, String identifier, String name, ItemStack material, ItemRarity rarity, int modelDataInt, int durability) {
 		super(numeric, identifier, name, material, rarity, modelDataInt, durability);
 		setTrackCreation(true);
+		this.runicCap = super.getBaseRunicCapacity();
 	}
 	
 	public boolean isEnchantAllowed(Enchantment enchant) {
@@ -86,7 +86,19 @@ public class BItemDurable extends BeanItem {
 	protected void addRepairMaterial(Material material, float durabilityPercentage) {
 		this.addRepairMaterial(material.name(), durabilityPercentage);
 	}
-	
+
+	/**
+	 * Set the runic capacity of this item. The value by default is equal to {@link BeanItem#getBaseRunicCapacity()}.
+	 */
+	protected void setRunicCapacity(int capacity) {
+		this.runicCap = capacity;
+	}
+
+	@Override
+	public int getBaseRunicCapacity() {
+		return runicCap;
+	}
+
 	/**
 	 * @param identifier The material that can be combined with the tool.
 	 * @param durabilityPercentage The percentage of durability that it restores.
@@ -155,7 +167,6 @@ public class BItemDurable extends BeanItem {
 				duraPerc = 100f; // Precaution
 			setDurability(item, (int) ((float)getMaxDurability(item) * (duraPerc/100f)));
 		}
-
 	}
 
 }

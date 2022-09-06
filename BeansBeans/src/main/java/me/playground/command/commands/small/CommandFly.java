@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import me.playground.playerprofile.settings.PlayerSetting;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -15,6 +16,7 @@ import me.playground.command.CommandException;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.NotNull;
 
 public class CommandFly extends BeanCommand {
 	
@@ -34,6 +36,11 @@ public class CommandFly extends BeanCommand {
 		
 		target.setAllowFlight(!target.getAllowFlight());
 		target.sendMessage("\u00a77You can " + (!target.getAllowFlight() ? "\u00a7cno longer" : "\u00a7anow") + "\u00a77 fly.");
+
+		// Update their flag for reconnecting flight re-application if they have the flight permission.
+		if (target.hasPermission("bean.cmd.fly"))
+			PlayerProfile.from(target).setSettingEnabled(PlayerSetting.FLIGHT, target.getAllowFlight());
+
 		if (sender != target)
 			sender.sendMessage(PlayerProfile.from(target).getComponentName().append(Component.text(("\u00a77 can " + (!target.getAllowFlight() ? "\u00a7cno longer" : "\u00a7anow")) + "\u00a77 fly.")));
 		return true;
@@ -45,7 +52,7 @@ public class CommandFly extends BeanCommand {
 	}
 	
 	@Override
-	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
+	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
 		return Component.text("\u00a7cUsage: \u00a7f/"+str);
 	}
 

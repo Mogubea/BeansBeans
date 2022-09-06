@@ -111,6 +111,7 @@ public class CommandManager {
 		registerCommand(new CommandInvsee(plugin));
 		registerCommand(new CommandHide(plugin));
 		registerCommand(new CommandValue(plugin));
+		registerCommand(new CommandHologram(plugin));
 
 		// Punishment Commands
 		registerCommand(new CommandBan(plugin));

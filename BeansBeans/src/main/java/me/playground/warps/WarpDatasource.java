@@ -91,8 +91,8 @@ public class WarpDatasource extends DynmapDatasource<Warp> {
 	@Override
 	public void saveAll() {
 		manager.getWarps().values().forEach(warp -> {
-			if (!warp.isDirty()) return;
-			saveDirtyWarp(warp);
+			if (warp.isDirty())
+				saveDirtyWarp(warp);
 		});
 	}
 	
@@ -119,7 +119,7 @@ public class WarpDatasource extends DynmapDatasource<Warp> {
 	public Warp createWarp(int creatorId, String warpName, Location loc) {
 		Warp w = null;
 		
-		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO warps (playerId,creatorId,warpName,description,world,x,y,z,yaw,p) VALUES (?,?,?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);) {
+		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO warps (playerId,creatorId,warpName,description,world,x,y,z,yaw,p) VALUES (?,?,?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
 			s.setInt(1, creatorId);
 			s.setInt(2, creatorId);
 			s.setString(3, warpName);
@@ -128,8 +128,8 @@ public class WarpDatasource extends DynmapDatasource<Warp> {
 			s.setFloat(6, (float)loc.getX());
 			s.setFloat(7, (float)loc.getY());
 			s.setFloat(8, (float)loc.getZ());
-			s.setFloat(9, (float)loc.getYaw());
-			s.setFloat(10, (float)loc.getPitch());
+			s.setFloat(9, loc.getYaw());
+			s.setFloat(10, loc.getPitch());
 			s.executeUpdate();
 			
 			ResultSet r = s.getGeneratedKeys();
@@ -159,14 +159,15 @@ public class WarpDatasource extends DynmapDatasource<Warp> {
 			StringBuilder invited = new StringBuilder();
 			final List<Integer> invitedIds = warp.getInvitedIds();
 			for (int x = 0; x < invitedIds.size(); x++)
-				invited.append(invitedIds.get(x) + ((x+1) < invitedIds.size() ? "," : ""));
+				invited.append(invitedIds.get(x)).append((x + 1) < invitedIds.size() ? "," : "");
 			
 			s.setString(9, invitedIds.size() < 1 ? null : invited.toString());
-			
+
 			StringBuilder banned = new StringBuilder();
 			final List<Integer> bannedIds = warp.getBannedIds();
 			for (int x = 0; x < bannedIds.size(); x++)
-				invited.append(bannedIds.get(x) + ((x+1) < bannedIds.size() ? "," : ""));
+				banned.append(bannedIds.get(x)).append((x + 1) < bannedIds.size() ? "," : "");
+
 			s.setString(10, bannedIds.size() < 1 ? null : banned.toString());
 			
 			final Location loc = warp.getLocation();
@@ -175,8 +176,8 @@ public class WarpDatasource extends DynmapDatasource<Warp> {
 			s.setFloat(12, (float)loc.getX());
 			s.setFloat(13, (float)loc.getY());
 			s.setFloat(14, (float)loc.getZ());
-			s.setFloat(15, (float)loc.getYaw());
-			s.setFloat(16, (float)loc.getPitch());
+			s.setFloat(15, loc.getYaw());
+			s.setFloat(16, loc.getPitch());
 			s.setInt(17, warp.getWarpId());
 			s.executeUpdate();
 			

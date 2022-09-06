@@ -13,6 +13,7 @@ public class BItemPickierAxe extends BItemPickyAxe {
 		addAttribute(Attribute.GENERIC_MOVEMENT_SPEED, 0.004, EquipmentSlot.HAND);
 		addAttribute(Attribute.GENERIC_ATTACK_SPEED, -3, EquipmentSlot.HAND);
 		addAttribute(Attribute.GENERIC_ATTACK_DAMAGE, 10, EquipmentSlot.HAND);
+		setRunicCapacity(16);
 	}
 
 	@Override

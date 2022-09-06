@@ -1,6 +1,7 @@
 package me.playground.listeners;
 
 import me.playground.main.Main;
+import me.playground.regions.flags.Flags;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockPistonExtendEvent;
@@ -29,6 +30,10 @@ public class RedstoneListener extends EventListener {
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPiston(BlockPistonExtendEvent e) {
+        if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.PISTONS)) {
+            e.setCancelled(true);
+            return;
+        }
         manager.incrementAction(e.getBlock().getChunk(), 9 + e.getBlocks().size() * 3);
         if (manager.getAverageRedstoneActions(e.getBlock().getChunk()) > manager.getMaximumActions())
             e.setCancelled(true); // Shut it down
@@ -36,6 +41,11 @@ public class RedstoneListener extends EventListener {
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPiston(BlockPistonRetractEvent e) {
+        if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.PISTONS)) {
+            e.setCancelled(true);
+            return;
+        }
+
         manager.incrementAction(e.getBlock().getChunk(), 9 + e.getBlocks().size() * 3);
         if (manager.getAverageRedstoneActions(e.getBlock().getChunk()) > manager.getMaximumActions())
             e.setCancelled(true); // Shut it down

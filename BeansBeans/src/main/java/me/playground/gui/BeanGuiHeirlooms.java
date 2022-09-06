@@ -17,20 +17,21 @@ import net.kyori.adventure.text.Component;
 
 public class BeanGuiHeirlooms extends BeanGui {
 	
-	protected static final ItemStack blankbl = newItem(new ItemStack(Material.WHITE_STAINED_GLASS_PANE, 1), Component.text("Heirloom Bag").color(BeanColor.HEIRLOOM));
-	
+	protected static final ItemStack blank = newItem(new ItemStack(Material.WHITE_STAINED_GLASS_PANE, 1), Component.text("Heirloom Bag").color(BeanColor.HEIRLOOM));
+	protected static final ItemStack locked = newItem(new ItemStack(Material.GRAY_STAINED_GLASS_PANE, 1), Component.text("Locked Slot"));
+
 	public BeanGuiHeirlooms(Player p) {
 		super(p);
 		
 		setName("Your Heirlooms");
 		this.presetSize = 54;
 		this.presetInv = new ItemStack[] {
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				null,null,null,null,null,null,null,null,null,
-				blankbl,null,blankbl,blankbl,goBack,blankbl,blankbl,null,blankbl
+				blank,blank,bBlank,bBlank,null,bBlank,bBlank,blank,blank,
+				blank,null,null,null,null,null,null,null,blank,
+				bBlank,locked,locked,locked,locked,locked,locked,locked,bBlank,
+				bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,bBlank,
+				bBlank,null,null,null,null,null,null,null,bBlank,
+				blank,blank,blank,blank,goBack,blank,blank,blank,blank
 		};
 	}
 
@@ -46,7 +47,7 @@ public class BeanGuiHeirlooms extends BeanGui {
 		
 		final BeanItem bitem = BeanItem.from(item);
 		
-		if (bitem == null || !(bitem instanceof BeanItemHeirloom)) return;
+		if (!(bitem instanceof BeanItemHeirloom)) return;
 		
 		if (slot > presetSize) {
 			if (tpp.getHeirlooms().size() >= tpp.getHeirlooms().getMaxHeirlooms()) {
@@ -55,13 +56,13 @@ public class BeanGuiHeirlooms extends BeanGui {
 			}
 			if (tpp.getHeirlooms().addHeirloom(item)) {
 				e.getClickedInventory().getItem(e.getSlot()).setAmount(item.getAmount()-1);
-				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.3F, 0.8F);
+				p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.5F, 0.8F);
 			}
 		} else if (slot < presetSize-9) {
 			if (p.getInventory().firstEmpty() > -1) {
 				if (tpp.getHeirlooms().removeHeirloom(item)) {
 					p.getInventory().addItem(item);
-					p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.3F, 0.8F);
+					p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.5F, 0.8F);
 				}
 			} else {
 				p.sendActionBar(Component.text("\u00a7cYour inventory is full!"));
@@ -77,21 +78,21 @@ public class BeanGuiHeirlooms extends BeanGui {
 		// Update Contents
 		final ItemStack[] contents = presetInv.clone();
 		final HeirloomInventory hinv = tpp.getHeirlooms();
-		
 		ArrayList<ItemStack> stacc = hinv.getContents();
-		
-		// 0 - 44
-		for (int x = 0 + (page * 45); x < Math.min(45 + (page * 45), hinv.size()); x++) {
-			int a = x - (page * 45);
-			contents[a] = stacc.get(x);
-			if (contents[a].getAmount() > 1) {
-				contents[a].setAmount(1);
-				BeanItem.formatItem(contents[a]);
+
+		for (int x = (page * 14); x < Math.min(14 + (page * 14), hinv.size()); x++) {
+			int a = x - (page * 14);
+			int slot = 10 + a + ((a / 7) * 3);
+
+			contents[slot] = stacc.get(x);
+			if (contents[slot].getAmount() > 1) {
+				contents[slot].setAmount(1);
+				BeanItem.formatItem(contents[slot]);
 			}
 		}
 		
-		contents[46] = page > 0 ? prevPage : blankbl;
-		contents[52] = (page < 2 && (hinv.size()+1)>(45*(page+1))) ? nextPage : blankbl;
+		contents[46] = page > 0 ? prevPage : blank;
+		contents[52] = (page < 2 && (hinv.size()+1)>(14*(page+1))) ? nextPage : blank;
 		
 		contents[50] = newItem(new ItemStack(Material.ENDER_CHEST), "\u00a7fHeirloom Bag", "", "\u00a77You have used \u00a7f" + hinv.size() + "\u00a77 of your", "\u00a77" + hinv.getMaxHeirlooms() + " available \u00a7fheirloom \u00a77slots!");
 		contents[48] = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), "\u00a7fWhat is this?", "", 
@@ -103,13 +104,16 @@ public class BeanGuiHeirlooms extends BeanGui {
 				"\u00a77To \u00a7aStore\u00a77 an \u00a7fHeirloom\u00a77, click the \u00a7fHeirloom", "\u00a77in your inventory!",
 				"",
 				"\u00a77To \u00a7cRemove\u00a77 an \u00a7fHeirloom\u00a78, click the \u00a7fHeirloom", "\u00a77that is within the \u00a7fHeirloom Bag\u00a77 interface!");
-		
+
+		//ItemStack stat_damage = newItem(new ItemStack(Material.IRON_SWORD), Component.text("Damage"), Lore.fastBuild(true, 40, "Test"));
+		//contents[37] = stat_damage;
+
 		i.setContents(contents);
 	}
 	
 	@Override
 	protected void playOpenSound() {
-		p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.4F, 1.0F);
+		p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.5F, 1.0F);
 	}
 	
 }

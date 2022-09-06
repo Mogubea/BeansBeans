@@ -9,8 +9,10 @@ import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 
 import me.playground.entity.EntityRegionCrystal;
+import me.playground.main.TeamManager;
 import me.playground.regions.flags.*;
 import net.kyori.adventure.text.format.TextColor;
+import net.minecraft.world.entity.Entity;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -24,11 +26,13 @@ import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import org.bukkit.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 
 public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	
 	final private int creatorId;
+	private BoundingBox box;
 	protected BlockVector min, max;
 	
 	private String name;
@@ -38,6 +42,7 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	private final List<EntityRegionCrystal> crystals = new ArrayList<>();
 
 	protected Component componentName;
+	protected TextColor colour;
 	
 	private final LinkedHashMap<Integer, MemberLevel> members = new LinkedHashMap<>(); // Member ID, Permission Level
 	private final List<Integer> regionKeys = new ArrayList<>(); // Region Keys, to remove upon deletion
@@ -54,18 +59,19 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	public Region(RegionManager rm, int id, int creator, int priority, String name, World world, BlockVector min, BlockVector max) {
 		super(rm, id, world);
 		this.name = name;
-		updateColouredName();
 		this.creatorId = creator;
 		this.priority = priority;
 		this.min = min;
 		this.max = max;
+
+		colour = TextColor.color(getFlag(Flags.NAME_COLOUR));
+		componentName = Component.text(name, getColour());
+
+		if (min != null && max != null)
+			this.box = BoundingBox.of(min, max);
 		rm.registerRegion(this);
 	}
-	
-	public Region(RegionManager rm, int id, World w) {
-		this(rm, id, 0, 0, w.getName(), w, null, null);
-	}
-	
+
 	public BlockVector getMinimumPoint() {
 		return min;
 	}
@@ -77,15 +83,24 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	public boolean isInsideRegion(int x, int y, int z) {
 		return new BlockVector(x, y, z).isInAABB(min, max);
 	}
+
+	// TODO: There is likely a better algorithm for this.
+	public boolean isByRegionBoundary(int x, int y, int z, int distance) {
+		return Math.abs(max.getX() - x) <= distance || Math.abs(x - min.getX()) <= distance
+				|| Math.abs(max.getY() - y) <= distance || Math.abs(y - min.getY()) <= distance
+				|| Math.abs(max.getZ() - z) <= distance || Math.abs(z - min.getZ()) <= distance;
+	}
 	
 	public Region setMinimumPoint(int x, int y, int z) {
 		this.min = new BlockVector(x, y, z);
+		this.box.resize(min.getX(), min.getY(), min.getZ(), max.getX(), max.getY(), max.getZ());
 		this.setDirty(true);
 		return this;
 	}
 	
 	public Region setMaximumPoint(int x, int y, int z) {
 		this.max = new BlockVector(x, y, z);
+		this.box.resize(min.getX(), min.getY(), min.getZ(), max.getX(), max.getY(), max.getZ());
 		this.setDirty(true);
 		return this;
 	}
@@ -176,22 +191,24 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	public String getName() {
 		return this.name;
 	}
-	
-	private void updateColouredName() {
+
+	public String getDisplayName() {
+		return this.name;
+	}
+
+	public void updateColouredName() {
+		colour = TextColor.color(getFlag(Flags.NAME_COLOUR));
 		componentName = Component.text(name, getColour());
+		getPlayersInRegion().forEach(player -> PlayerProfile.from(player).flagScoreboardUpdate(TeamManager.ScoreboardFlag.REGION));
+		crystals.forEach(crystal -> crystal.getBukkitEntity().customName(componentName));
 	}
 	
 	public Component getColouredName() {
 		return componentName;
 	}
-	
-	public boolean isWorldRegion() {
-		return this.getRegionId() < 0;
-	}
 
-	// TODO: Optimise.
 	public TextColor getColour() {
-		return TextColor.color(getFlag(Flags.NAME_COLOUR));
+		return colour;
 	}
 	
 	public boolean isDirty() {
@@ -219,7 +236,7 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 	public int getParentId() {
 		return parentId;
 	}
-	
+
 	public Region setParent(int id) {
 		Region r = rm.getRegion(id);
 		if (r != null) {
@@ -228,15 +245,24 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 		}
 		return r;
 	}
-	
+
+	@NotNull
+	public BoundingBox getBoundingBox() {
+		return box;
+	}
+
 	public Location getRegionCenter() {
-		if (this.isWorldRegion())
-			return world.getSpawnLocation();
-		
 		return new Location(world, min.getX() + (max.getX()-min.getX()) / 2, min.getY() + (max.getY()-min.getY()) / 2, min.getZ() + (max.getZ()-min.getZ()) / 2);
 	}
+
+	@NotNull
+	protected Collection<Player> getPlayersInRegion() {
+		List<Player> players = new ArrayList<>();
+		getWorld().getNearbyEntities(box, (entity) -> entity instanceof Player).forEach((player) -> players.add((Player) player));
+		return players;
+	}
 	
-	private Component getComponentMembers() {
+	Component getComponentMembers() {
 		Component text = Component.empty();
 		MemberLevel[] seek = {MemberLevel.OWNER, MemberLevel.OFFICER, MemberLevel.TRUSTED, MemberLevel.MEMBER, MemberLevel.VISITOR };
 		
@@ -251,40 +277,33 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 		return text;
 	}
 	
-	private Component component;
+	protected Component component;
+
+	@NotNull
 	public Component toComponent() {
 		if (component != null) return component;
-		Component text;
-		
-		if (isWorldRegion()) {
-			text = Component.text(
-					"\u00a7rWorld Region" + 
-					"\n\u00a7e(\u00a78World: " + getWorld().getName() + "\u00a7e)");
-		} else {
-			text = Component.text(
-					"\u00a7rPlayer Region" +
+		Component text = Component.text(
+					"\u00a7r" + getDisplayName() +
 					"\n\u00a7e(\u00a78" + getMinimumPoint().toString() + "\u00a77 - \u00a78" + getMaximumPoint() + "\u00a7e)" +
 					"\n\u00a77Priority: \u00a7b" + getPriority())
 					.append(getComponentMembers());
-		}
-		text = text.colorIfAbsent(isWorldRegion() ? BeanColor.REGION_WORLD : BeanColor.REGION);
+		text = text.colorIfAbsent(getColour());
 		Component done = getColouredName().hoverEvent(HoverEvent.showText(text));
 		component = Component.empty().append(done.clickEvent(ClickEvent.suggestCommand("/region warpto " + getName())));
 		return component;
 	}
 	
-	public Region update() {
+	public void updateMapEntry() {
 		rm.refreshRegion(this);
-		return this;
 	}
 	
 	public void delete() {
-		if (this.isWorldRegion()) return; // Precaution.
 		rm.removeRegion(this);
+		List<EntityRegionCrystal> concurrentSafe = new ArrayList<>(crystals);
+		concurrentSafe.forEach(crystal -> crystal.remove(Entity.RemovalReason.DISCARDED));
 	}
 	
-	public boolean canModify(Player p) {
-		if (this.isWorldRegion()) return p.hasPermission("bean.region.override");
+	public boolean canModify(@NotNull Player p) {
 		return p.hasPermission("bean.region.modifyothers") || getMember(p).higherThan(MemberLevel.OFFICER);
 	}
 
@@ -305,12 +324,20 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 
 	@Override
 	@NotNull
-	protected RegionType getRegionType() {
+	protected RegionType getType() {
 		return RegionType.DEFINED;
 	}
 
 	public void addCrystal(EntityRegionCrystal crystal) {
 		this.crystals.add(crystal);
+	}
+
+	public int getCrystalCount() {
+		return crystals.size();
+	}
+
+	public int getMaxCrystals() {
+		return 1;
 	}
 
 	public void removeCrystal(EntityRegionCrystal crystal) {

@@ -142,18 +142,23 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 	
 	public Region createNewRegion(int creator, int priority, int parent, String name, World world, BlockVector min, BlockVector max) {
 		Region reg = null;
-		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO regions (name, priority, parent, creatorId, world, minX, minY, minZ, maxX, maxY, maxZ) VALUES (?,?,?,?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
-			s.setString(1, name);
-			s.setInt(2, priority);
-			s.setInt(3, parent);
-			s.setInt(4, creator);
-			s.setInt(5, wm.getWorldId(world));
-			s.setInt(6, min.getBlockX());
-			s.setInt(7, min.getBlockY());
-			s.setInt(8, min.getBlockZ());
-			s.setInt(9, max.getBlockX());
-			s.setInt(10, max.getBlockY());
-			s.setInt(11, max.getBlockZ());
+		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO regions (name, priority, parent, creatorId, world, minX, minY, minZ, maxX, maxY, maxZ, originX, originY, originZ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
+			int idx = 0;
+
+			s.setString(++idx, name);
+			s.setInt(++idx, priority);
+			s.setInt(++idx, parent);
+			s.setInt(++idx, creator);
+			s.setInt(++idx, wm.getWorldId(world));
+			s.setInt(++idx, min.getBlockX());
+			s.setInt(++idx, min.getBlockY());
+			s.setInt(++idx, min.getBlockZ());
+			s.setInt(++idx, max.getBlockX());
+			s.setInt(++idx, max.getBlockY());
+			s.setInt(++idx, max.getBlockZ());
+			s.setInt(++idx, max.getBlockX() - min.getBlockX());
+			s.setInt(++idx, max.getBlockY() - min.getBlockY());
+			s.setInt(++idx, max.getBlockZ() - min.getBlockZ());
 			s.executeUpdate();
 			
 			ResultSet rs = s.getGeneratedKeys();
@@ -192,6 +197,7 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 			ResultSet rs = s.getGeneratedKeys();
 			rs.next();
 			reg = new PlayerRegion(manager, owner.getId(), rs.getInt(1), name, world, min, max, origin);
+			reg.addMember(owner.getId(), MemberLevel.OWNER);
 			CustomEntityType.REGION_CRYSTAL.spawn(new Location(world, origin.getBlockX() + 0.5, origin.getBlockY() + 0.2, origin.getBlockZ() + 0.5)).setRegion(reg);
 			updateMarker(reg);
 		} catch (SQLException e) {
@@ -295,13 +301,13 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 		BlockVector min = r.getMinimumPoint();
 		BlockVector max = r.getMaximumPoint();
 		
-		AreaMarker am = markerSet.createAreaMarker("region."+r.getName(), r.getName(), true, r.getWorld().getName(), 
+		AreaMarker am = markerSet.createAreaMarker("region."+r.getName(), r.getDisplayName(), true, r.getWorld().getName(),
 				new double[] {min.getX(), max.getX()+1}, new double[] {min.getZ(), max.getZ()+1}, false);
 		
 		am.setRangeY(min.getY(), max.getY()+1);
 		am.setDescription(r.getName());
 		am.setLineStyle(1, 6, r.getFlag(Flags.DYNMAP_COLOUR));
-		am.setFillStyle(1, r.getFlag(Flags.DYNMAP_COLOUR));
+		am.setFillStyle(100, r.getFlag(Flags.DYNMAP_COLOUR));
 		am.setFarewellText("what", "is a farewell text");
 	}
 

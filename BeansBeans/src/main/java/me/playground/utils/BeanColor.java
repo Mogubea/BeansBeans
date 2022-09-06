@@ -12,9 +12,11 @@ public class BeanColor implements TextColor {
 	public static final BeanColor ENCHANT_BURDEN= new BeanColor(0xef256f);
 	public static final BeanColor ENCHANT_ASTRAL= new BeanColor(0x4a1fbf);
 	public static final BeanColor ENCHANT_LAPIS = new BeanColor(0x3a53ff);
-	public static final BeanColor EXPERIENCE	= new BeanColor(0x87ff67);
+	public static final BeanColor EXPERIENCE	= new BeanColor(0x80ff5F);
 	public static final BeanColor REGION 		= new BeanColor(0x5755bf);
 	public static final BeanColor REGION_WORLD 	= new BeanColor(0x109b5a);
+	public static final BeanColor REGION_COUNT 	= new BeanColor(0x7643B6);
+	public static final BeanColor REGION_MAX	= new BeanColor(0x55338A);
 	public static final BeanColor WARP 			= new BeanColor(0xef89ef);
 	public static final BeanColor WARP_SHOP 	= new BeanColor(0xffdd66);
 	public static final BeanColor WARP_SERVER 	= new BeanColor(0xcf79ff);

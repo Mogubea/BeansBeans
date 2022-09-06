@@ -18,7 +18,7 @@ public class ListenerManager {
 		pm.registerEvents(new CustomEntityListener(pl, pl.getCustomEntityManager()), pl);
 
 		pm.registerEvents(new ConnectionListener(pl), pl);
-		pm.registerEvents(new WorldListener(pl), pl);
+		pm.registerEvents(new WorldListener(pl, pl.getWorldManager()), pl);
 		pm.registerEvents(new PlayerListener(pl), pl);
 		pm.registerEvents(new EntityListener(pl), pl);
 		pm.registerEvents(new ContainerListener(pl), pl);

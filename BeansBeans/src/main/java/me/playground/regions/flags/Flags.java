@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 import me.playground.items.lore.Lore;
+import me.playground.regions.Region;
 import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 
 public final class Flags {
 	
@@ -42,7 +42,8 @@ public final class Flags {
 					Component.text("\u00a77and utilise the functionality of anvils."),
 					Component.empty(),
 					Component.text("\u00a7cPlayers with Build Access ignore this flag."));
-	public static final FlagMember 	DOOR_ACCESS 		= register(new FlagMember("door-access", "Door Access", MemberLevel.VISITOR, MemberLevel.NONE))
+	public static final FlagMember 	DOOR_ACCESS 		= register(new FlagMember("door-access", "Door Access", MemberLevel.NONE, MemberLevel.NONE))
+			.setPlayerDefault(MemberLevel.VISITOR)
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
 			.setDescription(
 					Component.text("\u00a77Players equal to or above the designated"),
@@ -79,6 +80,7 @@ public final class Flags {
 
 	public static final FlagBoolean TELEPORT_OUT 		= register(new FlagBoolean("teleport-out", "Non-Member Warping Out", true))
 			.setFlagCategory(Flag.FlagCategory.TELEPORTING)
+			.setNeedsPermission()
 			.setDescription(
 					Component.text("\u00a79Non-Members\u00a77 will be able to \u00a7b/warp"),
 					Component.text("\u00a77and \u00a7b/tp\u00a77 out of the region."));
@@ -90,6 +92,7 @@ public final class Flags {
 					Component.text("\u00a77and \u00a7dChorus Fruit\u00a77 to get into the region."));
 
 	public static final FlagBoolean WARP_CREATION 		= register(new FlagBoolean("warp-creation", "Non-Member Warp Creation", true))
+			.setPlayerDefault(false)
 			.setFlagCategory(Flag.FlagCategory.TELEPORTING)
 			.setDescription(
 					Component.text("\u00a79Non-Members\u00a77 will be able to create \u00a7dWarps\u00a77,"),
@@ -116,6 +119,7 @@ public final class Flags {
 					Component.text("\u00a78(Does not effect Frost Walking players, and note"),
 					Component.text("\u00a78that Snowmen die without snow on the ground!)"));
 	public static final FlagBoolean MOB_HOSTILE_SPAWNS	= register(new FlagBoolean("hostile-spawning", "Hostile Mob Spawning", true))
+			.setPlayerDefault(false)
 			.setFlagCategory(Flag.FlagCategory.ENTITIES)
 			.setDescription(
 					Component.text("\u00a77Can \u00a74hostile mobs \u00a77like Creepers, Zombies etc."),
@@ -129,7 +133,8 @@ public final class Flags {
 	/*
 	 * Misc
 	 */
-	public static final FlagBoolean SEND_ENTER_ACTION_BAR = register(new FlagBoolean("send-enter-action-bar-msg", "Send Enter Action Bar Message", true))
+	public static final FlagBoolean SEND_ENTER_ACTION_BAR = register(new FlagBoolean("send-enter-action-bar-msg", "Send Enter Action Bar Message", false))
+			.setPlayerDefault(true)
 			.setFlagCategory(Flag.FlagCategory.NOTIFICATION)
 			.setNeedsPermission()
 			.setDescription(
@@ -145,7 +150,8 @@ public final class Flags {
 					Component.text("\u00a79Send Enter Action Bar\u00a77 is enabled.")
 			);
 
-	public static final FlagBoolean SEND_LEAVE_ACTION_BAR = register(new FlagBoolean("send-leave-action-bar-msg", "Send Leave Action Bar Message", true))
+	public static final FlagBoolean SEND_LEAVE_ACTION_BAR = register(new FlagBoolean("send-leave-action-bar-msg", "Send Leave Action Bar Message", false))
+			.setPlayerDefault(true)
 			.setFlagCategory(Flag.FlagCategory.NOTIFICATION)
 			.setNeedsPermission()
 			.setDescription(
@@ -174,6 +180,10 @@ public final class Flags {
 					Component.text("\u00a77Blocks such as \u00a72vines\u00a77, \u00a7asugar canes"),
 					Component.text("\u00a77and \u00a7cmushrooms\u00a77 can grow and spread."));
 
+	public static final FlagBoolean PISTONS				= register(new FlagBoolean("piston", "Pistons", true, false, false))
+			.setFlagCategory(Flag.FlagCategory.BLOCKS)
+			.setDescription(Lore.fastBuild(true, 40, "&#666666Pistons &rto react to &#ff7777Redstone &rsignals."));
+
 	public static final FlagBoolean SNOW_FORMATION		= register(new FlagBoolean("snow-form", "Form Snow Layers", true))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
 			.setDescription(
@@ -187,21 +197,19 @@ public final class Flags {
 
 	public static final FlagBoolean STONE_FORMATION		= register(new FlagBoolean("stone-form", "Form Stones", false, false, true))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
-			.setDescription(Lore.getBuilder("Form &#444444Stone &rand &#444444Cobblestone &rwhenever flowing lava mixes with water.").build().getLore());
+			.setDescription(Lore.fastBuild(true, 40, "Form &#666666Stone &rand &#666666Cobblestone &rwhenever flowing lava mixes with water."));
 
 	public static final FlagBoolean OBSIDIAN_FORMATION	= register(new FlagBoolean("obsidian-form", "Form Obsidian", true))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
-			.setDescription(Lore.getBuilder("Form &#770077Obsidian &rwhenever still lava mixes with water.").build().getLore());
+			.setDescription(Lore.fastBuild(true, 40, "Form &#770077Obsidian &rwhenever still lava mixes with water."));
 
-	public static final FlagBoolean TNT					= register(new FlagBoolean("tnt", "Block Explosions", false))
+	public static final FlagBoolean BLOCK_EXPLOSIONS = register(new FlagBoolean("block-explosions", "Block Explosions", false))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
-			.setDescription(
-					Component.text("\u00a77TNT and End Cystal Block Damage."));
+			.setDescription(Lore.fastBuild(false, 40, "Blocks can be destroyed due to block explosions. For example; Beds, TNT and End Crystals."));
 
-	public static final FlagBoolean EXPLOSIONS			= register(new FlagBoolean("explosions", "Mob Explosions", false))
+	public static final FlagBoolean ENTITY_EXPLOSIONS = register(new FlagBoolean("mob-explosions", "Mob Explosions", false))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
-			.setDescription(
-					Component.text("\u00a77Creeper and Bed Block Damage."));
+			.setDescription(Lore.fastBuild(false, 40, "Blocks can be destroyed due to entity explosions. For example; Creepers and Fireballs."));
 
 	public static final FlagBoolean KEEP_INVENTORY 		= register(new FlagBoolean("keep-inventory", "Keep Inventory", true))
 			.setFlagCategory(Flag.FlagCategory.MISCELLANEOUS)
@@ -215,15 +223,18 @@ public final class Flags {
 			.setDescription(
 					Component.text("\u00a77Can players fight each-other?"));
 
-	public static final FlagColour 	DYNMAP_COLOUR		= register(new FlagColour("dynmap-colour", "Dynmap Colour", 0x6655bf84, 0, false))
+	public static final FlagColour 	DYNMAP_COLOUR		= register(new FlagColour("dynmap-colour", "Dynmap Colour", 0x7755bf84, 0, false))
+			.setPlayerDefault(0x7766cfbb)
 			.setFlagCategory(Flag.FlagCategory.MISCELLANEOUS)
 			.setNeedsPermission()
 			.setDescription(Lore.fastBuild(false, 40, "The colour that this region will show up as on the Dynmap."));
 
 	public static final FlagColour 	NAME_COLOUR			= register(new FlagColour("name-colour", "Name Colour", BeanColor.REGION.value(), BeanColor.REGION_WORLD.value(), false))
+			.setPlayerDefault(0x66cfbb)
 			.setFlagCategory(Flag.FlagCategory.MISCELLANEOUS)
 			.setNeedsPermission()
-			.setDescription(Lore.fastBuild(false, 40, "The colour that this region will show up as on the Dynmap."));
+			.setConsumerOnUpdate(Region::updateColouredName)
+			.setDescription(Lore.fastBuild(false, 40, "The name colour of this region."));
 
 	public static final FlagFloat 	MOB_DAMAGE_TO		= register(new FlagFloat("mob-damage-to", "Damage Multiplier against Mobs", 1F, 0F, 100F))
 			.setMinimumValue(0F)
@@ -244,6 +255,7 @@ public final class Flags {
 	public static final FlagFloat 	MOB_DROP_EXP		= register(new FlagFloat("mob-exp-drop-mult", "Mob Experience Drop Multiplier", 1F, 0F, 100F))
 			.setMinimumValue(0F)
 			.setMaximumValue(100F)
+			.setPlayerDefault(0.75F)
 			.setFlagCategory(Flag.FlagCategory.ENTITIES)
 			.setNeedsPermission()
 			.setDescription(
@@ -252,6 +264,7 @@ public final class Flags {
 	public static final FlagFloat 	MOB_DROP_COIN		= register(new FlagFloat("mob-coin-drop-mult", "Mob Coin Drop Multiplier", 1F, 0F, 10F))
 			.setMinimumValue(0F)
 			.setMaximumValue(10F)
+			.setPlayerDefault(0.75F)
 			.setFlagCategory(Flag.FlagCategory.ENTITIES)
 			.setNeedsPermission()
 			.setDescription(

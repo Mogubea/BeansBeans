@@ -27,7 +27,7 @@ public class ItemTrackingDatasource extends PrivateDatasource {
         try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("SELECT identifier,reason,total FROM " + tableCreation); ResultSet r = s.executeQuery()) {
             while(r.next()) {
                 ManifestationReason reason = ManifestationReason.fromIdentifier(r.getString("reason"));
-                if (reason == null) continue;
+                if (reason == null || reason == ManifestationReason.TOTAL) continue;
                 String identifier = r.getString("identifier");
                 if (identifier == null) continue;
                 long total = r.getLong("total");
@@ -43,7 +43,7 @@ public class ItemTrackingDatasource extends PrivateDatasource {
         try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("SELECT identifier,reason,total FROM " + tableRemoval); ResultSet r = s.executeQuery()) {
             while(r.next()) {
                 DemanifestationReason reason = DemanifestationReason.fromIdentifier(r.getString("reason"));
-                if (reason == null) continue;
+                if (reason == null || reason == DemanifestationReason.TOTAL) continue;
                 String identifier = r.getString("identifier");
                 if (identifier == null) continue;
                 long total = r.getLong("total");

@@ -57,7 +57,7 @@ public abstract class RegionBase {
 	public <T extends Flag<V>, V> V getFlag(T flag, boolean ignoreDefaults) {
 		Object obj = flags.get(flag);
 		if (ignoreDefaults) return (obj != null ? (V)obj : null);
-		return obj != null ? (V)obj : isWorldRegion() ? flag.getWorldDefault() : flag.getDefault();
+		return obj != null ? (V)obj : getDefaultValue(flag);
 	}
 
 	/**
@@ -71,7 +71,7 @@ public abstract class RegionBase {
 		if (val == null && !world && flag.inheritsFromWorld())
 			val = rm.getWorldRegion(getWorld()).getFlag(flag);
 		if (val == null)
-			val = world ? flag.getWorldDefault() : flag.getDefault();
+			val = getDefaultValue(flag);
 		
 		return val;
 	}
@@ -82,20 +82,37 @@ public abstract class RegionBase {
 	
 	@SuppressWarnings("unchecked")
 	public <T extends Flag<V>, V> V setFlag(T flag, @Nullable Object val, boolean markDirty) {
-		if (val == null || val.equals(isWorldRegion() ? flag.getWorldDefault() : flag.getDefault()))
+		if (val == null || val.equals(getDefaultValue(flag)))
 			flags.remove(flag);
 		else
 			flags.put(flag, flag.validateValue((V)val));
 		
 		if (markDirty && !dirtyFlags.contains(flag))
 			dirtyFlags.add(flag);
+
+		if (this instanceof Region region)
+			flag.onUpdate(region);
+
 		return (V)val;
 	}
 	
 	public void setFlags(Map<Flag<?>, Object> flags) {
         this.flags = new ConcurrentHashMap<>(flags);
     }
-	
+
+	/**
+	 * Get the {@link Flag}'s default value based upon the type of {@link Region} this is.
+	 * @return the {@link Flag}'s default value.
+	 */
+	@NotNull
+	private <T extends Flag<V>, V> V getDefaultValue(T flag) {
+		if (this instanceof WorldRegion)
+			return flag.getWorldDefault();
+		if (this instanceof PlayerRegion)
+			return flag.getPlayerDefault();
+		return flag.getDefault();
+	}
+
 	public int getPriority() {
 		return priority;
 	}
@@ -105,10 +122,12 @@ public abstract class RegionBase {
 	}
 	
 	public abstract String getName();
-	
-	public abstract boolean isWorldRegion();
+
+	public boolean isWorldRegion() {
+		return false;
+	}
 
 	@NotNull
-	protected abstract RegionType getRegionType();
+	protected abstract RegionType getType();
 	
 }

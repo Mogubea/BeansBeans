@@ -1,5 +1,6 @@
 package me.playground.enchants;
 
+import me.playground.items.BeanItem;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.regions.flags.Flags;
 import org.bukkit.Color;
@@ -9,6 +10,7 @@ import org.bukkit.Sound;
 import org.bukkit.Particle.DustTransition;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Ageable;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityCategory;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
@@ -18,10 +20,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerFishEvent.State;
 import org.bukkit.event.player.PlayerItemDamageEvent;
+import org.bukkit.event.player.PlayerRiptideEvent;
 import org.bukkit.inventory.ItemStack;
 
 import me.playground.listeners.BlockDestructionSequence;
@@ -35,7 +39,7 @@ public class EnchantmentListener extends EventListener {
 		super(plugin);
 	}
 	
-	@EventHandler(ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onItemDamage(PlayerItemDamageEvent e) {
 		// New and nerfed Unbreaking
 		int level = e.getItem().getEnchantmentLevel(BEnchantment.UNBREAKING);
@@ -69,13 +73,19 @@ public class EnchantmentListener extends EventListener {
 		int investmentEnchant = item.getEnchantmentLevel(BEnchantment.PAY_TO_WIN);
 		if (investmentEnchant > 0) {
 			PlayerProfile pp = PlayerProfile.from(p);
-			int coinDeduct = (2^investmentEnchant) + (investmentEnchant-1) * 10; // 20, 50, 100
+			int coinDeduct = ((2^investmentEnchant) + (investmentEnchant-1)) * 10; // 20, 50, 100
 
 			if (pp.getBalance() < coinDeduct) return;
+			double damage = (2^investmentEnchant) + (investmentEnchant-1); // 2, 5, 10
 
-			pp.addToBalance(-coinDeduct);
-			int damage = (2^investmentEnchant) + (investmentEnchant-1); // 2, 5, 10
-			e.setDamage(e.getDamage() + damage);
+			// Deal 25% to sweeped entities
+			if (e.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+				e.setDamage(e.getDamage() + (damage / 4));
+			} else {
+				pp.addToBalance(-coinDeduct);
+				e.setDamage(e.getDamage() + damage);
+			}
+
 		}
 	}
 	
@@ -155,7 +165,7 @@ public class EnchantmentListener extends EventListener {
 		}
 		
 		
-		if (!(e.getBlock().getBlockData() instanceof Ageable)) return; // Prevent non ageables
+		if (!(e.getBlock().getBlockData() instanceof Ageable)) return; // Prevent non age-ables
 		if (e instanceof CustomBlockBreakEvent && ((CustomBlockBreakEvent)e).getEnchantmentCause() == BEnchantment.REAPING) return; // Prevent infinite loop
 		
 		if (item.containsEnchantment(BEnchantment.REAPING)) {
@@ -235,6 +245,11 @@ public class EnchantmentListener extends EventListener {
 					e.getDrops().set(x, overflow);
 			}
 		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onPlayerRiptide(PlayerRiptideEvent e) {
+		BeanItem.reduceItemDurabilityBy(e.getItem(), e.getItem().getEnchantmentLevel(Enchantment.RIPTIDE) * 2);
 	}
 	
 }

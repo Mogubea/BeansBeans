@@ -2,8 +2,8 @@ package me.playground.items;
 
 import me.playground.gui.BeanGuiConfirm;
 import me.playground.items.lore.Lore;
-import me.playground.regions.PlayerRegion;
 import me.playground.regions.Region;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -17,11 +17,14 @@ import org.bukkit.util.BlockVector;
 
 import java.util.List;
 
-public class BItemRegionCapsuleStarter extends BeanBlock {
-	
-	public BItemRegionCapsuleStarter(int numeric, String identifier, String name, ItemRarity rarity) {
+public class BItemRegionCapsule extends BeanBlock {
+
+	private final int claimSize;
+
+	public BItemRegionCapsule(int numeric, String identifier, String name, ItemRarity rarity, int claimSize) {
 		super(numeric, identifier, name, "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2UzZGViNTdlYWEyZjRkNDAzYWQ1NzI4M2NlOGI0MTgwNWVlNWI2ZGU5MTJlZTJiNGVhNzM2YTlkMWY0NjVhNyJ9fX0=", rarity);
-		setDefaultLore(Lore.getBuilder("Right click in an unclaimed area to automatically claim a &b21 Cubic Block&r sized &9region &rfor yourself.").build().getLore());
+		this.claimSize = claimSize;
+		setDefaultLore(Lore.getBuilder("Right click in an unclaimed area to automatically claim a &b" + claimSize + " Cubic Block&r sized &9region &rfor yourself.").build().getLore());
 	}
 
 	@Override
@@ -39,7 +42,7 @@ public class BItemRegionCapsuleStarter extends BeanBlock {
 			return;
 		}
 
-		List<Region> nearbyRegions = rm.getRegions(l, 45);
+		List<Region> nearbyRegions = rm.getRegions(l, 150 + claimSize);
 		if (!nearbyRegions.isEmpty()) {
 			p.sendActionBar(Component.text("\u00a7cThis area is too close to " + (nearbyRegions.size() > 1 ? nearbyRegions.size() + " other claimed areas" : "another claimed area.")));
 			return;
@@ -47,22 +50,24 @@ public class BItemRegionCapsuleStarter extends BeanBlock {
 
 		itemStack.subtract(1);
 
-		new BeanGuiConfirm(p, Lore.getBuilder("Are you sure you wish to settle your region here?").dontFormatColours().build().getLoree()) {
+		new BeanGuiConfirm(p, Lore.getBuilder("Are you sure you wish to settle your region here?\n\nA &b/rwarp&r will be created for you upon creation so you can always return here.").dontFormatColours().build().getLoree()) {
 			@Override
 			public void onAccept() {
-				rm.createPlayerRegion(pp, p.getWorld(),
-						new BlockVector(l.getBlockX() - 10, l.getBlockY() - 10, l.getBlockZ() - 10),
-						new BlockVector(l.getBlockX() + 10, l.getBlockY() + 10, l.getBlockZ() + 10),
+				int eachDirection = (claimSize - 1) / 2;
+
+				Region region = rm.createPlayerRegion(pp, p.getWorld(),
+						new BlockVector(l.getBlockX() - eachDirection, l.getBlockY() - eachDirection, l.getBlockZ() - eachDirection),
+						new BlockVector(l.getBlockX() + eachDirection, l.getBlockY() + eachDirection, l.getBlockZ() + eachDirection),
 						new BlockVector(l.getBlockX(), l.getBlockY(), l.getBlockZ()));
 
-				p.sendMessage(Component.text("._."));
+				p.sendMessage(Component.text("You have successfully created a Region in this area.", NamedTextColor.GREEN));
 			}
 
 			@Override
 			public void onDecline() {
 				ItemStack giveBack = itemStack.clone();
 				giveBack.setAmount(1);
-				pp.giveItem();
+				pp.giveItem(giveBack);
 			}
 		}.openInventory();
 

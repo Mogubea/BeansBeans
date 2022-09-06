@@ -66,6 +66,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class BeanItem {
 	private final static DecimalFormat df = new DecimalFormat("0.###");
+	protected static final Map<Attribute, UUID> refinementAttributeUUIDs = new HashMap<>();
 	private final static HashMap<Material, ItemRarity> vanillaRarities = new HashMap<>() {
 		@Serial
 		private static final long serialVersionUID = 1018055300807913156L;
@@ -223,7 +224,8 @@ public class BeanItem {
 	public final static BeanItem ROSE_GOLD_LEGGINGS = new BItemLeggingsRoseGold(6, 1);
 	public final static BeanItem ROSE_GOLD_BOOTS = new BItemBootsRoseGold(7, 2);
 
-	public final static BeanBlock REGION_CAPSULE_STARTER = new BItemRegionCapsuleStarter(8, "REGION_CAPSULE_STARTER", "Starting Region Capsule", ItemRarity.SPECIAL);
+	public final static BeanBlock BASIC_REGION_CAPSULE = new BItemRegionCapsule(8, "BASIC_REGION_CAPSULE", "Basic Region Capsule", ItemRarity.UNCOMMON, 21);
+	public final static BeanBlock REGION_CRYSTAL = new BItemRegionCrystal(9, "REGION_CRYSTAL", "Region Crystal", ItemRarity.COMMON);
 
 	public final static BeanItem POOR_QUALITY_WHEAT = new BeanItem(500, "POOR_QUALITY_WHEAT", "Poor Quality Wheat", Material.WHEAT, ItemRarity.TRASH, 1);
 	public final static BeanItem POOR_QUALITY_POTATO = new BeanItem(501, "POOR_QUALITY_POTATO", "Poor Quality Potato", Material.POTATO, ItemRarity.TRASH, 1);
@@ -278,6 +280,9 @@ public class BeanItem {
 		items = itemsByName.values().toArray(new BeanItem[0]);
 		for (BeanItem item : items)
 			formatItem(item.originalStack);
+
+		for (Attribute attribute : Attribute.values())
+			refinementAttributeUUIDs.put(attribute, UUID.fromString("fa1cb695-62e7-4f36-82cd-9ed930e2" + String.format("%04d", getAttributeId(attribute))));
 	}
 	
 	private final byte[]		    bytes;
@@ -399,7 +404,7 @@ public class BeanItem {
 	}
 
 	// Do not change these, only add on with future attributes, safer than ordinal.
-	private static int getAttributeId(Attribute attribute) {
+	protected static int getAttributeId(Attribute attribute) {
 		return switch(attribute) {
 			case GENERIC_MAX_HEALTH -> 0;
 			case GENERIC_FOLLOW_RANGE -> 1;
@@ -417,7 +422,7 @@ public class BeanItem {
 		};
 	}
 
-	private static String getAttributeString(Attribute attribute) {
+	protected static String getAttributeString(Attribute attribute) {
 		return switch(attribute) {
 			case GENERIC_MAX_HEALTH -> "Health";
 			case GENERIC_KNOCKBACK_RESISTANCE -> "KB. Resistance";
@@ -611,7 +616,7 @@ public class BeanItem {
 			}
 
 			lore.add(Component.empty());
-			lore.add(Component.text(" • Apply Cost: ", NamedTextColor.GRAY).append(Component.text(totalExperienceCost + " Experience Levels", BeanColor.EXPERIENCE)).decoration(TextDecoration.ITALIC, false));
+			lore.add(Component.text(" • Base Cost: ", NamedTextColor.GRAY).append(Component.text(totalExperienceCost + " \u25CE Experience Levels", BeanColor.EXPERIENCE)).decoration(TextDecoration.ITALIC, false));
 			lore.add(Component.text(" • Requires: ", NamedTextColor.GRAY).append(Component.text(totalRunicUsage + " \u269D Runic Capacity", BeanColor.ENCHANT)).decoration(TextDecoration.ITALIC, false));
 
 		}
@@ -656,7 +661,18 @@ public class BeanItem {
 		
 		if (custom != null)
 			meta.setAttributeModifiers(custom.getAttributes());
-		
+
+		final int refinementLevel = BItemDurable.getRefinementTier(item);
+
+		// Refresh any refinement attribute bonuses
+		if (refinementLevel > 0 && meta.hasAttributeModifiers() /* Probably not a check that's needed */) {
+			List<Attribute> refinedAttributes = Arrays.asList(Attribute.GENERIC_ATTACK_DAMAGE, Attribute.GENERIC_ATTACK_SPEED, Attribute.GENERIC_MAX_HEALTH, Attribute.GENERIC_ARMOR);
+			refinedAttributes.forEach(attribute -> {
+				if (!meta.getAttributeModifiers().containsKey(attribute)) return;
+				meta.addAttributeModifier(attribute, new AttributeModifier(refinementAttributeUUIDs.get(attribute), attribute.translationKey(), (double)refinementLevel / 10, Operation.MULTIPLY_SCALAR_1));
+			});
+		}
+
 		ItemAttributes ia = ItemAttributes.fromItem(item);
 		final boolean att1 = ia != ItemAttributes.NIL && ia != ItemAttributes.FISHING_ROD;
 		final boolean att2 = meta.hasAttributeModifiers();
@@ -706,19 +722,19 @@ public class BeanItem {
 			if (item.containsEnchantment(Enchantment.DAMAGE_ALL)) {
 				double x = ((item.getEnchantmentLevel(Enchantment.DAMAGE_ALL)+1) * 0.5D);
 				modifiers.put("Damage", modifiers.getOrDefault("Damage", 0.0) + x);
-				modsuffix.put("Damage", Component.text(" ("+(x>0?"+"+x:x)+")").color(BeanColor.ENCHANT));
+//				modsuffix.put("Damage", Component.text(" ("+(x>0?"+"+x:x)+")").color(BeanColor.ENCHANT));
 			}
 			
 			if (item.containsEnchantment(Enchantment.DAMAGE_UNDEAD)) {
 				double x = (item.getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD) * 2.5D);
 				modifiers.put("Undead Damage", modifiers.getOrDefault("Damage", 0.0) + x);
-				modsuffix.put("Undead Damage", Component.text(" ("+(x>0?"+"+x:x)+")").color(BeanColor.ENCHANT));
+//				modsuffix.put("Undead Damage", Component.text(" ("+(x>0?"+"+x:x)+")").color(BeanColor.ENCHANT));
 			}
 			
 			if (item.containsEnchantment(Enchantment.DAMAGE_ARTHROPODS)) {
 				double x = (item.getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS) * 2.5D);
 				modifiers.put("Arthro Damage", modifiers.getOrDefault("Damage", 0.0) + x);
-				modsuffix.put("Arthro Damage", Component.text(" ("+(x>0?"+"+x:x)+")").color(BeanColor.ENCHANT));
+//				modsuffix.put("Arthro Damage", Component.text(" ("+(x>0?"+"+x:x)+")").color(BeanColor.ENCHANT));
 			}
 			
 			// Write it
@@ -777,9 +793,8 @@ public class BeanItem {
 			if (lore.size() == 0 || !(lore.get(lore.size()-1).equals(Component.empty())))
 				lore.add(Component.empty());
 
-			int refineTier = BItemDurable.getRefinementTier(item);
-			if (refineTier > 0)
-				lore.add(Component.text("\u2692 Tier " + Utils.toRoman(refineTier) + " \u2692", TextColor.color((rarity.getColour().value() & 0xfefefe) >> 1)).decoration(TextDecoration.ITALIC, false));
+			if (refinementLevel > 0)
+				lore.add(Component.text("\u2692 Tier " + Utils.toRoman(refinementLevel) + " \u2692", TextColor.color((rarity.getColour().value() & 0xfefefe) >> 1)).decoration(TextDecoration.ITALIC, false));
 			// Perhaps Astral Refinement or something can use this format
 			//lore.add(Component.text("•.·*\u2727° • Tier " + Utils.toRoman(refineTier) + " • °\u2727*·.•", BeanColor.REFINEMENT).decoration(TextDecoration.ITALIC, false));
 			lore.add(getRarityString(rarity, item));
@@ -819,6 +834,8 @@ public class BeanItem {
 	 * @return If this ItemStack has been renamed.
 	 */
 	public static boolean hasBeenRenamed(ItemStack item) {
+		if (item == null) return false;
+
 		ItemMeta meta = item.getItemMeta();
 		Component name = meta.displayName();
 
@@ -858,9 +875,12 @@ public class BeanItem {
 	 */
 	public static int getBaseRunicCapacity(ItemStack item) {
 		if (item == null) return 0;
+		if (item.getType() == Material.ENCHANTED_BOOK) return 99999;
+
 		int runicCapacity = 15;
 
-		return runicCapacity;
+		ItemAttributes attributes = ItemAttributes.fromItem(item);
+		return attributes != null ? attributes.getRunicCapacity() : runicCapacity;
 	}
 
 	/**
@@ -870,17 +890,18 @@ public class BeanItem {
 	public static int getRunicCapacity(ItemStack item) {
 		return getBaseRunicCapacity(item) - getRunicExpenses(item);
 	}
-	
+
+	@Nullable
+	protected String getRarityString() {
+		return null;
+	}
+
 	protected static Component getRarityString(ItemRarity rarity, ItemStack item) {
 		final Material m = item.getType();
 		final BeanItem bi = BeanItem.from(item);
 		
-		if (bi != null) {
-			if (bi instanceof BeanItemHeirloom)
-				return rarity.toComponent().append(Component.text(" Heirloom"));
-			if (bi instanceof BItemPackage)
-				return rarity.toComponent().append(Component.text(" Crate"));
-		}
+		if (bi != null && bi.getRarityString() != null)
+			return rarity.toComponent().append(Component.text(" " + bi.getRarityString()));
 			
 		if (m.toString().endsWith("PICKAXE"))
 			return rarity.toComponent().append(Component.text(" Pickaxe"));
@@ -1097,8 +1118,10 @@ public class BeanItem {
 
 	public int getCustomModelData() { return customModelData; }
 
+	public int getBaseRunicCapacity() { return getBaseRunicCapacity(originalStack); }
+
 	/**
-	 * Use {@link #getTrackedStack(Player, ManifestationReason, int)} if giving an item directly to a player. Otherwise just make sure to call
+	 * Use {@link #getTrackedStack(Player, ManifestationReason, int)} if giving an item directly to a player. Otherwise, just make sure to call
 	 * {@link ItemTrackingManager#incrementManifestationCount(BeanItem, ManifestationReason, long)}
 	 * @return A cloned version of the original item stack.
 	 */

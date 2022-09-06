@@ -176,8 +176,11 @@ public class Main extends JavaPlugin {
 				permissionManager.clearPlayerPermissions(p);
 		}
 		
-		for (Player p : Bukkit.getOnlinePlayers())
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			PlayerProfile.from(p).closeBeanGui(); // Reassuring closure before kick
 			p.kick(Component.text("\u00a7eBean's Beans is reloading."), Cause.RESTART_COMMAND);
+		}
+
 		
 		if (recipeManager != null)
 			recipeManager.unregisterRecipes();
@@ -399,13 +402,14 @@ public class Main extends JavaPlugin {
 								FlagString fs = Flags.ACTION_BAR_MESSAGE;
 								Component message = fs.getComponentValue(region.getFlag(fs));
 								if (message == Component.empty())
-									message = Component.text("\u00a77You have entered region \u00a79" + region.getName());
+									message = Component.text("\u00a77You have entered region ").append(region.getColouredName());
 								p.sendActionBar(message);
 							}
 						} else if (oldRegion != null) {
 							if (region.getFlag(Flags.SEND_LEAVE_ACTION_BAR))
-								p.sendActionBar(Component.text("\u00a77You have left region \u00a79" + oldRegion.getName()));
+								p.sendActionBar(Component.text("\u00a77You have left region ").append(oldRegion.getColouredName()));
 						}
+
 						pp.flagScoreboardUpdate(ScoreboardFlag.REGION);
 					}
 

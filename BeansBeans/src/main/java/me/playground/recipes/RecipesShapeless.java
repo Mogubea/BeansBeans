@@ -5,6 +5,9 @@ import me.playground.main.Main;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionType;
 
 public class RecipesShapeless {
 
@@ -15,29 +18,34 @@ public class RecipesShapeless {
 		this.plugin = plugin;
 		this.manager = manager;
 
-		ItemStack metalChunk = BeanItem.LIVING_METAL_CHUNK.getOriginalStack();
+		// Cool recipe from @Mysticat_
+		ItemStack splashWaterBottle = new ItemStack(Material.SPLASH_POTION);
+		splashWaterBottle.editMeta(meta -> ((PotionMeta)meta).setBasePotionData(new PotionData(PotionType.WATER)));
+		shapelessRecipe("experience_bottle", new ItemStack(Material.EXPERIENCE_BOTTLE)).addIngredient(splashWaterBottle).addIngredient(Material.DRAGON_BREATH).addIngredient(Material.GHAST_TEAR);
+
+		/*ItemStack metalChunk = BeanItem.LIVING_METAL_CHUNK.getItemStack();
 		metalChunk.setAmount(16);
 		shapelessRecipe(BeanItem.LIVING_METAL_INGOT).addIngredient(4, metalChunk);
 
-		ItemStack metalIngot = BeanItem.LIVING_METAL_INGOT.getOriginalStack();
+		ItemStack metalIngot = BeanItem.LIVING_METAL_INGOT.getItemStack();
 		metalIngot.setAmount(16);
-		shapelessRecipe(BeanItem.LIVING_METAL_BLOCK).addIngredient(4, metalIngot);
+		shapelessRecipe(BeanItem.LIVING_METAL_BLOCK).addIngredient(4, metalIngot);*/
 
-		shapelessRecipe("up_quality_wheat", new ItemStack(Material.WHEAT)).addIngredient(9, BeanItem.POOR_QUALITY_WHEAT.getOriginalStack());
-		shapelessRecipe("up_quality_carrot", new ItemStack(Material.CARROT)).addIngredient(9, BeanItem.POOR_QUALITY_CARROT.getOriginalStack());
-		shapelessRecipe("up_quality_potato", new ItemStack(Material.POTATO)).addIngredient(9, BeanItem.POOR_QUALITY_POTATO.getOriginalStack());
-		shapelessRecipe("up_quality_beetroot", new ItemStack(Material.BEETROOT)).addIngredient(9, BeanItem.POOR_QUALITY_BEETROOT.getOriginalStack());
+		shapelessRecipe("quality_wheat", new ItemStack(Material.WHEAT)).addIngredient(9, BeanItem.POOR_QUALITY_WHEAT.getItemStack());
+		shapelessRecipe("quality_carrot", new ItemStack(Material.CARROT)).addIngredient(9, BeanItem.POOR_QUALITY_CARROT.getItemStack());
+		shapelessRecipe("quality_potato", new ItemStack(Material.POTATO)).addIngredient(9, BeanItem.POOR_QUALITY_POTATO.getItemStack());
+		shapelessRecipe("quality_beetroot", new ItemStack(Material.BEETROOT)).addIngredient(9, BeanItem.POOR_QUALITY_BEETROOT.getItemStack());
 
 	}
 	
 	private ShapelessRecipe shapelessRecipe(String name, ItemStack result) {
-		ShapelessRecipe sr = new ShapelessRecipe(plugin.keyRecipe(name), result);
+		ShapelessRecipe sr = new ShapelessRecipe(plugin.keyRecipe("shapeless_" + name), result);
 		manager.addRecipe(sr);
 		return sr;
 	}
 
 	private ShapelessRecipe shapelessRecipe(BeanItem result) {
-		return shapelessRecipe(result.getIdentifier().toLowerCase(), result.getOriginalStack());
+		return shapelessRecipe(result.getIdentifier().toLowerCase(), result.getItemStack());
 	}
 	
 }

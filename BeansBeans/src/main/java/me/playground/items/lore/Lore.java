@@ -8,7 +8,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.jetbrains.annotations.NotNull;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -116,7 +115,11 @@ public class Lore {
     }
 
     public static List<TextComponent> fastBuild(boolean format, int wrapLength, String... content) {
-        return new PersistentLoreBuilder(content).build().getLore();
+        PersistentLoreBuilder builder = new PersistentLoreBuilder(content);
+        if (!format) builder.dontFormatColours();
+        builder.setLineLimit(wrapLength);
+
+        return builder.build().getLore();
     }
 
     public static class PersistentLoreBuilder {
@@ -188,6 +191,8 @@ public class Lore {
 
             for (int x = -1; ++x < size;) {
                 String string = content[x];
+                if (x > 0)
+                    finishLine(false);
 
                 // Finish line, add empty line, continue
                 if (string == null || string.isEmpty()) {
@@ -216,13 +221,11 @@ public class Lore {
                                         finishLine(false);
 
                                     currentComponent = currentComponent.content(currentComponent.content() + newWord);
-                                    length += newWord.length();
                                     newWord = new StringBuilder();
                                 }
 
-                                finishLine(true);
-                                length-=2;
-                                i++;
+                                finishLine(false);
+                                length = 0;
                             } else if (b[i] == '&') {
                                 String check = "0123456789AaBbCcDdEeFfLlMmNnOoRr#";
                                 int idx = check.indexOf(b[i + 1]);
@@ -255,8 +258,8 @@ public class Lore {
                                     case 'M', 'm' -> currentComponent = currentComponent.decoration(TextDecoration.STRIKETHROUGH, true);
                                     case 'N', 'n' -> currentComponent = currentComponent.decoration(TextDecoration.UNDERLINED, true);
                                     case 'O', 'o' -> currentComponent = currentComponent.decoration(TextDecoration.ITALIC, true);
-                                    case 'R', 'r' -> currentComponent = currentComponent.color(null);
-                                    /*case 'T', 't' -> { TODO: translatables
+                                    case 'R', 'r' -> currentComponent = Component.text(currentComponent.content()); // Clears all formatting
+                                    /*case 'T', 't' -> { TODO: translatable
                                         int remaining = b.length - (i + 1);
 
 

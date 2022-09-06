@@ -22,6 +22,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 public class TeamManager {
 	
 	public enum ScoreboardFlag {
+		RESET,
 		TITLE,
 		COINS(true),
 		CRYSTALS(true),
@@ -45,7 +46,7 @@ public class TeamManager {
 		}
 		
 		public static int all() {
-			return 127;
+			return 511;
 		}
 	}
 	

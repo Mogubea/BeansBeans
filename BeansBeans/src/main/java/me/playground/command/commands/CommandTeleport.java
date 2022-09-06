@@ -21,6 +21,7 @@ import me.playground.utils.TabCompleter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.jetbrains.annotations.NotNull;
 
 public class CommandTeleport extends BeanCommand {
 
@@ -79,7 +80,7 @@ public class CommandTeleport extends BeanCommand {
 	};
 	
 	@Override
-	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
+	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
 		if (sender.hasPermission("bean.cmd.teleport.others"))
 			return Component.text("\u00a7cUsage: \u00a7f/"+str+" ").append(usageArguments[1]).append(usageArguments[2]);
 		return Component.text("\u00a7cUsage: \u00a7f/"+str+" ").append(usageArguments[0]);

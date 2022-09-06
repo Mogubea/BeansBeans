@@ -2,7 +2,6 @@ package me.playground.skills;
 
 import java.util.List;
 
-import me.playground.items.lore.Lore;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -36,23 +35,22 @@ public class SkillAgriculture extends Skill {
 		
 		int skillXP = getExperienceValue(b);
 		if (skillXP < 1) return false;
-		
-		if (b.getType() == Material.SUGAR_CANE) {
+
+		final int heightCheck = getHeightCheck(b.getType());
+
+		if (heightCheck > 0) {
 			Location loc = b.getLocation().clone();
 			int height = 0;
 			int sugar = 0;
 			
-			if (b.getLocation().subtract(0, 1, 0).getBlock().getType() != Material.SUGAR_CANE) sugar--;
-			while(height < 3 && loc.subtract(0, 1, 0).getBlock().getType() == Material.SUGAR_CANE) height++;
-			if (!(height > 2)) height = 0;
-			while(height < 3 && loc.add(0, 1, 0).getBlock().getType() == Material.SUGAR_CANE) { height++; sugar++; }
+			if (b.getLocation().subtract(0, 1, 0).getBlock().getType() != b.getType()) sugar--;
+			while(height < heightCheck && loc.add(0, 1, 0).getBlock().getType() == b.getType()) { height++; sugar++; }
 			
 			skillXP *= sugar;
 			if (skillXP <= 0) return false;
 		}
 		
-		if (b.getType() != Material.SUGAR_CANE && b.getBlockData() instanceof Ageable) {
-			Ageable crop = (Ageable) b.getBlockData();
+		if (b.getType() != Material.SUGAR_CANE && b.getBlockData() instanceof Ageable crop) {
 			if (crop.getAge() < crop.getMaximumAge()) return false;
 		}
 		
@@ -62,31 +60,34 @@ public class SkillAgriculture extends Skill {
 	
 	private int getExperienceValue(Block b) {
 		final Material material = b.getType();
-		
-		switch(material) {
-		case MOSS_CARPET: return 4;
-		case MOSS_BLOCK: return 5;
-		case AZALEA: return 5;
-		case FLOWERING_AZALEA: return 6;
-		case BAMBOO: return 7;
-		case CHORUS_PLANT: return 8;
-		case SUGAR_CANE: return 10;
-		case SWEET_BERRY_BUSH: return 13;
-		case COCOA: return 15;
-		case WHEAT: return 18;
-		case CARROTS: return 18;
-		case POTATOES: return 18;
-		case BEETROOTS: return 23;
-		case NETHER_WART: return 23;
-		case CACTUS: return 27;
-		case MELON: return 33;
-		case PUMPKIN: return 33;
-		case CHORUS_FLOWER: return 35;
-		case BEEHIVE: return 130;
-		case BEE_NEST: return 130;
-		default: 
-			return 0;
-		}
+
+		return switch (material) {
+			case MOSS_CARPET -> 4;
+			case MOSS_BLOCK, BAMBOO -> 5;
+			case CHORUS_PLANT -> 7;
+			case AZALEA, FLOWERING_AZALEA -> 8;
+			case SUGAR_CANE, GLOW_BERRIES -> 10;
+			case SWEET_BERRY_BUSH -> 13;
+			case COCOA -> 15;
+			case CARROTS, POTATOES -> 16;
+			case WHEAT -> 18;
+			case NETHER_WART -> 21;
+			case BEETROOTS -> 23;
+			case CACTUS -> 27;
+			case MELON, PUMPKIN -> 33;
+			case CHORUS_FLOWER -> 35;
+			case BEEHIVE, BEE_NEST -> 130;
+			default -> 0;
+		};
+	}
+
+	private int getHeightCheck(Material material) {
+		return switch(material) {
+			case BAMBOO -> 16;
+			case SUGAR_CANE -> 4;
+			case CACTUS -> 3;
+			default -> 0;
+		};
 	}
 
 	@Override

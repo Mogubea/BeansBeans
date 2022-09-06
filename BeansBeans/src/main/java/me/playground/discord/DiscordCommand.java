@@ -146,7 +146,7 @@ public abstract class DiscordCommand {
 				embed.addField("How to Obtain", "One-Time Purchase Only (\u00a326.99) \nhttps://ko-fi.com/s/d132ff6aa0", false);
 			else if (rank == Rank.SENATOR)
 				embed.addField("How to Obtain", "One-Time Purchase Only (\u00a354.99) \nhttps://ko-fi.com/s/639ae2b69e", false);
-			else if (rank == Rank.VIP)
+			else if (rank == Rank.VIB)
 				embed.addField("How to Obtain", "Requires Senator and Subscription Purchase (\u00a37.99/m)", false);
 		}
 		return embed.build();

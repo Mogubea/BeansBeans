@@ -16,12 +16,10 @@ import me.playground.listeners.RedstoneManager;
 import me.playground.punishments.Punishment;
 import me.playground.punishments.PunishmentMinecraft;
 import me.playground.regions.PlayerRegion;
+import me.playground.regions.RegionVisualiser;
+import me.playground.warps.Warp;
 import net.dv8tion.jda.api.entities.Member;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.attribute.Attribute;
@@ -154,8 +152,7 @@ public class PlayerProfile {
 	private int 						nameColour;
 	
 	private double 						coins;
-	private short						warpCount;
-	
+
 	private final UUID 					playerUUID;
 	
 	private Location					home;
@@ -164,7 +161,6 @@ public class PlayerProfile {
 	private final PlayerStats			stats;
 	private final List<String> 			pickupBlacklist;
 	private final List<Delivery>		inbox = new ArrayList<>();
-	private final List<PlayerRegion>    ownedRegions = new ArrayList<>();
 	private final List<Punishment<?>> 	punishments;
 	
 	private long 						booleanSettings;
@@ -183,8 +179,10 @@ public class PlayerProfile {
 	 * permission based system is far more reliable.
 	 */
 	private final Set<String>			permissions = new HashSet<>();
+	private final Map<String, Warp> 	myWarps;
 	private final ArrayList<String>		recentWarps = new ArrayList<>(10);
 	private final HashMap<String, Long> cooldowns = new HashMap<>();
+	private final Map<Region, RegionVisualiser>	visualisedRegions = new HashMap<>();
 	private BeanGui			 			currentlyViewedGUI;
 	private TextComponent 				chatLine;
 	private final Location[] 			lastLocation = new Location[2];
@@ -194,7 +192,7 @@ public class PlayerProfile {
 	// Admin
 	public UUID profileOverride;
 	
-	public PlayerProfile(PlayerProfileManager manager, int id, UUID uuid, ArrayList<Rank> ranks, Set<String> perms, int nameColour, String name, String nickname, double coins, long settings, short warpCount) {
+	public PlayerProfile(PlayerProfileManager manager, int id, UUID uuid, ArrayList<Rank> ranks, Set<String> perms, int nameColour, String name, String nickname, double coins, long settings) {
 		this.manager = manager;
 		this.loadTime = System.currentTimeMillis();
 		this.player = Bukkit.getOfflinePlayer(uuid);
@@ -210,7 +208,6 @@ public class PlayerProfile {
 		this.privatePermissions = perms;
 		
 		this.coins = coins;
-		this.warpCount = warpCount;
 		
 		this.booleanSettings = settings;
 		
@@ -220,6 +217,7 @@ public class PlayerProfile {
 		this.pickupBlacklist = manager.getDatasource().loadPickupBlacklist(id);
 		this.heirloomInventory = new HeirloomInventory(this, manager.getDatasource().loadPlayerHeirlooms(id));
 		this.stats = manager.getDatasource().loadPlayerStats(this);
+		this.myWarps = manager.getPlugin().warpManager().getWarpsOwnedBy(id);
 
 		this.punishments = manager.getPlugin().getPunishmentManager().loadPunishmnents(this);
 		checkPunishments();
@@ -239,7 +237,6 @@ public class PlayerProfile {
 
 	/**
 	 * Get the online version of the {@link #player}.
-	 *
 	 * {@link #isOnline()} should be checked first.
  	 * @return The player if online, otherwise null.
 	 */
@@ -314,6 +311,7 @@ public class PlayerProfile {
 	 * Similar to {@link Player#hasPermission(String)} since both the profile and player have the same permissions.
 	 * @return If the player has permission.
 	 */
+	@Contract("null -> true")
 	public boolean hasPermission(String permissionString) {
 		if (permissionString == null || permissionString.isEmpty()) return true;
 		return this.permissions.contains("*") || this.permissions.contains(permissionString);
@@ -323,6 +321,7 @@ public class PlayerProfile {
 	 * Get the permissions exclusive to this profile.
 	 * @return The list of permissions.
 	 */
+	@NotNull
 	public Set<String> getPrivatePermissions() {
 		return this.privatePermissions;
 	}
@@ -331,6 +330,7 @@ public class PlayerProfile {
 	 * Get the list of permissions.
 	 * @return The list of permissions.
 	 */
+	@NotNull
 	public Set<String> getPermissions() {
 		return permissions;
 	}
@@ -338,7 +338,7 @@ public class PlayerProfile {
 	/**
 	 * Checks whether this player has or inherits the specified {@link Rank}.
 	 */
-	public boolean isRank(Rank rank) {
+	public boolean isRank(@NotNull Rank rank) {
 		// If it's a donor rank, just check if your current donor rank is equal or higher.
 		if (rank.isDonorRank() && getDonorRank() != null && rank.power() <= getDonorRank().power())
 			return true;
@@ -360,7 +360,7 @@ public class PlayerProfile {
 				if (System.currentTimeMillis() >= this.donorExpirationTime) {
 					if (this.isOnline())
 						this.getPlayer().sendMessage(Component.text("\u00a7eYour ").append(donorRank.toComponent()).append(Component.text("\u00a7e rank has expired!")));
-					this.removeRank(Rank.VIP);
+					this.removeRank(Rank.VIB);
 				}
 		}
 		return this.donorExpirationTime;
@@ -1012,7 +1012,7 @@ public class PlayerProfile {
 	public ArrayList<String> recentWarps() {
 		return this.recentWarps;
 	}
-	
+
 	public void addToRecentWarps(String name) {
 		if (!recentWarps.contains(name))
 			recentWarps.add(0, name);
@@ -1022,24 +1022,69 @@ public class PlayerProfile {
 		return warpLimit;
 	}
 	
-	public short getWarpCount() {
-		return warpCount;
+	public int getWarpCount() {
+		return myWarps.size();
+	}
+
+	public Map<String, Warp> getOwnedWarps() {
+		return myWarps;
 	}
 	
-	public void upWarpCount() {
-		this.warpCount++;
+	public void addOwnedWarp(Warp warp) {
+		this.myWarps.put(warp.getName().toLowerCase(), warp);
 	}
 	
-	public void downWarpCount() {
-		this.warpCount--;
+	public void removeOwnedWarp(Warp warp) {
+		this.myWarps.remove(warp.getName().toLowerCase());
+	}
+
+	@Nullable
+	public Warp getOwnedWarp(String warpName) {
+		return myWarps.get(warpName);
+	}
+
+	/**
+	 * Get an immutable version of the currently visualised region map
+	 * @return Immutable map of region visualisers
+	 */
+	@NotNull
+	public Map<Region, RegionVisualiser> getVisualisedRegions() {
+		return Map.copyOf(visualisedRegions);
+	}
+
+	/**
+	 * Visualise a Region, providing null instead of a {@link RegionVisualiser} will simply remove it from the visualiser map.
+	 * @param region The region to be visualised.
+	 * @param ticks The amount of ticks to be visualised for (-1 is infinite).
+	 */
+	public void visualiseRegion(@NotNull Region region, int ticks) {
+		if (getPlayer() == null || region.isWorldRegion()) return;
+
+		RegionVisualiser current = visualisedRegions.get(region);
+
+		if (!visualisedRegions.containsKey(region) || (current.getTicksRemaining() < ticks && current.getTicksRemaining() != -1))
+			visualisedRegions.put(region, new RegionVisualiser(this, region, ticks));
+	}
+
+	public boolean isVisualisingRegion(@NotNull Region region) {
+		return visualisedRegions.containsKey(region);
+	}
+
+	public void unvisualiseRegion(@NotNull Region region) {
+		visualisedRegions.remove(region);
 	}
 
 	public int getRegionLimit() {
 		return regionLimit;
 	}
 
+	/**
+	 * Gets the set of {@link Region}s that this player has created.
+	 * @return Set
+	 */
+	@NotNull
 	public Set<Region> getRegions() {
-		return Main.getRegionManager().getRegionsMadeBy(getId());
+		return manager.getPlugin().regionManager().getRegionsMadeBy(getId());
 	}
 
 	/**
@@ -1053,8 +1098,18 @@ public class PlayerProfile {
 
 	/**
 	 * Sets the current region the player is located in.
+	 * <p>If the player has the flight setting enabled, and they're inside a region they own, sort that out too.
 	 */
 	public Region updateCurrentRegion(Region region) {
+		if (getPlayer() != null && getPlayer().getGameMode() == GameMode.SURVIVAL && !isSettingEnabled(PlayerSetting.FLIGHT) && hasPermission(Permission.FLIGHT_IN_OWNED_REGIONS))
+			getPlayer().setAllowFlight(region.getTrueMemberLevel(getId()).higherThan(MemberLevel.OFFICER));
+
+		if (getPlayer() != null && isSettingEnabled(PlayerSetting.REGION_BOUNDARIES)) {
+			visualiseRegion(region, -1);
+			if (currentRegion != null) // Will always return false at least once per profile load
+				unvisualiseRegion(currentRegion);
+		}
+
 		return this.currentRegion = region;
 	}
 	
@@ -1204,10 +1259,22 @@ public class PlayerProfile {
 		return relevantMute != null;
 	}
 
+	/**
+	 * Get this {@link Player}'s currently dominant and active ban, otherwise null.
+	 * @see #isBanned()
+	 * @return If the player is banned then return their ban, otherwise null.
+	 */
+	@Nullable
 	public PunishmentMinecraft getBan() {
 		return relevantBan;
 	}
 
+	/**
+	 * Get this {@link Player}'s currently dominant and active mute, otherwise null.
+	 * @see #isMuted()
+	 * @return If the player is muted then return their mute, otherwise null.
+	 */
+	@Nullable
 	public PunishmentMinecraft getMute() {
 		return relevantMute;
 	}
@@ -1338,29 +1405,29 @@ public class PlayerProfile {
 	 * Update this player's sidebar.
 	 */
 	public void updateSidebar() {
-		if (!isOnline()) return;
+		if (getPlayer() == null) return;
+		Player p = getPlayer();
 		
-		Scoreboard scoreboard = getPlayer().getScoreboard();
+		Scoreboard scoreboard = p.getScoreboard();
 		String c = "\u00a7" + ChatColor.charOf(getHighestRank().getRankColour());
 		String rc = "\u00a7" + ChatColor.charOf(getHighestRank().getRankColour());
+
+		// If the scoreboard has been changed, be sure to flag RESET.
+		if ((scoreboardFlag & 1 << ScoreboardFlag.RESET.ordinal()) != 0) {
+			scoreboardObj = scoreboard.registerNewObjective("id"+getId()+"-side", "dummy", getColouredName());
+			if (isSettingEnabled(PlayerSetting.SHOW_SIDEBAR))
+				showSidebar();
+
+			setScoreboardLine(7, "  ");
+			setScoreboardLine(3, " ");
+			setScoreboardLine(0, "\u00a78beansbeans.net");
+		}
 
 		// Flags, name etc...
 		if ((scoreboardFlag & 1 << ScoreboardFlag.TITLE.ordinal()) != 0) {
 			List<String> flags = new ArrayList<>();
 			if (isHidden()) flags.add("HIDE");
 			if (isAFK()) flags.add("AFK");
-			
-			if (scoreboardObj == null) {
-				scoreboardObj = scoreboard.getObjective("id"+getId()+"-side");
-				if (scoreboardObj == null)
-					scoreboardObj = scoreboard.registerNewObjective("id"+getId()+"-side", "dummy", getColouredName());
-				if (isSettingEnabled(PlayerSetting.SHOW_SIDEBAR))
-					showSidebar();
-
-				setScoreboardLine(7, "  ");
-				setScoreboardLine(3, " ");
-				setScoreboardLine(0, "\u00a78beansbeans.net");
-			}
 
 			setScoreboardLine(12, !flags.isEmpty() ? c + "\u258E \u00a77 " + flags : null);
 			scoreboardObj.displayName(getColouredName()/*.append(!flags.isEmpty() ? Component.text("\u00a77 " + flags) : Component.empty())*/);
@@ -1385,7 +1452,7 @@ public class PlayerProfile {
 		if ((scoreboardFlag & 1 << ScoreboardFlag.REGION.ordinal()) != 0) {
 			Region r = getCurrentRegion();
 			if (r != null && !r.isWorldRegion()) {
-				String rName = r.getName();
+				String rName = r.getDisplayName();
 				if (rName.length() > 9)
 					rName = rName.substring(0, 10) + "..";
 				
@@ -1399,7 +1466,7 @@ public class PlayerProfile {
 				}
 
 			} else {
-				String rName = getPlayer().getWorld().getName();
+				String rName = p.getWorld().getName();
 				if (rName.length() > 9)
 					rName = rName.substring(0, 10) + "..";
 				
@@ -1410,12 +1477,12 @@ public class PlayerProfile {
 
 		// Time...
 		if ((scoreboardFlag & 1 << ScoreboardFlag.TIME.ordinal()) != 0) {
-			int hour = (Calendar.getTime(getPlayer().getWorld())+6000) / 1000;
+			int hour = (Calendar.getTime(p.getWorld())+6000) / 1000;
 			boolean night = hour < 6 || hour > 18;
 			
 			String symbol = night ? "\u00a79\u263d" : "\u00a7e\u2600";
-			if (getPlayer().getWorld().hasStorm()) {
-				if (getPlayer().getWorld().isThundering())
+			if (p.getWorld().hasStorm()) {
+				if (p.getWorld().isThundering())
 					symbol = night ? "\u00a79\u26a1" : "\u00a76\u26a1";
 				else
 					symbol = night ? "\u00a79\u2602" : "\u00a7b\u2602";
@@ -1428,7 +1495,7 @@ public class PlayerProfile {
 			float avg = redstoneManager.getAverageRedstoneActions(getPlayer().getChunk());
 
 			// Hold redstone to show it
-			if (avg < 1 || getPlayer().getInventory().getItemInMainHand().getType().getCreativeCategory() != CreativeCategory.REDSTONE) {
+			if (avg < 1 || p.getInventory().getItemInMainHand().getType().getCreativeCategory() != CreativeCategory.REDSTONE) {
 				setScoreboardLine(2, null);
 			} else {
 				float max = redstoneManager.getMaximumActions();
@@ -1472,7 +1539,7 @@ public class PlayerProfile {
 		return tpString;
 	}
 
-	private static RedstoneManager redstoneManager = Main.getInstance().getRedstoneManager();
+	private static final RedstoneManager redstoneManager = Main.getInstance().getRedstoneManager();
 	private static final DecimalFormat df = new DecimalFormat("#,###");
 	private static final DecimalFormat tpsf = new DecimalFormat("#.#");
 

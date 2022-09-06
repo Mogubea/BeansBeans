@@ -36,7 +36,7 @@ public class PurchaseOption {
 	
 	private static final DecimalFormat df = new DecimalFormat("#,###");
 	
-	private int dbid;
+	private int id;
 	private MenuShop menuShop;
 	private int coinCost;
 	private int crystalCost;
@@ -46,13 +46,16 @@ public class PurchaseOption {
 	private final BeanItem customItem;
 	private Lore description;
 	private String purchaseWord = "purchase";
+	private String greySubtext;
 	private DemanifestationReason demanifestationReason = DemanifestationReason.PURCHASE;
 	private final Map<ItemStack, Integer> materialCost = new LinkedHashMap<>();
 	private final Map<@NotNull Skill, Integer> skillRequirement = new LinkedHashMap<>();
-	
+
 	private boolean complimentary;
 	private boolean enabled;
 	private boolean dirty;
+
+	private boolean hasMultiPurchase;
 	
 	private boolean hasCustomName;
 	
@@ -176,6 +179,11 @@ public class PurchaseOption {
 
 		if (lore == null)
 			lore = new ArrayList<>();
+
+		if (greySubtext != null && !greySubtext.isEmpty()) {
+			lore.add(0, Component.text("\u00a78" + greySubtext));
+			lore.add(1, Component.empty());
+		}
 		
 		if (components != null) {
 			lore.add(Component.empty());
@@ -207,19 +215,19 @@ public class PurchaseOption {
 
 			if (xpCost > 0) {
 				boolean xp = p.getLevel() >= xpCost;
-				lore.add(Component.text("\u00a78 • \u00a7r" + df.format(xpCost) + " \u25CE Experience Levels " + (!xp ? "\u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")).colorIfAbsent(BeanColor.EXPERIENCE).decoration(TextDecoration.ITALIC, false));
+				lore.add(Component.text("\u00a78 • \u00a7r" + df.format(xpCost) + " \u25CE Experience Level" + (crystalCost != 1 ? "s " : " ")  + (!xp ? "\u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")).colorIfAbsent(BeanColor.EXPERIENCE).decoration(TextDecoration.ITALIC, false));
 				if (!xp) can = false;
 			}
 
 			if (crystalCost > 0) {
 				boolean crystal = pp.getCrystals() >= crystalCost;
-				lore.add(Component.text("\u00a78 • \u00a7r" + df.format(coinCost) + " \u2756 Crystals " + (!crystal ? "\u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")).colorIfAbsent(BeanColor.CRYSTALS).decoration(TextDecoration.ITALIC, false));
+				lore.add(Component.text("\u00a78 • \u00a7r" + df.format(crystalCost) + " \u2756 Crystal" + (crystalCost != 1 ? "s " : " ") + (!crystal ? "\u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")).colorIfAbsent(BeanColor.CRYSTALS).decoration(TextDecoration.ITALIC, false));
 				if (!crystal) can = false;
 			}
 				
 			if (coinCost > 0) {
 				boolean coin = pp.getBalance() >= coinCost;
-				lore.add(Component.text("\u00a78 • \u00a76" + df.format(coinCost) + " \u20BF Coins " + (!coin ? "\u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")));
+				lore.add(Component.text("\u00a78 • \u00a76" + df.format(coinCost) + " Coin" + (crystalCost != 1 ? "s " : " ") + (!coin ? "\u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")));
 				if (!coin) can = false;
 			}
 
@@ -284,6 +292,9 @@ public class PurchaseOption {
 
 		for (Entry<ItemStack, Integer> entry : materialCost.entrySet())
 			if (!p.getInventory().containsAtLeast(entry.getKey(), entry.getValue())) return false;
+
+		for (boolean ack : fakeCosts.values())
+			if (!ack) return false;
 		return true;
 	}
 
@@ -319,6 +330,10 @@ public class PurchaseOption {
 		this.dirty = dirty;
 	}
 
+	public void setSubtext(@Nullable String text) {
+		this.greySubtext = text;
+	}
+
 	public void addCoinCost(int coins) {
 		if (coins < 0) coins = 0;
 		this.dirty = true;
@@ -328,6 +343,7 @@ public class PurchaseOption {
 	public void addCrystalCost(int crystal) {
 		if (crystal < 0) crystal = 0;
 		this.crystalCost = crystal;
+		dirty = true;
 	}
 	
 	public void addItemCost(Material material, int quantity) {
@@ -367,7 +383,7 @@ public class PurchaseOption {
 		skillRequirement.put(skill, level);
 	}
 
-	public void setPurchaseWord(String word) {
+	public void setPurchaseWord(@Nullable String word) {
 		this.purchaseWord = word;
 		this.dirty = true;
 	}
@@ -386,6 +402,10 @@ public class PurchaseOption {
 		this.menuShop = Main.getInstance().menuShopManager().getOrMakeShop(shop);
 		return this;
 	}
+
+	public boolean hasMultiPurchase() {
+		return hasMultiPurchase;
+	}
 	
 	protected void setEnabled(boolean enabled) {
 		this.enabled = enabled;
@@ -397,7 +417,7 @@ public class PurchaseOption {
 	}
 	
 	protected boolean isDirty() {
-		return dbid > 0 && dirty;
+		return id > 0 && dirty;
 	}
 	
 	/**
@@ -411,23 +431,23 @@ public class PurchaseOption {
 	 * Allows for this PurchaseOption instance to be updated and overwritten in the database
 	 */
 	protected void setDBID(int id) {
-		this.dbid = id;
+		this.id = id;
 		dirty = false;
 	}
 	
 	protected int getDBID() {
-		return dbid;
+		return id;
 	}
 	
-	protected int getCoinCost() {
+	public int getCoinCost() {
 		return coinCost;
 	}
 	
-	protected int getCrystalCost() {
+	public int getCrystalCost() {
 		return crystalCost;
 	}
 
-	protected int getExperienceCost() {
+	public int getExperienceCost() {
 		return xpCost;
 	}
 
@@ -455,7 +475,13 @@ public class PurchaseOption {
 		return hasCustomName;
 	}
 
+	@Nullable
 	protected String getPurchaseWord() {
 		return purchaseWord;
+	}
+
+	@Nullable
+	protected String getSubtext() {
+		return greySubtext;
 	}
 }

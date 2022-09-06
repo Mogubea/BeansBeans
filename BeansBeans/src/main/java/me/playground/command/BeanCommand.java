@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bukkit.Bukkit;
@@ -64,11 +63,11 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 		this(plugin, "", canConsoleRun, minArguments, aliases);
 	}
 	
-	public BeanCommand(final Main plugin, String permissionString, boolean canConsoleRun, @Nonnull String... aliases) {
+	public BeanCommand(final Main plugin, String permissionString, boolean canConsoleRun, @NotNull String... aliases) {
 		this(plugin, permissionString, canConsoleRun, 0, aliases);
 	}
 	
-	public BeanCommand(final Main plugin, String permissionString, boolean canConsoleRun, int minArguments, @Nonnull String... aliases) {
+	public BeanCommand(final Main plugin, String permissionString, boolean canConsoleRun, int minArguments, @NotNull String... aliases) {
 		this.plugin = plugin;
 		this.permissionString = permissionString;
 		this.canConsoleRun = canConsoleRun;
@@ -76,12 +75,12 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 		this.minArgs = minArguments;
 	}
 	
-	public abstract boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args);
-	public abstract @Nullable List<String> runTabComplete(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args);
-	public abstract Component getUsage(@Nonnull CommandSender sender, @Nonnull String str, @Nonnull String[] args);
+	public abstract boolean runCommand(@Nullable PlayerProfile profile, @NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args);
+	public abstract @Nullable List<String> runTabComplete(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args);
+	public abstract Component getUsage(@NotNull CommandSender sender, @NotNull String str, @NotNull String[] args);
 	
 	@Override
-	public boolean onCommand(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
+	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args) {
 		try {
 			if (str.startsWith("beansbeans:"))
 				str = str.substring(11);
@@ -124,7 +123,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	}
 	
 	@Override
-	public @Nullable List<String> onTabComplete(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
+	public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args) {
 		if (!this.canConsoleRun && !(sender instanceof Player))
 			return new ArrayList<>();
 		
@@ -155,24 +154,27 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 		return aliases;
 	}
 
+	@NotNull
 	public String getName() {
 		return aliases[0];
 	}
 	
 	@Override
-	public @NotNull Main getPlugin() {
+	@NotNull
+	public Main getPlugin() {
 		return plugin;
 	}
-	
+
+	@NotNull
 	protected Random getRandom() {
 		return random;
 	}
 	
-	protected boolean isPlayer(CommandSender sender) {
+	protected boolean isPlayer(@NotNull CommandSender sender) {
 		return sender instanceof Player;
 	}
 	
-	protected ItemStack toItemStack(CommandSender sender, String str, int amount) {
+	protected ItemStack toItemStack(@NotNull CommandSender sender, String str, int amount) {
 		final BeanItem bi = BeanItem.from(str);
 		
 		ItemStack i;
@@ -328,7 +330,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 		final boolean ra = sender.hasPermission("*") || sender.hasPermission(getPermissionString() + "." + subCmd) || sender.hasPermission(getPermissionString() + ".*");
 		if (!ra) 
 			throw new CommandException(sender, "You don't have permission to use /" + aliases[0] + " " + subCmd + ".");
-		return ra; 
+		return true;
 	}
 	
 	protected boolean isSafe(Location loc) {

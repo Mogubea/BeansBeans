@@ -314,12 +314,25 @@ public class PlayerListener extends EventListener {
 		}
 
 		final ItemStack item = e.getItem();
+		final Player p = e.getPlayer();
+
+		// Re-flatten pathing
+		if (e.getItem() != null && e.getItem().getType().name().endsWith("SHOVEL")) {
+			boolean main = e.getHand() == EquipmentSlot.HAND;
+			if (block != null && block.getType() == Material.DIRT_PATH) {
+				if (!enactRegionPermission(getRegionAt(block.getLocation()), e, p, Flags.BUILD_ACCESS, "flatten dirt paths")) return;
+				if (main) p.swingMainHand(); else p.swingOffHand();
+				new PlayerItemDamageEvent(p, e.getItem(), 1, 1).callEvent();
+				block.setType(Material.DIRT);
+				block.getWorld().playSound(block.getLocation().add(0.5, 1, 0.5), Sound.ITEM_SHOVEL_FLATTEN, 0.55f, 0.9f + rand.nextFloat(0.2f));
+				e.setCancelled(true);
+				return;
+			}
+		}
 
 		// Stop here if unnecessary to check
 		if (e.getHand() != EquipmentSlot.HAND || e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-		
-		final Player p = e.getPlayer();
-		
+
 		// Check Spawner spawn count
 		if (block.getType() == Material.SPAWNER && e.getItem() == null && !PlayerProfile.from(p).onCdElseAdd("spawnerCheck", 500, true)) {
 			CreatureSpawner spawner = (CreatureSpawner) block.getState();
@@ -345,7 +358,15 @@ public class PlayerListener extends EventListener {
 		final Region region = getRegionAt(block.getLocation());
 		final boolean canBuild = checkRegionPermission(region, e, p, Flags.BUILD_ACCESS);
 		final Material blockMat = block.getType();
-		
+
+		// Stick to quickly check protection bounds
+		if (e.getItem() != null && e.getItem().getType() == Material.STICK && e.useInteractedBlock().equals(Result.DENY)) {
+			p.sendActionBar(region.isWorldRegion() ?
+					Component.text("This block is not protected by any player regions.", NamedTextColor.GRAY) :
+					Component.text("This block is protected by ", NamedTextColor.GRAY).append(region.getColouredName()).append(Component.text(".", NamedTextColor.GRAY)));
+			p.swingMainHand();
+		}
+
 		// Region Permission Checks - Regardless of items
 		if (!p.isBlocking()) {
 			boolean stop = false;
@@ -450,7 +471,6 @@ public class PlayerListener extends EventListener {
 		ItemStack item = e.getItem();
 		BeanItem custom = BeanItem.from(item);
 
-
 		if (e.getHand() == EquipmentSlot.HAND) {
 			final Block b = e.getClickedBlock();
 			final Player p = e.getPlayer();
@@ -534,7 +554,7 @@ public class PlayerListener extends EventListener {
 					Sign sign = (Sign) b.getState();
 					if (!sign.isEditable()) {
 						sign.setEditable(true);
-						sign.update();
+						sign.update(true);
 					}
 
 					ClientboundOpenSignEditorPacket packet = new ClientboundOpenSignEditorPacket(new BlockPos(b.getX(), b.getY(), b.getZ()));
@@ -664,15 +684,12 @@ public class PlayerListener extends EventListener {
 	
 	@EventHandler
 	public void onPlayerRespawn(PlayerRespawnEvent e) {
-		Bukkit.getServer().getScheduler().runTask(getPlugin(), new Runnable() {
-			@Override
-			public void run() {
-				Player p = e.getPlayer();
-				p.setHealth(10);
-				p.setSaturation(2.0F);
-				p.setFoodLevel(15);
-				PlayerProfile.from(e.getPlayer()).getStats().addToStat(StatType.GENERIC, "respawn", 1, true);
-			}
+		Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> {
+			Player p = e.getPlayer();
+			p.setHealth(10);
+			p.setSaturation(2.0F);
+			p.setFoodLevel(12);
+			PlayerProfile.from(e.getPlayer()).getStats().addToStat(StatType.GENERIC, "respawn", 1, true);
 		});
 	}
 	
@@ -740,6 +757,10 @@ public class PlayerListener extends EventListener {
 			else if (fromGm == GameMode.SPECTATOR)
 				p.teleport(PlayerProfile.from(p).getLastLocation(1), TeleportCause.END_GATEWAY);
 		}
+
+		// Keep flight through changes
+		if (PlayerProfile.from(p).isSettingEnabled(PlayerSetting.FLIGHT))
+			p.setAllowFlight(true);
 
 		p.sendMessage(Component.text("\u00a77You are now in \u00a7f").append(Component.translatable(toGm.translationKey())).append(Component.text("\u00a77.")));
 	}

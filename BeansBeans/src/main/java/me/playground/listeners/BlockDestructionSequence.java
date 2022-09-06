@@ -54,11 +54,8 @@ public class BlockDestructionSequence {
 	public boolean fireSequence() {
 		if (!new CustomBlockBreakEvent(block, player, enchantCause, triggerCustomBlocks, triggerCustomItems).callEvent()) return false;
 		// Fire Item Damage Event to consider Custom Damage System.
-		if (itemDamage > 0) {
-			// Consider Unbreaking
-			boolean takeDmg = playerItem.containsEnchantment(Enchantment.DURABILITY) ? (rand.nextFloat()*100F) < (100F / (playerItem.getEnchantmentLevel(Enchantment.DURABILITY)+1F)) : true;
-			new PlayerItemDamageEvent(player, playerItem, takeDmg ? itemDamage : 0, itemDamage).callEvent();
-		}
+		if (itemDamage > 0)
+			new PlayerItemDamageEvent(player, playerItem, itemDamage, itemDamage).callEvent();
 		
 		// Play Sounds and Effects
 		if (playEffect)

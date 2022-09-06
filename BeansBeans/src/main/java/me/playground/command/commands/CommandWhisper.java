@@ -23,6 +23,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.jetbrains.annotations.NotNull;
 
 public class CommandWhisper extends BeanCommand { // TODO:
 
@@ -90,7 +91,7 @@ public class CommandWhisper extends BeanCommand { // TODO:
 	};
 	
 	@Override
-	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
+	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
 		if (str.equals("r") || str.equals("reply"))
 			return Component.text("\u00a7cUsage: \u00a7f/"+str+" ").append(usageArguments[2]);
 		return Component.text("\u00a7cUsage: \u00a7f/"+str+" ").append(usageArguments[0]).append(usageArguments[1]);

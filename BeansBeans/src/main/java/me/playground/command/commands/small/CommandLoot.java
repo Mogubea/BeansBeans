@@ -14,6 +14,7 @@ import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.TabCompleter;
 import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Not the same as /bestiary, it also has a reload sub command and in future, will have more sub commands for those with permissions.
@@ -47,7 +48,7 @@ public class CommandLoot extends BeanCommand {
 	}
 	
 	@Override
-	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
+	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
 		return Component.text("\u00a7cUsage: \u00a7f/"+str);
 	}
 	

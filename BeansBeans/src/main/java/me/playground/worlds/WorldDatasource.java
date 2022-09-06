@@ -10,10 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.bukkit.GameRule;
-import org.bukkit.World;
-import org.bukkit.WorldCreator;
-import org.bukkit.WorldType;
+import org.bukkit.*;
 import org.bukkit.World.Environment;
 
 import me.playground.data.PrivateDatasource;
@@ -21,7 +18,7 @@ import me.playground.main.Main;
 
 public class WorldDatasource extends PrivateDatasource {
 	private final WorldManager manager;
-	
+
 	protected WorldDatasource(Main plugin, WorldManager manager) {
 		super(plugin);
 		this.manager = manager;
@@ -29,30 +26,54 @@ public class WorldDatasource extends PrivateDatasource {
 
 	@Override
 	public void loadAll() {
-		List<World> toRemake = new ArrayList<World>();
+		List<World> toRemake = new ArrayList<>();
 		
 		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("SELECT * FROM worlds WHERE enabled = 1"); ResultSet r = s.executeQuery()) {
 			while(r.next()) {
-				final short id = r.getShort("id");
-				final long seed = r.getLong("seed");
-				final UUID uuid = UUID.fromString(r.getString("uuid"));
+				short id = r.getShort("id");
+
+				String name = r.getString("name");
+				if (name == null) continue;
+
+				String uuidString = r.getString("uuid");
+				UUID uuid = null;
+				try {
+					uuid = UUID.fromString(uuidString);
+				} catch (Exception ignored) {}
+
+				long seed = r.getLong("seed");
+				String predefinedWorldString = r.getString("predefinedGenerator");
+
+				WorldType type = WorldType.NORMAL;
+				try {
+					type = WorldType.valueOf(r.getString("type"));
+				} catch (Exception ignored) {}
+
+				Environment environment = Environment.NORMAL;
+				try {
+					environment = Environment.valueOf(r.getString("environment"));
+				} catch (Exception ignored) {}
+
 				final int border = r.getInt("borderSize");
-				WorldCreator wc = new WorldCreator(r.getString("name"));
-				wc.type(WorldType.valueOf(r.getString("type")));
-				wc.environment(Environment.valueOf(r.getString("environment")));
+				WorldCreator wc = new WorldCreator(name);
+				wc.type(type);
+				wc.environment(environment);
 				if (seed != 0) // If 0 randomize
 					wc.seed(seed);
-				
-				final World w = wc.createWorld();
-				w.setGameRule(GameRule.DISABLE_RAIDS, true);
-				w.setGameRule(GameRule.KEEP_INVENTORY, true);
-				w.setGameRule(GameRule.MOB_GRIEFING, true);
-				w.getWorldBorder().setSize(border);
-				
-				manager.addWorldToMap(id, w);
-				
-				if (uuid != w.getUID())
-					toRemake.add(w);
+
+				PredefinedWorld predefinedWorld = PredefinedWorld.getPredefinedWorld(predefinedWorldString);
+				World world = predefinedWorld == null ? wc.createWorld() : predefinedWorld.createWorld(wc);
+
+				if (world != null) {
+					world.setGameRule(GameRule.DISABLE_RAIDS, true);
+					world.setGameRule(GameRule.MOB_GRIEFING, true);
+					world.getWorldBorder().setSize(border);
+
+					manager.addWorldToMap(id, world);
+
+					if (uuid != world.getUID())
+						toRemake.add(world);
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -67,7 +88,7 @@ public class WorldDatasource extends PrivateDatasource {
 	public void saveAll() {
 	}
 	
-	// Exists to make sure the database is up to date when a world happens to be remade on server start up.
+	// Exists to make sure the database is up-to-date when a world happens to be remade on server start up.
 	private void remakeWorldEntry(World world) {
 		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("UPDATE worlds SET uuid = ?, creationDate = ? WHERE name = ?")) {
 			s.setString(1, world.getUID().toString());
@@ -99,5 +120,5 @@ public class WorldDatasource extends PrivateDatasource {
 			e.printStackTrace();
 		}
 	}
-	
+
 }

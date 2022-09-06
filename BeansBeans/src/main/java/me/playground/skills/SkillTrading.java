@@ -12,7 +12,7 @@ public class SkillTrading extends Skill {
 
 	protected SkillTrading() {
 		super("Trading", 0xffff66, BarColor.YELLOW, 'e', "\u23fc", Material.EMERALD, Material.YELLOW_DYE,
-				"Earn Trading XP by striking deals with Villagers, Wandering Traders and Piglins! &cCurrently work in progress.");
+				"Earn Trading XP by striking deals with Villagers, Wandering Traders and Piglins! Currently work in progress.");
 	}
 
 	@Override

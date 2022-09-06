@@ -2,6 +2,8 @@ package me.playground.command.commands;
 
 import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
+import me.playground.gui.BeanGuiConfirm;
+import me.playground.items.lore.Lore;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import net.kyori.adventure.text.Component;
@@ -10,6 +12,7 @@ import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -31,8 +34,16 @@ public class CommandSethome extends BeanCommand {
 		if (!isSafe(loc))
 			throw new CommandException(p, "You can't set your home here!");
 
-		profile.setHome(p.getLocation());
-		p.sendMessage(Component.text("\u00a77Successfully updated your ").append(commandInfo("home")).append(Component.text("\u00a77 location!")));
+		new BeanGuiConfirm(p, Lore.getBuilder("Confirming will move your home location to your current position.").dontFormatColours().build().getLoree()) {
+			@Override
+			public void onAccept() {
+				profile.setHome(p.getLocation());
+				p.sendMessage(Component.text("\u00a77Successfully updated your ").append(commandInfo("home")).append(Component.text("\u00a77 location!")));
+			}
+
+			@Override
+			public void onDecline() {}
+		}.openInventory();
 		return true;
 	}
 
@@ -42,7 +53,7 @@ public class CommandSethome extends BeanCommand {
 	}
 	
 	@Override
-	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
+	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
 		return Component.text("\u00a7cUsage: \u00a7f/"+str);
 	}
 

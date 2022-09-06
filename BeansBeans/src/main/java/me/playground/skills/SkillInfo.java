@@ -44,7 +44,7 @@ public class SkillInfo {
 	
 	protected void setLevel(int level) {
 		if (level < 0) level = 0;
-		if (level > 30) level = 30;
+		if (level > 21) level = 21;
 		long xpReq = 0;
 		for (int lv = level; --lv > -1;)
 			xpReq += getXPRequirement(lv);
@@ -90,7 +90,7 @@ public class SkillInfo {
 	
 	private int getXPRequirement(int level) {
 		if (level < 0) level = 0;
-		return (level * (level * 3000) - ((level * 10000))) + 30000; // 1 = 23000 total, 10 = 905000 total, 20 = 7110000 total
+		return level * level * 3500 - (level * 10000) + 30000;
 	}
 	
 	public long getXPRequirement() {

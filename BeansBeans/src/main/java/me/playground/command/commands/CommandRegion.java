@@ -39,6 +39,7 @@ import me.playground.regions.flags.Flags;
 import me.playground.regions.flags.MemberLevel;
 import me.playground.utils.TabCompleter;
 import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This needs to be drastically modified when the Settlement and Parent Systems comes into play,
@@ -182,7 +183,7 @@ public class CommandRegion extends BeanCommand {
 				BlockVector3 min = wer.getMinimumPoint();
 				BlockVector3 max = wer.getMaximumPoint();
 				
-				region.setMinimumPoint(min.getX(), min.getY(), min.getZ()).setMaximumPoint(max.getX(), max.getY(), max.getZ()).update();
+				region.setMinimumPoint(min.getX(), min.getY(), min.getZ()).setMaximumPoint(max.getX(), max.getY(), max.getZ()).updateMapEntry();
 				p.sendMessage(Component.text("\u00a77Successfully updated the boundaries of ").append(region.toComponent()));
 			} catch (IncompleteRegionException e) {
 				throw new CommandException(p, "Please select an area using your wand/selection commands.");
@@ -353,7 +354,7 @@ public class CommandRegion extends BeanCommand {
 	};
 	
 	@Override
-	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
+	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
 		return Component.text("\u00a7cUsage: \u00a7f/"+str);
 	}
 	

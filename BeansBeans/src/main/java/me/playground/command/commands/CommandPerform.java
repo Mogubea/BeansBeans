@@ -17,6 +17,7 @@ import me.playground.utils.TabCompleter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.jetbrains.annotations.NotNull;
 
 public class CommandPerform extends BeanCommand {
 	
@@ -32,11 +33,11 @@ public class CommandPerform extends BeanCommand {
 		// Can only perform as someone below your rank.
 		checkRankPower(sender, target, "You can't perform actions as someone with equal or higher ranking!");
 		
-		String performance = "";
+		StringBuilder performance = new StringBuilder();
 		for (int x = 1; x < args.length; x++)
-			performance += args[x] + " ";
+			performance.append(args[x]).append(" ");
 		
-		target.chat(performance);
+		target.chat(performance.toString());
 		return true;
 	}
 
@@ -53,7 +54,7 @@ public class CommandPerform extends BeanCommand {
 	};
 	
 	@Override
-	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
+	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
 		return Component.text("\u00a7cUsage: \u00a7f/"+str).append(usageArguments[0]).append(usageArguments[1]);
 	}
 

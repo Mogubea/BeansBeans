@@ -31,8 +31,8 @@ public class Warp implements Dirty {
 	private boolean isPublic; // Whether the warp is publically available or not.
 	private boolean isLocked; // Whether the warp can be updated/deleted or not.
 	private int useCount; // How many times the warp has been used.
-	private List<Integer> invitedIds = new ArrayList<Integer>(); // Players that can access the warp regardless of it being private.
-	private List<Integer> bannedIds = new ArrayList<Integer>(); // Players that can't access the warp regardless of it being public.
+	private List<Integer> invitedIds; // Players that can access the warp regardless of it being private.
+	private List<Integer> bannedIds; // Players that can't access the warp regardless of it being public.
 	private Location location; // Location of the warp.
 	
 	private boolean dirty = false;

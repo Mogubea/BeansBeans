@@ -12,6 +12,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -44,8 +45,6 @@ public class EntityRegionCrystal extends ArmorStand implements IBeanEntity {
 		super(EntityType.ARMOR_STAND, ((CraftWorld)location.getWorld()).getHandle());
 		setPos(location.getBlockX() + 0.5, location.getBlockY() + 0.2, location.getBlockZ() + 0.5);
 		this.realPos = new Vector(location.getBlockX() + 0.5, location.getBlockY() + 0.2, location.getBlockZ() + 0.5);
-
-		setInvulnerable(true);
 	}
 
 	@Override
@@ -55,6 +54,7 @@ public class EntityRegionCrystal extends ArmorStand implements IBeanEntity {
 		stand.setHeadPose(new EulerAngle(0, 0, 0));
 		stand.setItem(EquipmentSlot.HEAD, crystalIcon);
 		stand.setInvisible(true);
+		stand.setInvulnerable(true);
 		stand.setBasePlate(false);
 		stand.setGravity(false);
 		stand.setSmall(true);
@@ -132,6 +132,11 @@ public class EntityRegionCrystal extends ArmorStand implements IBeanEntity {
 
 			stand.getPersistentDataContainer().set(KEY_REGION_ID, PersistentDataType.INTEGER, regionId);
 		}
+	}
+
+	@Override
+	public PushReaction getPistonPushReaction() {
+		return PushReaction.IGNORE;
 	}
 
 	@Override

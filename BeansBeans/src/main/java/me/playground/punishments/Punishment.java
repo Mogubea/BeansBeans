@@ -60,6 +60,10 @@ public abstract class Punishment<T> {
         return punishmentEnd;
     }
 
+    /**
+     * Get whether this {@link Punishment} is intended to last forever or not.
+     * @return true if it lasts forever.
+     */
     public boolean isPermanent() {
         return getPunishmentEnd() == null;
     }
@@ -72,21 +76,44 @@ public abstract class Punishment<T> {
         return canAppeal;
     }
 
+    /**
+     * Set when this {@link Punishment} intends to end.
+     * <p>Setting a duration which is in the future will re-enable this {@link Punishment}.
+     * @param duration If this is below 0, the {@link Punishment} will be made {@link #isPermanent()}.
+     */
     public void setPunishmentEnd(long duration) {
-        this.punishmentEnd = Instant.ofEpochMilli(punishmentStart.toEpochMilli() + duration);
+        this.punishmentEnd = duration <= 0 ? null : Instant.ofEpochMilli(punishmentStart.toEpochMilli() + duration);
+
+        // Check if it should still be active or not.
+        this.isEnabled = true;
+        isActive();
+
+        // Dirty
         setDirty(true);
     }
 
+    /**
+     * If this {@link Punishment} has a valid profile target, return it. Otherwise null.
+     * @return The punished profile, else null.
+     */
     @Nullable
     public PlayerProfile getPunishedProfile() {
         return PlayerProfile.fromIfExists(punished);
     }
 
+    /**
+     * Get the reason displayed to the punished {@link org.bukkit.entity.Player} if one is set.
+     * @return The reason if one is set, else null.
+     */
     @Nullable
     public String getReason() {
         return reason;
     }
 
+    /**
+     * Get the reason displayed to the punished {@link org.bukkit.entity.Player}.
+     * @return The reason if one is set, else default reason.
+     */
     @NotNull
     public String getNonnullReason() {
         return reason == null ? "No reason given" : reason;

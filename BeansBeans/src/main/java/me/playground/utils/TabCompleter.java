@@ -15,10 +15,7 @@
  */
 package me.playground.utils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.function.Function;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -138,7 +135,7 @@ public class TabCompleter {
         return completions;
     }
     
-    public static List<String> completeString(String argument, List<String> options) {
+    public static List<String> completeString(String argument, Collection<String> options) {
         argument = argument.toLowerCase(Locale.ENGLISH);
         List<String> completions = new ArrayList<>();
 

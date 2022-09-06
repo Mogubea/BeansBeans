@@ -67,6 +67,7 @@ public class MenuShopDatasource extends PrivateDatasource {
 				
 				PurchaseOption option = new PurchaseOption(displayItem, GsonComponentSerializer.gson().deserializeOrNull(r.getString("componentName")), r.getString("description") != null ? Lore.getBuilder(r.getString("description")).build() : null);
 				option.setPurchaseWord(r.getString("purchaseWord"));
+				option.setSubtext(r.getString("subText"));
 				option.setEnabled(r.getBoolean("enabled"));
 				option.addCoinCost(r.getInt("coinCost"));
 				option.addCrystalCost(r.getInt("crystalCost"));
@@ -164,11 +165,12 @@ public class MenuShopDatasource extends PrivateDatasource {
 	public void register(PurchaseOption option) {
 		if (option.getMenuShop() == null || option.getDBID() > 0) return;
 		
-		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO menushop_purchase_options (purchaseWord, coinCost, crystalCost, xpCost, displayItemType, displayItemId, "
-				+ "displayCompressedStack, displayItemAmount, componentName, description, enabled, shop, itemCost, skillRequirement) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
+		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO menushop_purchase_options (purchaseWord, subText, coinCost, crystalCost, xpCost, displayItemType, displayItemId, "
+				+ "displayCompressedStack, displayItemAmount, componentName, description, enabled, shop, itemCost, skillRequirement) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
 			int idx = 1;
 
 			s.setString(idx++, option.getPurchaseWord());
+			s.setString(idx++, option.getSubtext());
 
 			s.setInt(idx++, option.getCoinCost());
 			s.setInt(idx++, option.getCrystalCost());
@@ -231,11 +233,12 @@ public class MenuShopDatasource extends PrivateDatasource {
 	private void saveDirtyPurchaseOption(PurchaseOption option) {
 		if (option.getMenuShop() == null || option.getDBID() < 1) return; // Can't update if it doesn't exist
 		
-		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("UPDATE menushop_purchase_options SET purchaseWord = ?, coinCost = ?, crystalCost = ?, xpCost = ?, displayItemType = ?, "
+		try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("UPDATE menushop_purchase_options SET purchaseWord = ?, subText = ?, coinCost = ?, crystalCost = ?, xpCost = ?, displayItemType = ?, "
 				+ "displayItemId = ?, displayCompressedStack = ?, displayItemAmount = ?, componentName = ?, description = ?, enabled = ?, shop = ?, itemCost = ?, skillRequirement = ? WHERE id = ?")) {
 			int idx = 1;
 
 			s.setString(idx++, option.getPurchaseWord());
+			s.setString(idx++, option.getSubtext());
 
 			s.setInt(idx++, option.getCoinCost());
 			s.setInt(idx++, option.getCrystalCost());

@@ -2,7 +2,10 @@ package me.playground.gui;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
+import me.playground.items.lore.Lore;
+import me.playground.skills.Skill;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -38,7 +41,6 @@ public class BeanGuiMainMenu extends BeanGui {
 	private static final ItemStack skull_Fon = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzBkYzk0MjBjMTRmY2FiOThkY2Q2ZjVhZDUxZThlYmUyYmI5Nzg5NTk3NmNhYTcwNTc4ZjczYzY2ZGZiZCJ9fX0="), "\u00a7eFlying: \u00a7aEnabled");
 	
 	private static final ItemStack icon_wardrobe = newItem(new ItemStack(Material.LEATHER_CHESTPLATE), "\u00a7cWardrobe", "\u00a77Store and swap your armour!", "", "\u00a76» \u00a7eClick to open!");
-	private static final ItemStack icon_skills = newItem(new ItemStack(Material.GOLDEN_PICKAXE), "\u00a76Your Skills", "\u00a77Skill Interface", "", "\u00a76» \u00a7eClick to open!");
 	private static final ItemStack icon_home = newItem(new ItemStack(Material.DARK_OAK_DOOR), "\u00a7bWarp Home", "\u00a77Teleport to your /sethome!", "", "\u00a76» \u00a7eClick to warp!");
 	private static final ItemStack icon_nohome = newItem(new ItemStack(Material.IRON_DOOR), "\u00a7cWarp Home", "\u00a77You haven't used /sethome yet!", "", "\u00a78» Cannot warp.");
 	private static final ItemStack icon_shome = newItem(new ItemStack(Material.RED_BED), "\u00a7bWarp to Spawnpoint", "\u00a77Teleport to your natural spawn point!", "", "\u00a76» \u00a7eClick to warp!");
@@ -56,7 +58,9 @@ public class BeanGuiMainMenu extends BeanGui {
 	private static final ItemStack icon_crafting = newItem(new ItemStack(Material.CRAFTING_TABLE), Component.text("Virtual Workbench", BeanColor.CRYSTALS), "\u00a77ye", "", "\u00a76» \u00a7eClick to craft!");
 	private static final ItemStack icon_anvil = newItem(new ItemStack(Material.ANVIL), Component.text("Virtual Anvil", BeanColor.CRYSTALS), "\u00a77ye", "", "\u00a76» \u00a7eClick to smith!");
 	private static final ItemStack icon_deliveries = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2RiY2E0YjY5ZWFmOGRjYjdhYzM3MjgyMjhkZThhNjQ0NDA3ODcwMTMzNDJkZGFhYmMxYjAwZWViOGVlYzFlMiJ9fX0="), Component.text("\u00a76Deliveries"));
-	
+
+	private static final ItemStack icon_skills = newItem(new ItemStack(Material.GOLDEN_PICKAXE), Component.text("Your Skills", NamedTextColor.GOLD));
+
 	public BeanGuiMainMenu(Player p) {
 		super(p);
 		
@@ -100,7 +104,7 @@ public class BeanGuiMainMenu extends BeanGui {
 			contents[9] = icon_resetOverride;
 		
 		contents[13] = newItem(tpp.getSkull(), tpp.getColouredName(), 
-				Component.text("\u00a77Rank: ").append(tpp.getHighestRank().toComponent()).append(tpp.getDonorRank() != null ? Component.text("\u00a77 (").append(tpp.getDonorRank().toComponent()).append(Component.text("\u00a77)")) : Component.empty()),
+				Component.text("\u00a78 • \u00a77Rank: ").append(tpp.getHighestRank().toComponent()).append(tpp.getDonorRank() != null ? Component.text("\u00a77 (").append(tpp.getDonorRank().toComponent()).append(Component.text("\u00a77)")) : Component.empty()),
 				Component.empty(),
 				Component.text("\u00a77View and edit information about your"),
 				Component.text("\u00a77Player Profile such as your name colour,"),
@@ -114,7 +118,7 @@ public class BeanGuiMainMenu extends BeanGui {
 		
 		// TODO: make better
 		waameta.lore(Arrays.asList(
-				Component.text("Using \u00a7f" + tpp.getHeirlooms().size() + "\u00a7r/\u00a77" + tpp.getHeirlooms().getMaxHeirlooms() + "\u00a7r Slots").colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false), 
+				Component.text("\u00a78 • \u00a7rUsing \u00a7f" + tpp.getHeirlooms().size() + "\u00a7r/\u00a77" + tpp.getHeirlooms().getMaxHeirlooms() + "\u00a7r Slots").colorIfAbsent(aa).decoration(TextDecoration.ITALIC, false),
 				Component.text(""),
 				Component.text("\u00a77Store and utilise the effects of"),
 				Component.text("\u00a77your Heirlooms in this magical bag."),
@@ -130,22 +134,32 @@ public class BeanGuiMainMenu extends BeanGui {
 		if (heirloomCount > 0)
 			waa.setAmount(Math.min(64, heirloomCount));
 		waa.setItemMeta(waameta);
-		
+
+		ItemStack icon_skill = icon_skills.clone();
+		icon_skills.editMeta(meta -> {
+			Skill bestSkill = tpp.getSkills().getBestSkill();
+			List<Component> lore = new ArrayList<>();
+			lore.add(Component.text("\u00a78 • \u00a7rBest Grade: ").colorIfAbsent(TextColor.color(0xdcb244)).append(Component.text("\u00a7r\u00a7l" + tpp.getSkillGrade(bestSkill) + " \u00a77in \u00a7r" + bestSkill.getNameWithIcon()).colorIfAbsent(bestSkill.getColour())).decoration(TextDecoration.ITALIC, false));
+			lore.add(Component.text("\u00a78 • \u00a7rAverage Grade: ").colorIfAbsent(TextColor.color(0xdcb244)).append(Component.text("\u00a7f\u00a7l" + tpp.getSkills().getAverageGrade())).decoration(TextDecoration.ITALIC, false));
+			lore.addAll(Lore.fastBuild(true, 36, "\nView your skill progress and access your skill trees with unique upgradable perks (Work in Progress)!\n\n&6» &eClick to open!"));
+			meta.lore(lore);
+		});
+
 		contents[20] = icon_bestiary;
-		contents[21] = icon_skills;
+		contents[21] = icon_skill;
 		contents[22] = waa;
 		contents[23] = icon_wardrobe;
 		contents[24] = tpp.getHome() != null ? icon_home : icon_nohome;
 		
 		ItemStack region = icon_region.clone();
 		TextColor regionCol = TextColor.color(TextColor.color(0x3d3d3d | BeanColor.REGION.value()));
-		ArrayList<Component> regionLore = new ArrayList<Component>();
+		ArrayList<Component> regionLore = new ArrayList<>();
 		boolean regionCanOpen = !getPlugin().regionManager().getRegion(p.getLocation()).isWorldRegion() || pp.hasPermission("bean.region.override");
 		
 		if (!regionCanOpen)
 			regionLore.add(Component.text("\u00a77No region found.", regionCol));
 		else
-			regionLore.add(Component.text("Region: ", regionCol).append(getPlugin().regionManager().getRegion(p.getLocation()).getColouredName()).decoration(TextDecoration.ITALIC, false));
+			regionLore.add(Component.text("\u00a78 • \u00a7rRegion: ", regionCol).append(getPlugin().regionManager().getRegion(p.getLocation()).getColouredName()).decoration(TextDecoration.ITALIC, false));
 		
 		regionLore.addAll(Arrays.asList(
 				Component.empty(), 
@@ -160,7 +174,7 @@ public class BeanGuiMainMenu extends BeanGui {
 		contents[30] = icon_warps;
 		contents[31] = region;
 		contents[32] = newItem(new ItemStack(Material.HOPPER_MINECART), Component.text("\u00a78Pickup Blacklist"), 
-				Component.text("Filtering \u00a7f" + tpp.getPickupBlacklist().size() + "\u00a7r/\u00a77135\u00a7r Items").colorIfAbsent(TextColor.color(TextColor.color(0x3d3d3d | NamedTextColor.DARK_GRAY.value()))).decoration(TextDecoration.ITALIC, false),
+				Component.text("\u00a78 • \u00a7rFiltering \u00a7f" + tpp.getPickupBlacklist().size() + "\u00a7r/\u00a77135\u00a7r Items").colorIfAbsent(TextColor.color(TextColor.color(0x3d3d3d | NamedTextColor.DARK_GRAY.value()))).decoration(TextDecoration.ITALIC, false),
 				Component.empty(),
 				Component.text("\u00a77Your personal item blacklist listing the"),
 				Component.text("\u00a77items you absolutely refuse to pick up!"),
@@ -218,7 +232,7 @@ public class BeanGuiMainMenu extends BeanGui {
 			break;
 		case 8: // Flight Button
 			if (p.hasPermission("bean.cmd.fly"))
-				p.setAllowFlight(!p.getAllowFlight());
+				p.chat("/fly");
 			break;
 		case 9: // Cancel Override Button
 			if (override)

@@ -2,6 +2,7 @@ package me.playground.skills;
 
 import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,10 +19,13 @@ import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.settings.PlayerSetting;
 
 public class Skills {
-	
+
+	private static final String[] levelTitles = {"F-", "F", "F+", "E-", "E", "E+", "D-", "D", "D+", "C-", "C", "C+", "B-", "B", "B+", "A-", "A", "A+", "S-", "S", "S+"};
+
 	private final PlayerProfile profile;
 	private final BossBar xpBar = Bukkit.getServer().createBossBar("Default Bar", BarColor.BLUE, BarStyle.SEGMENTED_10);
 	private final Map<Skill, SkillInfo> skills;
+	private Skill highestSkill;
 	private boolean notifyingLevelUp;
 
 	private double averageGrade;
@@ -63,14 +67,44 @@ public class Skills {
 		return getSkillInfo(skill).getSkillPoints();
 	}
 
-	public double getAverageGrade() {
+	/**
+	 * Grab the mean level across all skills.
+	 * @return the mean level of all the skills.
+	 */
+	public double getAverageLevel() {
 		if (averageGradeDirty) {
 			double totalSkillLevel = 0;
-			for (Skill skill : Skill.getRegisteredSkills())
-				totalSkillLevel += getLevel(skill);
-		}
+			List<Skill> skills = Skill.getRegisteredSkills();
 
+			for (Skill skill : skills) {
+				if (highestSkill == null)
+					highestSkill = skill;
+				else if (getLevel(highestSkill) < getLevel(skill))
+					highestSkill = skill;
+
+				totalSkillLevel += getLevel(skill);
+			}
+
+			averageGrade = totalSkillLevel / skills.size();
+			this.averageGradeDirty = false;
+		}
 		return averageGrade;
+	}
+
+	/**
+	 * Grab the average grade across all skills.
+	 * @return the mean grade of all the skills.
+	 */
+	public String getAverageGrade() {
+		if (getAverageLevel() < 0) return levelTitles[0];
+		if (getAverageLevel() >= levelTitles.length) return levelTitles[levelTitles.length-1];
+		return levelTitles[(int) getAverageLevel()];
+	}
+
+	public Skill getBestSkill() {
+		if (highestSkill == null) getAverageLevel(); // Trigger the update. averageGradeDirty will 100% be true in this instance.
+
+		return highestSkill;
 	}
 
 	/**
@@ -124,6 +158,7 @@ public class Skills {
 		lastSkill = skill;
 		skills.get(skill).setLevel(level);
 		notifyLevelBar(skill, 50L);
+		averageGradeDirty = true;
 	}
 	
 	/**
@@ -144,6 +179,12 @@ public class Skills {
 	private int xpSche;
 	private int recentAccumulation = 0;
 	private Skill lastSkill = null;
+
+	/**
+	 * Send the skill boss bar to the player
+	 * @param skill The skill being displayed. This impacts the colour, text etc.
+	 * @param dura The length of time to be displayed for.
+	 */
 	protected void notifyLevelBar(Skill skill, long dura) {
 		SkillInfo info = getSkillInfo(skill);
 		
@@ -167,6 +208,11 @@ public class Skills {
 	}
 
 	private final String[] colRotation = {"c", "e", "a", "b", "d", "f"};
+
+	/**
+	 * Send the level up skill boss bar to the player
+	 * @param skill The skill being displayed.
+	 */
 	private void notifyLevelUp(Skill skill) {
 		SkillInfo info = getSkillInfo(skill);
 		xpBar.setColor(skill.getBarColour());
@@ -179,7 +225,7 @@ public class Skills {
 
 		AtomicInteger rotation = new AtomicInteger();
 		int eck = Bukkit.getScheduler().scheduleSyncRepeatingTask(Main.getInstance(), () -> {
-			rotation.getAndAdd(rotation.get() >= colRotation.length ? -colRotation.length : 1);
+			rotation.set(rotation.get() >= colRotation.length ? 0 : rotation.get() + 1);
 			xpBar.setTitle("\u00a7" + skill.getColourCode() + skill.getNameWithIcon() + "\u00a78 (\u00a7"+skill.getColourCode()+info.getGrade()+"\u00a78)\u00a78 | \u00a7b" + "+" + dff.format(recentAccumulation) + " XP\u00a78 | \u00a7"+colRotation[rotation.get()] + "\u00a7l GRADE UP! ");
 		}, 0L, 5L);
 
@@ -188,7 +234,7 @@ public class Skills {
 			notifyingLevelUp = false;
 			averageGradeDirty = false;
 			Bukkit.getScheduler().cancelTask(eck);
-		}, 80);
+		}, 120);
 	}
 	
 	public SkillInfo getSkillInfo(Skill skill) {

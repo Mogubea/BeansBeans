@@ -14,10 +14,7 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -101,8 +98,7 @@ public abstract class BeanGui implements IPluginRef {
 	/**
 	 * Fired from {@link me.playground.listeners.EntityListener} whenever a player picks up an item while
 	 * viewing this {@link BeanGui} instance.
-	 * 
-	 * This does not fire when an item is added to the player's inventory through other means.
+	 * <p>This does not fire when an item is added to the player's inventory through other means.
 	 */
 	public void onItemPickup(EntityPickupItemEvent e) { }
 	
@@ -125,6 +121,8 @@ public abstract class BeanGui implements IPluginRef {
 	 * @return True if something happened during this method.
 	 */
 	public boolean preInventoryClick(InventoryClickEvent e) {
+		if (e.getAction() == InventoryAction.NOTHING) return true;
+
 		e.setCancelled(true);
 		final ItemStack i = e.getCurrentItem();
 		if (i == null) return true;

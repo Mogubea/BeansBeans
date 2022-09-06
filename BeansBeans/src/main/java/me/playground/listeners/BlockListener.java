@@ -8,6 +8,7 @@ import me.playground.items.tracking.ManifestationReason;
 import me.playground.listeners.events.CustomBlockBreakEvent;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
+import me.playground.playerprofile.settings.PlayerSetting;
 import me.playground.playerprofile.stats.StatType;
 import me.playground.regions.Region;
 import me.playground.regions.flags.Flags;
@@ -29,6 +30,8 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
+
+import java.util.List;
 
 public class BlockListener extends EventListener {
 	
@@ -63,7 +66,7 @@ public class BlockListener extends EventListener {
 			// Disallow connection to custom Chests.
 			if (container instanceof Chest) {
 				if (container.getBlockData() instanceof org.bukkit.block.data.type.Chest chestData) {
-					// Check if the current chest we're placing is in the process of turning into a double chest..
+					// Check if the current chest we're placing is in the process of turning into a double chest...
 					if (chestData.getType() != Type.SINGLE) {
 						// Grab the facing direction to determine the order of faces to check.
 						// This can save time if the first connection is immediately a valid one.
@@ -89,7 +92,7 @@ public class BlockListener extends EventListener {
 								org.bukkit.block.data.type.Chest chestData2 = (org.bukkit.block.data.type.Chest) chest2.getBlockData();
 								if (chestData.getFacing().equals(chestData2.getFacing())) {
 									
-									// If the checked chest is already a double or it's a custom, fail and flip the check to the other side.
+									// If the checked chest is already a double, or it's a custom, fail and flip the check to the other side.
 									if (chestData2.getType() != Type.SINGLE || BeanBlock.from(b) != null) {
 										// Reset its type
 										chestData2.setType(chestData2.getType());
@@ -196,9 +199,23 @@ public class BlockListener extends EventListener {
 		e.getBlock().removeMetadata("placed", getPlugin());
 	}
 
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onBlockPlaceFinal(BlockPlaceEvent e) {
+		PlayerProfile pp = PlayerProfile.from(e.getPlayer());
+		Block b = e.getBlock();
+
+		// Check if near the region boundary of their region (roughly 7 second cool down)
+		if (pp.isSettingEnabled(PlayerSetting.REGION_WARNING) && !pp.onCdElseAdd("region_boundary_warning", 6500, true)) {
+			List<Region> nearbyRegions = getPlugin().regionManager().getRegions(b.getLocation(), 6);
+			int regionCount = nearbyRegions.size(); // Doing this the efficient for loop way due to how hot this method is
+			for (int x = -1; ++x < regionCount;)
+				pp.visualiseRegion(nearbyRegions.get(x), 140);
+		}
+	}
+
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onExplosion(BlockExplodeEvent e) {
-		if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.EXPLOSIONS))
+		if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.BLOCK_EXPLOSIONS))
 			e.blockList().clear();
 	}
 
@@ -406,6 +423,17 @@ public class BlockListener extends EventListener {
 			if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.OBSIDIAN_FORMATION))
 				e.setCancelled(true);
 		}
+	}
+
+	/**
+	 * Prevent the flowing of liquids and warping of Ender Dragon Egg into other Regions
+	 */
+	@EventHandler(priority = EventPriority.LOW)
+	public void onLiquidFlow(BlockFromToEvent e) {
+		Region from = getRegionAt(e.getBlock().getLocation());
+		Region to = getRegionAt(e.getToBlock().getLocation());
+		if (!to.isWorldRegion() && from != to)
+			e.setCancelled(true);
 	}
 
 	private boolean isHarvestableCrop(Material m) {

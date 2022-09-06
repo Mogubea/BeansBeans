@@ -210,7 +210,7 @@ public class BeanGuiBigChest extends BeanGui {
 	public static ArrayList<Player> getViewers(Chest chest) {
 		ArrayList<Player> viewerz = new ArrayList<>();
 		if (chest != null)
-			viewerz = viewers.getOrDefault(chest.getLocation(), viewerz);
+			viewerz = new ArrayList<>(viewers.getOrDefault(chest.getLocation(), viewerz));
 		
 		return viewerz;
 	}

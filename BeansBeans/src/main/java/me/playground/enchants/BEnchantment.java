@@ -30,7 +30,12 @@ public class BEnchantment extends Enchantment {
 	private static final List<BEnchantment> customEnchants = new ArrayList<>();
 	private static final Map<String, BEnchantment> byKeyString = new TreeMap<>();
 	private static final Map<String, BEnchantment> byNameString = new TreeMap<>();
-	
+
+	// Replaced Vanilla Enchantments
+	public static final BEnchantment LEGACY_DURABILITY = new BEnchantment(Enchantment.DURABILITY, "Unbreaking", 4, 2, 5, 5)
+			.setItemRarity(ItemRarity.UNTOUCHABLE)
+			.setLegacy();
+
 	// Custom Enchantments
 	public static final BEnchantment FAKE_GLOW = new BEnchantment("fake_glow", "Glow", BEnchantmentTarget.VANISHABLE, 1, 1, false, false, false, 0, 0, 0, 0)
 			.setLore(Lore.getBuilder("Adds a glow.").dontFormatColours().build())
@@ -56,7 +61,7 @@ public class BEnchantment extends Enchantment {
 		public List<TextComponent> getLore(int level) {
 			return getLoreInstance().getLore("" + 7.5 * level, "" + 0.01 * level);
 		}
-	}.setLore(Lore.getBuilder("Blocks have a &a{0}%&r chance to drop some experience orbs. There is also a &a{1}%&r chance to drop a significantly large amount.").build())
+	}.setLore(Lore.getBuilder("Blocks have a &a{0}%&r chance to drop some experience orbs. There is also a &a{1}%&r chance to drop a significantly larger amount.").build())
 			.setItemRarity(ItemRarity.UNCOMMON, 3)
 			.setBookPowerRequirement(50, 80, 110);
 	
@@ -89,7 +94,11 @@ public class BEnchantment extends Enchantment {
 	/**
 	 * Attacking an Entity will take some of your coins in exchange for additional damage.
 	 */
-	public static final BEnchantment PAY_TO_WIN = new BEnchantment("pay_to_win", "Pay to Win", BEnchantmentTarget.WEAPON, 1, 2, false, false, false, 2, 2, 5, 5)
+	public static final BEnchantment PAY_TO_WIN = new BEnchantment("pay_to_win", "Pay to Win", BEnchantmentTarget.WEAPON, 1, 2, false, false, false, 2, 2, 5, 5) {
+		public List<TextComponent> getLore(int level) {
+			return getLoreInstance().getLore((2^level) + (level-1F), ((2^level) + (level-1))/4F, ((2^level) + (level-1)) * 10);
+		}
+	}.setLore(Lore.getBuilder("Attacks deal an additional &c{0} \ud83d\udde1 Damage&r and &c{1} \ud83c\udf0a Sweeping Damage &rat the cost of &6{2} Coins&r.").build())
 			.setBookPowerRequirement(50, 100);
 
 	// armour
@@ -157,13 +166,6 @@ public class BEnchantment extends Enchantment {
 	public static final BEnchantment BURDEN_ZOOPHOBIC = new BEnchantment("zoophobic", "Zoophobic", BEnchantmentTarget.WEAPON, 1, 1, true, false, false, -3, 0, 0, 0)
 			.setLore(Lore.getBuilder("The sword is rendered &#774444completely ineffective &ragainst animals.").build())
 			.setBookPowerRequirement(80);
-
-
-	// Replaced Vanilla Enchantments
-	public static final BEnchantment LEGACY_DURABILITY = new BEnchantment(Enchantment.DURABILITY, "Unbreaking", 4, 2, 5, 5, BEnchantment.UNBREAKING)
-			.setItemRarity(ItemRarity.UNTOUCHABLE)
-			.setLegacy();
-
 
 	// Vanilla Enchantments
 	public static final BEnchantment PROTECTION_ENVIRONMENTAL = new BEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, "Protection", 2, 2, 2, 4)
@@ -408,7 +410,7 @@ public class BEnchantment extends Enchantment {
 	}.setLore(Lore.getBuilder("The wearer's &#a8baef\ud83c\udf0a Speed&r is increased by &#a8baef{0}%&r when walking on &#773545Soul Blocks&r. Each block traversed has a &c{1}% &rchance to consume durability.").build())
 			.setItemRarity(ItemRarity.RARE, 5)
 			.setBookPowerRequirement(5, 15, 30, 45);
-	
+
 	private final boolean isCustom;
 	private final String englishString;
 	private final String translationKey;
@@ -508,7 +510,7 @@ public class BEnchantment extends Enchantment {
 		this.runicValuePerLevel = runicPerLevel;
 		this.baseXpCost = xpCost;
 		this.xpCostPerLevel = xpCostPerLevel;
-		
+
 		byKeyString.put(key().asString(), this);
 		byNameString.put(key().value(), this);
 	}
@@ -520,7 +522,6 @@ public class BEnchantment extends Enchantment {
 	/**
 	 * Grab the {@link BEnchantment} version of an {@link Enchantment}.
 	 */
-	@NotNull
 	public static BEnchantment from(Enchantment enchant) {
 		if (enchant instanceof BEnchantment bEnchantment)
 			return bEnchantment;
@@ -579,9 +580,13 @@ public class BEnchantment extends Enchantment {
 		return this;
 	}
 
+	/**
+	 * Removes it from the named map but keeps it in the key map
+	 */
 	protected BEnchantment setLegacy() {
 		this.componentName = this.componentName.color(NamedTextColor.DARK_GRAY).decoration(TextDecoration.STRIKETHROUGH, true);
 		this.isLegacy = true;
+
 		byNameString.remove(key().value());
 		return this;
 	}
@@ -819,8 +824,11 @@ public class BEnchantment extends Enchantment {
         return byKeyString.values().toArray(new BEnchantment[0]);
     }
 	
-	public static int size() {
-		return byKeyString.size();
+	public static int size(boolean includeLegacy) {
+		return includeLegacy ? byKeyString.size() : byNameString.size();
 	}
 
+	public boolean isLegacy() {
+		return isLegacy;
+	}
 }

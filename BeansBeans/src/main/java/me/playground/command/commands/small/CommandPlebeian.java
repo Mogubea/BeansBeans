@@ -17,6 +17,7 @@ import me.playground.ranks.Rank;
 import me.playground.utils.TabCompleter;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.NotNull;
 
 public class CommandPlebeian extends BeanCommand {
 	
@@ -72,7 +73,7 @@ public class CommandPlebeian extends BeanCommand {
 	}
 	
 	@Override
-	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
+	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
 		return Component.text("\u00a7cUsage: \u00a7f/"+str);
 	}
 	

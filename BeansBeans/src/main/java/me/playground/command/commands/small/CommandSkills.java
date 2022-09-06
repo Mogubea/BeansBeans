@@ -22,6 +22,7 @@ import me.playground.utils.TabCompleter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.jetbrains.annotations.NotNull;
 
 public class CommandSkills extends BeanCommand {
 	
@@ -39,13 +40,13 @@ public class CommandSkills extends BeanCommand {
 		PlayerProfile prof = args.length > 0 && sender.hasPermission("bean.cmd.skills.edit") ? toProfile(sender, args[0]) : null;
 		if (prof != null) {
 			if (args.length < 4)
-				new CommandException(sender, "Usage:\u00a7f/"+str+" " + prof.getDisplayName() + "\u00a77<gxp/rxp/sl> <skill> <value>");
+				throw new CommandException(sender, "Usage:\u00a7f/"+str+" " + prof.getDisplayName() + "\u00a77<gxp/rxp/sl> <skill> <value>");
 			
 			String action = args[1].toLowerCase();
 			Skill skill = Skill.getByName(args[2].toLowerCase());
 			Skills skills = prof.getSkills();
 			if (skill == null)
-				new CommandException(sender, "Couldn't find skill '" + args[2] + "'");
+				throw new CommandException(sender, "Couldn't find skill '" + args[2] + "'");
 			
 			int value = toIntMinMax(sender, args[3], 1, Integer.MAX_VALUE);
 			
@@ -100,7 +101,7 @@ public class CommandSkills extends BeanCommand {
 	}
 	
 	@Override
-	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
+	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
 		return Component.text("\u00a7cUsage: \u00a7f/"+str);
 	}
 	

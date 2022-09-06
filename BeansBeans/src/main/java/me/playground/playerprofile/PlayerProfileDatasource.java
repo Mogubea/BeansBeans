@@ -69,7 +69,7 @@ public class PlayerProfileDatasource extends PrivateDatasource {
                 s.setInt(++idx, pp.getNameColour().value());
                 s.setString(++idx, pp.getNickname());
                 s.setLong(++idx, pp.getSettings());
-                s.setShort(++idx, pp.getWarpCount());
+                s.setShort(++idx, (short)pp.getWarpCount());
                 s.setInt(++idx, pp.getCivilizationId());
                 s.setString(++idx, pp.getJob() == null ? null : pp.getJob().getName());
 
@@ -429,7 +429,7 @@ public class PlayerProfileDatasource extends PrivateDatasource {
                 Timestamp tsTwo = r.getTimestamp("openDate");
                 Timestamp tsThree = r.getTimestamp("expiryDate");
                 String content = r.getString("content");
-                DeliveryType type = DeliveryType.PACKAGE;
+                DeliveryType type;
                 try {
                     type = DeliveryType.valueOf(r.getString("type"));
 

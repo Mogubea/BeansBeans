@@ -26,6 +26,7 @@ import me.playground.regions.flags.Flags;
 import me.playground.utils.TabCompleter;
 import me.playground.worlds.WorldManager;
 import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.NotNull;
 
 public class CommandWorld extends BeanCommand {
 	
@@ -128,7 +129,7 @@ public class CommandWorld extends BeanCommand {
 	}
 	
 	@Override
-	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
+	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
 		return null;
 	}
 

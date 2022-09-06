@@ -3,6 +3,7 @@ package me.playground.gui;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import me.playground.items.BeanItem;
@@ -35,10 +36,12 @@ public class BeanGuiBasicMenuShop extends BeanGui {
 	
 	private boolean trueClosure = true;
 	private int maxThisPage;
-	private final int maxPerPage = 28;
-	
+	protected int maxPerPage = 28;
+
+	private PurchaseOption currentOption;
+
 	private final HashMap<Integer, PurchaseOption> mappings = new HashMap<>();
-	
+
 	public BeanGuiBasicMenuShop(Player p, MenuShop shop) {
 		super(p);
 		
@@ -53,7 +56,7 @@ public class BeanGuiBasicMenuShop extends BeanGui {
 		truePlayerInventory.setContents(p.getInventory().getContents());
 		
 		addSellValues(false);
-		
+
 		setName(purchaseOptions.size() > maxPerPage ? baseName.append(Component.text(" (1/" + (((purchaseOptions.size()-1) / maxPerPage) + 1) + ")")) : baseName);
 	}
 	
@@ -95,7 +98,11 @@ public class BeanGuiBasicMenuShop extends BeanGui {
 			}
 			return;
 		}
-		
+
+		if (currentOption != null) {
+			
+		}
+
 		// Buying items
 		PurchaseOption opt = mappings.get(slot);
 		if (opt == null) return;
@@ -115,6 +122,7 @@ public class BeanGuiBasicMenuShop extends BeanGui {
 				//truePlayerInventory.addItem(item);
 				addSellValues(true);
 			}
+
 		// Buy multiple
 		} else {
 			

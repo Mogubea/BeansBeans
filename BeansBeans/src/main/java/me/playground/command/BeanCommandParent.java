@@ -29,11 +29,11 @@ public abstract class BeanCommandParent extends BeanCommand {
 	private final int size;
 	
 	public BeanCommandParent(final Main plugin, String... aliases) {
-		this(plugin, "", false, 0, aliases);
+		this(plugin, "", false, 1, aliases);
 	}
 	
 	public BeanCommandParent(final Main plugin, boolean canConsoleRun, String... aliases) {
-		this(plugin, "", canConsoleRun, 0, aliases);
+		this(plugin, "", canConsoleRun, 1, aliases);
 	}
 	
 	public BeanCommandParent(final Main plugin, boolean canConsoleRun, int minArguments, String... aliases) {
@@ -41,7 +41,7 @@ public abstract class BeanCommandParent extends BeanCommand {
 	}
 	
 	public BeanCommandParent(final Main plugin, String permissionString, boolean canConsoleRun, @Nonnull String... aliases) {
-		this(plugin, permissionString, canConsoleRun, 0, aliases);
+		this(plugin, permissionString, canConsoleRun, 1, aliases);
 	}
 	
 	public BeanCommandParent(final Main plugin, String permissionString, boolean canConsoleRun, int minArguments, @Nonnull String... aliases) {
@@ -65,8 +65,9 @@ public abstract class BeanCommandParent extends BeanCommand {
 		String cmdName = args[0].toLowerCase();
 		Method subCmd = subCmds.get(cmdName);
 		if (subCmd == null) throw new CommandException(sender, "Sub-command /" + str + " " + cmdName + " does not exist.");
-		
-		if (!sender.hasPermission(subCmd.getAnnotation(SubCommand.class).permissionString())) 
+
+		String permissionString = subCmd.getAnnotation(SubCommand.class).permissionString();
+		if (!permissionString.isEmpty() && !sender.hasPermission(permissionString))
 			throw new CommandException(sender, "You don't have permission to use /" + str + " " + cmdName + ".");
 		
 		try {

@@ -78,4 +78,8 @@ public class BItemPackage extends BeanItem {
 	public LootTable getLootTable() {
 		return Main.getInstance().lootManager().getLootTable(table);
 	}
+
+	protected String getRarityString() {
+		return "Crate";
+	}
 }

@@ -1,16 +1,17 @@
 package me.playground.listeners;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import me.playground.items.tracking.DemanifestationReason;
 import me.playground.items.tracking.ManifestationReason;
 import me.playground.playerprofile.ProfileStore;
+import me.playground.utils.BeanColor;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.attribute.AttributeModifier.Operation;
+import org.bukkit.craftbukkit.v1_18_R2.advancement.CraftAdvancement;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -24,6 +25,7 @@ import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantRecipe;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import io.papermc.paper.event.player.PlayerTradeEvent;
@@ -40,7 +42,6 @@ import me.playground.regions.flags.Flags;
 import me.playground.regions.flags.MemberLevel;
 import me.playground.skills.Skill;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -50,7 +51,6 @@ public class EntityListener extends EventListener {
 
 	private final NamespacedKey KEY_ENTITY_LEVEL;
 	private final NamespacedKey KEY_PIGLIN_BARTERER;
-	private final ArrayList<ArmorStand> damageIndicators = new ArrayList<ArmorStand>(); // unsure if needed.
 	
 	public EntityListener(Main plugin) {
 		super(plugin);
@@ -65,29 +65,26 @@ public class EntityListener extends EventListener {
 			ArmorStand stand = (ArmorStand) armorStand;
 			stand.setInvisible(true);
 			stand.setInvulnerable(true);
-			stand.setCanTick(false);
 			stand.setMarker(true);
 			stand.setCollidable(false);
-			stand.customName(Component.text(dmg, TextColor.color(16746649)));
+			stand.customName(Component.text(dmg, BeanColor.BAN));
 			stand.setCustomNameVisible(true);
-			stand.setPersistent(false);
+			stand.setPersistent(false); // Removes on restart
+			stand.setGravity(true);
 		});
-		
-		damageIndicators.add(di);
-		Bukkit.getScheduler().scheduleSyncDelayedTask(getPlugin(), () -> {
-			damageIndicators.remove(di);
-			di.remove();
-		}, 14);
-	}
-	
-	public void clearDamageIndicators() {
-		for (ArmorStand di : damageIndicators)
-			di.remove();
-		damageIndicators.clear();
+
+		Bukkit.getScheduler().runTaskLater(getPlugin(), di::remove, 18);
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onStupidDamage(EntityDamageByEntityEvent e) {
+		// I don't care if a player is in creative mode, just don't hurt the damn entity ever.
+		// If it's Invulnerable, it is likely that for a good reason.
+		if (e.getEntity().isInvulnerable()) {
+			e.setCancelled(true);
+			return;
+		}
+
 		// stupid entities
 		if (isDumbEntity(e.getEntityType())) {
 			final Region r = getRegionAt(e.getEntity().getLocation());
@@ -170,7 +167,7 @@ public class EntityListener extends EventListener {
 		if (!(e.getDamager() instanceof Player p)) return;
 		if (!isDumbEntity(e.getEntityType())) {
 			PlayerProfile.from(p).getSkills().doSkillEvents(e, Skill.COMBAT);
-			spawnDamageIndicator(e.getEntity().getLocation().add(-0.5 + getPlugin().getRandom().nextDouble(), e.getEntity().getHeight()-(getPlugin().getRandom().nextDouble()/2), -0.5 + getPlugin().getRandom().nextDouble()), (int)e.getDamage());
+			spawnDamageIndicator(e.getEntity().getLocation().add(-0.5 + getPlugin().getRandom().nextDouble(), (e.getEntity().getHeight()/2) + ((e.getEntity().getHeight()/4) * (rand.nextDouble(2) - 1)), -0.5 + getPlugin().getRandom().nextDouble()), (int)e.getDamage());
 		}
 	}
 	
@@ -298,10 +295,16 @@ public class EntityListener extends EventListener {
 				if (!(hp/2 < 1))
 					pp.addToBalance((long) (2 + getPlugin().getRandom().nextInt(hp/2) * region.getEffectiveFlag(Flags.MOB_DROP_COIN)));
 			}
-			
-			// EXP Multiplier
-			if (e.getDroppedExp() > 0) // XXX: MOB_DROP_EXP_MULTIPLIER
+
+			if (e.getDroppedExp() > 0) {
+				// EXP Level Multiplier
+				PersistentDataContainer container = e.getEntity().getPersistentDataContainer();
+				int mobLevel = container.getOrDefault(KEY_ENTITY_LEVEL, PersistentDataType.SHORT, (short)1);
+				e.setDroppedExp((int) ((float)e.getDroppedExp() * (1 + (mobLevel/10)))); // 10% bonus xp base for level 1 mobs
+
+				// EXP Region Multiplier
 				e.setDroppedExp((int) ((float)e.getDroppedExp() * region.getEffectiveFlag(Flags.MOB_DROP_EXP)));
+			}
 		}
 
 		// Remove 50% xp
@@ -332,17 +335,17 @@ public class EntityListener extends EventListener {
 		final Region r = getRegionAt(e.getLocation());
 
 		cancelBlockDamage = switch (e.getEntityType()) {
-			case PRIMED_TNT, MINECART_TNT -> !r.getEffectiveFlag(Flags.TNT);
-			default -> !r.getEffectiveFlag(Flags.EXPLOSIONS);
+			case PRIMED_TNT, MINECART_TNT -> !r.getEffectiveFlag(Flags.BLOCK_EXPLOSIONS);
+			default -> !r.getEffectiveFlag(Flags.ENTITY_EXPLOSIONS);
 		};
 		
 		if (cancelBlockDamage)
 			e.blockList().clear();
 
-		// Poison Cloud from Creepers
-		if (e.getEntityType() == EntityType.CREEPER) {
+		// Poison Cloud from Creepers if block damage is cancelled.
+		if (cancelBlockDamage && e.getEntityType() == EntityType.CREEPER) {
 			int level = e.getEntity().getPersistentDataContainer().getOrDefault(KEY_ENTITY_LEVEL, PersistentDataType.SHORT, (short)1);
-			e.getLocation().getWorld().playSound(e.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 0.5F, 0.65F);
+			e.getLocation().getWorld().playSound(e.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 0.4F, 0.45F);
 			e.getLocation().getWorld().spawnEntity(e.getLocation(), EntityType.AREA_EFFECT_CLOUD, SpawnReason.CUSTOM, (entity) -> {
 				AreaEffectCloud cloud = (AreaEffectCloud) entity;
 				cloud.setBasePotionData(new PotionData(PotionType.POISON));
@@ -569,6 +572,7 @@ public class EntityListener extends EventListener {
 				case WITHER -> {
 					AttributeInstance attribute = monster.getAttribute(Attribute.GENERIC_MAX_HEALTH);
 					attribute.addModifier(new AttributeModifier(Attribute.GENERIC_MAX_HEALTH.translationKey(), 1, Operation.MULTIPLY_SCALAR_1));
+					monster.setHealth(attribute.getValue());
 					return;
 				}
 				default -> { return; }
@@ -579,7 +583,8 @@ public class EntityListener extends EventListener {
 			// Increase the HP of mobs above level 1
 			if (level > 1) {
 				AttributeInstance attribute = monster.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-				attribute.addModifier(new AttributeModifier(Attribute.GENERIC_MAX_HEALTH.translationKey(), level-1 * 0.1, Operation.MULTIPLY_SCALAR_1));
+				attribute.addModifier(new AttributeModifier(Attribute.GENERIC_MAX_HEALTH.translationKey(), (level-1) * 0.1, Operation.MULTIPLY_SCALAR_1));
+				monster.setHealth(attribute.getValue());
 			}
 
 			// Increase the armour of mobs above level 3
@@ -587,7 +592,7 @@ public class EntityListener extends EventListener {
 				AttributeInstance attribute = monster.getAttribute(Attribute.GENERIC_ARMOR);
 				if (attribute == null)
 					monster.registerAttribute(Attribute.GENERIC_ARMOR);
-				attribute.addModifier(new AttributeModifier(Attribute.GENERIC_ARMOR.translationKey(), 2 + rand.nextInt(level), Operation.ADD_NUMBER));
+				attribute.addModifier(new AttributeModifier(Attribute.GENERIC_ARMOR.translationKey(), 3 + rand.nextInt(level * 2), Operation.ADD_NUMBER));
 			}
 		}
 	}

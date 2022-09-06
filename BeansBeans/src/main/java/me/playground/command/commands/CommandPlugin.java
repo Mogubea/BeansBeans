@@ -17,6 +17,7 @@ import me.playground.playerprofile.PlayerProfile;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import org.jetbrains.annotations.NotNull;
 
 public class CommandPlugin extends BeanCommand {
 
@@ -62,7 +63,7 @@ public class CommandPlugin extends BeanCommand {
 	}
 	
 	@Override
-	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
+	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
 		return null;
 	}
 

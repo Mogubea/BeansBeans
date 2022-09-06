@@ -19,9 +19,11 @@ public class CustomEntityType<T extends Entity> {
     private static final CustomEntityManager manager = Main.getInstance().getCustomEntityManager();
 
     public static final CustomEntityType<EntityRegionCrystal> REGION_CRYSTAL;
+    public static final CustomEntityType<EntityHologram> HOLOGRAM;
 
     static {
         REGION_CRYSTAL = register("REGION_CRYSTAL", EntityRegionCrystal::new);
+        HOLOGRAM = register("HOLOGRAM", EntityHologram::new);
     }
 
     private final String identifier;
@@ -46,6 +48,8 @@ public class CustomEntityType<T extends Entity> {
 
     @NotNull
     public T spawn(Location location) {
+        if (factory == null) throw new UnsupportedOperationException("Spawning this entity via CustomEntityType#spawn isn't possible.");
+
         ServerLevel level = ((CraftWorld)location.getWorld()).getHandle();
         T newEntity = factory.create(location);
         org.bukkit.entity.Entity bukkitEnt = newEntity.getBukkitEntity();
@@ -59,6 +63,8 @@ public class CustomEntityType<T extends Entity> {
     }
 
     public T replace(org.bukkit.entity.Entity oldEntity) {
+        if (factory == null) throw new UnsupportedOperationException("Replacing this entity via CustomEntityType#spawn isn't possible.");
+
         ServerLevel level = ((CraftWorld)oldEntity.getWorld()).getHandle();
         T newEntity = factory.create(oldEntity.getLocation());
         org.bukkit.entity.Entity bukkitEnt = newEntity.getBukkitEntity();

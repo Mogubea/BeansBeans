@@ -24,7 +24,7 @@ import me.playground.items.BeanItemHeirloom;
 public class HeirloomInventory {
 	
 //	private static boolean enabled = true;
-	private final static int DEFAULT_SIZE = 5;
+	private final static int DEFAULT_SIZE = 7;
 	
 	/**
 	 * @return The default size of a new {@link HeirloomInventory}.
@@ -35,8 +35,8 @@ public class HeirloomInventory {
 	
 	private int maxSize;
 	final private PlayerProfile profile;
-	final private LinkedHashMap<String, ItemStack> heirlooms = new LinkedHashMap<String, ItemStack>();
-	final private HashMap<Attribute, Double> visualModifiers = new HashMap<Attribute, Double>(4); // Purely for show
+	final private LinkedHashMap<String, ItemStack> heirlooms = new LinkedHashMap<>();
+	final private HashMap<Attribute, Double> visualModifiers = new HashMap<>(4); // Purely for show
 	
 	public HeirloomInventory(PlayerProfile owner, @Nullable JSONObject data) {
 		putDefaultValues();
@@ -74,7 +74,7 @@ public class HeirloomInventory {
 	}
 	
 	public ArrayList<ItemStack> getContents() {
-		return new ArrayList<ItemStack>(heirlooms.values());
+		return new ArrayList<>(heirlooms.values());
 	}
 	
 	public int size() {

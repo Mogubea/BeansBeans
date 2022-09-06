@@ -13,10 +13,7 @@ import me.playground.items.tracking.DemanifestationReason;
 import me.playground.menushop.PurchaseOption;
 import me.playground.ranks.Permission;
 import net.kyori.adventure.text.TextComponent;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.block.EnchantingTable;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -74,7 +71,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 	protected static final ItemStack confGreen = newItem(new ItemStack(Material.LIME_STAINED_GLASS_PANE), Component.empty());
 	
 	protected static final ItemStack allEnchantList = newItem(new ItemStack(Material.KNOWLEDGE_BOOK), Component.text("Enchantment List", BeanColor.ENCHANT),
-			Component.text("\u00a77A detailed list of all \u00a7b" + BEnchantment.size() + "\u00a77 enchantments"),
+			Component.text("\u00a77A detailed list of all \u00a7b" + BEnchantment.size(false) + "\u00a77 enchantments"),
 			Component.text("\u00a77and burdens on Bean's Beans!"),
 			Component.empty(),
 			Component.text("\u00a76» \u00a7eClick to view!"));
@@ -225,6 +222,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 				}
 
 				updateEnchantSlot(); // Done by global gui update
+				p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, table != null ? table.getLocation() : p.getEyeLocation(), 12, 0.5, 0.5, 0.5);
 				p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0F, 1.0F);
 			} else {
 				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.4F, 0.8F);
@@ -620,7 +618,8 @@ public class BeanGuiEnchantingTable extends BeanGui {
 				confirm = new PurchaseOption(item, item.getItemMeta().displayName(), new Lore(lore));
 				confirm.setDemanifestationReason(DemanifestationReason.ENCHANTING);
 				confirm.setPurchaseWord("enchant");
-				confirm.addFakeCost(Component.text("\u00a77Remaining \u00a7r\u274c Runic Capacity", BeanColor.ENCHANT), remainingRunicScore > 0);
+				confirm.setSubtext("Enchanting");
+				confirm.addFakeCost(Component.text(remainingRunicScore + " \u269D Remaining Runic Capacity", BeanColor.ENCHANT), remainingRunicScore >= 0);
 				confirm.addExperienceCost(xpCost);
 
 				if (lapisCost > 0)

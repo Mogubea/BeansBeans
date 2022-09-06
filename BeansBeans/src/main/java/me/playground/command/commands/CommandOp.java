@@ -45,6 +45,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.network.protocol.game.ClientboundHorseScreenOpenPacket;
+import org.jetbrains.annotations.NotNull;
 
 public class CommandOp extends BeanCommand {
 
@@ -338,7 +339,7 @@ public class CommandOp extends BeanCommand {
 	};
 	
 	@Override
-	public Component getUsage(@Nonnull CommandSender sender, String str, String[] args) {
+	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
 		return Component.text("\u00a7cUsage: \u00a7f"+str+" ").append(usageArguments[0]);
 	}
 

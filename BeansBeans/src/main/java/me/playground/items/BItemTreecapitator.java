@@ -46,6 +46,7 @@ public class BItemTreecapitator extends BItemDurable {
 		super(1000, "HUNGRY_TREECAPITATOR", "Hungry Treecapitator", Material.IRON_AXE, ItemRarity.EPIC, 3, 1500);
 		addAttribute(Attribute.GENERIC_ATTACK_SPEED, -3, EquipmentSlot.HAND);
 		addRepairMaterial(BeanItem.LIVING_METAL_INGOT, 3f);
+		setRunicCapacity(10);
 	}
 	
 	@Override

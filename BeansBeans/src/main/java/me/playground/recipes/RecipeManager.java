@@ -8,11 +8,9 @@ import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
-import org.bukkit.inventory.FurnaceRecipe;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Recipe;
 
 import me.playground.main.Main;
+import org.bukkit.inventory.*;
 
 public class RecipeManager {
 	private final ArrayList<Recipe> recipes = new ArrayList<>();
@@ -24,6 +22,7 @@ public class RecipeManager {
 		new RecipesShaped(plugin, this);
 		new RecipesShapeless(plugin, this);
 		new RecipesSmithing(plugin, this);
+		new RecipesStonecutter(plugin, this);
 		
 		Map<Material, Material> furnaceRecipes = new HashMap<>();
 		Iterator<Recipe> recipes = Bukkit.recipeIterator();
@@ -45,9 +44,8 @@ public class RecipeManager {
 		this.recipes.forEach(Bukkit::addRecipe);
 	}
 	
-	public Recipe addRecipe(Recipe r) {
+	public void addRecipe(Recipe r) {
 		recipes.add(r);
-		return r;
 	}
 	
 	public void unregisterRecipes() {

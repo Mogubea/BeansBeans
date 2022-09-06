@@ -33,4 +33,7 @@ public class Permission {
 	public final static String VIEW_ITEM_VALUES = "bean.itemvalues.view";
 	public final static String EDIT_ITEM_VALUES = "bean.itemvalues.edit";
 
+	public final static String FLIGHT_IN_OWNED_REGIONS = "bean.region.flight";
+
+	public final static String HOLOGRAM_EXTRA_LINES = "bean.hologram.morelines";
 }

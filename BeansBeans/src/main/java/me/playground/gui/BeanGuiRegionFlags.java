@@ -77,14 +77,27 @@ public class BeanGuiRegionFlags extends BeanGuiRegion {
 					getRegion().setFlag(flag, !setting);
 					p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
 					i.setItem(slot, getFlagItem(flag));
+					refreshRegionViewers();
 				} else if (flag instanceof FlagMember) {
 					new BeanGuiRegionFlagMember(p, regionIdx, (FlagMember)flag).openInventory();
 				} else if (flag instanceof FlagFloat) {
-					getPlugin().getSignMenuFactory().requestSignResponse(p, Material.WARPED_WALL_SIGN, (strings -> getRegion().setFlag(flag, Float.parseFloat(strings[0]))), true, "Float Value for Flag", flag.getDisplayName());
+					getPlugin().getSignMenuFactory().requestSignResponse(p, Material.WARPED_WALL_SIGN, (strings -> {
+						getRegion().setFlag(flag, Float.parseFloat(strings[0]));
+						i.setItem(slot, getFlagItem(flag));
+						refreshRegionViewers();
+					}), true, "Float Value for Flag", flag.getDisplayName());
 				} else if (flag instanceof FlagInt) {
-					getPlugin().getSignMenuFactory().requestSignResponse(p, Material.WARPED_WALL_SIGN, (strings -> getRegion().setFlag(flag, Integer.decode(strings[0]))), true, "Int Value for Flag", flag.getDisplayName());
+					getPlugin().getSignMenuFactory().requestSignResponse(p, Material.WARPED_WALL_SIGN, (strings -> {
+						getRegion().setFlag(flag, Integer.decode(strings[0]));
+						i.setItem(slot, getFlagItem(flag));
+						refreshRegionViewers();
+					}), true, "Int Value for Flag", flag.getDisplayName());
 				} else if (flag instanceof FlagString) {
-					getPlugin().getSignMenuFactory().requestSignResponse(p, Material.WARPED_WALL_SIGN, (strings -> getRegion().setFlag(flag, strings[0]+strings[1])), true, flag.getDisplayName() + " Value");
+					getPlugin().getSignMenuFactory().requestSignResponse(p, Material.WARPED_WALL_SIGN, (strings -> {
+						getRegion().setFlag(flag, strings[0]+strings[1]);
+						i.setItem(slot, getFlagItem(flag));
+						refreshRegionViewers();
+					}), true, flag.getDisplayName() + " Value");
 				}
 			}
 			return;
@@ -213,7 +226,7 @@ public class BeanGuiRegionFlags extends BeanGuiRegion {
 			int value = getRegion().getEffectiveFlag(flagColour);
 			Component setting = Component.text(Long.toHexString(value), TextColor.color(value));
 			item.setType(Material.IRON_SHOVEL);
-			lore.add(Component.text("Value: ", BeanColor.REGION).append(setting).decoration(TextDecoration.ITALIC, false));
+			lore.add(Component.text("Value: #", BeanColor.REGION).append(setting).decoration(TextDecoration.ITALIC, false));
 		} else {
 			Object setting = getRegion().getEffectiveFlag(flag);
 			item.setType(Material.COMMAND_BLOCK_MINECART);

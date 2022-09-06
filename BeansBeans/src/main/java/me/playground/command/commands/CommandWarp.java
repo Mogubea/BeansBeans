@@ -8,6 +8,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import me.playground.playerprofile.ProfileStore;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.GameMode;
 import org.bukkit.command.Command;
@@ -41,7 +42,7 @@ public class CommandWarp extends BeanCommand {
 		wm = plugin.warpManager();
 	}
 	
-	final List<String> bannedWarpNames = new ArrayList<String>(Arrays.asList("create", "delete", "rename", "reload", "remove", "settype", "public", "private", "lock", "relocate", "invite", "uninvite", "give", "list", "home"));
+	final List<String> bannedWarpNames = new ArrayList<>(Arrays.asList("create", "delete", "rename", "reload", "remove", "settype", "public", "private", "lock", "relocate", "invite", "uninvite", "give", "list", "home"));
 	
 	final List<String> subCmds = Arrays.asList("create", "delete", "give", "home", "invite", "list", "private", "public", "reload", "relocate", "rename", "settype", "uninvite");
 	final String[] warpTypeArgs = { "normal", "shop" };
@@ -86,7 +87,7 @@ public class CommandWarp extends BeanCommand {
 				newWarp = wm.createWarp(profile.getId(), warpname, p.getLocation());
 				if (!profile.hasPermission("bean.cmd.warp.*"))
 					profile.addToBalance(-creationCost, "Created a warp with the name '" + warpname + "'");
-				profile.upWarpCount();
+				profile.addOwnedWarp(warp);
 			} catch (Throwable e) {
 				p.sendMessage("\u00a7cThere was a problem creating your warp!");
 			}
@@ -107,8 +108,8 @@ public class CommandWarp extends BeanCommand {
 					String name = warp.getName();
 					int ownerId = warp.getOwnerId();
 					if (warp.delete()) {
-						if (ownerId > 0)
-							PlayerProfile.fromIfExists(ownerId).downWarpCount();
+						if (ProfileStore.from(ownerId).isOnline())
+							PlayerProfile.fromIfExists(ownerId).removeOwnedWarp(warp);
 						p.sendMessage(Component.text("\u00a77Successfully deleted \u00a7d" + name));
 					}
 					p.closeInventory();
@@ -135,31 +136,27 @@ public class CommandWarp extends BeanCommand {
 		} else if ("invite".equals(subcmd)) {
 			if (args.length < 3) throw new CommandException(sender, "Usage: \u00a7f/warp invite " + (warp!=null ? args[1] : "\u00a77<warp>") + "\u00a77 [players]");
 			canDo(sender, warp, "invite people to");
-			
-			if (args.length > 2) {
-				for (int x = 2; x < args.length; x++) {
-					int id = toId(p, args[x]);
-					if (warp.isInvited(id)) {
-						p.sendMessage(PlayerProfile.getDisplayName(id).append(Component.text("\u00a7c is already invited to ")).append(warp.toComponent()));
-					} else {
-						warp.invitePlayer(id);
-						p.sendMessage(Component.text("\u00a77Successfully invited ").append(PlayerProfile.getDisplayName(id)).append(Component.text("\u00a77 to ")).append(warp.toComponent()));
-					}
+
+			for (int x = 2; x < args.length; x++) {
+				int id = toId(p, args[x]);
+				if (warp.isInvited(id)) {
+					p.sendMessage(PlayerProfile.getDisplayName(id).append(Component.text("\u00a7c is already invited to ")).append(warp.toComponent()));
+				} else {
+					warp.invitePlayer(id);
+					p.sendMessage(Component.text("\u00a77Successfully invited ").append(PlayerProfile.getDisplayName(id)).append(Component.text("\u00a77 to ")).append(warp.toComponent()));
 				}
 			}
 		} else if ("uninvite".equals(subcmd)) {
 			if (args.length < 3) throw new CommandException(sender, "Usage: \u00a7f/warp uninvite " + (warp!=null ? args[1] : "\u00a77<warp>") + "\u00a77 [players]");
 			canDo(sender, warp, "uninvite people from");
-			
-			if (args.length > 2) {
-				for (int x = 2; x < args.length; x++) {
-					int id = toId(p, args[x]);
-					
-					if (warp.uninvitePlayer(id)) {
-						p.sendMessage(Component.text("\u00a77Successfully uninvited ").append(PlayerProfile.getDisplayName(id)).append(Component.text("\u00a77 from ")).append(warp.toComponent()));
-					} else {
-						p.sendMessage(PlayerProfile.getDisplayName(id).append(Component.text("\u00a7c was never invited to ")).append(warp.toComponent()));
-					}
+
+			for (int x = 2; x < args.length; x++) {
+				int id = toId(p, args[x]);
+
+				if (warp.uninvitePlayer(id)) {
+					p.sendMessage(Component.text("\u00a77Successfully uninvited ").append(PlayerProfile.getDisplayName(id)).append(Component.text("\u00a77 from ")).append(warp.toComponent()));
+				} else {
+					p.sendMessage(PlayerProfile.getDisplayName(id).append(Component.text("\u00a7c was never invited to ")).append(warp.toComponent()));
 				}
 			}
 		} else if ("rename".equals(subcmd)) {
@@ -243,10 +240,18 @@ public class CommandWarp extends BeanCommand {
 	}
 	
 	private boolean canDo(CommandSender sender, Warp warp, String err) {
-		boolean can = (isPlayer(sender) ? (warp.isOwner(((Player)sender)) || sender.hasPermission("bean.cmd.warp.*") || sender.hasPermission("bean.cmd.warp.others")) : true);
+		boolean can = (!isPlayer(sender) || (warp.isOwner(((Player) sender)) || sender.hasPermission("bean.cmd.warp.*") || sender.hasPermission("bean.cmd.warp.others")));
 		if (!can)
 			throw new CommandException(sender, Component.text("\u00a7cYou can't " + err + " ").append(warp.toComponent()).append(Component.text("\u00a7c.")));
-		return can;
+		return true;
+	}
+
+	private List<String> getWarpSuggestions(PlayerProfile profile) {
+		List<String> warps = profile.recentWarps();
+		profile.getOwnedWarps().keySet().forEach(name -> {
+			if (!warps.contains(name)) warps.add(name);
+		});
+		return warps;
 	}
 
 	@Override
@@ -257,11 +262,11 @@ public class CommandWarp extends BeanCommand {
 				ack.remove("give");
 				ack.remove("reload");
 			}
-			ack.addAll(TabCompleter.completeString(args[0], PlayerProfile.from((Player)sender).recentWarps()));
+			ack.addAll(TabCompleter.completeString(args[0], getWarpSuggestions(PlayerProfile.from((Player)sender))));
 			return ack;
 		}
 		if (args.length == 2 && !args[0].equals("create") && subCmds.contains(args[0]))
-			return TabCompleter.completeString(args[1], PlayerProfile.from((Player)sender).recentWarps());
+			return TabCompleter.completeString(args[1], getWarpSuggestions(PlayerProfile.from((Player)sender)));
 		if (args.length == 3 && args[0].equals("settype"))
 			if (sender.hasPermission("bean.cmd.warp.*"))
 				return TabCompleter.completeEnum(args[2], WarpType.class);
