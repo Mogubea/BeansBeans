@@ -811,28 +811,32 @@ public class PlayerProfile {
 		if (!isOnline() || setting == null) return;
 		final boolean enabled = isSettingEnabled(setting);
 		switch(setting) {
-		case HIDE:
-			Main.getTeamManager().updateTeam(getPlayer()); // Team
-			flagScoreboardUpdate(ScoreboardFlag.TITLE);
-			break;
-		case SHOW_SIDEBAR:
-			if (enabled) {
-				flagFullScoreboardUpdate(); // flag rather than actually update since it's a spammable setting
-				showSidebar();
-			} else
-				hideSidebar();
-			break;
-		case MENU_ITEM:
-			if (enabled) {
-				ItemStack prevItem = getPlayer().getInventory().getItem(9);
-				getPlayer().getInventory().setItem(9, BeanItem.PLAYER_MENU.getOriginalStack());
-				if (prevItem != null && !prevItem.equals(BeanItem.PLAYER_MENU.getOriginalStack()))
-					giveItem(prevItem);
-			} else {
-				getPlayer().getInventory().setItem(9, null);
-			}
-		default:
-			break;
+			case HIDE:
+				Main.getTeamManager().updateTeam(getPlayer()); // Team
+				flagScoreboardUpdate(ScoreboardFlag.TITLE);
+				break;
+			case REGION_BOUNDARIES:
+				if (enabled)
+					updateCurrentRegion(currentRegion);
+				break;
+			case SHOW_SIDEBAR:
+				if (enabled) {
+					flagFullScoreboardUpdate(); // flag rather than actually update since it's a spammable setting
+					showSidebar();
+				} else
+					hideSidebar();
+				break;
+			case MENU_ITEM:
+				if (enabled) {
+					ItemStack prevItem = getPlayer().getInventory().getItem(9);
+					getPlayer().getInventory().setItem(9, BeanItem.PLAYER_MENU.getOriginalStack());
+					if (prevItem != null && !prevItem.equals(BeanItem.PLAYER_MENU.getOriginalStack()))
+						giveItem(prevItem);
+				} else {
+					getPlayer().getInventory().setItem(9, null);
+				}
+			default:
+				break;
 		}
 	}
 	
@@ -1372,7 +1376,10 @@ public class PlayerProfile {
 		if (!isOnline()) return;
 		scoreboardObj.setDisplaySlot(null);
 	}
-	
+
+	/**
+	 * Update the player's sidebar if they're online.
+	 */
 	public void updateScoreboard() {
 		if (!isOnline()) return;
 		if (!isSettingEnabled(PlayerSetting.SHOW_SIDEBAR)) return;
@@ -1400,11 +1407,8 @@ public class PlayerProfile {
 	 * Keep scoreboard score information here for easy and optimal replacement rather than having to sift through searching for them.
 	 */
 	private final Map<Integer, String> scoreboardScores = new HashMap<>();
-	
-	/**
-	 * Update this player's sidebar.
-	 */
-	public void updateSidebar() {
+
+	private void updateSidebar() {
 		if (getPlayer() == null) return;
 		Player p = getPlayer();
 		
@@ -1414,6 +1418,7 @@ public class PlayerProfile {
 
 		// If the scoreboard has been changed, be sure to flag RESET.
 		if ((scoreboardFlag & 1 << ScoreboardFlag.RESET.ordinal()) != 0) {
+			scoreboardScores.clear();
 			scoreboardObj = scoreboard.registerNewObjective("id"+getId()+"-side", "dummy", getColouredName());
 			if (isSettingEnabled(PlayerSetting.SHOW_SIDEBAR))
 				showSidebar();

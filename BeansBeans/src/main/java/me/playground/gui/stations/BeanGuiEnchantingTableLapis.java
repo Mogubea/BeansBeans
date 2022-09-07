@@ -26,7 +26,7 @@ public class BeanGuiEnchantingTableLapis extends BeanGui {
 
 	protected static final ItemStack goBack = newItem(new ItemStack(Material.ENCHANTING_TABLE), Component.text("\u00a7cGo Back"), Component.text("\u00a77Return to Enchanting Table"));
 	
-	private static final List<PurchaseOption> lapisUpgrades = Main.getInstance().menuShopManager().getOrMakeShop("lazuliStorageCompartment").getPurchaseOptions();
+	private final List<PurchaseOption> lapisUpgrades = Main.getInstance().menuShopManager().getOrMakeShop("lazuliStorageCompartment").getPurchaseOptions();
 	
 	private final EnchantingTable table;
 	private byte lapisLevel = 0;

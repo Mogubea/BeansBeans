@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.playground.items.ItemRarity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
@@ -64,7 +63,7 @@ public class TeamManager {
 		
 		PlayerProfile pp = PlayerProfile.from(p);
 		pp.flagFullScoreboardUpdate();
-		pp.updateSidebar();
+		pp.updateScoreboard();
 	}
 	
 	private void createScoreboard(Player p) {

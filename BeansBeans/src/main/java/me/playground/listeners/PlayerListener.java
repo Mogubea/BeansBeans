@@ -33,13 +33,7 @@ import org.bukkit.craftbukkit.v1_18_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_18_R2.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Animals;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
+import org.bukkit.entity.*;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -252,6 +246,9 @@ public class PlayerListener extends EventListener {
 
 		// Pre-Region Check Entity Interaction method
 		if (BeanItem.func(item, custom -> custom.onEntityInteract(e))) return;
+
+		if (item.getType() == Material.NAME_TAG && ent instanceof ArmorStand && ent.isInvulnerable())
+			e.setCancelled(true); // Cancel but continue.
 
 		// Only bother if matching entities
 		if (item.getType().name().endsWith("SPAWN_EGG") && item.getType().name().startsWith(e.getRightClicked().getType().name())) {
