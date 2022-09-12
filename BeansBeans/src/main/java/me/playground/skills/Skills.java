@@ -225,7 +225,7 @@ public class Skills {
 
 		AtomicInteger rotation = new AtomicInteger();
 		int eck = Bukkit.getScheduler().scheduleSyncRepeatingTask(Main.getInstance(), () -> {
-			rotation.set(rotation.get() >= colRotation.length ? 0 : rotation.get() + 1);
+			rotation.set((rotation.get() + 1) >= colRotation.length ? 0 : rotation.get() + 1);
 			xpBar.setTitle("\u00a7" + skill.getColourCode() + skill.getNameWithIcon() + "\u00a78 (\u00a7"+skill.getColourCode()+info.getGrade()+"\u00a78)\u00a78 | \u00a7b" + "+" + dff.format(recentAccumulation) + " XP\u00a78 | \u00a7"+colRotation[rotation.get()] + "\u00a7l GRADE UP! ");
 		}, 0L, 5L);
 

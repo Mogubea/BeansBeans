@@ -22,4 +22,8 @@ public class PrivateLogger<O> {
             pendingLogs.removeAll(logsToSave);
     }
 
+    public int countPendingChanges() {
+        return pendingLogs.size();
+    }
+
 }

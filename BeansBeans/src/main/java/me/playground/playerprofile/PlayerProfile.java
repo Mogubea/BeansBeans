@@ -827,9 +827,22 @@ public class PlayerProfile {
 				flagScoreboardUpdate(ScoreboardFlag.TITLE);
 				break;
 			case REGION_BOUNDARIES:
-				if (enabled)
+				if (enabled) {
 					updateCurrentRegion(currentRegion);
+				} else { // Un-visualise all permanently visualised regions.
+					getVisualisedRegions().forEach((region, visualiser) -> {
+						if (visualiser.getTicksRemaining() == -1)
+							unvisualiseRegion(region);
+					});
+				}
 				break;
+			case REGION_WARNING:
+				if (!enabled) { // Un-visualise all non-permanently visualised regions.
+					getVisualisedRegions().forEach((region, visualiser) -> {
+						if (visualiser.getTicksRemaining() != -1)
+							unvisualiseRegion(region);
+					});
+				}
 			case SHOW_SIDEBAR:
 				if (enabled) {
 					flagFullScoreboardUpdate(); // flag rather than actually update since it's a spammable setting

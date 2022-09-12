@@ -28,4 +28,8 @@ public class LoggingManager<O> {
         logger.addLog(log);
     }
 
+    public int countPendingChanges() {
+        return logger.countPendingChanges();
+    }
+
 }

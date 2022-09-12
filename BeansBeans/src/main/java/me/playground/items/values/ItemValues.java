@@ -139,17 +139,15 @@ public class ItemValues {
             });
         }
 
-        DirtyInteger dirty = new DirtyInteger(0);
         oldValues.forEach((identifier, preCalcValue) -> {
             double postCalcValue = getItemValue(identifier);
             if (preCalcValue.getValue() == postCalcValue) return;
 
-            dirty.addToValue(1);
             manager.addLog(new ItemValueLog(identifier, preCalcValue.getValue(), postCalcValue, 0, false)); // Log calculated change
         });
 
         manager.getPlugin().getSLF4JLogger().info("Calculated " + getCalculatedSize() + " Item Values in " + (System.currentTimeMillis()-then) + "ms");
-        manager.getPlugin().getSLF4JLogger().info(dirty.getValue() + " of these values have changed from the last calculation.");
+        manager.getPlugin().getSLF4JLogger().info("There are currently " + manager.countPendingChanges() + " value changes waiting to be saved.");
         lastRecalculation = then;
     }
 
