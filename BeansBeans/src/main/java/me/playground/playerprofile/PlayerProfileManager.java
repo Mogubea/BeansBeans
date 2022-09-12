@@ -27,7 +27,6 @@ public class PlayerProfileManager {
     public PlayerProfileManager(Main plugin) {
         this.plugin = plugin;
         this.datasource = new PlayerProfileDatasource(plugin, this);
-
         datasource.loadAll();
     }
 

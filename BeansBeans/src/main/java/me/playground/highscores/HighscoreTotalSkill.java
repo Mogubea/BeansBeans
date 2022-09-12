@@ -15,7 +15,7 @@ public class HighscoreTotalSkill extends Highscore {
 	@Override
 	public void updateScores() {
 		this.orderedScores = Datasource.getHighscoreTotalSkillXp();
-		this.preservedOrder = new ArrayList<Integer>(orderedScores.keySet());
+		this.preservedOrder = new ArrayList<>(orderedScores.keySet());
 		Collections.reverse(preservedOrder);
 	}
 

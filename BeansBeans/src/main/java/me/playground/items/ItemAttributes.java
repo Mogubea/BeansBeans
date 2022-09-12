@@ -1,18 +1,20 @@
 package me.playground.items;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
+import com.avaje.ebean.validation.NotNull;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 
 import me.playground.enchants.BEnchantment;
+import org.checkerframework.checker.units.qual.A;
+import org.w3c.dom.Attr;
 
 public enum ItemAttributes {
 	
-	NIL(Material.AIR, 0, 0, 0),
+	NIL(Material.AIR, 0, 0, 0, 0),
 	
 	FISHING_ROD(Material.FISHING_ROD, 15, 0, 0),
 	SHEARS(Material.SHEARS, 15, 0, 0),
@@ -78,18 +80,33 @@ public enum ItemAttributes {
 	
 	private final Material material;
 	private final int runicCapacity;
-	private final double values[];
+	private final Map<Attribute, Double> values = new HashMap<>();
 	private Set<BEnchantment> allowedEnchantments = new HashSet<>();
 	
 	/**
 	 * Attack Damage and Attack Speed for tools
-	 * Defense Points, Armour Toughness and Knockback Resistance for armour
 	 */
-	ItemAttributes(Material material, int runicCapacity, double...values) {
+	ItemAttributes(Material material, int runicCapacity, double attackDamage, double attackSpeed) {
 		this.material = material;
 		this.runicCapacity = runicCapacity;
-		this.values = values;
-		
+		this.values.put(Attribute.GENERIC_ATTACK_DAMAGE, attackDamage);
+		this.values.put(Attribute.GENERIC_ATTACK_SPEED, attackSpeed);
+		finish();
+	}
+
+	/**
+	 * Defense Points, Armour Toughness and Knockback Resistance for armour
+	 */
+	ItemAttributes(Material material, int runicCapacity, double defense, double toughness, double knockbackResistance) {
+		this.material = material;
+		this.runicCapacity = runicCapacity;
+		this.values.put(Attribute.GENERIC_ARMOR, defense);
+		this.values.put(Attribute.GENERIC_ARMOR_TOUGHNESS, toughness);
+		this.values.put(Attribute.GENERIC_KNOCKBACK_RESISTANCE, knockbackResistance);
+		finish();
+	}
+
+	private void finish() {
 		BEnchantment[] enchants = BEnchantment.values();
 		final int size = enchants.length;
 		for (int x = -1; ++x < size;) {
@@ -105,27 +122,29 @@ public enum ItemAttributes {
 	public int getRunicCapacity() { return runicCapacity; }
 
 	public double getAttackDamage() {
-		return values[0];
+		return values.getOrDefault(Attribute.GENERIC_ATTACK_DAMAGE, 0D);
 	}
 	
 	public double getDefensePoints() {
-		return values[0];
+		return values.getOrDefault(Attribute.GENERIC_ARMOR, 0D);
 	}
 	
 	public double getAttackSpeed() {
-		return values[1];
+		return values.getOrDefault(Attribute.GENERIC_ATTACK_SPEED, 0D);
 	}
 	
 	public double getArmourToughness() {
-		return values[1];
+		return values.getOrDefault(Attribute.GENERIC_ARMOR_TOUGHNESS, 0D);
 	}
 	
 	public double getKnockbackResistance() {
-		return values[2];
+		return values.getOrDefault(Attribute.GENERIC_KNOCKBACK_RESISTANCE, 0D);
 	}
-	
+
+	public double getAttribute(Attribute attribute) { return values.getOrDefault(attribute, 0D); }
+
 	public boolean isTool() {
-		return values.length == 2;
+		return values.containsKey(Attribute.GENERIC_ATTACK_SPEED);
 	}
 	
 	public static ItemAttributes fromItem(ItemStack i) {
@@ -133,7 +152,7 @@ public enum ItemAttributes {
 	}
 	
 	public static ItemAttributes fromMaterial(Material m) {
-		ItemAttributes ia = null;
+		ItemAttributes ia;
 		try {
 			ia = valueOf(m.toString());
 		} catch (Exception e) {

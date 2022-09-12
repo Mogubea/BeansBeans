@@ -238,11 +238,11 @@ public class Utils {
 		int todo = (int)(((float)value/(float)maxvalue) * (float)amount);
 		
 		for (int c = -1; ++c < 2;) {
-			String sb = "";
+			StringBuilder sb = new StringBuilder();
 			
 			for (int x = -1; ++x < todo;)
-				sb += symbol;
-			component = component.append(Component.text(sb, TextColor.color(c == 0 ? filledColor : baseColor)));
+				sb.append(symbol);
+			component = component.append(Component.text(sb.toString(), TextColor.color(c == 0 ? filledColor : baseColor)));
 			todo = amount - todo;
 		}
 		

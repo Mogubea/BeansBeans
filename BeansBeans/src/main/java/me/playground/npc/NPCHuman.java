@@ -14,7 +14,6 @@ import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_18_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.json.JSONObject;
 
 import com.mojang.authlib.GameProfile;
@@ -81,22 +80,19 @@ public class NPCHuman extends NPC<ServerPlayer> {
 	}
 	
 	@Override
-	protected void showToAll() {
-		Bukkit.getOnlinePlayers().forEach(this::showTo);
-	}
-	
-	@Override
 	public void showTo(Player p) {
 		ServerGamePacketListenerImpl connection = ((CraftPlayer)p).getHandle().connection;
 		connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.ADD_PLAYER, getEntity())); // add npc to existence
-		connection.send(new ClientboundAddPlayerPacket(entity)); // spawn entity
-		connection.send(new ClientboundRotateHeadPacket(entity, getFixedRot(getLocation().getYaw())));
-		
-		new BukkitRunnable() {
-			public void run() {
-				connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, getEntity())); // remove from tab
-			}
-		}.runTaskAsynchronously(getPlugin());
+		getPlugin().getServer().getScheduler().runTask(getPlugin(), () -> {
+			connection.send(new ClientboundAddPlayerPacket(getEntity())); // Spawns the Entity for the player
+			connection.send(new ClientboundRotateHeadPacket(entity, getFixedRot(getLocation().getYaw()))); // Rotates the head for the player
+			});
+
+		// Equipment and nullification of profile has to be sent slightly later
+		getPlugin().getServer().getScheduler().runTaskLater(getPlugin(), () -> {
+			connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, getEntity())); // Removes from tab by nullifying the profile
+			showEquipment(p); // Sends equipment
+		}, 5L);
 	}
 
 	@Override

@@ -136,7 +136,7 @@ public class BeanGuiMainMenu extends BeanGui {
 		waa.setItemMeta(waameta);
 
 		ItemStack icon_skill = icon_skills.clone();
-		icon_skills.editMeta(meta -> {
+		icon_skill.editMeta(meta -> {
 			Skill bestSkill = tpp.getSkills().getBestSkill();
 			List<Component> lore = new ArrayList<>();
 			lore.add(Component.text("\u00a78 • \u00a7rBest Grade: ").colorIfAbsent(TextColor.color(0xdcb244)).append(Component.text("\u00a7r\u00a7l" + tpp.getSkillGrade(bestSkill) + " \u00a77in \u00a7r" + bestSkill.getNameWithIcon()).colorIfAbsent(bestSkill.getColour())).decoration(TextDecoration.ITALIC, false));

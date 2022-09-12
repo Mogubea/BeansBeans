@@ -13,7 +13,7 @@ import net.kyori.adventure.text.Component;
 public class SkillForaging extends Skill {
 	
 	protected SkillForaging() {
-		super("Foraging", 0x45eeaa, BarColor.GREEN, 'a', "\ud83e\ude93", Material.DARK_OAK_SAPLING, Material.LIME_DYE,
+		super("Foraging", 0x36e579, BarColor.GREEN, 'a', "\ud83e\ude93", Material.DARK_OAK_SAPLING, Material.LIME_DYE,
 				"Earn Foraging XP by chopping down forests and harvesting flowers!");
 	}
 	

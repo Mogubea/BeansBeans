@@ -1,7 +1,6 @@
 package me.playground.celestia.logging;
 
 import com.google.gson.Gson;
-import me.playground.data.Datasource;
 import me.playground.items.BeanBlock;
 import me.playground.items.BeanItem;
 import me.playground.listeners.EventListener;
@@ -23,29 +22,32 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CelestiaListener extends EventListener {
-	
-	public CelestiaListener(Main plugin) {
+
+	private final CelestiaManager manager;
+
+	public CelestiaListener(Main plugin, CelestiaManager manager) {
 		super(plugin);
+		this.manager = manager;
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onJoin(PlayerLoginEvent e) {
 		if (e.getResult() == PlayerLoginEvent.Result.ALLOWED)
-			Datasource.logCelestia(CelestiaAction.JOIN, e.getPlayer(), e.getPlayer().getLocation(), e.getRealAddress().getHostAddress());
+			manager.log(e.getPlayer(), CelestiaAction.JOIN, e.getRealAddress().getHostAddress());
 		else
-			Datasource.logCelestia(CelestiaAction.JOIN, e.getPlayer(), e.getPlayer().getLocation(), e.getRealAddress().getHostAddress() + " ("+e.getResult().name()+")");
+			manager.log(e.getPlayer(), CelestiaAction.FAIL_JOIN, e.getRealAddress().getHostAddress() + " ("+e.getResult().name()+")");
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onLeave(PlayerQuitEvent e) {
 		InetSocketAddress address = e.getPlayer().getAddress(); // Not often that this will be null but this is just a precaution.
-		Datasource.logCelestia(CelestiaAction.QUIT, e.getPlayer(), e.getPlayer().getLocation(), address == null ? "Unknown IP" : address.getAddress().getHostAddress());
+		manager.log(e.getPlayer(), CelestiaAction.QUIT, address == null ? "Unknown IP" : address.getAddress().getHostAddress());
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onChat(PlayerCommandPreprocessEvent e) {
 		if (!e.isCancelled())
-			Datasource.logCelestia(CelestiaAction.COMMAND, e.getPlayer(), e.getPlayer().getLocation(), e.getMessage());
+			manager.log(e.getPlayer(), CelestiaAction.COMMAND, e.getMessage());
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -53,7 +55,7 @@ public class CelestiaListener extends EventListener {
 		if (!e.isCancelled()) {
 			BeanBlock custom = BeanBlock.from(e.getBlock());
 			String name = custom != null ? custom.getIdentifier() : e.getBlock().getType().name();
-			Datasource.logCelestia(CelestiaAction.BLOCK_PLACE, e.getPlayer(), e.getBlock().getLocation(), name);
+			manager.log(e.getPlayer(), CelestiaAction.BLOCK_PLACE, e.getBlock().getLocation(), name);
 		}
 	}
 	
@@ -62,24 +64,21 @@ public class CelestiaListener extends EventListener {
 		if (!e.isCancelled()) {
 			BeanBlock custom = BeanBlock.from(e.getBlock());
 			String name = custom != null ? custom.getIdentifier() : e.getBlock().getType().name();
-			Datasource.logCelestia(CelestiaAction.BLOCK_BREAK, e.getPlayer(), e.getBlock().getLocation(), name);
+			manager.log(e.getPlayer(), CelestiaAction.BLOCK_BREAK, e.getBlock().getLocation(), name);
 		}
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onItemPickup(EntityPickupItemEvent e) {
-		if (!e.isCancelled() && e.getEntity() instanceof Player)
-			Datasource.logCelestia(CelestiaAction.ITEM_PICKUP, e.getEntity(), e.getEntity().getLocation(), toJson(e.getItem().getItemStack()));
+		if (!e.isCancelled() && e.getEntity() instanceof Player player)
+			manager.log(player, CelestiaAction.ITEM_PICKUP, toJson(e.getItem().getItemStack()));
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onItemDrop(PlayerDropItemEvent e) {
 		if (!e.isCancelled()) {
 			String json = toJson(e.getItemDrop().getItemStack());
-			Datasource.logCelestia(CelestiaAction.ITEM_DROP, e.getPlayer(), e.getPlayer().getLocation(), json);
-
-//			e.getPlayer().sendMessage("Duped?");
-//			e.getPlayer().getWorld().dropItem(e.getPlayer().getLocation(), fromJson(json));
+			manager.log(e.getPlayer(), CelestiaAction.ITEM_DROP, json);
 		}
 	}
 

@@ -7,7 +7,7 @@ import org.bukkit.util.BoundingBox;
 
 public class RegionVisualiser {
 
-    public static final int INTERVAL = 16;
+    protected static final int INTERVAL = 16;
 
     private final PlayerProfile profile;
     private final Player player;
@@ -34,6 +34,7 @@ public class RegionVisualiser {
         this.volume = region.getBoundingBox().getVolume();
 
         // To reduce the amount of particles for larger regions in an attempt to limit the amount of particle packets being sent to players.
+        if (volume >= 4000000) { gridSize = 32; step = 4; orangeSize = 128; }
         if (volume >= 2000000) { step = 3; }
         else if (volume >= 750000) { gridSize = 16; step = 2; orangeSize = 64; }
         else if (volume >= 125000) { gridSize = 8; step = 2; }

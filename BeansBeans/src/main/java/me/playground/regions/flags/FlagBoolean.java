@@ -27,25 +27,15 @@ public class FlagBoolean extends Flag<Boolean> {
 	
 	@Override
     public Boolean unmarshal(String o) {
-        if (o.equalsIgnoreCase("true")) {
-            return true;
-        } else if (o.equalsIgnoreCase("false")) {
-            return false;
-        } else {
-            return null;
-        }
-    }
+		if (o == null) return null;
+		return o.equalsIgnoreCase("true");
+	}
 
     @Override
     public String marshal(Boolean o) {
-        if (o == true) {
-            return "true";
-        } else if (o == false) {
-            return "false";
-        } else {
-            return null;
-        }
-    }
+		if (o == null) return null;
+		return o ? "true" : "false";
+	}
 
 	@Override
 	public Boolean validateValue(Boolean o) {

@@ -25,6 +25,7 @@ public abstract class Skill {
 	public static final SkillCombat COMBAT = new SkillCombat();
 	public static final SkillForging FORGING = new SkillForging();
 	public static final Skill DUNGEONEERING = new SkillDungeoneering();
+	public static final SkillAcrobatics ACROBATICS = new SkillAcrobatics();
 	public static final SkillEnchanting ENCHANTING = new SkillEnchanting();
 	public static final SkillAlchemy ALCHEMY = new SkillAlchemy();
 	public static final SkillTrading TRADING = new SkillTrading();

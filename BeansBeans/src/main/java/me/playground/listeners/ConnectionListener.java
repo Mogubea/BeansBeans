@@ -2,6 +2,7 @@ package me.playground.listeners;
 
 import java.util.ArrayList;
 
+import me.playground.items.lore.Lore;
 import me.playground.ranks.Permission;
 import me.playground.regions.Region;
 
@@ -15,7 +16,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import me.playground.items.BeanItem;
 import me.playground.main.Main;
-import me.playground.main.PermissionManager;
+import me.playground.playerprofile.PermissionManager;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileModifyRequest;
 import me.playground.playerprofile.settings.PlayerSetting;
@@ -34,6 +35,8 @@ public class ConnectionListener extends EventListener {
 	private final int MAX_DONOR_LIMIT = 50; // +20 donors
 	private final int NON_DONOR_LIMIT = 30; // 30 normal users
 
+	private Component motd = null;
+
 	private final Component nonDonorFullMsg = Component.text("\u00a7cBean's Beans is currently full!\n\n\n\u00a77Did you know that ")
 			.append(Rank.PATRICIAN.toComponent()).append(Component.text("\u00a77s bypass the player limit, up to a \n\u00a77cap of 50 players rather than the usual 30!"));
 
@@ -44,9 +47,17 @@ public class ConnectionListener extends EventListener {
 		permManager = getPlugin().permissionManager();
 		getPlugin().getServer().setMaxPlayers(MAX_PLAYERS);
 	}
-	
+
 	@EventHandler
 	public void ping(ServerListPingEvent e) {
+		if (motd == null) {
+			String line1 = "&#8f66ff&lB&r&#9369ffe&#966bffa&#996effn&#9c72ff'&#9f75ffs &#a278ff&lB&r&#a57bffe&#a87effa&#ab81ffn&#ae84ffs " +
+					(getPlugin().isDebugMode() ? "&#ff3390(Development)" : "&#653390(Alpha v" + getPlugin().getDescription().getVersion() + ")") + "\n";
+			String line2 = "&#545565New Enchantment and Forging Rework (WIP xd)";
+			motd = Lore.getBuilder(line1 + line2).setCompact().build().getLoree().get(0);
+		}
+
+		e.motd(motd);
 		e.setMaxPlayers(NON_DONOR_LIMIT);
 	}
 	
@@ -95,7 +106,6 @@ public class ConnectionListener extends EventListener {
 		pp.updateShownNames(false); // Update names
 		pp.pokeAFK(); // Poke the afk timer
 		getPlugin().teamManager().initScoreboard(p);
-		getPlugin().npcManager().showAllNPCs(p);
 
 		if (pp.isSettingEnabled(PlayerSetting.FLIGHT))
 			p.setAllowFlight(true);

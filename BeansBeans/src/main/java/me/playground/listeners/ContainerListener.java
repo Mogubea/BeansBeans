@@ -271,28 +271,28 @@ public class ContainerListener extends EventListener {
 	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
 	public void onInventoryClickArmorCheck(InventoryClickEvent e) {
 		// Prevent equipping a custom skull that's considered a block to your head.
-		if (!(e.getInventory() instanceof PlayerInventory pInv)) return;
+		if (!(e.getClickedInventory() instanceof PlayerInventory pInv)) return;
+		if (!(e.getView().getTopInventory() instanceof PlayerInventory)) return;
+
 		boolean helmetSlot = e.getRawSlot() == 5;
 		ItemStack itemToCheck = null;
 
-		Player p = (Player) e.getViewers().get(0);
-		p.sendMessage("Slot: " + e.getRawSlot());
-
 		if (e.isShiftClick() && pInv.getHelmet() == null) { // Check for shift clicking into the helmet slot.
-			p.sendMessage("checking");
 			itemToCheck = e.getCurrentItem();
 		} else if (!e.isShiftClick() && helmetSlot) { // Check for clicking the helmet slot directly without shift clicking.
-			p.sendMessage("checking");
 			if (e.getCursor().getAmount() > 1 && pInv.getHelmet() != null) return;
 			itemToCheck = e.getCursor();
+		} else if (helmetSlot && e.getHotbarButton() > -1) {
+			itemToCheck = pInv.getItem(e.getHotbarButton());
 		}
 
 		if (itemToCheck != null) {
-			BeanBlock bBlock = BeanBlock.from(itemToCheck, BeanBlock.class);
-			if (bBlock == null) return;
-
-			p.sendMessage("is custom");
-			e.setCancelled(!bBlock.isWearable());
+			BeanItem custom = BeanItem.from(itemToCheck);
+			if (custom == null) return;
+			if (custom instanceof BeanItemHeirloom)
+				e.setCancelled(true);
+			else if (custom instanceof BeanBlock bBlock && !bBlock.isWearable())
+				e.setCancelled(true);
 		}
 	}
 
@@ -396,7 +396,7 @@ public class ContainerListener extends EventListener {
 				boolean allowed = true; // All allowed by default
 				for (int x = -1; ++x < whitelist.length;) {
 					if (whitelist[x] == null) continue;
-					allowed = false; // If there's a non null item in the filter, disallow all by default
+					allowed = false; // If there's a non-null item in the filter, disallow all by default
 					if (whitelist[x].getType() == e.getItem().getType()) {
 						BeanItem itemCustom = BeanItem.from(whitelist[x]);
 						

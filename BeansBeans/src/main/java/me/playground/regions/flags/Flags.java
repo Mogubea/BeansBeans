@@ -72,39 +72,39 @@ public final class Flags {
 	 */
 	
 	// Applies only to non Members
-	public static final FlagBoolean TELEPORT_IN 		= register(new FlagBoolean("teleport-in", "Non-Member Warping In", true))
+	public static final FlagMemberBoolean TELEPORT_IN 	= register(new FlagMemberBoolean("teleport-in", "Non-Member Warping In", true))
 			.setFlagCategory(Flag.FlagCategory.TELEPORTING)
 			.setDescription(
 					Component.text("\u00a79Non-Members\u00a77 will be able to \u00a7b/warp"),
 					Component.text("\u00a77and \u00a7b/tp\u00a77 into the region."));
 
-	public static final FlagBoolean TELEPORT_OUT 		= register(new FlagBoolean("teleport-out", "Non-Member Warping Out", true))
+	public static final FlagMemberBoolean TELEPORT_OUT 	= register(new FlagMemberBoolean("teleport-out", "Non-Member Warping Out", true))
 			.setFlagCategory(Flag.FlagCategory.TELEPORTING)
 			.setNeedsPermission()
 			.setDescription(
 					Component.text("\u00a79Non-Members\u00a77 will be able to \u00a7b/warp"),
 					Component.text("\u00a77and \u00a7b/tp\u00a77 out of the region."));
 
-	public static final FlagBoolean ENDERPEARLS 		= register(new FlagBoolean("enderpearls", "Non-Member Enderpearls", true))
+	public static final FlagMemberBoolean ENDERPEARLS 	= register(new FlagMemberBoolean("enderpearls", "Non-Member Enderpearls", true))
 			.setFlagCategory(Flag.FlagCategory.TELEPORTING)
 			.setDescription(
 					Component.text("\u00a79Non-Members\u00a77 will be able to use \u00a72Enderpearls"),
 					Component.text("\u00a77and \u00a7dChorus Fruit\u00a77 to get into the region."));
 
-	public static final FlagBoolean WARP_CREATION 		= register(new FlagBoolean("warp-creation", "Non-Member Warp Creation", true))
+	public static final FlagMemberBoolean WARP_CREATION = register(new FlagMemberBoolean("warp-creation", "Non-Member Warp Creation", true))
 			.setPlayerDefault(false)
 			.setFlagCategory(Flag.FlagCategory.TELEPORTING)
 			.setDescription(
 					Component.text("\u00a79Non-Members\u00a77 will be able to create \u00a7dWarps\u00a77,"),
 					Component.text("\u00a7b Homes\u00a77 and \u00a7bSpawn Points\u00a77 inside of the region."));
 
-	public static final FlagBoolean SHOP_ACCESS 		= register(new FlagBoolean("shop-access", "Non-Member Shop Access", true))
+	public static final FlagMemberBoolean SHOP_ACCESS 	= register(new FlagMemberBoolean("shop-access", "Non-Member Shop Access", true))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
 			.setDescription(
 					Component.text("\u00a79Non-Members\u00a77 will be able to access \u00a7eShops"),
 					Component.text("\u00a77that are inside of the region."));
 
-	public static final FlagBoolean PROTECT_ANIMALS 	= register(new FlagBoolean("protect-animals", "Animal Protection", true, false, false))
+	public static final FlagMemberBoolean PROTECT_ANIMALS 	= register(new FlagMemberBoolean("protect-animals", "Animal Protection", true, false, false))
 			.setFlagCategory(Flag.FlagCategory.ENTITIES)
 			.setDescription(
 					Component.text("\u00a77Prevent \u00a74Hostile mobs\u00a77 and \u00a79Non-Members\u00a77 from harming"),
@@ -129,6 +129,9 @@ public final class Flags {
 			.setDescription(
 					Component.text("\u00a77Can \u00a7apassive mobs \u00a77like Sheep, Pigs, Cows etc."),
 					Component.text("\u00a77naturally spawn inside of the region boundaries?"));
+	public static final FlagBoolean MOB_SPAWNERS 		= register(new FlagBoolean("spawner-spawning", "Mob Spawners", true))
+			.setFlagCategory(Flag.FlagCategory.ENTITIES)
+			.setDescription(Lore.fastBuild(true, 40, "&#666988Mob Spawners&r can summon mobs."));
 	
 	/*
 	 * Misc
@@ -182,7 +185,7 @@ public final class Flags {
 
 	public static final FlagBoolean PISTONS				= register(new FlagBoolean("piston", "Pistons", true, false, false))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
-			.setDescription(Lore.fastBuild(true, 40, "&#666666Pistons &rto react to &#ff7777Redstone &rsignals."));
+			.setDescription(Lore.fastBuild(true, 40, "&#666666Pistons &rto react to &#ef6666Redstone &rsignals."));
 
 	public static final FlagBoolean SNOW_FORMATION		= register(new FlagBoolean("snow-form", "Form Snow Layers", true))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)

@@ -10,7 +10,7 @@ import me.playground.main.Main;
 public class ShopManager {
 	private final ShopDatasource datasource;
 	
-	private final Map<Integer, Shop> shopList = new HashMap<Integer, Shop>();
+	private final Map<Integer, Shop> shopList = new HashMap<>();
 	private boolean shopsEnabled = true;
 	
 	public ShopManager(Main plugin) {

@@ -31,7 +31,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 				rBlank,rBlank,bBlank,bBlank,regionSkull,bBlank,bBlank,rBlank,rBlank,
 				rBlank,blanc,blanc,blanc,blanc,blanc,blanc,blanc,rBlank,
 				bBlank,icon_name,blanc,icon_members,blanc,icon_flags,blanc,icon_priority,bBlank,
-				bBlank,blanc,blanc,blanc,icon_size,blanc,blanc,blanc,bBlank,
+				bBlank,blanc,blanc,blanc,blanc,blanc,blanc,blanc,bBlank,
 				bBlank,blanc,blanc,blanc,blanc,blanc,blanc,blanc,bBlank,
 				rBlank,rBlank,rBlank,whatIsThis,goBack,rBlank,rBlank,rBlank,rBlank
 		};
@@ -134,9 +134,9 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
             });
 			menu2.open(p);
 			return;
-			case 31: // Size Button
+			/*case 31: // Size Button
 				new BeanGuiRegionExpansion(p, regionIdx).openInventory();
-				break;
+				break;*/
 		default:
 			super.onInventoryClicked(e);
 			return;

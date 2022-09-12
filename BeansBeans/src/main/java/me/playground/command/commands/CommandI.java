@@ -41,7 +41,7 @@ public class CommandI extends BeanCommand {
 	public @Nullable List<String> runTabComplete(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		if (args.length == 1) {
 			List<String> mats = TabCompleter.completeItems(args[0]);
-			mats.addAll(TabCompleter.completeObject(args[0], i -> ((BeanItem)i).getIdentifier(), BeanItem.values()));
+			mats.addAll(TabCompleter.completeObject(args[0], BeanItem::getIdentifier, BeanItem.values()));
 			return mats;
 		}
 		if (args.length == 2)

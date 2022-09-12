@@ -15,7 +15,10 @@ public enum StatType {
 	VOTING(9, "vote", "votes"),
 	CURRENCY(10, "currency", "currencies"),
 	ATTRIBUTE_SOURCES(11, "attributesource", "attributes", "attributesources"),
-	TRADING(12, "trading", "barters")
+	TRADING(12, "trading", "barters"),
+	NPC_SHOPS(13, "npc_shops", "npcshop", "npcshops", "npc_shop"),
+	ITEM_SELL(14, "item_sell", "itemsell"),
+	ITEM_PURCHASE(15, "item_purchase", "itembuy", "itempurchase"),
 	
 	
 	;

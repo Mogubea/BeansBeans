@@ -11,7 +11,6 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.attribute.AttributeModifier.Operation;
-import org.bukkit.craftbukkit.v1_18_R2.advancement.CraftAdvancement;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -225,6 +224,14 @@ public class EntityListener extends EventListener {
 			// Log the destruction of the item
 			getPlugin().getItemTrackingManager().incrementDemanifestationCount(item.getItemStack(), DemanifestationReason.DESTROYED, item.getItemStack().getAmount());
 		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onPlayerFallDamage(EntityDamageEvent e) {
+		if (!(e.getEntity() instanceof Player p)) return;
+		if (e.getCause() != DamageCause.FALL) return;
+
+		Skill.ACROBATICS.performSkillEvent(PlayerProfile.from(p).getSkills(), e);
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
@@ -505,7 +512,7 @@ public class EntityListener extends EventListener {
 	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
 	public void onSpawnerSpawn(SpawnerSpawnEvent e) {
 		// Cancel spawner spawns if the spawner is powered.
-		if (e.getSpawner().getBlock().isBlockPowered()) {
+		if (e.getSpawner().getBlock().isBlockPowered() || !(getRegionAt(e.getSpawner().getLocation()).getEffectiveFlag(Flags.MOB_SPAWNERS))) {
 			e.setCancelled(true);
 			return;
 		}
@@ -516,15 +523,19 @@ public class EntityListener extends EventListener {
 		e.getEntity().setPortalCooldown(Integer.MAX_VALUE); // Good enough
 	}
 
-	/*final int chunkEntityLimit = 300;
-	TODO: determine practicality
+	//final int chunkEntityLimit = 300;
+	//TODO: determine practicality
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void preEntitySpawn(CreatureSpawnEvent e) {
 		// Cancel living entity spawning if the chunk limit is hit.
-		int amountCurrently = e.getEntity().getChunk().getEntities().length;
-		if (amountCurrently >= chunkEntityLimit)
+		//int amountCurrently = e.getEntity().getChunk().getEntities().length;
+		//if (amountCurrently >= chunkEntityLimit)
+		//	e.setCancelled(true);
+
+		// Cancel Pig Zombies spawning in portals
+		if (e.getSpawnReason() == SpawnReason.NETHER_PORTAL)
 			e.setCancelled(true);
-	}*/
+	}
 
 	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
 	public void onEntitySpawn(CreatureSpawnEvent e) {

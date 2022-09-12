@@ -1,7 +1,8 @@
 package me.playground.npc;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
@@ -11,9 +12,7 @@ import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
@@ -29,9 +28,7 @@ import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
 import net.minecraft.network.protocol.Packet;
 
 public abstract class NPC<T extends LivingEntity> implements IPluginRef {
@@ -40,10 +37,9 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	private Location baseLocation;
 	
 	protected int creatorId; // Can be set to 0.
-	protected Civilization civilization; // If the NPC belongs to a Civilization and not neccessarily an owning player.
+	protected Civilization civilization; // If the NPC belongs to a Civilization and not necessarily an owning player.
 	protected Job job = Job.getByName("gatherer"); // If the NPC has a Job, for Interactions.
 	protected NPCInteraction interaction = NPCInteraction.getByName("base");
-	protected int titleCol = BeanColor.NPC.value();
 	
 	protected MenuShop shop;
 	
@@ -51,8 +47,10 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	
 	final protected Main plugin;
 	final protected T entity;
-	
-	protected ArmorStand titleEntity;
+
+//	protected EntityNPCHologram hologram;
+
+	private final List<Player> nearbyPlayers = new ArrayList<>();
 	
 	public NPC(Main plugin, T entity, Location location) {
 		this(0, -1, plugin, entity, location, null);
@@ -67,19 +65,8 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 		this.baseLocation = location;
 		entity.moveTo(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
 
-		// Remove previous stands if they are there.
-		getLocation().getChunk().load();
-		Collection<ArmorStand> stands = getLocation().add(0, entity.getBukkitEntity().getHeight() + 0.54, 0).getNearbyEntitiesByType(ArmorStand.class, 0.1D);
-		for (ArmorStand s : stands)
-			if (s.isMarker())
-				s.remove();
-		
 		// Assign json stuff
 		if (json != null) {
-			titleCol = json.optNumber("titleCol", BeanColor.NPC.value()).intValue();
-			String title = json.optString("title");
-			if (!title.isEmpty())
-				setTitle(Component.text(title), false);
 			job = Job.getByName(json.optString("job", "gatherer"));
 			interaction = NPCInteraction.getByName(json.optString("interaction", "base"));
 			String strCiv = json.optString("civilization");
@@ -90,6 +77,7 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 		}
 		
 		interaction.onInit(this);
+		onTick();
 	}
 	
 	public abstract void showTo(Player p);
@@ -101,8 +89,6 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	 */
 	public JSONObject getJsonData() {
 		JSONObject obj = new JSONObject();
-		if (titleEntity != null) obj.put("title", ((TextComponent)titleEntity.customName()).content());
-		if (titleCol != BeanColor.NPC.value()) obj.put("titleCol", titleCol);
 		if (civilization != null) obj.put("civilization", civilization.getName());
 		if (shop != null) obj.put("shop", shop.getIdentifier());
 		
@@ -111,18 +97,14 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 		return obj;
 	}
 	
-	protected void showToAll() {
-		Bukkit.getOnlinePlayers().forEach(this::showTo);
-	}
-	
-	protected void hideFrom(Player p) {
+	protected void hideFrom(@NotNull Player p) {
 		ServerGamePacketListenerImpl connection = ((CraftPlayer)p).getHandle().connection;
 		connection.send(new ClientboundRemoveEntitiesPacket(getEntityId()));
 	}
 	
 	protected void hideFromAll() {
 		Bukkit.getOnlinePlayers().forEach(this::hideFrom);
-		removeTitle(false);
+//		removeHologram();
 	}
 	
 	public void spawnParticle(Particle particle, double xOffset, double yOffset, double zOffset, int particles) {
@@ -133,6 +115,7 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 		location = loc;
 		baseLocation = loc;
 		entity.moveTo(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
+//		hologram.moveTo(loc.getX(), loc.getY() + 0.5, loc.getZ());
 		sendPacketToAll(makeTeleportPacket(loc));
 		sendPacketToAll(new ClientboundRotateHeadPacket(entity, getFixedRot(loc.getYaw())));
 		if (dirty)
@@ -162,13 +145,12 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 			isLookingAtTarget = true;
 		}
 
-
 		sendPacketToAll(new ClientboundMoveEntityPacket.Rot(getEntityId(), getFixedRot(location.getYaw()), getFixedRot(location.getPitch()), false));
 		sendPacketToAll(new ClientboundRotateHeadPacket(this.entity, getFixedRot(location.getYaw())));
 	}
 	
 	protected void sendPacketToAll(@SuppressWarnings("rawtypes") Packet pa) {
-		for (Player p : Bukkit.getOnlinePlayers()) {
+		for (Player p : nearbyPlayers) {
 			ServerGamePacketListenerImpl connection = ((CraftPlayer)p).getHandle().connection;
 			connection.send(pa);
 		}
@@ -203,21 +185,17 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	}
 	
 	/**
-	 * Marks the NPC as {@link #dirty}, assuming they have an entry in the database. 
+	 * Marks the NPC as {@link #dirty}.
 	 */
 	public void setDirty() {
-		dirty = isDatabaseNPC();
+		dirty = true;
 	}
 	
 	public void setClean() {
 		dirty = false;
 	}
 	
-	public boolean isDatabaseNPC() {
-		return npcId > 0;
-	}
-	
-	public int getDatabaseId() {
+	public int getId() {
 		return npcId;
 	}
 	
@@ -283,49 +261,25 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	
 	protected void refresh() {
 		this.hideFromAll();
-		this.showToAll();
+		this.onTick();
+	}
+
+	// TODO: NPCs need a hologram system
+
+	/*public void removeHologram() {
+		if (hologram != null)
+			hologram.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
 	}
 	
-	public void removeTitle(boolean dirty) {
-		if (titleEntity != null) 
-			titleEntity.remove();
-		if (dirty) setDirty();
+	public void setHologramText(List<TextComponent> components) {
+		if (hologram == null) hologram = CustomEntityType.NPC_HOLOGRAM.spawn(entity.getBukkitEntity().getLocation().add(0, 0.5, 0));
+		hologram.setOwnerId(this.getId());
+		hologram.setComponents(components);
 	}
-	
-	public void setTitle(Component title, boolean dirty) {
-		if (title == null) { removeTitle(dirty); return; }
-		if (getTitleStand() != null) { titleEntity.remove(); }
-		Location loc = getLocation().add(0, entity.getBukkitEntity().getHeight() + 0.54, 0);
-		titleEntity = (ArmorStand) location.getWorld().spawnEntity(loc, EntityType.ARMOR_STAND);
-		titleEntity.setInvisible(true);
-		titleEntity.setInvulnerable(true);
-		titleEntity.setCanTick(false);
-		titleEntity.setMarker(true);
-		titleEntity.setCollidable(false);
-		titleEntity.customName(title.color(TextColor.color(titleCol)));
-		titleEntity.setCustomNameVisible(true);
-		if (dirty) setDirty();
-	}
-	
-	public void setTitleColour(int col) {
-		titleCol = col;
-		setDirty();
-		if (getTitle() != Component.empty())
-			setTitle(getTitle(), true);
-	}
-	
-	public int getTitleColour() {
-		return titleCol;
-	}
-	
-	public Component getTitle() {
-		if (titleEntity == null) return Component.empty();
-		return titleEntity.customName();
-	}
-	
-	protected ArmorStand getTitleStand() {
-		return this.titleEntity;
-	}
+
+	public void setHologram(EntityNPCHologram hologram) {
+		this.hologram = hologram;
+	}*/
 	
 	@Override
 	public @NotNull Main getPlugin() {
@@ -335,9 +289,47 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	public Component getName() {
 		return this.getEntity().getBukkitEntity().name();
 	}
-	
+
+	public String getDisplayName() {
+		return this.getEntity().getScoreboardName();
+	}
+
+	private int nearbyCheck = 8;
+
+	/**
+	 * Fires every 3 ticks for every {@link NPC} who's chunk is loaded.
+	 */
 	public void onTick() {
-		// XXX: Testing
+		if (!isEnabled() || !entity.isChunkLoaded()) return;
+
+		// Check every 30 ticks, onTick fires every 3 ticks.
+		if (--nearbyCheck == 0) {
+			nearbyCheck = 10;
+			// Players within 64 blocks
+			List<Player> playersInRange = new ArrayList<>(getLocation().getNearbyPlayers(64));
+			int currentSize = nearbyPlayers.size();
+
+			// Hide from, now, no longer in range players
+			for (int x = currentSize; --x > -1;) {
+				Player p = nearbyPlayers.get(x);
+				if (p != null) {
+					if (playersInRange.contains(p)) {
+						playersInRange.remove(p);
+						continue;
+					}
+					this.hideFrom(p);
+				}
+				nearbyPlayers.remove(x);
+			}
+
+			// Show to new nearby players
+			currentSize = playersInRange.size();
+			for (int x = -1; ++x < currentSize;) {
+				this.showTo(playersInRange.get(x));
+				nearbyPlayers.add(playersInRange.get(x));
+			}
+		}
+
 		Iterator<Player> ents = getLocation().getNearbyPlayers(4).iterator();
 		if (!ents.hasNext()) {
 			if (isLookingAtTarget)

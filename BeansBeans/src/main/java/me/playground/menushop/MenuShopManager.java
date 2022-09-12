@@ -6,12 +6,18 @@ import java.util.List;
 import java.util.Map;
 
 import me.playground.main.Main;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class MenuShopManager {
 	private final MenuShopDatasource datasource;
-	
+
+	/**
+	 * TODO: Store a player's 27 recently sold items. Cleared on restarts.
+	 */
+	private final Map<Integer, List<ItemStack>> recentlySoldItems = new HashMap<>();
+
 	private final Map<String, MenuShop> shopList = new HashMap<>();
 	private boolean shopsEnabled = true;
 	

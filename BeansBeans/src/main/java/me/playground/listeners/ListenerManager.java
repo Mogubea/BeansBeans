@@ -27,7 +27,7 @@ public class ListenerManager {
 
 		pm.registerEvents(new RedstoneListener(pl, pl.getRedstoneManager()), pl);
 		
-		pm.registerEvents(new CelestiaListener(pl), pl);
+		pm.registerEvents(new CelestiaListener(pl, pl.getCelestiaManager()), pl);
 		pm.registerEvents(new VoteListener(pl), pl);
 		
 		pm.registerEvents(new PotionCauldronListener(pl), pl);

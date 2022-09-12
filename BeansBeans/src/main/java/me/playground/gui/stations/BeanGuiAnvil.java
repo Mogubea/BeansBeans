@@ -13,6 +13,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Directional;
@@ -97,6 +98,7 @@ public class BeanGuiAnvil extends BeanGui {
 
 	private int skillXpToGive = 0;
 	private int rightConsumeCount = 0;
+	private boolean isRefining;
 
 	private final int[] leftIndicators = {19, 10, 11, 12};
 	private final int[] rightIndicators = {14, 15, 16, 25};
@@ -188,11 +190,10 @@ public class BeanGuiAnvil extends BeanGui {
 						i.setItem(modifySlot, result[option]);
 						i.getItem(infuseSlot).subtract(rightConsumeCount);
 
-						if (option == 0 && dualOption) { // Refining
+						if (option == 0 && isRefining) { // Refining
 							p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.4F, 1.2F);
 							p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, p.getEyeLocation(), 16, 1, 1, 1);
 						}
-						p.getWorld().playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 0.75F, 1.0F);
 
 						if (p.getGameMode() == GameMode.SURVIVAL)
 							pp.getSkills().addExperience(isEnchant ? Skill.ENCHANTING : Skill.FORGING, 29 * purchase[option].getExperienceCost() + (purchase[option].getCoinCost()/12));
@@ -217,7 +218,11 @@ public class BeanGuiAnvil extends BeanGui {
 								p.getWorld().playSound(anvil.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 0.75F, 1.0F);
 								if (newState >= 3)
 									close();
+							} else {
+								p.getWorld().playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 0.75F, 1.0F);
 							}
+						} else {
+							p.getWorld().playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 0.75F, 1.0F);
 						}
 						calculateAnvil();
 					} else {
@@ -286,7 +291,6 @@ public class BeanGuiAnvil extends BeanGui {
 	private void calculateAnvil() {
 		getPlugin().getServer().getScheduler().runTask(getPlugin(), () -> {
 			p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_FALL, 0.12F, 1.4F);
-			boolean isRefining = false;
 			boolean isRepairing = false;
 			boolean isBookEnchanting = false;
 			boolean checkForEnchants = true;
@@ -307,6 +311,7 @@ public class BeanGuiAnvil extends BeanGui {
 			infuseItem = i.getItem(infuseSlot);
 			rightConsumeCount = 0;
 			dualOption = false;
+			isRefining = false;
 
 			ItemStack resultItem = upgradeItem == null ? noResult : upgradeItem.clone();
 			ItemStack resultItem2 = resultItem.clone();
@@ -336,7 +341,7 @@ public class BeanGuiAnvil extends BeanGui {
 						if (BItemDurable.canBeRefined(upgradeItem) && pp.getSkillLevel(Skill.FORGING) >= 4) {
 							int newRefine = Math.max(BItemDurable.getRefinementTier(upgradeItem), BItemDurable.getRefinementTier(infuseItem)) + 1;
 							if (newRefine > 15) {
-								// TODO: Do something if over refinement 15, for now, do nothing. Very little players will get to this point any time soon (written mid 2022).
+								// TODO: Do something if over refinement 15, for now, do nothing. Very little players will get to this point any time soon (written late 2022).
 							} else {
 								isRefining = true;
 								left = indicatorRefine;
@@ -348,9 +353,35 @@ public class BeanGuiAnvil extends BeanGui {
 								newCost[0] += 10 + (2 * newRefine * newRefine);
 								coinCost[0] = 5000 * newRefine * newRefine;
 
+								StringBuilder statChanges = new StringBuilder();
+								List<Attribute> refinedAttributes = Arrays.asList(Attribute.GENERIC_ATTACK_DAMAGE, Attribute.GENERIC_ATTACK_SPEED, Attribute.GENERIC_MAX_HEALTH, Attribute.GENERIC_ARMOR);
+
+								// Stats
+								refinedAttributes.forEach(attribute -> {
+									double val = BeanItem.getAttributeValue(upgradeItem, attribute);
+									if (val <= 0) return;
+									double newVal = BeanItem.getAttributeValue(resultItem, attribute);
+									if (val == newVal) return;
+									statChanges.append("\n&8 • &7").append(BeanItem.getAttributeString(attribute)).append(": &f&m").append(dec.format(val)).append("&8&l \u2192 &a").append(dec.format(newVal));
+								});
+
+								// Durability
+								int oldDura = BeanItem.getMaxDurability(upgradeItem);
+								int newDura = BeanItem.getMaxDurability(resultItem);
+
+								if (oldDura != newDura)
+									statChanges.append("\n&8 • &7Durability: &f&m").append(df.format(oldDura)).append("&8&l \u2192 &a").append(df.format(newDura));
+
+								// Runic Capacity
+								int oldRunic = BeanItem.getBaseRunicCapacity(upgradeItem);
+								int newRunic = BeanItem.getBaseRunicCapacity(resultItem);
+
+								if (oldRunic != newRunic)
+									statChanges.append("\n&8 • &7Runic Capacity: &f&m").append(df.format(oldRunic)).append("&8&l \u2192 &f&").append(BeanColor.ENCHANT.asHexString()).append(df.format(newRunic)).append(" \u269D");
+
 								purchase[0] = new PurchaseOption(purchaseConfirm, Component.text("\u00a7dCombine and Refine"),
 										Lore.getBuilder("Combine the two items provided whilst also &drefining &rthe item to &" + BeanItem.getItemRarity(resultItem).getRefinementColour().asHexString() +
-												"Tier " + Utils.toRoman(BItemDurable.getRefinementTier(resultItem)) + "&7, permanently increasing its stats.").build());
+												"Tier " + Utils.toRoman(BItemDurable.getRefinementTier(resultItem)) + "&7, permanently increasing its stats.\n" + statChanges).setLineLimit(36).build());
 								purchase[0].addSkillRequirement(Skill.FORGING, 4 + newRefine);
 							}
 						}
@@ -446,7 +477,7 @@ public class BeanGuiAnvil extends BeanGui {
 								}
 
 								// Warn the user about the inability to merge all the Enchantments due to a lack of Runic Capacity.
-								enchantWarning.set(x, Lore.getBuilder("&c\u26a0 Some Enchantments can't be transferred due to the lack of available &" + BeanColor.ENCHANT.asHexString() + "\u269D Runic Capacity&c.").build().getLore());
+								enchantWarning.set(x, Lore.getBuilder("&c\u26a0 Some Enchantments can't be transferred due to the lack of available &" + BeanColor.ENCHANT.asHexString() + "Runic Capacity&c.").build().getLore());
 							} else {
 								remainingRunicCapacity[x] -= runicCost;
 								totalEnchants.get(x).put(entry.getKey(), newLevel); // Change to new level

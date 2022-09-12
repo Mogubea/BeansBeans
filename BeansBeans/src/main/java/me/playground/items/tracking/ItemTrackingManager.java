@@ -20,15 +20,13 @@ import java.util.Map;
  */
 public class ItemTrackingManager {
 
-    private boolean isReloading;
     private final Map<String, Map<ManifestationReason, DirtyLong>> itemCreationCounter = new HashMap<>();
     private final Map<String, Map<DemanifestationReason, DirtyLong>> itemRemovalCounter = new HashMap<>();
 //  private final Map<Material, Long> vanillaCreationCounter = new HashMap<>();
-    private final ItemTrackingDatasource datasource;
 
     public ItemTrackingManager(Main pl) {
-        this.datasource = new ItemTrackingDatasource(pl, this);
-        datasource.loadAll(); // Load the current counter for each item
+        ItemTrackingDatasource datasource = new ItemTrackingDatasource(pl, this);
+        datasource.loadAll();
     }
 
     /**

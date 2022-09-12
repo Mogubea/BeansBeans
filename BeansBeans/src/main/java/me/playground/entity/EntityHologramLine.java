@@ -38,6 +38,7 @@ public class EntityHologramLine extends ArmorStand implements IBeanEntity {
 		stand.setBasePlate(false);
 		stand.setGravity(false);
 		stand.setCollidable(false);
+		stand.setMarker(true);
 		stand.setSmall(true);
 		stand.setCanTick(false);
 		stand.setPersistent(false); // No reason to save this on unload as the loading of EntityHologram creates new EntityHologramLines

@@ -715,5 +715,11 @@ public class BeanGuiEnchantingTable extends BeanGui {
 			}
 		});
 	}
+
+	public static String getLapisStorageTitle(int level) {
+		if (level < 0) level = 0;
+		else if (level >= lapisTitles.length) level = lapisTitles.length - 1;
+		return lapisTitles[level];
+	}
 	
 }

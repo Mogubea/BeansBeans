@@ -4,6 +4,7 @@ import io.papermc.paper.event.block.BlockBreakBlockEvent;
 import me.playground.gui.stations.BeanGuiEnchantingTable;
 import me.playground.items.BeanBlock;
 import me.playground.items.BeanItem;
+import me.playground.items.BeanItemHeirloom;
 import me.playground.items.tracking.ManifestationReason;
 import me.playground.listeners.events.CustomBlockBreakEvent;
 import me.playground.main.Main;
@@ -20,6 +21,7 @@ import org.bukkit.block.*;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.block.data.type.Chest.Type;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -130,12 +132,20 @@ public class BlockListener extends EventListener {
 			sign.update();
 		}
 		
-		// Enchant Table default container values.
+		// Enchant Table container values.
 		else if (block.getState() instanceof EnchantingTable table) {
+			short lapis = 0;
+			byte level = 0;
+
+			if (e.getItemInHand().hasItemMeta()) {
+				PersistentDataContainer iPdc = e.getItemInHand().getItemMeta().getPersistentDataContainer();
+				lapis = iPdc.getOrDefault(BeanGuiEnchantingTable.KEY_LAPIS, PersistentDataType.SHORT, lapis);
+				level = iPdc.getOrDefault(BeanGuiEnchantingTable.KEY_LAPIS_LEVEL, PersistentDataType.BYTE, level);
+			}
+
 			PersistentDataContainer pdc = table.getPersistentDataContainer();
-			
-			pdc.set(BeanGuiEnchantingTable.KEY_LAPIS, PersistentDataType.SHORT, (short)0);
-			pdc.set(BeanGuiEnchantingTable.KEY_LAPIS_LEVEL, PersistentDataType.BYTE, (byte)0);
+			pdc.set(BeanGuiEnchantingTable.KEY_LAPIS, PersistentDataType.SHORT, lapis);
+			pdc.set(BeanGuiEnchantingTable.KEY_LAPIS_LEVEL, PersistentDataType.BYTE, level);
 			table.update();
 		}
 		
@@ -330,51 +340,68 @@ public class BlockListener extends EventListener {
 	}
 
 	/**
-	 * Armour being dispensed by a dispenser, attempting to auto equip
+	 * Just prevent any custom block from being fired
+	 * TODO: Edit this to allow normal firing but disallow equipping etc.
 	 */
 	@EventHandler(priority = EventPriority.LOW)
-	public void onDispenseArmour(BlockDispenseArmorEvent e) {
-		// Check for custom items that shouldn't be equipped.
-		BeanBlock bBlock = BeanBlock.from(e.getItem(), BeanBlock.class);
-		if (bBlock == null) return;
-
-		e.setCancelled(!bBlock.isWearable());
+	public void onDispenseArmour(BlockDispenseEvent e) {
+		BeanItem custom = BeanItem.from(e.getItem());
+		if (custom instanceof BeanItemHeirloom) e.setCancelled(true);
+		else if (custom instanceof BeanBlock bBlock) {
+			e.setCancelled(!bBlock.isWearable());
+		}
 	}
-	
+
 	/**
 	 * When an item is dropped from a block
 	 */
 	@EventHandler(priority = EventPriority.LOW)
 	public void onItemDrop(BlockDropItemEvent e) {
-		if (e.getItems().isEmpty()) return;
+		boolean isEmpty = e.getItems().isEmpty();
+
 		final BlockState state = e.getBlockState();
 		
 		// If custom block, add to the drops, ignore following checks.
 		boolean isCustom = BeanBlock.from(state, (custom) -> {
-			e.getItems().get(0).setItemStack(custom.getItemStack());
+			if (!isEmpty) e.getItems().get(0).setItemStack(custom.getItemStack());
 			custom.onBlockDropItems(e);
-		}) == null;
+		}) != null;
 
 		if (!isCustom) {
-			if (state.getType() == Material.ANCIENT_DEBRIS) {
+			if (!isEmpty && state.getType() == Material.ANCIENT_DEBRIS) {
 				if (!e.getPlayer().getInventory().getItemInMainHand().containsEnchantment(Enchantment.SILK_TOUCH))
 					// Make the non-silk drop from Ancient Debris into Netherite Scrap to support the anti Mining skill XP Server Restart Exploit.
 					e.getItems().get(0).setItemStack(new ItemStack(Material.NETHERITE_SCRAP));
 			}
 
 			// Drop lapis from the storage compartment in enchanting tables.
-			if (state instanceof EnchantingTable) {
-				int count = ((EnchantingTable)e.getBlockState()).getPersistentDataContainer().getOrDefault(BeanGuiEnchantingTable.KEY_LAPIS, PersistentDataType.SHORT, (short)0);
+			else if (state instanceof EnchantingTable table) {
+				PersistentDataContainer pdc = table.getPersistentDataContainer();
+				final byte level = pdc.getOrDefault(BeanGuiEnchantingTable.KEY_LAPIS_LEVEL, PersistentDataType.BYTE, (byte)0);
+				if (level > 0) {
+					ItemStack enchTable = new ItemStack(Material.ENCHANTING_TABLE);
+					enchTable.editMeta(meta -> meta.getPersistentDataContainer().set(BeanGuiEnchantingTable.KEY_LAPIS_LEVEL, PersistentDataType.BYTE, level));
+					// TODO: Change all of this Enchanting Table stuff and try to throw it into a single class somewhere for organisation sake
+					Item item = e.getBlock().getWorld().dropItem(e.getBlock().getLocation().add(0.5, 0, 0.5), enchTable);
+					if (!isEmpty)
+						e.getItems().set(0, item);
+					else
+						e.getItems().add(item);
+				}
+				
+				int count = pdc.getOrDefault(BeanGuiEnchantingTable.KEY_LAPIS, PersistentDataType.SHORT, (short)0);
 
 				if (count > 0) {
 					int blocks = count / 9;
 					int rem = count % 9;
 					int loops = (blocks / 64) + 1;
 
-					for (int x = -1; ++x < loops;) {
-						int amt = Math.min(64, blocks);
-						blocks -= amt;
-						e.getItems().add(e.getBlock().getWorld().dropItem(e.getBlock().getLocation().add(0.5, 0, 0.5), new ItemStack(Material.LAPIS_BLOCK, amt)));
+					if (blocks > 0) {
+						for (int x = -1; ++x < loops;) {
+							int amt = Math.min(64, blocks);
+							blocks -= amt;
+							e.getItems().add(e.getBlock().getWorld().dropItem(e.getBlock().getLocation().add(0.5, 0, 0.5), new ItemStack(Material.LAPIS_BLOCK, amt)));
+						}
 					}
 
 					if (rem > 0)

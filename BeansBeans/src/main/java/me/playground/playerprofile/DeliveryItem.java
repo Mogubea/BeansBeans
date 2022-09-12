@@ -23,7 +23,7 @@ public class DeliveryItem extends DeliveryContent {
 	protected boolean doClaim() {
 		PlayerProfile pp = getDelivery().getRecipientProfile();
 		if (!pp.isOnline()) return false;
-		pp.getPlayer().getInventory().addItem(item).forEach((index, item) -> { pp.getPlayer().getWorld().dropItem(pp.getPlayer().getLocation(), item); });
+		pp.getPlayer().getInventory().addItem(item).forEach((index, item) -> pp.getPlayer().getWorld().dropItem(pp.getPlayer().getLocation(), item));
 		return true;
 	}
 	

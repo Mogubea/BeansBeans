@@ -24,7 +24,7 @@ public class BeanGuiSkills extends BeanGui {
 	
 	private static final ItemStack blank = newItem(new ItemStack(Material.ORANGE_STAINED_GLASS_PANE, 1), "\u00a76Skills");
 	private final HashMap<Integer, Skill> mappings = new HashMap<>();
-	private final int[] skillSlots = {20,21,22,23,24,28,29,30,32,33,34};
+	private final int[] skillSlots = {20,21,22,23,24,28,29,30,31,32,33,34};
 	
 	public BeanGuiSkills(Player p) {
 		super(p);
@@ -70,6 +70,7 @@ public class BeanGuiSkills extends BeanGui {
 			// copium
 			int spaces = 25 - (skillInfo.getLevelXP() + "/" + skillInfo.getXPRequirement() + " ("+dec.format(skillInfo.getLevelProgress() * 100)+"%)").length();
 			StringBuilder spaceb = new StringBuilder();
+			spaces += skillInfo.getGrade().length();
 			for (int a = -1; ++a < spaces;)
 				spaceb.append(" ");
 			final String space = spaceb.toString();
@@ -83,9 +84,9 @@ public class BeanGuiSkills extends BeanGui {
 				if (skill.getDescription() != null)
 					lore.addAll(skill.getDescription());
 				lore.add(Component.empty());
-				lore.add(Component.text("\u00a7l" + skillInfo.getGrade() + " \u00a7r", lighter)
+				lore.add(Component.text("\u00a7l " + skillInfo.getGrade() + " \u00a7r", lighter)
 						.append(Utils.getProgressBar('-', 20, skillInfo.getLevelXP(), skillInfo.getXPRequirement(), 0x454545, col))
-						.append(Component.text(" \u00a7l"+skillInfo.getNextGrade(), skill.getColour())).decoration(TextDecoration.ITALIC, false));
+						.append(Component.text(" \u00a7l"+skillInfo.getNextGrade()+" ", skill.getColour())).decoration(TextDecoration.ITALIC, false));
 				lore.add(Component.text(space + "\u00a7" + skill.getColourCode() + df.format(skillInfo.getLevelXP()))
 						.append(Component.text("/", NamedTextColor.DARK_GRAY))
 						.append(Component.text("\u00a7" + skill.getColourCode() + df.format(skillInfo.getXPRequirement()))

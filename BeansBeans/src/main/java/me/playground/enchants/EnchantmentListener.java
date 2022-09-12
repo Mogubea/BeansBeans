@@ -11,10 +11,7 @@ import org.bukkit.Particle.DustTransition;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.EntityCategory;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -64,7 +61,8 @@ public class EnchantmentListener extends EventListener {
 
 		ItemStack item = p.getEquipment().getItemInMainHand();
 		if ((ent.getCategory() == EntityCategory.ARTHROPOD && item.containsEnchantment(BEnchantment.BURDEN_ARACHNOPHOBIC)) ||
-			(ent.getCategory() == EntityCategory.UNDEAD && item.containsEnchantment(BEnchantment.BURDEN_NECROPHOBIC))) {
+				(ent.getCategory() == EntityCategory.UNDEAD && item.containsEnchantment(BEnchantment.BURDEN_NECROPHOBIC)) ||
+				(ent instanceof Animals && item.containsEnchantment(BEnchantment.BURDEN_ZOOPHOBIC))) {
 			p.getWorld().spawnParticle(Particle.VILLAGER_ANGRY, e.getEntity().getLocation().add(0, e.getEntity().getHeight()/2, 0), 4, 0.3, e.getEntity().getHeight()/2, 0.3, 0.02);
 			e.setCancelled(true);
 			return;

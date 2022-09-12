@@ -2,6 +2,7 @@ package me.playground.main;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
+import me.playground.celestia.logging.CelestiaManager;
 import me.playground.command.CommandManager;
 import me.playground.data.Datasource;
 import me.playground.data.DatasourceCore;
@@ -20,6 +21,7 @@ import me.playground.loot.LootManager;
 import me.playground.main.TeamManager.ScoreboardFlag;
 import me.playground.menushop.MenuShopManager;
 import me.playground.npc.NPCManager;
+import me.playground.playerprofile.PermissionManager;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.PlayerProfileManager;
 import me.playground.playerprofile.stats.StatType;
@@ -40,6 +42,7 @@ import me.playground.utils.Utils;
 import me.playground.warps.WarpManager;
 import me.playground.worlds.WorldManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -77,6 +80,7 @@ public class Main extends JavaPlugin {
 	private CustomEntityManager entityManager;
 	private PlayerProfileManager profileManager;
 	private PunishmentManager punishmentManager;
+	private CelestiaManager celestiaManager;
 
 	private ItemTrackingManager itemTrackingManager;
 	private ItemValueManager itemValueManager;
@@ -99,7 +103,7 @@ public class Main extends JavaPlugin {
 		instance = this;
 
 		this.protocolManager = ProtocolLibrary.getProtocolManager();
-		
+
 		enchantManager = new EnchantmentManager(this);
 		
 		this.signMenuFactory = new SignMenuFactory(this);
@@ -108,6 +112,7 @@ public class Main extends JavaPlugin {
 		datasource = new DatasourceCore(this);
 		Datasource.init(this);
 
+		celestiaManager = new CelestiaManager(this);
 		profileManager = new PlayerProfileManager(this);
 
 		punishmentManager = new PunishmentManager(this);
@@ -159,7 +164,8 @@ public class Main extends JavaPlugin {
 			getSLF4JLogger().warn("Failed to load Live Status Thread.");
 			e.printStackTrace();
 		}
-		
+
+		getDatasourceCore().doPostCreation();
 		startMainServerLoop();
 		fullyBooted = true;
 	}
@@ -178,7 +184,7 @@ public class Main extends JavaPlugin {
 		
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			PlayerProfile.from(p).closeBeanGui(); // Reassuring closure before kick
-			p.kick(Component.text("\u00a7eBean's Beans is reloading."), Cause.RESTART_COMMAND);
+			p.kick(Component.text("Bean's Beans is reloading.", NamedTextColor.YELLOW), Cause.RESTART_COMMAND);
 		}
 
 		
@@ -323,6 +329,10 @@ public class Main extends JavaPlugin {
 		return punishmentManager;
 	}
 
+	public CelestiaManager getCelestiaManager() {
+		return celestiaManager;
+	}
+
 	/**
 	 * Save everything that is involved with a {@link me.playground.data.PrivateDatasource}, which should be everything.
 	 */
@@ -342,7 +352,7 @@ public class Main extends JavaPlugin {
 		for (int x = -1; ++x < size;) {
 			Player p = targets.get(x);
 			me.playground.playerprofile.PlayerProfile pp = me.playground.playerprofile.PlayerProfile.from(p);
-			if ((pp.hasNickname() && pp.getDisplayName().equalsIgnoreCase(name)) || pp.getRealName().equalsIgnoreCase(name))
+			if (pp.getDisplayName().equalsIgnoreCase(name) || pp.getRealName().equalsIgnoreCase(name))
 				return p;
 		}
 
@@ -351,7 +361,7 @@ public class Main extends JavaPlugin {
 			for (int x = -1; ++x < size;) {
 				Player p = targets.get(x);
 				me.playground.playerprofile.PlayerProfile pp = me.playground.playerprofile.PlayerProfile.from(p);
-				if ((pp.hasNickname() && pp.getDisplayName().toLowerCase().contains(lowerName)) || pp.getRealName().toLowerCase().equalsIgnoreCase(lowerName))
+				if (pp.getDisplayName().toLowerCase().contains(lowerName) || pp.getRealName().toLowerCase().contains(lowerName))
 					return p;
 			}
 		}

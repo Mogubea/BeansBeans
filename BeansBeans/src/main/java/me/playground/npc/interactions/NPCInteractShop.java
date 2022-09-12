@@ -2,7 +2,7 @@ package me.playground.npc.interactions;
 
 import org.bukkit.entity.Player;
 
-import me.playground.gui.BeanGuiBasicMenuShop;
+import me.playground.gui.BeanGuiBasicNPCShop;
 import me.playground.npc.NPC;
 
 public class NPCInteractShop extends NPCInteraction {
@@ -15,7 +15,7 @@ public class NPCInteractShop extends NPCInteraction {
 	public void onInteract(final NPC<?> npc, final Player p) {
 		if (npc.getMenuShop() == null) return;
 		
-		new BeanGuiBasicMenuShop(p, npc.getMenuShop()).openInventory();
+		new BeanGuiBasicNPCShop(p, npc).openInventory();
 	}
 
 	@Override

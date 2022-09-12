@@ -11,10 +11,12 @@ import java.util.function.Function;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import me.playground.gui.stations.BeanGuiEnchantingTable;
 import me.playground.items.tracking.DemanifestationReason;
 import me.playground.items.tracking.ItemTrackingManager;
 import me.playground.items.tracking.ManifestationReason;
 import me.playground.playerprofile.PlayerProfile;
+import me.playground.playerprofile.stats.DirtyDouble;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
@@ -422,7 +424,7 @@ public class BeanItem {
 		};
 	}
 
-	protected static String getAttributeString(Attribute attribute) {
+	public static String getAttributeString(Attribute attribute) {
 		return switch(attribute) {
 			case GENERIC_MAX_HEALTH -> "Health";
 			case GENERIC_KNOCKBACK_RESISTANCE -> "KB. Resistance";
@@ -437,6 +439,29 @@ public class BeanItem {
 			case HORSE_JUMP_STRENGTH -> "Horse Jump";
 			default -> "";
 		};
+	}
+
+	public static double getAttributeValue(@NotNull ItemStack item, @NotNull Attribute attribute) {
+		DirtyDouble dirtyDouble = new DirtyDouble(0);
+		ItemMeta meta = item.getItemMeta();
+
+		ItemAttributes attributes = ItemAttributes.fromItem(item);
+		dirtyDouble.setValue(attributes.getAttribute(attribute));
+
+		if (!meta.hasAttributeModifiers()) return dirtyDouble.getValue();
+
+		Collection<AttributeModifier> modifiers = meta.getAttributeModifiers(attribute);
+		if (modifiers == null || modifiers.isEmpty()) return attributes.getAttribute(attribute);
+
+		modifiers.forEach(attributeModifier -> {
+			switch (attributeModifier.getOperation()) {
+				case ADD_NUMBER -> dirtyDouble.addToValue(attributeModifier.getAmount());
+				case ADD_SCALAR -> dirtyDouble.addToValue(dirtyDouble.getValue() * attributeModifier.getAmount());
+				case MULTIPLY_SCALAR_1 -> dirtyDouble.addToValue(dirtyDouble.getValue() * (1 + attributeModifier.getAmount()));
+			}
+		});
+
+		return dirtyDouble.getValue() - attributes.getAttribute(attribute); // Negate the base attribute value from modified versions
 	}
 
 	/**
@@ -634,6 +659,13 @@ public class BeanItem {
 			if (x > 3)
 				lore.add(Component.text("And " + (x-3) + " more...", NamedTextColor.GRAY));
 		}
+		else if (material == Material.ENCHANTING_TABLE && item.hasItemMeta()) {
+			PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+			byte level = pdc.getOrDefault(BeanGuiEnchantingTable.KEY_LAPIS_LEVEL, PersistentDataType.BYTE, (byte)0);
+			if (level > 0)
+				lore.add(Component.text(" • Compartment Size: ", NamedTextColor.GRAY).append(Component.text(BeanGuiEnchantingTable.getLapisStorageTitle(level), NamedTextColor.YELLOW)).decoration(TextDecoration.ITALIC, false));
+		}
+
 		return lore;
 	}
 	
@@ -663,24 +695,39 @@ public class BeanItem {
 			meta.setAttributeModifiers(custom.getAttributes());
 
 		final int refinementLevel = BItemDurable.getRefinementTier(item);
+		final ItemAttributes ia = ItemAttributes.fromItem(item);
 
-		// Refresh any refinement attribute bonuses
-		if (refinementLevel > 0 && meta.hasAttributeModifiers() /* Probably not a check that's needed */) {
-			List<Attribute> refinedAttributes = Arrays.asList(Attribute.GENERIC_ATTACK_DAMAGE, Attribute.GENERIC_ATTACK_SPEED, Attribute.GENERIC_MAX_HEALTH, Attribute.GENERIC_ARMOR);
-			refinedAttributes.forEach(attribute -> {
-				if (!meta.getAttributeModifiers().containsKey(attribute)) return;
-				meta.addAttributeModifier(attribute, new AttributeModifier(refinementAttributeUUIDs.get(attribute), attribute.translationKey(), (double)refinementLevel / 10, Operation.MULTIPLY_SCALAR_1));
-			});
-		}
+		/*if (refinementLevel > 0) {
+			// % damage increase per level for any item
+			Attribute attribute = Attribute.GENERIC_ATTACK_DAMAGE;
+			double value = getAttributeValue(item, attribute);
+			if (value > 0) {
+				AttributeModifier modifier = new AttributeModifier(refinementAttributeUUIDs.get(attribute), attribute.translationKey(), value + ((value / 10) * refinementLevel), Operation.ADD_NUMBER);
+//				meta.removeAttributeModifier(attribute, modifier);
+				meta.addAttributeModifier(attribute, modifier);
+			}
+		}*/
 
-		ItemAttributes ia = ItemAttributes.fromItem(item);
 		final boolean att1 = ia != ItemAttributes.NIL && ia != ItemAttributes.FISHING_ROD;
 		final boolean att2 = meta.hasAttributeModifiers();
 		if (att1 || att2) {
 			final LinkedHashMap<String, Double> modifiers = new LinkedHashMap<>();
 			final LinkedHashMap<String, Component> modsuffix = new LinkedHashMap<>();
 			meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-			
+
+			for (Attribute attribute : Attribute.values()) {
+				double val = getAttributeValue(item, attribute);
+				if (val == 0) continue;
+
+				switch (attribute) {
+					case GENERIC_MOVEMENT_SPEED -> val *= 1000; // 0.001 = 1
+					case GENERIC_LUCK -> val *= 20;
+					default -> {}
+				}
+
+				modifiers.put(getAttributeString(attribute), val);
+			}
+			/*
 			if (att1) {
 				if (ia.isTool()) {
 					modifiers.put(getAttributeString(Attribute.GENERIC_ATTACK_DAMAGE), ia.getAttackDamage());
@@ -718,7 +765,8 @@ public class BeanItem {
 					}
 				}
 			}
-			
+			*/
+
 			if (item.containsEnchantment(Enchantment.DAMAGE_ALL)) {
 				double x = ((item.getEnchantmentLevel(Enchantment.DAMAGE_ALL)+1) * 0.5D);
 				modifiers.put("Damage", modifiers.getOrDefault("Damage", 0.0) + x);
@@ -876,11 +924,25 @@ public class BeanItem {
 	public static int getBaseRunicCapacity(ItemStack item) {
 		if (item == null) return 0;
 		if (item.getType() == Material.ENCHANTED_BOOK) return 99999;
-
 		int runicCapacity = 15;
 
-		ItemAttributes attributes = ItemAttributes.fromItem(item);
-		return attributes != null ? attributes.getRunicCapacity() : runicCapacity;
+		final BeanItem custom = from(item);
+
+		// Grab base Runic Capacity
+		if (custom != null) {
+			runicCapacity = custom.getBaseRunicCapacity();
+		} else {
+			ItemAttributes attributes = ItemAttributes.fromItem(item);
+			if (attributes != null)
+				runicCapacity = attributes.getRunicCapacity();
+		}
+
+		// Add Refinement Bonuses
+		int tier = BItemDurable.getRefinementTier(item);
+		if (tier > 0)
+			runicCapacity += Math.floorDiv((tier + 1), 2);
+
+		return runicCapacity;
 	}
 
 	/**
@@ -1118,7 +1180,9 @@ public class BeanItem {
 
 	public int getCustomModelData() { return customModelData; }
 
-	public int getBaseRunicCapacity() { return getBaseRunicCapacity(originalStack); }
+	public int getBaseRunicCapacity() {
+		return 15;
+	}
 
 	/**
 	 * Use {@link #getTrackedStack(Player, ManifestationReason, int)} if giving an item directly to a player. Otherwise, just make sure to call
@@ -1248,6 +1312,10 @@ public class BeanItem {
 	
 	public static BeanItem[] values() {
 		return items;
+	}
+
+	public static int size() {
+		return items.length;
 	}
 	
 }

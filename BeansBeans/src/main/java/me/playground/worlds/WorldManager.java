@@ -47,4 +47,8 @@ public class WorldManager {
 		return idToWorld.values();
 	}
 
+	public int size() {
+		return idToWorld.size();
+	}
+
 }

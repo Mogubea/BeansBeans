@@ -45,7 +45,21 @@ public abstract class PrivateDatasource {
 	public World getWorld(int databaseId) {
 		return plugin.getWorldManager().getWorld(databaseId);
 	}
-	
+
+	/**
+	 * Register a {@link PrivateLogger} to the {@link DatasourceCore} for automatic routine saving of logs.
+	 */
+	protected void registerLogger(PrivateLogger<?> logger) {
+		this.dc.registerLogger(logger);
+	}
+
+	/**
+	 * Fires after this {@link PrivateDatasource} has been registered by the {@link DatasourceCore}.
+	 */
+	protected void postCreation() {
+
+	}
+
 	/**
 	 * Load all the relevant objects this datasource is managing the data of.
 	 */
@@ -60,5 +74,4 @@ public abstract class PrivateDatasource {
 		dc.close(c);
 	}
 
-	
 }

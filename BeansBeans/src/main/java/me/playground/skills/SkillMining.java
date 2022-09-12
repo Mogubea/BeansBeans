@@ -1,10 +1,8 @@
 package me.playground.skills;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import me.playground.items.lore.Lore;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;

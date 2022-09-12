@@ -20,7 +20,7 @@ public class HighscoreStat extends Highscore {
 	@Override
 	public void updateScores() {
 		this.orderedScores = Datasource.getStatHighscores(type, stat);
-		this.preservedOrder = new ArrayList<Integer>(orderedScores.keySet());
+		this.preservedOrder = new ArrayList<>(orderedScores.keySet());
 		Collections.reverse(preservedOrder);
 	}
 

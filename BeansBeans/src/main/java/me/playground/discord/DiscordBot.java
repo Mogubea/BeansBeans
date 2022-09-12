@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 
+import me.playground.items.BeanItem;
 import net.dv8tion.jda.api.exceptions.RateLimitedException;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -386,9 +387,10 @@ public class DiscordBot extends ListenerAdapter {
 			} else {
 				test.setImage("https://i.imgur.com/CPMkKYg.png");
 			}
-			test.addField("Random Statistics", "There are **" + plugin.shopManager().countShops() + "** Shops\n"
-					+ "There are **"+plugin.regionManager().countRegions()+"** Regions\n"
-					+ "There are **"+plugin.warpManager().countWarps()+"** Warps", false);
+			test.addField("Random Server Statistics", "** • " + ProfileStore.size() + "** Players have joined the server.\n"
+					+ "** • "+plugin.warpManager().countWarps()+"** Warps are currently active.\n"
+					+ "** • "+plugin.regionManager().countRegions()+"** Regions exist across **" + plugin.getWorldManager().size()+ "** Worlds.\n"
+					+ "** • "+ BeanItem.size()+"** Custom Items have been designed and implemented.", false);
 			test.setFooter("Last updated ");
 			test.setTimestamp(Instant.now());
 			test.setAuthor("Bean's Beans Server Status", null, "https://img.icons8.com/nolan/344/ingredients-list.png");

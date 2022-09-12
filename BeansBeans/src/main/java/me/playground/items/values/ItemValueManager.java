@@ -1,5 +1,6 @@
 package me.playground.items.values;
 
+import me.playground.data.LoggingManager;
 import me.playground.items.BItemDurable;
 import me.playground.main.Main;
 import org.bukkit.inventory.ItemStack;
@@ -8,22 +9,17 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Manages the sell value of items on Bean's Beans
  */
-public class ItemValueManager {
+public class ItemValueManager extends LoggingManager<ItemValueLog> {
 
     private final Main plugin;
-    private final ItemValueDatasource datasource;
-    private final ItemValueLogger logger;
     private final ItemValues values;
     private final ItemValueTemp tempVals;
 
     public ItemValueManager(Main plugin) {
+        super(new ItemValueDatasource(plugin));
         this.plugin = plugin;
-        this.datasource = new ItemValueDatasource(plugin, this);
         this.values = new ItemValues(this);
         this.tempVals = new ItemValueTemp(this);
-        this.logger = new ItemValueLogger(this);
-
-        datasource.loadAll();
     }
 
     protected ItemValues getItemValues() {
@@ -100,14 +96,6 @@ public class ItemValueManager {
 
     public long getLastRecalculation() {
         return values.getLastRecalculation();
-    }
-
-    protected ItemValueDatasource getDatasource() {
-        return datasource;
-    }
-
-    protected ItemValueLogger getLogger() {
-        return logger;
     }
 
     protected Main getPlugin() {

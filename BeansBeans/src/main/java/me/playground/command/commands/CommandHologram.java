@@ -16,7 +16,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.world.entity.Entity;
-import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -47,7 +46,7 @@ public class CommandHologram extends BeanCommand {
 
 	/**/
 
-	private static final String[] subCmds = {"create", "remove", "modifyrank", "addline", "removeline", "editline", "resetlines",};
+	private static final String[] subCmds = {"create", "remove", "modifyrank", "addline", "removeline", "editline", "resetlines", "linespacing"};
 
 	@Override
 	public boolean runCommand(PlayerProfile profile, @NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args) {
@@ -101,14 +100,14 @@ public class CommandHologram extends BeanCommand {
 			if (args.length < 2)
 				throw new CommandException(p, "You must specify what you wish to have on line #" + (hologram.getSize() + 1) + " of the hologram!");
 
-			hologram.addComponent(createComponent(profile, p, Arrays.copyOfRange(args, 1, args.length - 1)));
+			hologram.addComponent(createComponent(profile, p, Arrays.copyOfRange(args, 1, args.length)));
 			p.sendMessage(Component.text("Successfully added line #" + hologram.getSize() + " to Hologram.", NamedTextColor.GRAY));
 		}
 
 		// Remove Line
 		else if (subCmd.equals(subCmds[4])) {
 			EntityHologram hologram = getHologram(profile, p, true);
-			int lineToDelete = toIntMinMax(p, args[0], 1, hologram.getSize());
+			int lineToDelete = toIntMinMax(p, args[1], 1, hologram.getSize());
 
 			p.sendMessage(Component.text("Successfully removed line #" + lineToDelete + " from the Hologram.", NamedTextColor.GRAY));
 			hologram.removeComponent(lineToDelete - 1);
@@ -117,7 +116,7 @@ public class CommandHologram extends BeanCommand {
 		// Edit Line
 		else if (subCmd.equals(subCmds[5])) {
 			EntityHologram hologram = getHologram(profile, p, true);
-			int lineToEdit = toIntMinMax(p, args[0], 1, hologram.getSize());
+			int lineToEdit = toIntMinMax(p, args[1], 1, hologram.getSize());
 
 			hologram.setComponent(lineToEdit, createComponent(profile, p, Arrays.copyOfRange(args, 2, args.length - 1)));
 			p.sendMessage(Component.text("Successfully modified line #" + lineToEdit + " of the Hologram."));
@@ -128,6 +127,12 @@ public class CommandHologram extends BeanCommand {
 			EntityHologram hologram = getHologram(profile, p, true);
 			hologram.setComponents(null);
 			p.sendMessage(Component.text("Successfully reset the Hologram's lines."));
+		}
+
+		else if (subCmd.equals(subCmds[7])) {
+			EntityHologram hologram = getHologram(profile, p, true);
+			hologram.setSpaceBetweenComponents(toFloat(p, args[1]));
+			p.sendMessage(Component.text("Successfully updated the Hologram's line spacing."));
 		}
 
 		return false;

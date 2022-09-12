@@ -17,11 +17,12 @@ public class RecipesSmithing {
 	public RecipesSmithing(Main plugin, RecipeManager manager) {
 		this.plugin = plugin;
 		this.manager = manager;
-		
-		recipe("rose_gold_helmet", BeanItem.ROSE_GOLD_HELMET.getItemStack(), new MaterialChoice(Material.GOLDEN_HELMET), new MaterialChoice(Material.COPPER_INGOT), true);
+
+		// TODO: re-enable after attribute rework
+		/*recipe("rose_gold_helmet", BeanItem.ROSE_GOLD_HELMET.getItemStack(), new MaterialChoice(Material.GOLDEN_HELMET), new MaterialChoice(Material.COPPER_INGOT), true);
 		recipe("rose_gold_chestplate", BeanItem.ROSE_GOLD_CHESTPLATE.getItemStack(), new MaterialChoice(Material.GOLDEN_CHESTPLATE), new MaterialChoice(Material.COPPER_INGOT), true);
 		recipe("rose_gold_leggings", BeanItem.ROSE_GOLD_LEGGINGS.getItemStack(), new MaterialChoice(Material.GOLDEN_LEGGINGS), new MaterialChoice(Material.COPPER_INGOT), true);
-		recipe("rose_gold_boots", BeanItem.ROSE_GOLD_BOOTS.getItemStack(), new MaterialChoice(Material.GOLDEN_BOOTS), new MaterialChoice(Material.COPPER_INGOT), true);
+		recipe("rose_gold_boots", BeanItem.ROSE_GOLD_BOOTS.getItemStack(), new MaterialChoice(Material.GOLDEN_BOOTS), new MaterialChoice(Material.COPPER_INGOT), true);*/
 		recipe("gilded_blackstone", new ItemStack(Material.GILDED_BLACKSTONE), new MaterialChoice(Material.GOLD_ORE), new MaterialChoice(Material.BLACKSTONE), false);
 	}
 	

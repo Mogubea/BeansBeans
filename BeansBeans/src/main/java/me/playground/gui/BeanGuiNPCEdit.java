@@ -83,25 +83,11 @@ public class BeanGuiNPCEdit extends BeanGui {
 			e.setCancelled(false);
 		// TODO: Name Change
 		} else if (slot == 10) {
-			
-		// Title Change
-		} else if (slot == 12) {
-			if (npc.getInteraction().hasLockedTitle()) return;
-			if (e.isRightClick()) {
-				npc.removeTitle(true);
-				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
-				onInventoryOpened();
-				return;
-			}
 
-			getPlugin().getSignMenuFactory().requestSignResponse(p, Material.BIRCH_WALL_SIGN, (strings) -> {
-				if (strings[0] == null && strings[1] == null)
-	            	npc.removeTitle(true);
-	            npc.setTitle(Component.text(strings[0] + strings[1]), true);
-			
-			}, true, "NPC Title");
-			
-		// Interaction Change
+		} else if (slot == 12) {
+			close();
+			p.chat("/op npc settitle");
+			// Interaction Change
 		} else if (slot == 14) {
 			getPlugin().getSignMenuFactory().requestSignResponse(p, Material.BIRCH_WALL_SIGN, (strings) -> {
 				NPCInteraction interaction = NPCInteraction.getByName(strings[0]);
@@ -111,26 +97,6 @@ public class BeanGuiNPCEdit extends BeanGui {
             	}
             	npc.setInteraction(interaction);
 			}, true, "Interaction ID", "for this NPC");
-			
-		// Title Colour Change
-		} else if (slot == 21) {
-			if (npc.getInteraction().hasLockedTitle()) return;
-			if (e.isRightClick()) {
-				npc.setTitleColour(BeanColor.NPC.value());
-				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
-				onInventoryOpened();
-				return;
-			}
-
-			getPlugin().getSignMenuFactory().requestSignResponse(p, Material.BIRCH_WALL_SIGN, (strings) -> {
-				String sCol = strings[0];
-            	if (!sCol.startsWith("#")) {
-					sCol = "#" + sCol;
-				}
-            	
-            	npc.setTitleColour(Integer.decode(strings[0]));
-			}, true, "HEX Title Colour", "for this NPC");
-			
 		// Employment Job Change
 		} else if (slot == 40) {
 			getPlugin().getSignMenuFactory().requestSignResponse(p, Material.BIRCH_WALL_SIGN, (strings) -> {
@@ -161,9 +127,7 @@ public class BeanGuiNPCEdit extends BeanGui {
 		contents[10] = newItem(icon_name, Component.text("NPC Name", BeanColor.NPC), npc.getName());
 		boolean isJobNPC = npc.getInteraction() instanceof NPCInteractEmployer;
 		contents[12] = newItem(new ItemStack(isJobNPC ? Material.CRIMSON_SIGN : Material.WARPED_SIGN),
-				Component.text("NPC Title", isJobNPC ? NamedTextColor.RED : BeanColor.NPC), npc.getTitle().decoration(TextDecoration.ITALIC, false));
-		contents[21] = newItem(new ItemStack(isJobNPC ? Material.CRIMSON_SIGN : Material.WARPED_SIGN),
-				Component.text("NPC Title Colour", isJobNPC ? NamedTextColor.RED : BeanColor.NPC), Component.text(npc.getTitleColour()).color(TextColor.color(npc.getTitleColour())).decoration(TextDecoration.ITALIC, false));
+				Component.text("NPC Hologram", isJobNPC ? NamedTextColor.RED : BeanColor.NPC), Component.text("Command Required", BeanColor.COMMAND));
 		contents[14] = newItem(icon_interaction, Component.text("NPC Interaction Script", BeanColor.NPC), "\u00a7f" + npc.getInteraction().getName());
 		contents[40] = newItem(icon_employment, Component.text("NPC Occupation", BeanColor.NPC), npc.getJob().toComponent());
 		

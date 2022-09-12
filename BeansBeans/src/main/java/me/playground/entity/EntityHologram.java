@@ -49,7 +49,7 @@ public class EntityHologram extends ArmorStand implements IBeanEntity {
 		super(EntityType.ARMOR_STAND, ((CraftWorld)location.getWorld()).getHandle());
 
 		// Round the Location to 1 decimal space, down Y by 1
-		Location newLoc = new Location(location.getWorld(), Math.round(location.getX() * 10D) / 10D, (Math.round(location.getY() * 10D) / 10D) - 1, Math.round(location.getZ() * 10D) / 10D);
+		Location newLoc = new Location(location.getWorld(), Math.round(location.getX() * 10D) / 10D, (Math.round(location.getY() * 10D) / 10D), Math.round(location.getZ() * 10D) / 10D);
 		this.realPos = new Vector(newLoc.getX(), newLoc.getY(), newLoc.getZ());
 
 		setInvisible(true);
@@ -83,14 +83,15 @@ public class EntityHologram extends ArmorStand implements IBeanEntity {
 	}
 
 	public void setSpaceBetweenComponents(float distance) {
+		spaceBetweenComponents = distance;
 		org.bukkit.entity.ArmorStand stand = (org.bukkit.entity.ArmorStand) this.getBukkitEntity();
 		PersistentDataContainer container = stand.getPersistentDataContainer();
-		container.set(KEY_COMPONENT_SPACE, PersistentDataType.FLOAT, spaceBetweenComponents);
+		container.set(KEY_COMPONENT_SPACE, PersistentDataType.FLOAT, distance);
 
 		int total = lines.size();
 		for (int x = -1; ++x < total;) {
 			EntityHologramLine line = lines.get(x);
-			line.setPos(realPos.getX(), realPos.getY() + (total * 0.25) - ((distance + 0.25) * x), realPos.getZ());
+			line.setPos(realPos.getX(), realPos.getY() + ((total-1) * (distance + 0.3)) - ((distance + 0.3) * x) + 1, realPos.getZ());
 		}
 	}
 
@@ -119,6 +120,10 @@ public class EntityHologram extends ArmorStand implements IBeanEntity {
 
 	public int getCreatorId() {
 		return creatorId;
+	}
+
+	public void setOwnerId(int id) {
+		this.creatorId = id;
 	}
 
 	/**
@@ -158,7 +163,7 @@ public class EntityHologram extends ArmorStand implements IBeanEntity {
 		creatorId = oldContainer.getOrDefault(KEY_CREATOR_ID, PersistentDataType.INTEGER, 0);
 		realPos = oldContainer.getOrDefault(KEY_REAL_LOCATION, CustomPersistentDataType.VECTOR, new Vector(realPos.getX(), realPos.getY(), realPos.getZ()));
 		components = new ArrayList<>(Arrays.asList(oldContainer.getOrDefault(KEY_COMPONENTS, CustomPersistentDataType.TEXT_COMPONENT_ARRAY, new TextComponent[] {Component.text("I am a hologram!")})));
-		spaceBetweenComponents = oldContainer.getOrDefault(KEY_COMPONENT_SPACE, PersistentDataType.FLOAT, 0.35f);
+		spaceBetweenComponents = oldContainer.getOrDefault(KEY_COMPONENT_SPACE, PersistentDataType.FLOAT, 0f);
 		overridePower = oldContainer.getOrDefault(KEY_OVERRIDE_POWER, PersistentDataType.SHORT, (short) Rank.MODERATOR.power());
 	}
 
@@ -185,10 +190,23 @@ public class EntityHologram extends ArmorStand implements IBeanEntity {
 	}
 
 	@Override
+	public void moveTo(double d0, double d1, double d2, float yRot, float xRot) {
+		super.moveTo(d0, d1, d2, this.getYRot(), this.getXRot());
+
+		realPos = new Vector(d0, d1, d2);
+
+		org.bukkit.entity.ArmorStand stand = (org.bukkit.entity.ArmorStand) this.getBukkitEntity();
+		PersistentDataContainer container = stand.getPersistentDataContainer();
+		container.set(KEY_REAL_LOCATION, CustomPersistentDataType.VECTOR, realPos);
+		setComponents(components);
+	}
+
+	@Override
 	public void remove(RemovalReason entity_removalreason) {
 		super.remove(entity_removalreason);
-		for (EntityHologramLine line : lines)
-			line.remove(entity_removalreason);
+		int size = lines.size();
+		for (int x = size; --x > -1;)
+			lines.remove(x);
 	}
 
 }

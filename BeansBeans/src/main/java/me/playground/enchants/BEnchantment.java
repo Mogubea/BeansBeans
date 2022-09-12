@@ -129,9 +129,9 @@ public class BEnchantment extends Enchantment {
 	/**
 	 * Items slow the player and can fail at their main task
 	 */
-	public static final BEnchantment BURDEN_PONDEROUS = new BEnchantment("ponderous", "Ponderous", BEnchantmentTarget.TOOL, 1, 4, true, false, false, -1, -1, 0, 0)
+	/*public static final BEnchantment BURDEN_PONDEROUS = new BEnchantment("ponderous", "Ponderous", BEnchantmentTarget.TOOL, 1, 4, true, false, false, -1, -1, 0, 0)
 			.setItemRarity(ItemRarity.UNCOMMON, 3)
-			.setBookPowerRequirement(60, 80, 100, 120);
+			.setBookPowerRequirement(60, 80, 100, 120);*/
 	/**
 	 * Items take additional XP and Items to repair, cannot be removed until fully repaired.
 	 */
@@ -144,27 +144,27 @@ public class BEnchantment extends Enchantment {
 	/**
 	 * Items steal common drops, items, xp and coins at random.
 	 */
-	public static final BEnchantment BURDEN_RAPACIOUS = new BEnchantment("rapacious", "Rapacious", BEnchantmentTarget.HANDHELD, 1, 5, true, false, false, -1,- 1, 0, 0)
+	/*public static final BEnchantment BURDEN_RAPACIOUS = new BEnchantment("rapacious", "Rapacious", BEnchantmentTarget.HANDHELD, 1, 5, true, false, false, -1,- 1, 0, 0)
 			.setItemRarity(ItemRarity.UNCOMMON)
-			.setBookPowerRequirement(80, 100, 120, 140, 160);
+			.setBookPowerRequirement(80, 100, 120, 140, 160);*/
 	/**
 	 * Items actively refuse to touch spiders.
 	 */
 	public static final BEnchantment BURDEN_ARACHNOPHOBIC = new BEnchantment("arachnophobic", "Arachnophobic", BEnchantmentTarget.WEAPON, 1, 1, true, false, false, -3, 0, 0, 0)
-			.setLore(Lore.getBuilder("The sword is rendered &#774444completely ineffective &ragainst spiders.").build())
+			.setLore(Lore.getBuilder("The sword is rendered &#994444completely ineffective &ragainst spiders.").build())
 			.setBookPowerRequirement(80);
 	/**
 	 * Items actively refuse to touch the undead.
 	 */
 	public static final BEnchantment BURDEN_NECROPHOBIC = new BEnchantment("necrophobic", "Necrophobic", BEnchantmentTarget.WEAPON, 1, 1, true, false, false, -4, 0, 0, 0)
-			.setLore(Lore.getBuilder("The sword is rendered &#774444completely ineffective &ragainst the undead.").build())
+			.setLore(Lore.getBuilder("The sword is rendered &#994444completely ineffective &ragainst the undead.").build())
 			.setItemRarity(ItemRarity.UNCOMMON)
 			.setBookPowerRequirement(100);
 	/**
 	 * Items actively refuse to touch animals.
 	 */
 	public static final BEnchantment BURDEN_ZOOPHOBIC = new BEnchantment("zoophobic", "Zoophobic", BEnchantmentTarget.WEAPON, 1, 1, true, false, false, -3, 0, 0, 0)
-			.setLore(Lore.getBuilder("The sword is rendered &#774444completely ineffective &ragainst animals.").build())
+			.setLore(Lore.getBuilder("The sword is rendered &#994444completely ineffective &ragainst animals.").build())
 			.setBookPowerRequirement(80);
 
 	// Vanilla Enchantments
@@ -271,9 +271,9 @@ public class BEnchantment extends Enchantment {
 
     public static final BEnchantment LOOT_BONUS_MOBS = new BEnchantment(Enchantment.LOOT_BONUS_MOBS, "Looting", 2, 2, 4, 4) {
 		public List<TextComponent> getLore(int level) {
-			return getLoreInstance().getLore(level <= 1 ? "item" : "&a" + level + " &ritems");
+			return getLoreInstance().getLore(level);
 		}
-	}.setLore(Lore.getBuilder("Mobs potentially drop an extra {0} where applicable.").build())
+	}.setLore(Lore.getBuilder("Mobs potentially drop an extra &a{0} &ritem(s) where applicable.").build())
 			.setItemRarity(ItemRarity.UNCOMMON, 3)
 			.setItemRarity(ItemRarity.RARE, 4)
     		.setBookPowerRequirement(30, 60, 90);
@@ -397,7 +397,7 @@ public class BEnchantment extends Enchantment {
 	}.setLore(Lore.getBuilder("Arrows fired can pierce up to &a{0}&r targets.").build())
     		.setBookPowerRequirement(5, 15, 25);
 
-    public static final BEnchantment MENDING = new BEnchantment(Enchantment.MENDING, "Mending", 0, 0, 250, 0, true, Enchantment.ARROW_INFINITE, BEnchantment.BURDEN_IRREPARABLE)
+    public static final BEnchantment MENDING = new BEnchantment(Enchantment.MENDING, "Mending", 0, 0, 250, 0, true, Enchantment.ARROW_INFINITE, BEnchantment.BURDEN_IRREPARABLE, BEnchantment.UNBREAKING)
 			.setLore(Lore.getBuilder("Collecting experience while the item is worn or held will consume the experience and repair this item slightly.").build());
 
     public static final BEnchantment VANISHING_CURSE = new BEnchantment(Enchantment.VANISHING_CURSE, "Curse of Vanishing", 0, 0, 0, 0)
@@ -564,10 +564,13 @@ public class BEnchantment extends Enchantment {
 		if (isAstral) return ItemRarity.ASTRAL;
 		if (enchantmentLevel <= 1) return baseRarity;
 
-		for (Map.Entry<Integer, ItemRarity> entry : rarityRequirements.entrySet())
-			if (enchantmentLevel >= entry.getKey()) return entry.getValue();
+		ItemRarity rarity = baseRarity;
+		for (Map.Entry<Integer, ItemRarity> entry : rarityRequirements.entrySet()) {
+			if (enchantmentLevel >= entry.getKey()) rarity = entry.getValue();
+			else break;
+		}
 
-		return baseRarity;
+		return rarity;
 	}
 
 	/**

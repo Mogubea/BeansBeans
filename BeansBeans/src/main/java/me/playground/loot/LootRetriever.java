@@ -59,9 +59,6 @@ public class LootRetriever {
 	 */
 	
 	public static LootRetriever from(@Nonnull LootTable table, @Nonnull RetrieveMethod method, Player p) {
-		if (method == null) throw new NullPointerException("The retrieve method cannot be null!");
-		if (table == null) throw new NullPointerException("The table cannot be null!");
-		
 		return new LootRetriever(table, method, p);
 	}
 	
@@ -133,7 +130,7 @@ public class LootRetriever {
 			if (((Steerable)entity).hasSaddle())
 				items.add(new ItemStack(Material.SADDLE));
 		// Entities that can pick up items...
-		} else if (entity.getCanPickupItems()) {
+		} else if (entity.getCanPickupItems() && entity.getEquipment() != null) {
 			for (EquipmentSlot slot : EquipmentSlot.values())
 				if (entity.getEquipment().getDropChance(slot) > table.getManager().getRandom().nextFloat())
 					items.add(entity.getEquipment().getItem(slot));

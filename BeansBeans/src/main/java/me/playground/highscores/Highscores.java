@@ -30,9 +30,7 @@ public class Highscores {
 	
 	public OptionData retrieveDiscordOptionData() {
 		OptionData data = new OptionData(OptionType.STRING, "category", "The name of the Highscore Category.", true);
-		highscores.forEach((name, hs) -> {
-			data.addChoice(name, name);
-		});
+		highscores.forEach((name, hs) -> data.addChoice(name, name));
 		return data;
 	}
 	

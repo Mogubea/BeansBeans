@@ -41,7 +41,7 @@ public class NPCDatasource extends PrivateDatasource {
 				NPCType type = NPCType.HUMAN;
 				try {
 					type = NPCType.valueOf(r.getString("type"));
-				} catch (Exception e) {}
+				} catch (Exception ignored) {}
 				
 				String npcName = r.getString("npcName");
 				String json = r.getString("data");
@@ -118,7 +118,7 @@ public class NPCDatasource extends PrivateDatasource {
 			JSONObject cunt = npc.getJsonData();
 			
 			s.setString(idx++, cunt == null ? null : cunt.toString());
-			s.setInt(idx++, npc.getDatabaseId());
+			s.setInt(idx++, npc.getId());
 			s.executeUpdate();
 			npc.setClean();
 		} catch (SQLException e) {

@@ -1,5 +1,6 @@
 package me.playground.items.values;
 
+import me.playground.data.LoggingDatasource;
 import me.playground.data.PrivateDatasource;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
@@ -13,15 +14,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ItemValueDatasource extends PrivateDatasource {
+public class ItemValueDatasource extends PrivateDatasource implements LoggingDatasource<ItemValueLog> {
 
-    private final ItemValueManager manager;
+    private ItemValueManager manager;
     private final String tableValues = "item_values";
     private final String tableHistory = "item_value_history";
 
-    protected ItemValueDatasource(Main plugin, ItemValueManager manager) {
+    protected ItemValueDatasource(Main plugin) {
         super(plugin);
-        this.manager = manager;
+    }
+
+    @Override
+    protected void postCreation() {
+        manager = plugin.getItemValueManager();
+        loadAll();
     }
 
     @Override
@@ -75,11 +81,10 @@ public class ItemValueDatasource extends PrivateDatasource {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        manager.getLogger().saveLogs();
     }
 
-    protected boolean logItemValueChanges(List<ItemValueLog> logs) {
+    @Override
+    public boolean saveLogs(List<ItemValueLog> logs) {
         try (Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO " + tableHistory + " (identifier, time, newValue, oldValue, updaterId, isEnforced) VALUES (?, ?, ?, ?, ?, ?)")) {
             int size = logs.size();
             for (int x = -1; ++x < size;) {
@@ -95,7 +100,6 @@ public class ItemValueDatasource extends PrivateDatasource {
             }
 
             s.executeBatch();
-
             if (logs.size() > 0)
                 notifyStaff(logs);
             return true;
@@ -131,5 +135,4 @@ public class ItemValueDatasource extends PrivateDatasource {
     }
 
     protected final DecimalFormat df = new DecimalFormat("#,###.##");
-
 }

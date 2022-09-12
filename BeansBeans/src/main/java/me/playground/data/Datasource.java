@@ -320,34 +320,7 @@ public class Datasource {
 	}
 	
 	// XXX: Worlds
-	
-	public static void logCelestia(CelestiaAction action, LivingEntity entity, Location location, String data) {
-		logCelestia(action, entity instanceof Player ? PlayerProfile.from(((Player)entity)).getId() : 0, location, data);
-	}
 
-	/**
-	 * @apiNote Due to how often this is called, it will always be run Asynchronously.
-	 */
-	public static void logCelestia(final CelestiaAction action, final int id, final Location loc, final String data) {
-		Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), task -> {
-			try(Connection c = getNewConnection(); PreparedStatement statement = c.prepareStatement("INSERT INTO celestia (playerId, action, world, x, y, z, data) VALUES (?,?,?,?,?,?,?)")) {
-				Location location = loc == null ? new Location(Bukkit.getWorlds().get(0), 0, 0, 0) : loc;
-				int idx = 0;
-				statement.setInt(++idx, id);
-				statement.setString(++idx, action.getIdentifier());
-				statement.setInt(++idx, getWorldId(location.getWorld()));
-				statement.setShort(++idx, (short)location.getX());
-				statement.setShort(++idx, (short)location.getY());
-				statement.setShort(++idx, (short)location.getZ());
-				statement.setString(++idx, data);
-
-				statement.executeUpdate();
-			} catch (Throwable e) {
-				e.printStackTrace();
-			}
-		});
-	}
-	
 	public static ArrayList<UpdateEntry> loadNews() {
 		Connection c = null;
 		PreparedStatement statement = null;

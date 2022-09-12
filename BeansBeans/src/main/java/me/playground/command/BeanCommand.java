@@ -181,6 +181,8 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 		if (bi == null) {
 			try {
 				Material m = Material.valueOf(str.toUpperCase());
+				if (!m.isItem())
+					throw new CommandException(sender, "Invalid item '"+str+"'");
 				i = BeanItem.formatItem(new ItemStack(m));
 			} catch (IllegalArgumentException e) {
 				throw new CommandException(sender, "Unknown item '"+str+"'");
@@ -218,6 +220,14 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
             throw new CommandException(sender, err);
         }
     }
+
+	protected float toFloat(CommandSender sender, String s) {
+		try {
+			return Float.parseFloat(s);
+		} catch (NumberFormatException numberformatexception) {
+			throw new CommandException(sender, "'" + s + "' is not a valid floating number!");
+		}
+	}
 	
 	protected int toIntMinMax(CommandSender sender, String s, int i, int j) {
         int k = toInt(sender, s, "'" + s + "' is not a valid number!");

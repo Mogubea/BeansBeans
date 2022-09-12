@@ -4,6 +4,7 @@ import me.playground.main.Main;
 import me.playground.regions.flags.Flags;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
@@ -18,7 +19,7 @@ public class RedstoneListener extends EventListener {
         this.manager = redstoneManager;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onRedstoneUpdate(BlockRedstoneEvent e) {
         manager.incrementAction(e.getBlock().getChunk(), 1); // Count as 1
         if (manager.getAverageRedstoneActions(e.getBlock().getChunk()) > manager.getMaximumActions()) {
@@ -51,10 +52,17 @@ public class RedstoneListener extends EventListener {
             e.setCancelled(true); // Shut it down
     }
 
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onHopper(InventoryMoveItemEvent e) {
         manager.incrementAction(e.getSource().getLocation().getChunk(), 8);
         if (manager.getAverageRedstoneActions(e.getSource().getLocation().getChunk()) > manager.getMaximumActions())
+            e.setCancelled(true); // Shut it down
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onDispense(BlockDispenseEvent e) {
+        manager.incrementAction(e.getBlock().getLocation().getChunk(), 4);
+        if (manager.getAverageRedstoneActions(e.getBlock().getLocation().getChunk()) > manager.getMaximumActions())
             e.setCancelled(true); // Shut it down
     }
 

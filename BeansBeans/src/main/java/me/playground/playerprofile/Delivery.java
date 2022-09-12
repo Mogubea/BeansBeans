@@ -23,7 +23,7 @@ public class Delivery implements Dirty {
 	
 	private final String title; // Display title
 	private final String msg; // Display message
-	private final List<DeliveryContent> content = new ArrayList<DeliveryContent>(); // Content of Delivery
+	private final List<DeliveryContent> content = new ArrayList<>(); // Content of Delivery
 	private final DeliveryType type; // Pretty much just a visual thing for gui
 	
 	private boolean dirty; // Dirty flag - When dirty, update the database entry on profile save.
@@ -49,8 +49,11 @@ public class Delivery implements Dirty {
 		
 		for (int x = -1; ++x < size;) {
 			DeliveryContent cont = DeliveryContent.fromJSON(this, contentArray.optJSONObject(x));
-			if (cont != null) this.content.add(cont);
-			if (cont.isClaimed()) this.contentClaimed++;
+			if (cont == null) continue;
+
+			this.content.add(cont);
+			if (cont.isClaimed())
+				this.contentClaimed++;
 		}
 	}
 	

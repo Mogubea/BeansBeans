@@ -145,7 +145,7 @@ public class ItemValues {
             if (preCalcValue.getValue() == postCalcValue) return;
 
             dirty.addToValue(1);
-            new ItemValueLog(manager.getLogger(), identifier, preCalcValue.getValue(), postCalcValue, 0, false); // Log calculated change
+            manager.addLog(new ItemValueLog(identifier, preCalcValue.getValue(), postCalcValue, 0, false)); // Log calculated change
         });
 
         manager.getPlugin().getSLF4JLogger().info("Calculated " + getCalculatedSize() + " Item Values in " + (System.currentTimeMillis()-then) + "ms");
@@ -183,7 +183,7 @@ public class ItemValues {
         dd.setValue(Math.round(newValue * 100D) / 100D); // Round to 2 decimals
 
         calculatedItemValues.remove(identifier); // No need to have it in here anymore.
-        if (dd.isDirty()) new ItemValueLog(manager.getLogger(), identifier, oldValue, newValue, playerId, true);
+        if (dd.isDirty()) manager.addLog(new ItemValueLog(identifier, oldValue, newValue, playerId, true));
         return oldValue;
     }
 

@@ -161,7 +161,6 @@ public class BeanGuiPlayerMain extends BeanGuiPlayer {
 			return;
 		case 24:
 			new BeanGuiPlayerSettings(p).openInventory();
-			return;
 		}
 	}
 	
@@ -185,7 +184,7 @@ public class BeanGuiPlayerMain extends BeanGuiPlayer {
 		ItemStack chestCol = new ItemStack(Material.LEATHER_CHESTPLATE);
 		LeatherArmorMeta meta = (LeatherArmorMeta) chestCol.getItemMeta();
 		meta.displayName(Component.text("Name Colour", tpp.getNameColour()).decoration(TextDecoration.ITALIC, false));
-		final ArrayList<Component> lore = new ArrayList<Component>();
+		final ArrayList<Component> lore = new ArrayList<>();
 		lore.add(Component.text("\u00a77Current Colour: #").append(Component.text(Long.toHexString(tpp.getNameColour().value()), tpp.getNameColour()).decoration(TextDecoration.ITALIC, false)));
 		lore.add(Component.empty());
 		lore.add(Component.text("\u00a76» \u00a7eClick to modify!"));

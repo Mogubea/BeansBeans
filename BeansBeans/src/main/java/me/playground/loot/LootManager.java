@@ -22,8 +22,6 @@ public class LootManager implements IPluginRef {
 	public LootManager(Main plugin) {
 		this.plugin = plugin;
 		this.datasource = new LootDatasource(plugin, this);
-
-		datasource.loadAll();
 	}
 	
 	/**

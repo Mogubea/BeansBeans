@@ -34,6 +34,20 @@ import me.playground.regions.flags.MemberLevel;
  */
 public class TabCompleter {
 
+    private static final List<Material> validMaterials;
+
+    static {
+        validMaterials = new ArrayList<>();
+        for (Material enumConstant : Material.values()) {
+            String name = enumConstant.name().toLowerCase();
+            if (name.startsWith("legacy"))
+                continue;
+            if (!enumConstant.isItem())
+                continue;
+            validMaterials.add(enumConstant);
+        }
+    }
+
     /**
      * Offer tab completions for whole numbers.
      *
@@ -228,18 +242,17 @@ public class TabCompleter {
 
         return completions;
     }
-    
+
     /**
-     * Ignores all LEGACY materials
+     * Ignores all LEGACY materials and invalid items like lava_cauldron or water
      */
     public static List<String> completeItems(String argument) {
         argument = argument.toLowerCase(Locale.ENGLISH);
-        List<String> completions = new ArrayList<>();
 
-        for (Material enumConstant : Material.values()) {
-            String name = enumConstant.name().toLowerCase();
-            if (name.startsWith("legacy"))
-            	continue;
+        List<String> completions = new ArrayList<>();
+        int size = validMaterials.size();
+        for (int x = -1; ++x < size;) {
+            String name = validMaterials.get(x).name().toLowerCase();
             if (name.contains(argument))
                 completions.add(name);
         }

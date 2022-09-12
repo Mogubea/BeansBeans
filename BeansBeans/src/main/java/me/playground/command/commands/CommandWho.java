@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -44,7 +45,7 @@ public class CommandWho extends BeanCommand {
 		else if (target.isAFK())
 			statusPrefix = statusPrefix.append(Component.text("\u00a7f[\u00a77AFK\u00a7f]").hoverEvent(HoverEvent.showText(Component.text("\u00a77AFK For: \u00a7f" + Utils.timeStringFromNow(target.getLastAFK())))));
 		
-		sender.sendMessage(Component.text("\u00a77Information about ").append(target.getComponentName()).append(Component.text(" ")).append(statusPrefix));
+		sender.sendMessage(Component.text("Information about ", NamedTextColor.GRAY).append(target.getComponentName()).append(Component.text(" ")).append(statusPrefix));
 		int mins = target.getPlaytime() / 60;
 		int hours = Math.floorDiv(mins, 60);
 		mins -= hours*60;
@@ -55,19 +56,19 @@ public class CommandWho extends BeanCommand {
 				Player t = target.getPlayer();
 				Location l = t.getLocation();
 				
-				sender.sendMessage(Component.text("\u00a77Ping: \u00a7f" + t.getPing() + "ms"));
-				sender.sendMessage(Component.text("\u00a77Location: ").append(worldInfo(sender, t.getWorld()))
+				sender.sendMessage(Component.text("Ping: ", NamedTextColor.GRAY).append(Component.text(t.getPing() + "ms", NamedTextColor.WHITE)));
+				sender.sendMessage(Component.text("Location: ", NamedTextColor.GRAY).append(worldInfo(sender, t.getWorld()))
 						.append(Component.text("\u00a77, X: \u00a7r" + l.getBlockX() + "\u00a77, Y: \u00a7r" + l.getBlockY() + "\u00a77, Z: \u00a7r" + l.getBlockZ())
 								.colorIfAbsent(TextColor.color(0x30cb5a))));
-				sender.sendMessage(Component.text("\u00a77Last Login: \u00a7f" + Utils.timeStringFromNow(target.getLastLogin()) + " ago"));
+				sender.sendMessage(Component.text("Last Login: ", NamedTextColor.GRAY).append(Component.text(Utils.timeStringFromNow(target.getLastLogin()) + " ago", NamedTextColor.WHITE)));
 			} else {
-				sender.sendMessage(Component.text("\u00a77Last Logout: \u00a7f" + Utils.timeStringFromNow(target.getLastLogout()) + " ago"));
+				sender.sendMessage(Component.text("Last Logout: ", NamedTextColor.GRAY).append(Component.text(Utils.timeStringFromNow(target.getLastLogout()) + " ago", NamedTextColor.WHITE)));
 			}
 		}
 		
 		
-		sender.sendMessage(Component.text("\u00a77Playtime: \u00a7f" + (hours > 0 ? hours + " Hours and " : "") + mins + " Minutes"));
-		sender.sendMessage(Component.text("\u00a77Ranks: ").append(target.getComponentRanks()));
+		sender.sendMessage(Component.text("Playtime: ", NamedTextColor.GRAY).append(Component.text((hours > 0 ? hours + " Hours and " : "") + mins + " Minutes", NamedTextColor.WHITE)));
+		sender.sendMessage(Component.text("Ranks: ", NamedTextColor.GRAY).append(target.getComponentRanks()));
 		
 		return true;
 	}

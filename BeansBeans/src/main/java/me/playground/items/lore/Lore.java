@@ -23,7 +23,23 @@ public class Lore {
     }
 
     protected Lore(PersistentLoreBuilder builder) {
-        lore = List.copyOf(builder.lore);
+        if (builder.compact) {
+            TextComponent component = Component.empty();
+            int size = builder.lore.size();
+            for (int x = -1; ++x < size;) {
+                component = component.append(builder.lore.get(x));
+                if (x + 1 < size)
+                    component = component.append(Component.newline());
+            }
+
+            for (TextComponent comp : builder.lore)
+                component = component.append(Component.text("\n").append(comp));
+
+            lore = List.of(component);
+        } else {
+            lore = List.copyOf(builder.lore);
+        }
+
         StringBuilder content = new StringBuilder();
         int size = builder.content.length;
         for (int x = -1; ++x < size;) {
@@ -132,6 +148,7 @@ public class Lore {
 
         private final List<TextComponent> lore = new ArrayList<>();
         private final String[] content;
+        private boolean compact = false;
 
         private TextComponent currentLine = Component.empty();
         private TextComponent currentComponent = Component.empty();
@@ -142,6 +159,15 @@ public class Lore {
          */
         public PersistentLoreBuilder(@NotNull String[] content) {
             this.content = content;
+        }
+
+        /**
+         * The final list of {@link TextComponent}'s will only have 1 entry containing every component separated by \n character.
+         */
+        public PersistentLoreBuilder setCompact() {
+            this.maximumLineLength = 500;
+            this.compact = true;
+            return this;
         }
 
         public PersistentLoreBuilder dontFormatColours() {
@@ -286,7 +312,7 @@ public class Lore {
                                         length -= counted;
                                         i += counted;
                                     }
-                                    default -> currentComponent = currentComponent.color(ChatColor.namedOfChar(b[i]));
+                                    default -> currentComponent = Component.text(currentComponent.content(), ChatColor.namedOfChar(b[i])); // Clears previous formatting
                                 }
                             } else {
                                 newWord.append(b[i]);

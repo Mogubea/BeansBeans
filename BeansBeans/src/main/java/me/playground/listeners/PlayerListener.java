@@ -75,7 +75,6 @@ import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent.SlotType;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
 import me.playground.celestia.logging.CelestiaAction;
-import me.playground.data.Datasource;
 import me.playground.enchants.BEnchantment;
 import me.playground.gui.stations.BeanGuiEnchantingTable;
 import me.playground.items.BeanBlock;
@@ -106,6 +105,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import org.jetbrains.annotations.Nullable;
 
 public class PlayerListener extends EventListener {
 	
@@ -147,13 +147,21 @@ public class PlayerListener extends EventListener {
 		}
 		
 		pp.getStats().addToStat(StatType.GENERIC, "chatMessages", 1, true);
-		
-		TextComponent chat = pp.isRank(Rank.MODERATOR) ? Component.empty().append(Component.text("\u24E2", BeanColor.STAFF)
-				.hoverEvent(HoverEvent.showText(Component.text("Staff Member", BeanColor.STAFF))))
-				.append(Component.text(" "))
-				.append(pp.getComponentName())
-				: pp.getComponentName();
-		
+
+		TextComponent chat = pp.getComponentName();
+
+		if (pp.isRank(Rank.MODERATOR)) {
+			chat = Component.empty().append(Component.text("\u24E2", BeanColor.STAFF)
+							.hoverEvent(HoverEvent.showText(Component.text("Staff Member", BeanColor.STAFF))))
+					.append(Component.text(" "))
+					.append(pp.getComponentName());
+		} else if (pp.isRank(Rank.PLEBEIAN)) {
+			chat = Component.empty().append(Component.text("\u2b50", pp.getDonorRank().getRankColour())
+							.hoverEvent(HoverEvent.showText(Component.text("Supporter", pp.getDonorRank().getRankColour()))))
+					.append(Component.text(" "))
+					.append(pp.getComponentName());
+		}
+
 		final String content = ((TextComponent)e.message()).content();
 		final ArrayList<UUID> pinged = new ArrayList<>();
 		
@@ -192,8 +200,8 @@ public class PlayerListener extends EventListener {
 			if (pp.isRank(Rank.MODERATOR) || !ppl.getIgnoredPlayers().contains(pp.getId()))
 				pl.sendMessage(chat.colorIfAbsent(TextColor.color(pinged.contains(pl.getUniqueId()) ? 0xffffff : 0xe8e8e8)));
 		}
-		
-		Datasource.logCelestia(CelestiaAction.CHAT, e.getPlayer(), e.getPlayer().getLocation(), content); // Logs
+
+		getPlugin().getCelestiaManager().log(pp.getId(), CelestiaAction.CHAT, e.getPlayer().getLocation(), content);
 		getPlugin().getLogger().info("[CHAT] " + pp.getDisplayName() + ": " + content); // Console
 		getPlugin().getDiscord().sendWebhookMessage(pp.getId(), content); // Discord Chat
 		getPlugin().getWebChatServer().sendWebMessage(pp.getId(), content); // Web Chat
@@ -235,8 +243,6 @@ public class PlayerListener extends EventListener {
 	public void onBedEnter(PlayerBedEnterEvent e) {
 		Player p = e.getPlayer();
 		p.setStatistic(Statistic.TIME_SINCE_REST, 0);
-		
-		enactRegionPermission(getRegionAt(e.getBed().getLocation()), e, p, Flags.WARP_CREATION, null);
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
@@ -305,7 +311,7 @@ public class PlayerListener extends EventListener {
 		final Block block = e.getClickedBlock();
 		
 		// Cancel mob destruction of farmland.
-		if (e.getAction() == Action.PHYSICAL && block.getType() == Material.FARMLAND) {
+		if (e.getAction() == Action.PHYSICAL && block != null && block.getType() == Material.FARMLAND) {
 			e.setCancelled(true);
 			return;
 		}
@@ -315,10 +321,9 @@ public class PlayerListener extends EventListener {
 
 		// Re-flatten pathing
 		if (e.getItem() != null && e.getItem().getType().name().endsWith("SHOVEL")) {
-			boolean main = e.getHand() == EquipmentSlot.HAND;
 			if (block != null && block.getType() == Material.DIRT_PATH) {
 				if (!enactRegionPermission(getRegionAt(block.getLocation()), e, p, Flags.BUILD_ACCESS, "flatten dirt paths")) return;
-				if (main) p.swingMainHand(); else p.swingOffHand();
+				swingHand(p, e.getHand());
 				new PlayerItemDamageEvent(p, e.getItem(), 1, 1).callEvent();
 				block.setType(Material.DIRT);
 				block.getWorld().playSound(block.getLocation().add(0.5, 1, 0.5), Sound.ITEM_SHOVEL_FLATTEN, 0.55f, 0.9f + rand.nextFloat(0.2f));
@@ -328,7 +333,7 @@ public class PlayerListener extends EventListener {
 		}
 
 		// Stop here if unnecessary to check
-		if (e.getHand() != EquipmentSlot.HAND || e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+		if (e.getAction() != Action.RIGHT_CLICK_BLOCK || block == null) return;
 
 		// Check Spawner spawn count
 		if (block.getType() == Material.SPAWNER && e.getItem() == null && !PlayerProfile.from(p).onCdElseAdd("spawnerCheck", 500, true)) {
@@ -340,14 +345,13 @@ public class PlayerListener extends EventListener {
 					creature.color(NamedTextColor.WHITE).append(Component.text(" ").append(Component.translatable(block.translationKey()))
 							.append(Component.text("\u00a7r has spawned \u00a7f" + spawns + " \u00a7r")))
 							.append(creature)).append(Component.text("(s)")).colorIfAbsent(TextColor.color(0xeeeeee)));
-			p.playSound(e.getPlayer().getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.2F, 0.8F);
-			e.getPlayer().swingMainHand();
+			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.2F, 0.8F);
+			swingHand(p, e.getHand());
 			return;
 		}
-		
+
 		// Cancel the cleansing of custom leather items
-		if (block.getType() == Material.WATER_CAULDRON && e.getItem() != null &&
-				e.getItem().getItemMeta() instanceof LeatherArmorMeta && BeanItem.from(e.getItem()) != null) {
+		if (block.getType() == Material.WATER_CAULDRON && e.getItem() != null && e.getItem().getItemMeta() instanceof LeatherArmorMeta && BeanItem.from(e.getItem()) != null) {
 			e.setCancelled(true);
 			return;
 		}
@@ -361,14 +365,16 @@ public class PlayerListener extends EventListener {
 			p.sendActionBar(region.isWorldRegion() ?
 					Component.text("This block is not protected by any player regions.", NamedTextColor.GRAY) :
 					Component.text("This block is protected by ", NamedTextColor.GRAY).append(region.getColouredName()).append(Component.text(".", NamedTextColor.GRAY)));
-			p.swingMainHand();
+			swingHand(p, e.getHand());
 		}
 
 		// Region Permission Checks - Regardless of items
 		if (!p.isBlocking()) {
 			boolean stop = false;
 
-			if (block.getState() instanceof Container) { // Using Containers
+			if (blockMat.name().endsWith("_BED")) { // Use Beds to set home
+				stop = !enactRegionPermission(region, e, p, Flags.WARP_CREATION, "sleep");
+			} else if (block.getState() instanceof Container) { // Using Containers
 				stop = !enactRegionPermission(region, e, p, Flags.CONTAINER_ACCESS, "use containers");
 			} else if (blockMat.name().endsWith("DOOR") || blockMat.name().endsWith("GATE")) { // Using Doors
 				stop = !enactRegionPermission(region, e, p, Flags.DOOR_ACCESS, "open door");
@@ -377,7 +383,7 @@ public class PlayerListener extends EventListener {
 				if (stop) return;
 				if (!region.getEffectiveFlag(Flags.ANVIL_DEGRADATION)) { // Handle anvil unbreakable flag by giving the Player a fake Anvil GUI.
 					e.setCancelled(true);
-					p.openAnvil(p.getLocation(), true);
+					new BeanGuiAnvil(p, e.getClickedBlock());
 				}
 			} else if (blockMat == Material.FLOWER_POT || blockMat.name().startsWith("POTTED")) { // Flower Pots
 				stop = !enactRegionPermission(canBuild, e, p, "plant flowers");
@@ -401,7 +407,7 @@ public class PlayerListener extends EventListener {
 		final Material itemMat = item.getType();
 
 		if (itemMat.name().endsWith("_SPAWN_EGG")) {
-			if (!e.getClickedBlock().getType().isInteractable()) {
+			if (!block.getType().isInteractable()) {
 				if (!enactRegionPermission(canBuild, e, p, "spawn mobs")) return;
 				e.setCancelled(true); // Always cancel
 
@@ -410,7 +416,7 @@ public class PlayerListener extends EventListener {
 					net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(new ItemStack(item));
 					net.minecraft.world.entity.EntityType<?> entity = ((SpawnEggItem) nmsItem.getItem()).getType(nmsItem.getTag());
 					BlockFace face = e.getBlockFace();
-					Location l = e.getClickedBlock().getLocation().add(face.getModX(), face.getModY(), face.getModZ());
+					Location l = block.getLocation().add(face.getModX(), face.getModY(), face.getModZ());
 					LivingEntity newent = (LivingEntity) entity.spawn((((CraftWorld)p.getWorld()).getHandle()), nmsItem.getTag(), null, ((CraftPlayer)e.getPlayer()).getHandle(),
 							new BlockPos(l.getBlockX(), l.getBlockY(), l.getBlockZ()), MobSpawnType.SPAWN_EGG, e.getBlockFace() == BlockFace.UP, false).getBukkitEntity();
 					if (new PlayerSpawnCreatureEvent(newent, e.getPlayer(), item).callEvent()) {
@@ -443,10 +449,10 @@ public class PlayerListener extends EventListener {
 				String ending = blockMat.name().endsWith("T") ? "_CARPET" : "_WOOL";
 				block.setType(Material.valueOf(starter + ending), false); // <dye name> + <_block name>
 				block.getWorld().spawnParticle(Particle.BLOCK_DUST, block.getLocation().add(e.getBlockFace().getModX(), e.getBlockFace().getModY(), e.getBlockFace().getModZ()), 3, block.getBlockData());
-				block.getWorld().playSound(block.getLocation().toCenterLocation(), Sound.BLOCK_SLIME_BLOCK_PLACE, 0.2F, 0.7F + getPlugin().getRandom().nextFloat()/4F);
+				block.getWorld().playSound(block.getLocation().add(0.5, 0, 0.5), Sound.BLOCK_SLIME_BLOCK_PLACE, 0.2F, 0.8F + getPlugin().getRandom().nextFloat()/4F);
 				if (p.getGameMode() != GameMode.CREATIVE)
 					item.subtract(1);
-				p.swingMainHand();
+				swingHand(p, e.getHand());
 			} else if (item.getItemMeta().hasEnchant(Enchantment.FIRE_ASPECT) || (itemMat == Material.ENCHANTED_BOOK && ((EnchantmentStorageMeta)item.getItemMeta()).hasStoredEnchant(Enchantment.FIRE_ASPECT))) {
 				if (blockMat.name().endsWith("CANDLE") || blockMat.name().endsWith("CANDLE_CAKE") || blockMat.name().endsWith("CAMPFIRE")) {
 					Lightable data = (Lightable) block.getBlockData();
@@ -455,7 +461,7 @@ public class PlayerListener extends EventListener {
 					data.setLit(true);
 					block.getWorld().playSound(block.getLocation().toCenterLocation(), Sound.ITEM_FIRECHARGE_USE, 0.2F, 0.7F + getPlugin().getRandom().nextFloat()/2F);
 					block.setBlockData(data, false); // no need for physics check
-					p.swingMainHand();
+					swingHand(p, e.getHand());
 					e.setCancelled(true);
 				}
 			}
@@ -554,8 +560,12 @@ public class PlayerListener extends EventListener {
 						sign.update(true);
 					}
 
-					ClientboundOpenSignEditorPacket packet = new ClientboundOpenSignEditorPacket(new BlockPos(b.getX(), b.getY(), b.getZ()));
-					((CraftPlayer) p).getHandle().connection.send(packet);
+					// Delay it to allow the sign to update
+					getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), () -> {
+						ClientboundOpenSignEditorPacket packet = new ClientboundOpenSignEditorPacket(new BlockPos(b.getX(), b.getY(), b.getZ()));
+						((CraftPlayer) p).getHandle().connection.send(packet);
+					}, 1L);
+
 					p.swingMainHand();
 					return;
 				}
@@ -681,7 +691,7 @@ public class PlayerListener extends EventListener {
 	
 	@EventHandler
 	public void onPlayerRespawn(PlayerRespawnEvent e) {
-		Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> {
+		getPlugin().getServer().getScheduler().runTask(getPlugin(), () -> {
 			Player p = e.getPlayer();
 			p.setHealth(10);
 			p.setSaturation(2.0F);
@@ -692,39 +702,26 @@ public class PlayerListener extends EventListener {
 	
 	@EventHandler
 	public void onPlayerTeleport(PlayerTeleportEvent e) {
-		if (e.getTo().getWorld() != e.getFrom().getWorld())
-			getPlugin().npcManager().showAllNPCs(e.getPlayer());
+		final Region r = getRegionAt(e.getTo());
 
-		if (e.getCause() == TeleportCause.CHORUS_FRUIT || e.getCause() == TeleportCause.ENDER_PEARL) {
-			final Region r = getPlugin().regionManager().getRegion(e.getTo());
-			if (!r.getEffectiveFlag(Flags.ENDERPEARLS) && r.getMember(e.getPlayer()).lowerThan(MemberLevel.MEMBER)) {
-				e.setCancelled(true);
-				e.getPlayer().sendActionBar(Component.text("\u00a7cYou don't have permission to ender warp into here."));
-			}
-			return;
-		}
-		
-		if (e.getCause() == TeleportCause.COMMAND || e.getCause() == TeleportCause.PLUGIN || e.getCause() == TeleportCause.NETHER_PORTAL) {
-			if (e.getTo().getWorld() != e.getFrom().getWorld()) {
-				final Region r = getPlugin().regionManager().getWorldRegion(e.getTo().getWorld());
-				final boolean canWarpInto = r.getEffectiveFlag(Flags.TELEPORT_IN) || r.getMember(e.getPlayer()).equals(MemberLevel.MASTER);
-				if (!canWarpInto) {
-					e.setCancelled(true);
-					e.getPlayer().sendActionBar(Component.text("\u00a7cYou don't have permission to teleport into \u00a7r"+e.getTo().getWorld().getName()).color(BeanColor.WORLD));
-					return;
+		switch(e.getCause()) {
+			case ENDER_PEARL, CHORUS_FRUIT -> enactRegionPermission(r, e, e.getPlayer(), Flags.ENDERPEARLS, "ender warp into");
+			case COMMAND, PLUGIN, NETHER_PORTAL, END_PORTAL -> {
+				if (!enactRegionPermission(r, e, e.getPlayer(), Flags.TELEPORT_IN, "teleport into")) break;
+				PlayerProfile pp = PlayerProfile.from(e.getPlayer());
+
+				if (e.getCause() != TeleportCause.NETHER_PORTAL && e.getCause() != TeleportCause.END_PORTAL) {
+					e.getPlayer().setFallDistance(0F);
+					pp.updateLastLocation(e.getFrom(), 0);
+					pp.getStats().addToStat(StatType.GENERIC, "teleport", 1);
+				} else {
+					pp.getStats().addToStat(StatType.GENERIC, "portalUse", 1);
 				}
 			}
-			if (e.getCause() != TeleportCause.NETHER_PORTAL) {
-				e.getPlayer().setFallDistance(0F);
-				PlayerProfile pp = PlayerProfile.from(e.getPlayer());
-				pp.updateLastLocation(e.getFrom(), 0);
-				pp.getStats().addToStat(StatType.GENERIC, "teleport", 1, true);
-			}
 		}
-		
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onItemMend(PlayerItemMendEvent e) {
 		e.setCancelled(true);
 		BeanItem.addDurability(e.getItem(), e.getRepairAmount());
@@ -735,6 +732,7 @@ public class PlayerListener extends EventListener {
 	public void onItemDamage(PlayerItemDamageEvent e) {
 		e.setCancelled(true);
 		BeanItem.addDurability(e.getItem(), -e.getDamage());
+		PlayerProfile.from(e.getPlayer()).getStats().addToStat(StatType.GENERIC, "durabilityUse", e.getDamage());
 	}
 	
 	@EventHandler
@@ -756,8 +754,13 @@ public class PlayerListener extends EventListener {
 		}
 
 		// Keep flight through changes
-		if (PlayerProfile.from(p).isSettingEnabled(PlayerSetting.FLIGHT))
-			p.setAllowFlight(true);
+		if (PlayerProfile.from(p).isSettingEnabled(PlayerSetting.FLIGHT)) {
+			boolean isFlying = p.isFlying();
+			getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(getPlugin(), () -> {
+					p.setAllowFlight(true);
+					if (isFlying) p.setFlying(true);
+			}, 1L);
+		}
 
 		p.sendMessage(Component.text("\u00a77You are now in \u00a7f").append(Component.translatable(toGm.translationKey())).append(Component.text("\u00a77.")));
 	}
@@ -913,5 +916,13 @@ public class PlayerListener extends EventListener {
 		
 		return ye;
 	}
-	
+
+	private void swingHand(Player p, @Nullable EquipmentSlot hand) {
+		if (hand == null) return;
+		switch(hand) {
+			case HAND -> p.swingMainHand();
+			case OFF_HAND -> p.swingOffHand();
+		}
+	}
+
 }

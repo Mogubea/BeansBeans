@@ -275,7 +275,7 @@ public class PlayerProfile {
 		return coins;
 	}
 	
-	public void setBalance(float amount, String log) {
+	public void setBalance(double amount, String log) {
 		coins = amount;
 		Datasource.logTransaction(playerId, amount, log);
 		flagScoreboardUpdate(ScoreboardFlag.COINS);
@@ -289,7 +289,7 @@ public class PlayerProfile {
 	public void addToBalance(double amount) {
 		coins+=amount;
 		if (this.isOnline() && amount != 0)
-			getPlayer().sendActionBar(Component.text("\u00a76" + df.format(getBalance()) + " Coins \u00a77( " + (amount>-1 ? "\u00a7a+" : "\u00a7c") + df.format(amount) + "\u00a77 )"));
+			getPlayer().sendActionBar(Component.text("\u00a76" + dec.format(getBalance()) + " Coins \u00a77( " + (amount>-1 ? "\u00a7a+" : "\u00a7c") + dec.format(amount) + "\u00a77 )"));
 		flagScoreboardUpdate(ScoreboardFlag.COINS);
 	}
 	
@@ -416,7 +416,7 @@ public class PlayerProfile {
 			ranks.add(rank);
 			updateRanksPerms();
 			if (colourIsRank)
-				this.nameColour = getHighestRank().getRankHex();
+				setNameColour(rank.getRankHex());
 			
 			flagScoreboardUpdate(ScoreboardFlag.RANK);
 			Main.getInstance().getDiscord().updateRoles(this);
@@ -435,7 +435,7 @@ public class PlayerProfile {
 				ranks.remove(rank);
 				boolean colourIsRank = this.nameColour == rank.getRankHex();
 				if (colourIsRank)
-					this.nameColour = getHighestRank().getRankHex();
+					setNameColour(getHighestRank().getRankHex());
 			}
 		}
 		
@@ -450,7 +450,7 @@ public class PlayerProfile {
 	 * as it's not usually used in situations where ranks are updated, but rather previewed or loaded.
 	 * @param ranks The new ranks of the player.
 	 */
-	public void setRanks(List<Rank> ranks) {
+	protected void setRanks(List<Rank> ranks) {
 		this.ranks.clear();
 		this.ranks.addAll(ranks);
 		updateRanksPerms();
@@ -1109,9 +1109,9 @@ public class PlayerProfile {
 			getPlayer().setAllowFlight(region.getTrueMemberLevel(getId()).higherThan(MemberLevel.OFFICER));
 
 		if (getPlayer() != null && isSettingEnabled(PlayerSetting.REGION_BOUNDARIES)) {
-			visualiseRegion(region, -1);
 			if (currentRegion != null) // Will always return false at least once per profile load
 				unvisualiseRegion(currentRegion);
+			visualiseRegion(region, -1);
 		}
 
 		return this.currentRegion = region;
@@ -1302,7 +1302,7 @@ public class PlayerProfile {
 	 * Set the player as AFK.
 	 */
 	public void setAFK(String reason) {
-		if (!isOnline()) return;
+		if (!isOnline()) throw new UnsupportedOperationException("Attempting to set an offline player as AFK.");
 		
 		this.isAFK = true;
 		this.lastAFK = System.currentTimeMillis();
@@ -1317,7 +1317,7 @@ public class PlayerProfile {
 	 * Poke the player's AFK checking timer. This will also un-mark them from AFK.
 	 */
 	public void pokeAFK() {
-		if (!isOnline()) return;
+		if (!isOnline()) throw new UnsupportedOperationException("Attempting to poke an offline player's AFK timer.");
 		
 		long millis = System.currentTimeMillis();
 		this.lastAFKPoke = millis;
@@ -1418,13 +1418,15 @@ public class PlayerProfile {
 
 		// If the scoreboard has been changed, be sure to flag RESET.
 		if ((scoreboardFlag & 1 << ScoreboardFlag.RESET.ordinal()) != 0) {
-			scoreboardScores.clear();
-			scoreboardObj = scoreboard.registerNewObjective("id"+getId()+"-side", "dummy", getColouredName());
+			if (scoreboard.getObjective("id"+getId()+"-side") == null) { // Happens sometimes.
+				scoreboardObj = scoreboard.registerNewObjective("id" + getId() + "-side", "dummy", getColouredName());
+				scoreboardScores.clear();
+			}
+
 			if (isSettingEnabled(PlayerSetting.SHOW_SIDEBAR))
 				showSidebar();
 
 			setScoreboardLine(7, "  ");
-			setScoreboardLine(3, " ");
 			setScoreboardLine(0, "\u00a78beansbeans.net");
 		}
 
@@ -1501,12 +1503,15 @@ public class PlayerProfile {
 
 			// Hold redstone to show it
 			if (avg < 1 || p.getInventory().getItemInMainHand().getType().getCreativeCategory() != CreativeCategory.REDSTONE) {
+				if (!scoreboardScores.containsKey(1))
+					setScoreboardLine(3, null);
 				setScoreboardLine(2, null);
 			} else {
 				float max = redstoneManager.getMaximumActions();
 				float percentUsed = (avg / max) * 100;
 				String col = percentUsed < 50 ? "\u00a7a" : percentUsed < 95 ? "\u00a7e" : "\u00a7c";
 
+				setScoreboardLine(3, " ");
 				setScoreboardLine(2, "\u00a78\u258E \u00a74\ud83d\udd25 \u00a7cWiring: " + col + (int)percentUsed + "%");
 			}
 		}
@@ -1514,8 +1519,11 @@ public class PlayerProfile {
 		// Admin TPS Information...
 		if ((scoreboardFlag & 1 << ScoreboardFlag.TPS.ordinal()) != 0) {
 			if (isRank(Rank.ADMINISTRATOR)) {
+				setScoreboardLine(3, " ");
 				setScoreboardLine(1, "\u00a78\u258E " + getScoreboardTPS());
 			} else {
+				if (!scoreboardScores.containsKey(2))
+					setScoreboardLine(3, null);
 				setScoreboardLine(1, null);
 			}
 		}
@@ -1546,6 +1554,7 @@ public class PlayerProfile {
 
 	private static final RedstoneManager redstoneManager = Main.getInstance().getRedstoneManager();
 	private static final DecimalFormat df = new DecimalFormat("#,###");
+	private static final DecimalFormat dec = new DecimalFormat("#,###.##");
 	private static final DecimalFormat tpsf = new DecimalFormat("#.#");
 
 }

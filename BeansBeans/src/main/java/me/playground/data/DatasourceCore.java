@@ -18,6 +18,7 @@ public class DatasourceCore implements IPluginRef {
 	
 	private final DynmapAPI dynmap;
 	private final Set<PrivateDatasource> registeredSources = new HashSet<>();
+	private final Set<PrivateLogger<?>> registeredLoggers = new HashSet<>();
 	
 	private final Main plugin;
 	private final String host, database, username, password;
@@ -122,7 +123,15 @@ public class DatasourceCore implements IPluginRef {
 	protected void registerDatasource(PrivateDatasource source) {
 		this.registeredSources.add(source);
 	}
-	
+
+	public void doPostCreation() {
+		registeredSources.forEach(PrivateDatasource::postCreation);
+	}
+
+	protected void registerLogger(PrivateLogger<?> logger) {
+		this.registeredLoggers.add(logger);
+	}
+
 	/**
 	 * Save everything.
 	 */
@@ -135,6 +144,17 @@ public class DatasourceCore implements IPluginRef {
 				e.printStackTrace();
 			}
 		});
+
+		saveLogs();
 	}
-	
+
+	public void saveLogs() {
+		registeredLoggers.forEach(logger -> {
+			try {
+				logger.saveLogs();
+			} catch (Exception e) {
+				plugin.getSLF4JLogger().error("There was a problem with saving " + logger.getClass().getPackageName() + "'s logs.");
+			}
+		});
+	}
 }

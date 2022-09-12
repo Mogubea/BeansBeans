@@ -11,15 +11,13 @@ public class ItemValueLog {
     private final int updaterId; // Updater
     private final boolean enforcedChange; // Whether it was an enforced or calculated change.
 
-    protected ItemValueLog(ItemValueLogger logger, String identifier, double oldValue, double newValue, int updaterId, boolean enforcedChange) {
+    protected ItemValueLog(String identifier, double oldValue, double newValue, int updaterId, boolean enforcedChange) {
         this.time = Instant.now();
         this.identifier = identifier;
         this.oldValue = oldValue;
         this.newValue = newValue;
         this.updaterId = updaterId;
         this.enforcedChange = enforcedChange;
-
-        logger.addLog(this);
     }
 
     public Instant getTime() {

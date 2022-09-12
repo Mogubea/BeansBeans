@@ -18,8 +18,7 @@ public class SkillBuilding extends Skill {
 
 	@Override
 	protected boolean doSkillEvent(Skills s, Event e) {
-		if (!(e instanceof BlockPlaceEvent)) return false;
-		BlockPlaceEvent event = (BlockPlaceEvent) e;
+		if (!(e instanceof BlockPlaceEvent event)) return false;
 		float hardness = event.getBlock().getType().getHardness();
 		if (hardness <= 0F) return false;
 		

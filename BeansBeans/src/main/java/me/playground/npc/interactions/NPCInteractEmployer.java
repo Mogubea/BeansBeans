@@ -2,7 +2,6 @@ package me.playground.npc.interactions;
 
 import java.util.Arrays;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -11,11 +10,11 @@ import me.playground.civilizations.jobs.Job;
 import me.playground.gui.BeanGuiConfirm;
 import me.playground.npc.NPC;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.playerprofile.settings.PlayerSetting;
 import me.playground.playerprofile.stats.StatType;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 
+@Deprecated
 public class NPCInteractEmployer extends NPCInteraction {
 	
 	protected NPCInteractEmployer() {
@@ -107,7 +106,7 @@ public class NPCInteractEmployer extends NPCInteraction {
 
 	@Override
 	public void onInit(NPC<?> npc) {
-		npc.setTitle(Component.text("<" + npc.getJob().getNiceName() + " Employer>"), false);
+
 	}
 
 	@Override

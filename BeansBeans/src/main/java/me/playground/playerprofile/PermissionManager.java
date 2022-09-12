@@ -1,4 +1,4 @@
-package me.playground.main;
+package me.playground.playerprofile;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import me.playground.main.Main;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 
@@ -17,8 +18,8 @@ public class PermissionManager {
 	
 	final private Main plugin;
 	
-	final private HashMap<UUID, PermissionAttachment> permissions = new HashMap<UUID, PermissionAttachment>();
-	final private HashMap<UUID, List<Rank>> rankPreviewers = new HashMap<UUID, List<Rank>>();
+	final private HashMap<UUID, PermissionAttachment> permissions = new HashMap<>();
+	final private HashMap<UUID, List<Rank>> rankPreviewers = new HashMap<>();
 	
 	public PermissionManager(Main plugin) {
 		this.plugin = plugin;

@@ -7,6 +7,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import me.playground.gui.BeanGuiAdminItemValues;
+import me.playground.items.lore.Lore;
+import me.playground.playerprofile.stats.DirtyInteger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
@@ -16,11 +18,8 @@ import org.bukkit.block.Container;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.TraderLlama;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.*;
 import org.bukkit.event.inventory.InventoryCloseEvent.Reason;
 import org.bukkit.inventory.AbstractHorseInventory;
 import org.bukkit.inventory.ItemStack;
@@ -29,7 +28,6 @@ import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
 import me.playground.gui.BeanGuiBeanItems;
 import me.playground.gui.BeanGuiShop;
-import me.playground.gui.BeanGuiBasicMenuShop;
 import me.playground.gui.debug.BeanGuiDebug;
 import me.playground.items.BeanItem;
 import me.playground.main.Main;
@@ -45,6 +43,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.network.protocol.game.ClientboundHorseScreenOpenPacket;
+import org.bukkit.inventory.MerchantRecipe;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.jetbrains.annotations.NotNull;
 
 public class CommandOp extends BeanCommand {
@@ -54,7 +54,7 @@ public class CommandOp extends BeanCommand {
 		description = "Operator Command.";
 	}
 
-	final String[] subCmds = { "commands", "customitems", "debug", "itemvalues", "fixformatting", "formatchunks", "guiprofile", "lockserver", "menushop", "openserver", "pissoff", "previewrank", "shops" };
+	final String[] subCmds = { "commands", "customitems", "debug", "itemvalues", "fixformatting", "formatchunks", "guiprofile", "lockserver", "openserver", "pissoff", "previewrank", "shops" };
 	final String[] npcSubCmds = { "create", "list", "reload", "setskin", "tphere", "warpto", };
 	final String[] shopSubCmds = { "enable", "disable", "reload" };
 	
@@ -70,11 +70,6 @@ public class CommandOp extends BeanCommand {
 
 		if ("itemvalues".equals(cmdStr)) {
 			new BeanGuiAdminItemValues(p, getPlugin().getItemValueManager(), getPlugin().getItemTrackingManager()).openInventory();
-			return true;
-		}
-
-		if ("menushop".equals(cmdStr)) {
-			new BeanGuiBasicMenuShop(p, getPlugin().menuShopManager().getExistingShop(subcmd.isEmpty() ? "test" : subcmd)).openInventory();
 			return true;
 		}
 		
@@ -119,13 +114,11 @@ public class CommandOp extends BeanCommand {
 			for (int x = -1-dist; ++x < dist + 1;)
 					for (int z = -1-dist; ++z < dist + 1;) {
 						Chunk ch = p.getWorld().getChunkAt(cX + x, cZ + z);
-						p.sendMessage(Component.text("X: " + ch.getX() + ", Z:" + ch.getZ()));
 						BlockState[] blockStates = ch.getTileEntities();
 						int count = blockStates.length;
 						totalContainers += count;
 						for (int b = -1; ++b < count;) {
-							if (!(blockStates[b] instanceof Container)) continue;
-							Container c = (Container) blockStates[b];
+							if (!(blockStates[b] instanceof Container c)) continue;
 							ItemStack[] newInv = c.getInventory().getContents();
 							int invSize = newInv.length;
 							for (byte co = -1; ++co < invSize;) {
@@ -138,6 +131,38 @@ public class CommandOp extends BeanCommand {
 						}
 					}
 			p.sendMessage(Component.text("\u00a77Done. Updated \u00a7a"+totalItems+"\u00a77 items in \u00a72" + totalContainers + "\u00a77 containers."));
+			return true;
+		}
+
+		// TODO: Modify after the Villager Rework and then remove once applied on live.
+		if ("formatvillagers".equals(cmdStr) && checkPlayer(sender)) {
+			int dist = args.length > 1 ? toIntDef(args[1], 0) : 0;
+			if (dist < 1) dist = 1;
+			DirtyInteger totalVillagers = new DirtyInteger(0);
+			DirtyInteger totalTradesModified = new DirtyInteger(0);
+			p.sendMessage(Component.text("\u00a77Formatting all villagers within a \u00a7e" + dist + " Chunk Radius\u00a77..."));
+
+			p.getWorld().getNearbyEntitiesByType(Villager.class, p.getLocation(), dist * 16).forEach(villager -> {
+				totalVillagers.addToValue(1);
+				if (villager.getProfession() != null && villager.getProfession() == Villager.Profession.LIBRARIAN) {
+					int count = villager.getRecipeCount();
+					for (int x = count; --x > -1;) {
+						MerchantRecipe recipe = villager.getRecipe(x);
+						if (recipe.getResult().getType() == Material.ENCHANTED_BOOK) {
+							EnchantmentStorageMeta meta = (EnchantmentStorageMeta) recipe.getResult().getItemMeta();
+							if (meta.hasStoredEnchant(Enchantment.MENDING)) {
+								totalTradesModified.addToValue(1);
+								recipe.setDemand(0);
+								recipe.setMaxUses(0);
+								recipe.setUses(0);
+								recipe.setIgnoreDiscounts(true);
+								villager.setRecipe(x, recipe);
+							}
+						}
+					}
+				}
+			});
+			p.sendMessage(Component.text("\u00a77Done. Updated \u00a7a"+totalTradesModified.getValue()+"\u00a77 trades among \u00a72" + totalVillagers.getValue() + "\u00a77 Villagers."));
 			return true;
 		}
 		
@@ -234,24 +259,38 @@ public class CommandOp extends BeanCommand {
 				} catch (Exception e) { // NullPointerException and NumberFormatException
 					sender.sendMessage("\u00a7cAn NPC with the ID of '"+args[2]+"' does not exist!");
 				}
-			} else if ("settitle".equals(subcmd)) {
+			} /*else if ("settitle".equals(subcmd)) {
 				if (args.length<3) {
 					sender.sendMessage("\u00a7cUsage: \u00a7f/op npc "+subcmd+" \u00a77<id> <title>");
 					return true;
 				}
+
+				NPC<?> npc;
 				try {
-					Component title = args.length < 4 ? null : Component.text(args[3]);
-					NPC<?> npc = npcManager.getEntityNPC(Integer.parseInt(args[2]));
-					if (title != null)
-						npc.setTitle(title, true);
-					else
-						npc.removeTitle(true);
-					sender.sendMessage("\u00a77Title of NPC updated.");
-				} catch (Exception e) { // NullPointerException and NumberFormatException
+					npc = npcManager.getEntityNPC(Integer.parseInt(args[2]));
+				} catch (Exception e) {
 					sender.sendMessage("\u00a7cAn NPC with the ID of '"+args[2]+"' does not exist!");
+					return true;
 				}
+
+				if (args.length > 3) {
+					StringBuilder builder = new StringBuilder();
+					int size = args.length;
+					for (int x = 3; ++x < size;) {
+						String word = args[x].replace("\n", "");
+						builder.append(word);
+						if (x+1 < size) builder.append(" ");
+					}
+
+					npc.setHologramText(Lore.getBuilder(builder.toString()).build().getLore());
+					sender.sendMessage("\u00a77Hologram of NPC updated.");
+				} else {
+					npc.removeHologram();
+					sender.sendMessage("\u00a77Hologram of NPC removed.");
+				}
+
 			}
-			return true;
+			return true;*/
 		}
 		
 		if ("shops".equals(cmdStr) || "shop".equals(cmdStr)) {

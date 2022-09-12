@@ -93,13 +93,7 @@ public class VoteReceiver extends Thread {
 					final Vote vote = new Vote(vs, username, address, timeStamp);
 					
 					// Sync the event.
-					vm.getPlugin().getServer().getScheduler()
-							.scheduleSyncDelayedTask(vm.getPlugin(), new Runnable() {
-								public void run() {
-									Bukkit.getServer().getPluginManager()
-											.callEvent(new VoteEvent(vote));
-								}
-							});
+					vm.getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(vm.getPlugin(), () -> Bukkit.getServer().getPluginManager().callEvent(new VoteEvent(vote)));
 				}
 				
 				// Clean up.

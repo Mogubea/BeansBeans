@@ -22,7 +22,6 @@ import me.playground.celestia.logging.Celestia;
 import me.playground.data.Dirty;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.ProfileStore;
-import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -314,11 +313,13 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 
 	public boolean doesPlayerBypass(Player p, Flag<?> flag) {
 		MemberLevel level = getMember(p);
-		
-		if (flag instanceof FlagMember)
-			return getEffectiveFlag((FlagMember)flag).lowerOrEqTo(level);
-		if (flag instanceof FlagBoolean)
-			return !getEffectiveFlag((FlagBoolean) flag) || level.higherThan(MemberLevel.VISITOR);
+
+		if (flag instanceof FlagMember mFlag)
+			return getEffectiveFlag(mFlag).lowerOrEqTo(level);
+		if (flag instanceof FlagMemberBoolean mbFlag)
+			return level.higherThan(MemberLevel.VISITOR) || getEffectiveFlag(mbFlag);
+		if (flag instanceof FlagBoolean bFlag)
+			return getEffectiveFlag(bFlag);
 		return false;
 	}
 

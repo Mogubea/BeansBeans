@@ -85,6 +85,10 @@ public class ProfileStore {
 	public static Collection<ProfileStore> getEntries() {
 		return players.values();
 	}
+
+	public static int size() {
+		return players.size() - 2;
+	}
 	
 	public static void updateStore(int id, UUID uuid, String realName, String displayName, int nameColour) {
 		players.put(id, new ProfileStore(id, uuid, realName, displayName, nameColour));

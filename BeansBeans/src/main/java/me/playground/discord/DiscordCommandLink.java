@@ -70,8 +70,8 @@ public class DiscordCommandLink extends DiscordCommand {
 				} else if (pp.isOnline()) {
 					pp.getPlayer().sendMessage(Component.text("\u00a77However, due to having Administrator perms, your nickname and roles cannot be updated by the bot."));
 				}
-				
-				Datasource.logCelestia(CelestiaAction.LINK_DISCORD, pp.getId(), null, "Linked to Discord ID: "+member.getIdLong());
+
+				plugin.getCelestiaManager().log(pp.getId(), CelestiaAction.LINK_DISCORD, null, "Linked to Discord ID: "+member.getIdLong());
 				//pp.addToBalance(2500, "Linking Discord");
 				pp.grantAdvancement("beansbeans:advancements/discord");
 				eb.setColor(0x44ddff);
