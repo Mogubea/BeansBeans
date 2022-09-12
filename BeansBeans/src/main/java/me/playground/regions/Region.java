@@ -311,7 +311,7 @@ public class Region extends RegionBase implements Dirty, Comparable<Region> {
 		return Integer.compare(otherRegion.getPriority(), getPriority());
 	}
 
-	public boolean doesPlayerBypass(Player p, Flag<?> flag) {
+	public boolean doesPlayerBypass(@NotNull Player p, Flag<?> flag) {
 		MemberLevel level = getMember(p);
 
 		if (flag instanceof FlagMember mFlag)

@@ -139,8 +139,8 @@ public class EntityListener extends EventListener {
 				if (p == null || !r2.getMember(p).higherThan(MemberLevel.VISITOR))
 					e.setDamage(0);
 
-			// Check specifically for Villager Protection
-			if (e.getEntity() instanceof Villager && !checkRegionPermission(r2, e, p, Flags.VILLAGER_ACCESS))
+			// Check specifically for Villager Protection against Players only
+			if (e.getEntity() instanceof Villager && p != null && !checkRegionPermission(r2, e, p, Flags.VILLAGER_ACCESS))
 				e.setDamage(0);
 
 			if (e.getDamage() > 0) {

@@ -7,7 +7,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import me.playground.gui.BeanGuiAdminItemValues;
-import me.playground.items.lore.Lore;
 import me.playground.playerprofile.stats.DirtyInteger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -144,14 +143,15 @@ public class CommandOp extends BeanCommand {
 
 			p.getWorld().getNearbyEntitiesByType(Villager.class, p.getLocation(), dist * 16).forEach(villager -> {
 				totalVillagers.addToValue(1);
-				if (villager.getProfession() != null && villager.getProfession() == Villager.Profession.LIBRARIAN) {
+				if (villager.getProfession() != null) {
 					int count = villager.getRecipeCount();
 					for (int x = count; --x > -1;) {
 						MerchantRecipe recipe = villager.getRecipe(x);
+
+						// Fix up mending
 						if (recipe.getResult().getType() == Material.ENCHANTED_BOOK) {
 							EnchantmentStorageMeta meta = (EnchantmentStorageMeta) recipe.getResult().getItemMeta();
 							if (meta.hasStoredEnchant(Enchantment.MENDING)) {
-								totalTradesModified.addToValue(1);
 								recipe.setDemand(0);
 								recipe.setMaxUses(0);
 								recipe.setUses(0);
@@ -159,6 +159,16 @@ public class CommandOp extends BeanCommand {
 								villager.setRecipe(x, recipe);
 							}
 						}
+
+						totalTradesModified.addToValue(1);
+
+						// Replace recipe
+						List<ItemStack> newIngredients = recipe.getIngredients();
+						newIngredients.forEach(BeanItem::formatItem);
+						MerchantRecipe newRecipe = new MerchantRecipe(BeanItem.formatItem(recipe.getResult()), recipe.getUses(), recipe.getMaxUses(),
+								recipe.hasExperienceReward(), recipe.getVillagerExperience(), recipe.getPriceMultiplier(), recipe.getDemand(), recipe.getSpecialPrice(), recipe.shouldIgnoreDiscounts());
+						newRecipe.setIngredients(newIngredients);
+						villager.setRecipe(x, newRecipe);
 					}
 				}
 			});

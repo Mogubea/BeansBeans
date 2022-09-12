@@ -208,7 +208,7 @@ public class PlayerProfile {
 		this.privatePermissions = perms;
 		
 		this.coins = coins;
-		
+
 		this.booleanSettings = settings;
 		
 		this.home = manager.getDatasource().loadHome(id);
@@ -223,6 +223,7 @@ public class PlayerProfile {
 		checkPunishments();
 		
 		setRanks(ranks);
+		verifySettings(); // Needs to be done after the ranks are set due to permission checks.
 		refreshInbox();
 		//Bukkit.getConsoleSender().sendMessage(Component.text("Profile was loaded for " + (hasNickname() ? getNickname() + " ("+getRealName()+")" : getRealName())));
 	}
@@ -785,7 +786,17 @@ public class PlayerProfile {
 	public String getSkillGrade(Skill skill) {
 		return skill != null ? skillData.getSkillInfo(skill).getGrade() : null;
 	}
-	
+
+	/**
+	 * If the player doesn't have permission to have a setting enabled, forcibly disable it.
+	 */
+	private void verifySettings() {
+		for (PlayerSetting setting : PlayerSetting.values())
+			if (!(setting.getPermissionString() == null || setting.getPermissionString().isEmpty()))
+				if (!hasPermission(setting.getPermissionString()))
+					setSettingEnabled(setting, false);
+	}
+
 	public boolean isSettingEnabled(PlayerSetting setting) {
 		return (this.booleanSettings & 1<<setting.ordinal()) != 0;
 	}

@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>BeansBeans</groupId>
   <artifactId>BeansBeans</artifactId>
-  <version>0.4.5-ALPHA</version>
+  <version>0.5-ALPHA</version>
 
   <properties>
 	  <maven.compiler.target>17</maven.compiler.target>
@@ -111,7 +111,7 @@
 			<artifactId>maven-jar-plugin</artifactId>
 			<version>3.2.2</version>
 			<configuration>
-				<outputDirectory>${user.home}/Desktop/Minecraft Server/Bukkit Server/plugins/</outputDirectory>
+				<outputDirectory>${user.home}/Desktop/Minecraft Servers/Bukkit Server/plugins/</outputDirectory>
 			</configuration>
 		</plugin>
     	<plugin>

@@ -23,11 +23,12 @@ public class RedstoneManager {
 
     private void redstoneDeductionLoop() {
         plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, () -> {
-            currentIdx += 1;
-            if (currentIdx >= secondsToAverage)
-                currentIdx = 0;
+            // With an async timer and a value this active we must make sure the value is always within boundaries.
+            currentIdx = (currentIdx + 1 >= secondsToAverage) ? 0 : currentIdx + 1;
 
-            for (Map.Entry<Long, int[]> entry : chunkRedstoneActions.entrySet()) {
+            // A clone is required here to prevent ConcurrentModificationExceptions
+            Map<Long, int[]> chunkRedstoneActionsCopy = new TreeMap<>(chunkRedstoneActions);
+            for (Map.Entry<Long, int[]> entry : chunkRedstoneActionsCopy.entrySet()) {
                 long id = entry.getKey();
                 int[] actions = entry.getValue();
 
