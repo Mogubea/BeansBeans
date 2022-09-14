@@ -19,12 +19,11 @@ public class SkillCombat extends Skill {
 	
 	@Override
 	protected boolean doSkillEvent(final Skills s, final Event e) {
-		if (!(e instanceof EntityDamageByEntityEvent)) return false;
-		EntityDamageByEntityEvent event = (EntityDamageByEntityEvent) e;
-		
-		float mult = 0.15F;
-		if (!event.getEntity().fromMobSpawner())
-			mult = isPassiveMob(event.getEntityType()) ? 1.5F : 3.75F;
+		if (!(e instanceof EntityDamageByEntityEvent event)) return false;
+
+		float mult = 0.2F;
+		if (!event.getEntity().fromMobSpawner() && !(event.getEntity().getNearbyEntities(3, 7, 3).size() > 6))
+			mult = isPassiveMob(event.getEntityType()) ? 1.5F : 3.25F;
 		
 		s.addExperience(this, (int) (mult * event.getDamage()));
 		return true;
