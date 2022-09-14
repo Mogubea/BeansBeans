@@ -80,7 +80,10 @@ public abstract class Flag<T> {
 		this.playerDef = def;
 		return (F) this;
 	}
-	
+
+	/**
+	 * Determine if this flag for non-world regions will inherit the value from a world region, assuming they don't have an overriding default.
+	 */
 	public boolean inheritsFromWorld() {
 		return inheritsFromWorld;
 	}

@@ -867,9 +867,8 @@ public class BeanItem {
 			recalculateMaxDurability(item);
 			return reduceItemDurabilityBy(item, 0);
 		}
-		
-		if (!lore.isEmpty()) 
-			meta.lore(lore);
+
+		meta.lore(lore.isEmpty() ? null : lore);
 		item.setItemMeta(meta);
 		
 		return item;

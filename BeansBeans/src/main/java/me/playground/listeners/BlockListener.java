@@ -27,6 +27,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.*;
 import org.bukkit.event.block.BlockIgniteEvent.IgniteCause;
+import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -150,8 +151,20 @@ public class BlockListener extends EventListener {
 		}
 		
 		// Block placing, ignore crops to allow xp
-		if (!(block.getBlockData() instanceof Ageable))
+		if (!isHarvestableCrop(block.getType()))
 			block.setMetadata("placed", new FixedMetadataValue(getPlugin(), true));
+
+		// Check double high blocks a tick later
+		if (isDoubleBlock(block.getType())) {
+			getPlugin().getServer().getScheduler().runTask(getPlugin(), () -> {
+				Block other = block.getLocation().subtract(0, 1, 0).getBlock();
+				Block other2 = block.getLocation().add(0, 1, 0).getBlock();
+				if (isDoubleBlock(other.getType())) // Below
+					other.setMetadata("placed", new FixedMetadataValue(getPlugin(), true));
+				else if (isDoubleBlock(other2.getType())) // Above
+					other2.setMetadata("placed", new FixedMetadataValue(getPlugin(), true));
+			});
+		}
 		
 		PlayerProfile pp = PlayerProfile.from(e.getPlayer());
 		pp.getStats().addToStat(StatType.BLOCK_PLACE, blockName, 1);
@@ -199,8 +212,13 @@ public class BlockListener extends EventListener {
 			pp.getStats().addToStat(StatType.BLOCK_BREAK, blockName, 1);
 			pp.getStats().addToStat(StatType.BLOCK_BREAK, "total", 1, true);
 			if (p.getGameMode() == GameMode.CREATIVE) return;
-			pp.getSkills().doSkillEvents(e, Skill.MINING, Skill.FORAGING, Skill.AGRICULTURE);
+
+			pp.getSkills().doSkillEvents(e, Skill.MINING, Skill.FORAGING);
 		}
+
+		// Damage hoe if being used to harvest crops
+		if (pp.getSkills().doSkillEvents(e, Skill.AGRICULTURE) && p.getEquipment().getItemInMainHand().getType().name().endsWith("_HOE"))
+			new PlayerItemDamageEvent(e.getPlayer(), p.getEquipment().getItemInMainHand(), 1, 1).callEvent();
 	}
 	
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
@@ -466,6 +484,13 @@ public class BlockListener extends EventListener {
 	private boolean isHarvestableCrop(Material m) {
 		return switch (m) {
 			case WHEAT, COCOA, CARROTS, POTATOES, NETHER_WART/*, CACTUS*/, MELON, PUMPKIN, BEETROOTS/*, SUGAR_CANE*/ -> true;
+			default -> false;
+		};
+	}
+
+	private boolean isDoubleBlock(Material m) {
+		return switch (m) {
+			case PEONY, ROSE_BUSH, LARGE_FERN, LILAC, SUNFLOWER -> true;
 			default -> false;
 		};
 	}

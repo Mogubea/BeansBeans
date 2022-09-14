@@ -129,14 +129,14 @@ public class BeanGuiAdminItemValues extends BeanGui {
 			case 51 -> { // Recalculate
 				if (!pp.hasPermission(Permission.EDIT_ITEM_VALUES)) return;
 
-				if (System.currentTimeMillis() - valueManager.getLastRecalculation() < 1000 * 30) {
+				if (System.currentTimeMillis() - valueManager.getLastRecalculation() < 1000 * 15) {
 					p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.4F, 0.9F);
 				} else {
 					p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.4F, 1.0F);
 					p.sendMessage(Component.text("\u00a78Recalculating item recipe result values..."));
 					valueManager.calculateItemValues();
 					getAllViewers(BeanGuiAdminItemValues.class).forEach(ui -> { ui.preparePresetInventory(ui.page); ui.openInventory(); });
-					p.sendMessage(Component.text("\u00a77Done."));
+					p.sendMessage(Component.text("\u00a77Done. There are " + valueManager.countPendingChanges() + " total changes."));
 				}
 			}
 			case 52 -> { // Category Filter

@@ -90,7 +90,7 @@ public class SkillInfo {
 	
 	private int getXPRequirement(int level) {
 		if (level < 0) level = 0;
-		return level * level * 3500 - (level * 10000) + 30000;
+		return level * level * 4500 - (level * 10000) + 25000;
 	}
 	
 	public long getXPRequirement() {

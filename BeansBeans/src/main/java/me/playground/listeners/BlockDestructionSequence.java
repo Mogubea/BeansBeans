@@ -45,7 +45,7 @@ public class BlockDestructionSequence {
 	}
 	
 	/**
-	 * Fire all of the required events, effects, item drops etc. As if it was a regular block break. This method fires
+	 * Fire all the required events, effects, item drops etc. As if it was a regular block break. This method fires
 	 * {@link CustomBlockBreakEvent}, {@link PlayerItemDamageEvent} and {@link BlockDropItemEvent}, taking into consideration
 	 * the player's permissions, item enchantments, custom item functionality etc.
 	 * 

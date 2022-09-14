@@ -7,12 +7,12 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import me.playground.command.BeanCommand;
-import me.playground.command.CommandException;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.Utils;
@@ -29,9 +29,8 @@ public class CommandSkull extends BeanCommand {
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		final Player p = (Player)sender;
-		final UUID uuid = getPlugin().getServer().getPlayerUniqueId(args[0]);
-		if (uuid == null) throw new CommandException(sender, "The player '"+args[0]+"' does not exist.");
-		
+		final UUID uuid = Bukkit.getOfflinePlayer(args[0]).getUniqueId();
+
 		p.getInventory().addItem(Utils.getSkullFromPlayer(uuid));
 		return true;
 	}

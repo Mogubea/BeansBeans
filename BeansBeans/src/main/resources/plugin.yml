@@ -1,5 +1,5 @@
 name: BeansBeans
-version: 0.5
+version: 0.5.1
 api-version: 1.18
 main: me.playground.main.Main
 softdepend: [WorldEdit, dynmap, ProtocolLib]

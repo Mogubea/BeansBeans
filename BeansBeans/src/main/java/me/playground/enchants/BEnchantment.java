@@ -59,7 +59,7 @@ public class BEnchantment extends Enchantment {
 	// tools
 	public static final BEnchantment EXPERIENCED = new BEnchantment("experienced", "Experienced", BEnchantmentTarget.TOOL, 1, 3, false, false, false, 4, 2, 6, 4) {
 		public List<TextComponent> getLore(int level) {
-			return getLoreInstance().getLore("" + 7.5 * level, "" + 0.01 * level);
+			return getLoreInstance().getLore("" + 6 * level, "" + 0.01 * level);
 		}
 	}.setLore(Lore.getBuilder("Blocks have a &a{0}%&r chance to drop some experience orbs. There is also a &a{1}%&r chance to drop a significantly larger amount.").build())
 			.setItemRarity(ItemRarity.UNCOMMON, 3)

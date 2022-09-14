@@ -39,5 +39,10 @@ public abstract class DirtyVal<T> {
 		this.dirty = dirty;
 		return this;
 	}
+
+	@Override
+	public String toString() {
+		return value.toString();
+	}
 	
 }

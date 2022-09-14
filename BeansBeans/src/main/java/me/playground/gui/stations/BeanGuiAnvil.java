@@ -402,7 +402,7 @@ public class BeanGuiAnvil extends BeanGui {
 					left = indicatorEnchant;
 					right = indicatorEnchant;
 				} else { // Check for Repair
-					repairVal = custom != null ? custom.getRepairPercentage(infuseItem) : upgradeItem.isRepairableBy(infuseItem) ? 20 : 0;
+					repairVal = custom != null ? custom.getRepairPercentage(infuseItem) : getRepairValueFor(upgradeItem, infuseItem);
 					checkForEnchants = false;
 				}
 
@@ -689,6 +689,22 @@ public class BeanGuiAnvil extends BeanGui {
 		if (item != null) return BeanItem.is(infuseItem, item);
 
 		return upgradeItem.getType().equals(infuseItem.getType());
+	}
+
+	// TODO: Create a class to obtain the repairable items for each item and their respective repair values
+
+	/**
+	 * Basically here to give Netherite equipment a helping hand when it comes to repairing.
+	 */
+	private int getRepairValueFor(@NotNull ItemStack tool, @NotNull ItemStack item) {
+		if (tool.getType().name().startsWith("NETHERITE_")) {
+			switch (item.getType()) {
+				case NETHERITE_INGOT -> { return 100; }
+				case NETHERITE_SCRAP -> { return 45; }
+			}
+		}
+
+		return tool.isRepairableBy(item) ? 20 : 0;
 	}
 
 }

@@ -7,25 +7,19 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 
-import me.playground.civilizations.jobs.Job;
 import me.playground.items.BeanItem;
 import me.playground.npc.NPCHuman;
-import me.playground.npc.interactions.NPCInteractEmployer;
 import me.playground.npc.interactions.NPCInteractShop;
 import me.playground.npc.interactions.NPCInteraction;
 import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 
 public class BeanGuiNPCEdit extends BeanGui {
 	
 	protected static final ItemStack icon_name = newItem(new ItemStack(Material.WARPED_SIGN), Component.text("NPC Name", BeanColor.NPC));
 	protected static final ItemStack icon_title = newItem(new ItemStack(Material.WARPED_SIGN), Component.text("NPC Title", BeanColor.NPC));
 	protected static final ItemStack icon_titleCol = newItem(new ItemStack(Material.WARPED_SIGN), Component.text("NPC Title Colour", BeanColor.NPC));
-	protected static final ItemStack icon_employment = newItem(new ItemStack(Material.DIAMOND_AXE), Component.text("NPC Occupation", BeanColor.NPC));
-	protected static final ItemStack icon_civilization = newItem(new ItemStack(Material.BIRCH_SIGN), Component.text("NPC Civilization", BeanColor.NPC));
 	protected static final ItemStack icon_interaction = newItem(new ItemStack(Material.MOJANG_BANNER_PATTERN), Component.text("NPC Interaction Script", BeanColor.NPC));
 	protected static final ItemStack icon_refresh = newItem(new ItemStack(Material.BELL), Component.text("Refresh NPC", BeanColor.NPC));
 	
@@ -91,24 +85,8 @@ public class BeanGuiNPCEdit extends BeanGui {
 		} else if (slot == 14) {
 			getPlugin().getSignMenuFactory().requestSignResponse(p, Material.BIRCH_WALL_SIGN, (strings) -> {
 				NPCInteraction interaction = NPCInteraction.getByName(strings[0]);
-            	if (interaction == null) {
-            		p.sendActionBar(Component.text("\u00a7cYou provided an invalid interaction script!"));
-            		throw new RuntimeException("Invalid interaction script.");
-            	}
-            	npc.setInteraction(interaction);
+				npc.setInteraction(interaction);
 			}, true, "Interaction ID", "for this NPC");
-		// Employment Job Change
-		} else if (slot == 40) {
-			getPlugin().getSignMenuFactory().requestSignResponse(p, Material.BIRCH_WALL_SIGN, (strings) -> {
-				Job job = Job.getByName(strings[0]);
-            	if (job == null) {
-            		p.sendActionBar(Component.text("\u00a7cYou provided an invalid job!"));
-            		throw new RuntimeException("Invalid job.");
-            	}
-            	npc.setJob(job);
-            	npc.getInteraction().onInit(npc);
-			}, true, "Specify a Job", "for this NPC");
-			
 		// Set Shop
 		} else if (slot == 41 && npc.getInteraction() instanceof NPCInteractShop) {
 			getPlugin().getSignMenuFactory().requestSignResponse(p, Material.BIRCH_WALL_SIGN, (strings) -> npc.setMenuShop(strings[0] + strings[1]), true, "NPC MenuShop ID");
@@ -125,15 +103,11 @@ public class BeanGuiNPCEdit extends BeanGui {
 			contents[x * 9 + 8] = items[5 - x];
 		
 		contents[10] = newItem(icon_name, Component.text("NPC Name", BeanColor.NPC), npc.getName());
-		boolean isJobNPC = npc.getInteraction() instanceof NPCInteractEmployer;
-		contents[12] = newItem(new ItemStack(isJobNPC ? Material.CRIMSON_SIGN : Material.WARPED_SIGN),
-				Component.text("NPC Hologram", isJobNPC ? NamedTextColor.RED : BeanColor.NPC), Component.text("Command Required", BeanColor.COMMAND));
-		contents[14] = newItem(icon_interaction, Component.text("NPC Interaction Script", BeanColor.NPC), "\u00a7f" + npc.getInteraction().getName());
-		contents[40] = newItem(icon_employment, Component.text("NPC Occupation", BeanColor.NPC), npc.getJob().toComponent());
 		
 		if (npc.getInteraction() instanceof NPCInteractShop)
 			contents[41] = newItem(BeanItem.GOLDEN_CHEST.getItemStack(), Component.text("\u00a7eNPC Shop"), Component.text("\u00a77The MenuShop that will open when"), Component.text("\u00a77a player clicks this NPC.."), Component.empty(), npc.getMenuShop() == null ? Component.text("\u00a7cNo MenuShop set.") : Component.text("\u00a77MenuShop: \u00a76" + npc.getMenuShop().getIdentifier()));
-		
+		contents[14] = newItem(icon_interaction, Component.text("NPC Interaction", BeanColor.NPC), npc.getInteraction().getName());
+
 		i.setContents(contents);
 	}
 	

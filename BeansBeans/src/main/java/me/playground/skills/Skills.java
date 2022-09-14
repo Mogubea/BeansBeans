@@ -12,11 +12,13 @@ import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.settings.PlayerSetting;
+import org.jetbrains.annotations.NotNull;
 
 public class Skills {
 
@@ -101,8 +103,12 @@ public class Skills {
 		return levelTitles[(int) getAverageLevel()];
 	}
 
+	@NotNull
 	public Skill getBestSkill() {
-		if (highestSkill == null) getAverageLevel(); // Trigger the update. averageGradeDirty will 100% be true in this instance.
+		if (highestSkill == null) {
+			averageGradeDirty = true;
+			getAverageLevel();
+		}
 
 		return highestSkill;
 	}
@@ -111,7 +117,9 @@ public class Skills {
 	 * Fire the Skill Event for the specified Skills.
 	 * @return true if something actually happened
 	 */
-	public boolean doSkillEvents(Event e, Skill...skills) {
+	public boolean doSkillEvents(@NotNull Event e, @NotNull Skill...skills) {
+		if (e instanceof Cancellable c && c.isCancelled()) return false;
+
 		for (Skill sk : skills)
 			if (sk.doSkillEvent(this, e)) return true;
 		return false;
@@ -120,7 +128,9 @@ public class Skills {
 	/**
 	 * Add experience to the specified Skill
 	 */
-	public void addExperience(Skill skill, int exp) {
+	public void addExperience(@NotNull Skill skill, int exp) {
+		if (exp == 0) return;
+
 		int lvl = getLevel(skill);
 		skills.get(skill).addXP(exp);
 
@@ -232,7 +242,6 @@ public class Skills {
 		xpSche = Bukkit.getScheduler().scheduleSyncDelayedTask(Main.getInstance(), () -> {
 			hideBossBar();
 			notifyingLevelUp = false;
-			averageGradeDirty = false;
 			Bukkit.getScheduler().cancelTask(eck);
 		}, 120);
 	}

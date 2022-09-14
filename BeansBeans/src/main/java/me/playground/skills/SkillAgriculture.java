@@ -38,22 +38,29 @@ public class SkillAgriculture extends Skill {
 
 		final int heightCheck = getHeightCheck(b.getType());
 
+		// Check blocks that go up and up
 		if (heightCheck > 0) {
 			Location loc = b.getLocation().clone();
 			int height = 0;
-			int sugar = 0;
-			
-			if (b.getLocation().subtract(0, 1, 0).getBlock().getType() != b.getType()) sugar--;
-			while(height < heightCheck && loc.add(0, 1, 0).getBlock().getType() == b.getType()) { height++; sugar++; }
+			int sugar = b.getLocation().subtract(0, 1, 0).getBlock().getType() != b.getType() || b.hasMetadata("placed") ? 0 : 1;
+
+			while(height < heightCheck) {
+				Block block = loc.add(0, 1, 0).getBlock();
+				if (block.getType() != b.getType()) break;
+				if (!block.hasMetadata("placed")) sugar++;
+				height++;
+			}
 			
 			skillXP *= sugar;
 			if (skillXP <= 0) return false;
+		} else {
+			if (b.hasMetadata("placed")) return false;
+
+			// Check age if age-able, excluding Sugar Cane since they age weirdly.
+			if (b.getBlockData() instanceof Ageable crop)
+				if (crop.getAge() < crop.getMaximumAge()) return false;
 		}
-		
-		if (b.getType() != Material.SUGAR_CANE && b.getBlockData() instanceof Ageable crop) {
-			if (crop.getAge() < crop.getMaximumAge()) return false;
-		}
-		
+
 		s.addExperience(this, skillXP);
 		return true;
 	}
@@ -62,21 +69,19 @@ public class SkillAgriculture extends Skill {
 		final Material material = b.getType();
 
 		return switch (material) {
-			case MOSS_CARPET -> 4;
-			case MOSS_BLOCK, BAMBOO -> 5;
-			case CHORUS_PLANT -> 7;
-			case AZALEA, FLOWERING_AZALEA -> 8;
-			case SUGAR_CANE, GLOW_BERRIES -> 10;
-			case SWEET_BERRY_BUSH -> 13;
-			case COCOA -> 15;
-			case CARROTS, POTATOES -> 16;
-			case WHEAT -> 18;
-			case NETHER_WART -> 21;
-			case BEETROOTS -> 23;
-			case CACTUS -> 27;
-			case MELON, PUMPKIN -> 33;
-			case CHORUS_FLOWER -> 35;
-			case BEEHIVE, BEE_NEST -> 130;
+			case BAMBOO -> 1;
+			case MOSS_CARPET, MOSS_BLOCK -> 3;
+			case CHORUS_PLANT -> 4;
+			case AZALEA, FLOWERING_AZALEA, SUGAR_CANE -> 5;
+			case GLOW_BERRIES -> 8;
+			case SWEET_BERRY_BUSH -> 7;
+			case CARROTS, POTATOES, NETHER_WART -> 9;
+			case COCOA, WHEAT -> 10;
+			case BEETROOTS -> 11;
+			case CACTUS -> 15;
+			case MELON, PUMPKIN -> 20;
+			case CHORUS_FLOWER -> 22;
+			case BEEHIVE, BEE_NEST -> 100;
 			default -> 0;
 		};
 	}

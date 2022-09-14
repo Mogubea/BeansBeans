@@ -94,17 +94,16 @@ import me.playground.ranks.Permission;
 import me.playground.ranks.Rank;
 import me.playground.regions.Region;
 import me.playground.regions.flags.Flags;
-import me.playground.regions.flags.MemberLevel;
 import me.playground.skills.Skill;
 import me.playground.utils.BeanColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TextReplacementConfig;
-import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import org.bukkit.scoreboard.Team;
 import org.jetbrains.annotations.Nullable;
 
 public class PlayerListener extends EventListener {
@@ -124,7 +123,9 @@ public class PlayerListener extends EventListener {
 				if (!item.hasMetadata("rarity")) return; // Goes bye bye on restarts but whatever
 
 				String rarityName = ItemRarity.valueOf(item.getMetadata("rarity").get(0).asString()).name();
-				p.getScoreboard().getTeam("itemRarity_" + rarityName).addEntity(e);
+				Team team = p.getScoreboard().getTeam("itemRarity_" + rarityName);
+				if (team != null)
+					team.addEntity(e);
 			}
 		});
 
@@ -231,7 +232,7 @@ public class PlayerListener extends EventListener {
 		TextReplacementConfig c = TextReplacementConfig.builder().match("\u24E2 ").replacement("").build();
 		TextReplacementConfig c2 = TextReplacementConfig.builder().match(p.getName()).replacement(pp.getComponentName()).build();
 		TextReplacementConfig c3 = TextReplacementConfig.builder().match("\u2b50 ").replacement("").build();
-		
+
 		e.deathMessage(Component.text("\u2620 ", NamedTextColor.RED).append(e.deathMessage().color(TextColor.color(0xff7a7a))).replaceText(c).replaceText(c3).replaceText(c2));
 		
 		getPlugin().getServer().getOnlinePlayers().forEach(player -> { if (PlayerProfile.from(player).isSettingEnabled(PlayerSetting.SHOW_DEATH_MESSAGES)) { player.sendMessage(e.deathMessage()); }});
@@ -319,21 +320,21 @@ public class PlayerListener extends EventListener {
 		final ItemStack item = e.getItem();
 		final Player p = e.getPlayer();
 
+		// Stop here if unnecessary to check
+		if (e.getAction() != Action.RIGHT_CLICK_BLOCK || block == null) return;
+
 		// Re-flatten pathing
-		if (e.getItem() != null && e.getItem().getType().name().endsWith("SHOVEL")) {
-			if (block != null && block.getType() == Material.DIRT_PATH) {
+		if (item != null && item.getType().name().endsWith("SHOVEL")) {
+			if (block.getType() == Material.DIRT_PATH) {
 				if (!enactRegionPermission(getRegionAt(block.getLocation()), e, p, Flags.BUILD_ACCESS, "flatten dirt paths")) return;
 				swingHand(p, e.getHand());
-				new PlayerItemDamageEvent(p, e.getItem(), 1, 1).callEvent();
+				new PlayerItemDamageEvent(p, item, 1, 1).callEvent();
 				block.setType(Material.DIRT);
 				block.getWorld().playSound(block.getLocation().add(0.5, 1, 0.5), Sound.ITEM_SHOVEL_FLATTEN, 0.55f, 0.9f + rand.nextFloat(0.2f));
 				e.setCancelled(true);
 				return;
 			}
 		}
-
-		// Stop here if unnecessary to check
-		if (e.getAction() != Action.RIGHT_CLICK_BLOCK || block == null) return;
 
 		// Check Spawner spawn count
 		if (block.getType() == Material.SPAWNER && e.getItem() == null && !PlayerProfile.from(p).onCdElseAdd("spawnerCheck", 500, true)) {
@@ -500,25 +501,34 @@ public class PlayerListener extends EventListener {
 						e.setCancelled(true);
 						
 						// Add lapis to the Enchanting Table lapis pocket
-						if (custom == null && (item != null && item.getType() == Material.LAPIS_LAZULI /*|| e.getItem().getType() == Material.LAPIS_BLOCK*/)) {
+						if (custom == null && (item != null && (item.getType() == Material.LAPIS_LAZULI || e.getItem().getType() == Material.LAPIS_BLOCK))) {
+							boolean block = item.getType() != Material.LAPIS_LAZULI;
 
-							int amt = pdc.getOrDefault(BeanGuiEnchantingTable.KEY_LAPIS, PersistentDataType.SHORT, (short)0);
-							int lv = pdc.getOrDefault(BeanGuiEnchantingTable.KEY_LAPIS_LEVEL, PersistentDataType.BYTE, (byte)0);
-							int max = 128 + (lv*lv) * 64;
+							int oldLapis = pdc.getOrDefault(BeanGuiEnchantingTable.KEY_LAPIS, PersistentDataType.SHORT, (short)0);
+							int lapisLevel = pdc.getOrDefault(BeanGuiEnchantingTable.KEY_LAPIS_LEVEL, PersistentDataType.BYTE, (byte)0);
+							int maxLapis = 128 + (lapisLevel*lapisLevel) * 64;
 							
-							if (amt >= max) {
+							if (oldLapis >= maxLapis) {
 								b.getWorld().spawnParticle(Particle.CRIT, b.getLocation().add(0.5, 0.5, 0.5), 7, 0.35, 0.35, 0.35, 0.15);
 								p.sendActionBar(Component.text("The Lazuli Storage Compartment™ is full!", NamedTextColor.RED));
 								return;
 							}
-							
-							int handAmt = e.getItem().getAmount();
-							int remaining = Math.max(0, amt+handAmt - max);
+
+							int handLapisValue = e.getItem().getAmount() * (block ? 9 : 1);
+							int remainingSpace = oldLapis+handLapisValue - maxLapis;
+							if (remainingSpace < 0) remainingSpace = 0;
+							int toTakeAway = remainingSpace;
+
+							if (block && remainingSpace > 0) {
+								p.getInventory().addItem(new ItemStack(Material.LAPIS_LAZULI, toTakeAway)).forEach((idx, itemm) -> p.getWorld().dropItem(p.getLocation(), itemm));
+								remainingSpace = Math.floorDiv(remainingSpace, 9);
+							}
+
 							p.playSound(b.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 0.6F, 0.9F);
 							b.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, b.getLocation().add(0.5, 0.5, 0.5), 8, 0.45, 0.45, 0.45, new DustTransition(Color.BLUE, Color.AQUA, 1.5F));
-							pdc.set(BeanGuiEnchantingTable.KEY_LAPIS, PersistentDataType.SHORT, (short)(amt + handAmt - remaining));
+							pdc.set(BeanGuiEnchantingTable.KEY_LAPIS, PersistentDataType.SHORT, (short)(oldLapis + handLapisValue - toTakeAway));
 							BeanGuiEnchantingTable.forceUpdateLapis(table);
-							e.getItem().setAmount(remaining);
+							e.getItem().setAmount(remainingSpace);
 							return;
 						}
 						
@@ -707,6 +717,7 @@ public class PlayerListener extends EventListener {
 		switch(e.getCause()) {
 			case ENDER_PEARL, CHORUS_FRUIT -> enactRegionPermission(r, e, e.getPlayer(), Flags.ENDERPEARLS, "ender warp into");
 			case COMMAND, PLUGIN, NETHER_PORTAL, END_PORTAL -> {
+				if (!enactRegionPermission(getRegionAt(e.getFrom()), e, e.getPlayer(), Flags.TELEPORT_OUT, "teleport out of")) break;
 				if (!enactRegionPermission(r, e, e.getPlayer(), Flags.TELEPORT_IN, "teleport into")) break;
 				PlayerProfile pp = PlayerProfile.from(e.getPlayer());
 
@@ -723,7 +734,6 @@ public class PlayerListener extends EventListener {
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onItemMend(PlayerItemMendEvent e) {
-		e.setCancelled(true);
 		BeanItem.addDurability(e.getItem(), e.getRepairAmount());
 		PlayerProfile.from(e.getPlayer()).getStats().addToStat(StatType.GENERIC, "mending", e.getRepairAmount());
 	}
@@ -775,36 +785,41 @@ public class PlayerListener extends EventListener {
 		
 		if (advancementCoins.containsKey(e.getAdvancement().getKey()))
 			pp.addToBalance(advancementCoins.get(e.getAdvancement().getKey()), "Advancement: " + e.getAdvancement().getKey().asString());
-		
+
+		if (e.getAdvancement().getDisplay() == null) return;
+
 		if (e.message() != null) {
-			TranslatableComponent ack = (TranslatableComponent) e.message();
-			Component msg = Component.text("\u00a7e» ").append(pp.getComponentName()).append(Component.text(" has achieved ").append(ack.args().get(ack.args().size()-1))).color(TextColor.color(0xfff7a9));
-			Bukkit.getOnlinePlayers().forEach(player -> { if (PlayerProfile.from(player).isSettingEnabled(PlayerSetting.SHOW_ACHIEVEMENTS)) { player.sendMessage(msg); }});
+			Component msg = Component.text("\u00a7e\u2605 ")
+					.append(pp.getComponentName()).append(Component.text(" has achieved ", NamedTextColor.GRAY))
+					.append(e.getAdvancement().getDisplay().title().hoverEvent(HoverEvent.showText(e.getAdvancement().getDisplay().description())))
+					.append(Component.text(".", NamedTextColor.GRAY));
+
+			Bukkit.getOnlinePlayers().forEach(player -> {
+				PlayerProfile tpp = PlayerProfile.from(player);
+				if (tpp.isIgnoring(pp.getId())) return;
+				if (!tpp.isSettingEnabled(PlayerSetting.SHOW_ACHIEVEMENTS)) return;
+				player.sendMessage(msg);
+			});
 			e.message(null);
 		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onConsume(PlayerItemConsumeEvent e) {
-		PlayerProfile.from(e.getPlayer()).getHeirlooms().doPlayerItemConsumeEvent(e);
-		if (!e.isCancelled())
+		if (PlayerProfile.from(e.getPlayer()).getHeirlooms().doPlayerItemConsumeEvent(e))
 			getPlugin().getItemTrackingManager().incrementDemanifestationCount(e.getItem(), DemanifestationReason.EATEN, 1);
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)
 	public void onPlayerFish(PlayerFishEvent e) {
 		final Player p = e.getPlayer();
-		
+
 		switch(e.getState()) {
 		case CAUGHT_ENTITY: // Protect animals and villagers from being reeled
 			if (!(e.getCaught() instanceof Animals || e.getCaught() instanceof Villager)) return;
-			
-			final Region r = getRegionAt(e.getCaught().getLocation());
-			if (r.getEffectiveFlag(Flags.PROTECT_ANIMALS) && r.getMember(p).lowerThan(MemberLevel.MEMBER)) {
-				p.sendActionBar(Component.text("\u00a7cYou don't have permission to fish animals here."));
+
+			if (!enactRegionPermission(getRegionAt(e.getCaught().getLocation()), e, p, Flags.PROTECT_ANIMALS, "fish animals"))
 				e.getHook().remove();
-				e.setCancelled(true);
-			}
 			break;
 		default:
 			break;

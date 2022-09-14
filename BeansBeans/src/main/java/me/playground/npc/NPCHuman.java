@@ -31,14 +31,16 @@ public class NPCHuman extends NPC<ServerPlayer> {
 	
 	public NPCHuman(int creatorId, int dbid, Main plugin, ServerPlayer entity, Location location, JSONObject json) {
 		super(creatorId, dbid, plugin, entity, location, json);
-		
-		if (json == null) return;
-		if (json.has("texValue") && json.has("texSig"))
-			getGameProfile().getProperties().put("textures", new Property("textures", json.getString("texValue"), json.getString("texSig")));
-		
-		String invArray = json.optString("inventory");
-		if (!(invArray == null || invArray.isEmpty()))
-			inventory = Utils.itemStackArrayFromBase64(invArray);
+
+		if (json != null) {
+			if (json.has("texValue") && json.has("texSig"))
+				getGameProfile().getProperties().put("textures", new Property("textures", json.getString("texValue"), json.getString("texSig")));
+
+			String invArray = json.optString("inventory");
+			if (!(invArray == null || invArray.isEmpty()))
+				inventory = Utils.itemStackArrayFromBase64(invArray);
+		}
+
 		for (int x = -1; ++x < invSize;)
 			nmsInventory.add(new Pair<>(EquipmentSlot.values()[x], CraftItemStack.asNMSCopy(inventory[x])));
 	}

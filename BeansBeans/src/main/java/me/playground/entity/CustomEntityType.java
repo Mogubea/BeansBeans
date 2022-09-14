@@ -20,10 +20,12 @@ public class CustomEntityType<T extends Entity> {
 
     public static final CustomEntityType<EntityRegionCrystal> REGION_CRYSTAL;
     public static final CustomEntityType<EntityHologram> HOLOGRAM;
+    public static final CustomEntityType<EntityWitherShulker> WITHER_SHULKER;
 
     static {
         REGION_CRYSTAL = register("REGION_CRYSTAL", EntityRegionCrystal::new);
         HOLOGRAM = register("HOLOGRAM", EntityHologram::new);
+        WITHER_SHULKER = register("WITHER_SHULKER", EntityWitherShulker::new);
     }
 
     private final String identifier;

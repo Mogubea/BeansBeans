@@ -118,7 +118,7 @@ public class CommandHologram extends BeanCommand {
 			EntityHologram hologram = getHologram(profile, p, true);
 			int lineToEdit = toIntMinMax(p, args[1], 1, hologram.getSize());
 
-			hologram.setComponent(lineToEdit, createComponent(profile, p, Arrays.copyOfRange(args, 2, args.length - 1)));
+			hologram.setComponent(lineToEdit - 1, createComponent(profile, p, Arrays.copyOfRange(args, 2, args.length - 1)));
 			p.sendMessage(Component.text("Successfully modified line #" + lineToEdit + " of the Hologram."));
 		}
 

@@ -166,7 +166,7 @@ public class EntityListener extends EventListener {
 		if (!(e.getDamager() instanceof Player p)) return;
 		if (!isDumbEntity(e.getEntityType())) {
 			PlayerProfile.from(p).getSkills().doSkillEvents(e, Skill.COMBAT);
-			spawnDamageIndicator(e.getEntity().getLocation().add(-0.5 + getPlugin().getRandom().nextDouble(), (e.getEntity().getHeight()/2) + ((e.getEntity().getHeight()/4) * (rand.nextDouble(2) - 1)), -0.5 + getPlugin().getRandom().nextDouble()), (int)e.getDamage());
+			spawnDamageIndicator(e.getEntity().getLocation().add(-0.5 + getPlugin().getRandom().nextDouble(), (e.getEntity().getHeight()/2) + ((e.getEntity().getHeight()/4) * (rand.nextDouble(2) - 1)), -0.5 + getPlugin().getRandom().nextDouble()), (int)e.getFinalDamage());
 		}
 	}
 	
@@ -297,11 +297,11 @@ public class EntityListener extends EventListener {
 				pp.getStats().addToStat(StatType.KILLS, "withChargedCreeper", 1);
 			
 			// Coin Drops
-			if (isMonster) {
+			/*if (isMonster) {
 				int hp = (int) e.getEntity().getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
 				if (!(hp/2 < 1))
 					pp.addToBalance((long) (2 + getPlugin().getRandom().nextInt(hp/2) * region.getEffectiveFlag(Flags.MOB_DROP_COIN)));
-			}
+			}*/
 
 			if (e.getDroppedExp() > 0) {
 				// EXP Level Multiplier
@@ -565,6 +565,8 @@ public class EntityListener extends EventListener {
 			short level = (short) (1 + rand.nextInt(5));
 
 			switch (e.getEntityType()) {
+				case SHULKER -> {
+				}
 				// Remove armour equipment for now
 				case SKELETON, ZOMBIE -> {
 					ItemStack hand = monster.getEquipment().getItemInMainHand();

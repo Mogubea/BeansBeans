@@ -51,6 +51,7 @@ public class BItemHeirloomMochi extends BeanItemHeirloom {
 		final ArmorStand di = (ArmorStand) e.getPlayer().getWorld().spawnEntity(new Location(e.getPlayer().getWorld(), 0, -10, 0), EntityType.ARMOR_STAND);
 		di.setInvisible(true);
 		di.setMarker(true);
+		di.setPersistent(false);
 		di.customName(Component.text("\u3082\u3050~").color(TextColor.color(0xffef78)));
 		di.setCustomNameVisible(true);
 		di.teleport(e.getPlayer().getLocation());

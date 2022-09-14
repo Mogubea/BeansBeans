@@ -138,7 +138,6 @@ public class DiscordBot extends ListenerAdapter {
 	private long staffChatId;
 	private long playerReportChatId;
 	private long statusMessageId;
-	private long suggestionChatId;
 	private long bugReportChatId;
 	
 	private final JDA discordBot;
@@ -155,7 +154,6 @@ public class DiscordBot extends ListenerAdapter {
 		this.staffChatId = plugin.getConfig().getLong("discord.staffChannel");
 		this.playerReportChatId = plugin.getConfig().getLong("discord.playerReportChannel");
 		this.bugReportChatId = plugin.getConfig().getLong("discord.bugReportChannel");
-		this.suggestionChatId = plugin.getConfig().getLong("discord.suggestionChannel");
 		this.statusMessageTitle = plugin.getConfig().getString("discord.statusTitle");
 		this.statusMessageId = plugin.getConfig().getLong("discord.statusMessage");
 		
@@ -263,10 +261,6 @@ public class DiscordBot extends ListenerAdapter {
 		return this.bugReportChatId;
 	}
 	
-	public long getSuggestionChatId() {
-		return this.suggestionChatId;
-	}
-	
 	// XXX: Commands
 	private final HashMap<String, DiscordCommand> discordCommands = new HashMap<>();
 	
@@ -278,7 +272,6 @@ public class DiscordBot extends ListenerAdapter {
 		cmds.add(registerCommand(new DiscordCommandLink(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandForceLink(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandReport(getPlugin())).getCommandData());
-		cmds.add(registerCommand(new DiscordCommandSuggest(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandEmbed(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandWho(getPlugin())).getCommandData());
 		cmds.add(registerCommand(new DiscordCommandRank(getPlugin())).getCommandData());
@@ -308,8 +301,6 @@ public class DiscordBot extends ListenerAdapter {
 		
 		if (e.getChannel().getIdLong() == getPlayerReportChatId() || e.getChannel().getIdLong() == getBugReportChatId())
 			this.getCommand("report").onMessageReactionAdd(e);
-		else if (e.getChannel().getIdLong() == getSuggestionChatId())
-			this.getCommand("suggest").onMessageReactionAdd(e);
 	}
 	
 	@Override

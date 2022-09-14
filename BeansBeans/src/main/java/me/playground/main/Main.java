@@ -89,6 +89,8 @@ public class Main extends JavaPlugin {
 	private VoteManager voteManager;
 	private WhateverChat webChatServer;
 	private StatusResponseThread webStatusThread;
+
+	private BlockTracker blockTracker;
 	
 	private DatasourceCore datasource;
 	private ProtocolManager protocolManager;
@@ -119,7 +121,9 @@ public class Main extends JavaPlugin {
 		
 		worldManager = new WorldManager(this); // Important to be before everything else due to a lot of things requiring the getWorld and getWorldId methods.
 		regionManager = new RegionManager(this); // Should always be after WorldManager due to dependence.
-		
+
+		blockTracker = new BlockTracker(this); // After Worlds
+
 		teamManager = new TeamManager(this);
 		highscores = new Highscores();
 		warpManager = new WarpManager(this);
@@ -233,6 +237,10 @@ public class Main extends JavaPlugin {
 		return Main.instance.permissionManager;
 	}
 
+	public BlockTracker getBlockTracker() {
+		return blockTracker;
+	}
+
 	public CustomEntityManager getCustomEntityManager() {
 		return entityManager;
 	}
@@ -339,6 +347,7 @@ public class Main extends JavaPlugin {
 	public void saveAll() {
 		long then = System.currentTimeMillis();
 		getDatasourceCore().saveAll();
+		getBlockTracker().save();
 		Utils.sendActionBar(Rank.ADMINISTRATOR, Component.text("\u00a7dSaved data to Database (" + (System.currentTimeMillis()-then) + "ms)"));
 	}
 	/**

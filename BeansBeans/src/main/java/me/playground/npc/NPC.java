@@ -17,8 +17,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
-import me.playground.civilizations.Civilization;
-import me.playground.civilizations.jobs.Job;
 import me.playground.main.IPluginRef;
 import me.playground.main.Main;
 import me.playground.menushop.MenuShop;
@@ -37,9 +35,7 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	private Location baseLocation;
 	
 	protected int creatorId; // Can be set to 0.
-	protected Civilization civilization; // If the NPC belongs to a Civilization and not necessarily an owning player.
-	protected Job job = Job.getByName("gatherer"); // If the NPC has a Job, for Interactions.
-	protected NPCInteraction interaction = NPCInteraction.getByName("base");
+	protected NPCInteraction interaction;
 	
 	protected MenuShop shop;
 	
@@ -67,13 +63,11 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 
 		// Assign json stuff
 		if (json != null) {
-			job = Job.getByName(json.optString("job", "gatherer"));
 			interaction = NPCInteraction.getByName(json.optString("interaction", "base"));
-			String strCiv = json.optString("civilization");
-			if (!strCiv.isEmpty())
-				civilization = Civilization.getByName(strCiv);
 			if (interaction instanceof NPCInteractShop)
 				shop = plugin.menuShopManager().getOrMakeShop(json.optString("shop"));
+		} else {
+			interaction = NPCInteraction.getByName("base");
 		}
 		
 		interaction.onInit(this);
@@ -89,10 +83,8 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 	 */
 	public JSONObject getJsonData() {
 		JSONObject obj = new JSONObject();
-		if (civilization != null) obj.put("civilization", civilization.getName());
 		if (shop != null) obj.put("shop", shop.getIdentifier());
-		
-		obj.put("job", job.getName());
+
 		obj.put("interaction", interaction.getName());
 		return obj;
 	}
@@ -203,15 +195,7 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 		return creatorId == PlayerProfile.getDBID(p);
 	}
 	
-	public boolean hasCivilization() {
-		return civilization != null;
-	}
-	
-	public Civilization getCivilization() {
-		return civilization;
-	}
-	
-	public NPC<T> setInteraction(NPCInteraction interaction) {
+	public NPC<T> setInteraction(@NotNull NPCInteraction interaction) {
 		this.interaction = interaction;
 		this.interaction.onInit(this);
 		setDirty();
@@ -239,16 +223,6 @@ public abstract class NPC<T extends LivingEntity> implements IPluginRef {
 		this.creatorId = playerId;
 		setDirty();
 		return this;
-	}
-	
-	public NPC<T> setJob(Job job) {
-		this.job = job;
-		setDirty();
-		return this;
-	}
-	
-	public Job getJob() {
-		return job;
 	}
 	
 	public Location getLocation() {

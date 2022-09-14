@@ -171,13 +171,16 @@ public class LootEntry {
 		ItemStack clone = baseStack.clone();
 		if (burn && hasCookedVariant())
 			clone.setType(cookedMaterial);
-		
-		if (allowsLooting())
-			clone.setAmount(minStack + getRandom().nextInt(maxStack + looting - minStack + 1));
-		else if (minStack >= maxStack)
+
+		if (allowsLooting()) {
+			int rand = maxStack + looting - minStack + 1;
+			int amt = rand < 1 ? minStack : getRandom().nextInt(rand);
+			clone.setAmount(minStack + amt);
+		} else if (minStack >= maxStack) {
 			clone.setAmount(minStack);
-		else
+		} else {
 			clone.setAmount(minStack + getRandom().nextInt(maxStack - minStack + 1));
+		}
 
 		if (!this.possibleEnchants.isEmpty()) {
 			int size = possibleEnchants.size();

@@ -2,25 +2,24 @@ package me.playground.npc.interactions;
 
 import java.util.HashMap;
 
-import javax.annotation.Nullable;
-
 import org.bukkit.entity.Player;
 
 import me.playground.npc.NPC;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class NPCInteraction {
 	
-	private final static HashMap<String, NPCInteraction> interactions = new HashMap<String, NPCInteraction>();
+	private final static HashMap<String, NPCInteraction> interactions = new HashMap<>();
+
 	static {
 		new NPCInteractBase();
-		new NPCInteractEmployer();
 		new NPCInteractShop();
 	}
-	
-	@Nullable
+
+	@NotNull
 	public static NPCInteraction getByName(String name) {
-		if (name == null) return null;
-		return interactions.get(name.toLowerCase());
+		if (name == null) return interactions.get("base");
+		return interactions.getOrDefault(name.toLowerCase(), interactions.get("base"));
 	}
 	
 	private final String name;

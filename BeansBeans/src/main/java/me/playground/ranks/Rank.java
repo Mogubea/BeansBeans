@@ -42,7 +42,6 @@ public enum Rank {
 	SENATOR(3, 0xaa32da, 100, 1, 914921526158041089L,
 			"The final tier of permanent **Supporter Rank**. This rank provides access to custom name colours, the ability to rename your regions "
 					+ "and everything that <@&873916287682756668> offers!",
-			"bean.cmd.value",
 			"bean.region.rename",
 			Permission.NAMECOLOUR_CUSTOM),
 	VIB(4, 0xffffff, 0, 0, 998171528678080652L,
@@ -52,7 +51,8 @@ public enum Rank {
 	// Playtime Ranks
 	NEWBEAN(15, 0x2faf2f, 10, 1, 546771060415135747L, 0,
 			"Every single user that has ever played on Bean's Beans will be given this rank!",
-			
+
+			"bean.cmd.value",
 			"bean.cmd.region",
 			"bean.cmd.region.info",
 			"bean.cmd.teleport",
@@ -99,7 +99,7 @@ public enum Rank {
 			Flags.BLOCK_SPREAD.getPermission(),
 			Flags.OBSIDIAN_FORMATION.getPermission(),
 			"bean.gm.moderator"),
-	ADMINISTRATOR(90, 0x3378FF, 500, 0, 546771706769965070L,
+	ADMINISTRATOR(90, 0x3378FF, 500, 500, 546771706769965070L,
 			"Administrators are in charge of managing the Moderator team, operating various systems " +
 			"and assisting with more severe issues that may arise.",
 					
@@ -144,7 +144,7 @@ public enum Rank {
 			"bean.shop.override",
 			"bean.gm.spectator",
 			"bean.gm.creative"),
-	OWNER(100, 0x6550ff, 30000, 0, 546771982167965716L,
+	OWNER(100, 0x6550ff, 30000, 30000, 546771982167965716L,
 			"The rank that represents Ownership of all that is Bean's Beans. There will only ever " + 
 			"be one Owner, <@170538991693725696>.",
 			

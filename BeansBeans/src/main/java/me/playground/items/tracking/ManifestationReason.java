@@ -21,7 +21,8 @@ public enum ManifestationReason {
     HARVEST("HARVEST"),
     REWARD("REWARD"),
     SHOP("SHOP"),
-    LOOT("LOOT");
+    LOOT("LOOT"),
+    FIRST_TIME_LOGIN("FIRST_TIME_LOGIN");
 
     private static final Map<String, ManifestationReason> byIdentifier = new HashMap<>();
 

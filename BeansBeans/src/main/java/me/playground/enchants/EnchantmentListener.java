@@ -9,6 +9,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.Particle.DustTransition;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -124,7 +125,7 @@ public class EnchantmentListener extends EventListener {
 	 */
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onBlockBreakFirst(BlockBreakEvent e) {
-		if (!(e.getBlock().getBlockData() instanceof Ageable)) return; // Prevent non ageables
+		if (!(e.getBlock().getBlockData() instanceof Ageable)) return; // Prevent non age-ables
 		if (!e.getPlayer().getInventory().getItemInMainHand().containsEnchantment(BEnchantment.PRESERVATION)) return;
 		Material m = e.getBlock().getType();
 		
@@ -146,22 +147,18 @@ public class EnchantmentListener extends EventListener {
 		ItemStack item = p.getEquipment().getItemInMainHand();
 		
 		if (item.containsEnchantment(BEnchantment.EXPERIENCED)) {
-			if (!b.hasMetadata("placed")) {
-				if (b.getType().getHardness() > 1F || b.getType() == Material.SNOW) {
-					if (b.isPreferredTool(item)) {
-						double val = rand.nextDouble()*100;
-						if (val < (item.getEnchantmentLevel(BEnchantment.EXPERIENCED) * 0.01)) {
-							e.setExpToDrop((int) (e.getExpToDrop() + 50 * b.getType().getHardness()));
-							p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, e.getBlock().getLocation().add(0.5, 0.5, 0.5), 2, 0.25, 0.25, 0.25, 0.03);
-						} else if (val < (item.getEnchantmentLevel(BEnchantment.EXPERIENCED) * 7.5)) {
-							e.setExpToDrop(e.getExpToDrop() + 1);
-							p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, e.getBlock().getLocation().add(0.5, 0.5, 0.5), 2, 0.15, 0.15, 0.15, 0.03);
-						}
-					}
+			if ((item.getType().name().endsWith("_HOE") && (b.getBlockData() instanceof Ageable ageable && ageable.getAge() >= ageable.getMaximumAge())) // Hoes
+					|| b.isPreferredTool(item) && b.getType().getHardness() > 1F || b.getType() == Material.SNOW) { // Others
+				double val = rand.nextDouble()*100;
+				if (val < (item.getEnchantmentLevel(BEnchantment.EXPERIENCED) * 0.01)) {
+					e.setExpToDrop((int) (e.getExpToDrop() + 50 * b.getType().getHardness()));
+					p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, e.getBlock().getLocation().add(0.5, 0.5, 0.5), 2, 0.25, 0.25, 0.25, 0.03);
+				} else if (val < (item.getEnchantmentLevel(BEnchantment.EXPERIENCED) * 6)) {
+					e.setExpToDrop(e.getExpToDrop() + 1);
+					p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, e.getBlock().getLocation().add(0.5, 0.5, 0.5), 2, 0.15, 0.15, 0.15, 0.03);
 				}
 			}
 		}
-		
 		
 		if (!(e.getBlock().getBlockData() instanceof Ageable)) return; // Prevent non age-ables
 		if (e instanceof CustomBlockBreakEvent && ((CustomBlockBreakEvent)e).getEnchantmentCause() == BEnchantment.REAPING) return; // Prevent infinite loop
@@ -177,7 +174,7 @@ public class EnchantmentListener extends EventListener {
 				
 				Block bb = e.getBlock().getRelative(!facingX ? x : 0, 0, facingX ? x : 0);
 				if (bb.getType() != b.getType()) continue; // Can only reap the same kinds of crop
-				if (new BlockDestructionSequence(e.getPlayer(), bb, BEnchantment.REAPING, false, false).fireSequence()) {
+				if (new BlockDestructionSequence(e.getPlayer(), bb, BEnchantment.REAPING, false, false).setItemDamage(0).fireSequence()) {
 					b.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, bb.getLocation().add(0.5, 0.6, 0.5), 4, 0.25, 0.2, 0.25, new DustTransition(Color.BLACK, Color.BLUE, 1.0F));
 					b.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, bb.getLocation().add(0.5, 0.5, 0.5), 2, 0.15, 0.15, 0.15, 0.03);
 				}
@@ -191,7 +188,8 @@ public class EnchantmentListener extends EventListener {
 		Player p = e.getPlayer();
 		ItemStack item = p.getEquipment().getItemInMainHand();
 
-		Material type = e.getBlockState().getType();
+		BlockState state = e.getBlockState();
+		Material type = state.getType();
 		if (type == Material.WHEAT || type == Material.CARROTS || type == Material.POTATOES || type == Material.BEETROOTS || type == Material.NETHER_WART || type == Material.COCOA) {
 			if (item.containsEnchantment(BEnchantment.REPLENISH) || getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.CROP_REPLENISH)) {
 				int size = e.getItems().size();
@@ -210,7 +208,11 @@ public class EnchantmentListener extends EventListener {
 				}
 				
 				// Delay the replacement to divide the maximum amount of spammed requests from this enchantment.
-				getPlugin().getServer().getScheduler().runTaskLater(getPlugin(), () -> { e.getBlock().setType(type); }, 5L);
+				getPlugin().getServer().getScheduler().runTaskLater(getPlugin(), () -> {
+					Ageable ageable = (Ageable) state.getBlockData();
+					ageable.setAge(0);
+					state.getBlock().getLocation().getBlock().setBlockData(ageable);
+				}, 5L);
 			}
 		}
 		

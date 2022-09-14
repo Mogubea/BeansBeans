@@ -66,7 +66,8 @@ public class ItemValues {
         long then = System.currentTimeMillis();
 
         // Previously calculated values.
-        Map<String, DirtyDouble> oldValues = new HashMap<>(getCalculated());
+        Map<String, Double> oldValues = new HashMap<>();
+        calculatedItemValues.forEach((id, value) -> oldValues.put(id, value.getValue()));
 
         // Loop 5 times to ensure changes apply to deeper recipes too.
         for (int x = -1; ++x < 5;) {
@@ -139,15 +140,17 @@ public class ItemValues {
             });
         }
 
+        DirtyInteger dirty = new DirtyInteger(0);
         oldValues.forEach((identifier, preCalcValue) -> {
             double postCalcValue = getItemValue(identifier);
-            if (preCalcValue.getValue() == postCalcValue) return;
+            if (preCalcValue == postCalcValue) return;
 
-            manager.addLog(new ItemValueLog(identifier, preCalcValue.getValue(), postCalcValue, 0, false)); // Log calculated change
+            dirty.addToValue(1);
+            manager.addLog(new ItemValueLog(identifier, preCalcValue, postCalcValue, 0, false)); // Log calculated change
         });
 
         manager.getPlugin().getSLF4JLogger().info("Calculated " + getCalculatedSize() + " Item Values in " + (System.currentTimeMillis()-then) + "ms");
-        manager.getPlugin().getSLF4JLogger().info("There are currently " + manager.countPendingChanges() + " value changes waiting to be saved.");
+        manager.getPlugin().getSLF4JLogger().info(dirty + " Item Values have been changed.");
         lastRecalculation = then;
     }
 

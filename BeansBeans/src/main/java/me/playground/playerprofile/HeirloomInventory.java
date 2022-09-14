@@ -244,14 +244,15 @@ public class HeirloomInventory {
 	/**
 	 * Fires the {@link BeanItemHeirloom#onConsumeItem(PlayerItemConsumeEvent, HeirloomInventory)} method for each {@link BeanItemHeirloom} within the {@link HeirloomInventory}.
 	 *<p>By default, the method does nothing, and has to be overriden when an item is declared.</p>
-	 * @param e
+	 * @return If this event hasn't been cancelled.
 	 */
-	public void doPlayerItemConsumeEvent(PlayerItemConsumeEvent e) {
+	public boolean doPlayerItemConsumeEvent(PlayerItemConsumeEvent e) {
 		this.heirlooms.keySet().forEach((identifier) -> {
 			BeanItemHeirloom heirloom = (BeanItemHeirloom) BeanItemHeirloom.from(identifier);
 			if (heirloom == null) return; // Should never happen, but just in-case.
 			heirloom.onConsumeItem(e, this);
 		});
+		return !e.isCancelled();
 	}
 	
 	/**

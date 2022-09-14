@@ -1,24 +1,21 @@
 package me.playground.discord;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-
 import me.playground.main.Main;
-import me.playground.playerprofile.ProfileStore;
-import me.playground.ranks.Rank;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.MessageEmbed.Field;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 public class DiscordCommandSuggest extends DiscordCommand {
+	public DiscordCommandSuggest(Main plugin, CommandData data) {
+		super(plugin, data);
+	}
 
+	@Override
+	public void onCommand(@NotNull SlashCommandEvent event) {
+
+	}
+/*
 	public DiscordCommandSuggest(Main plugin) {
 		super(plugin, null, new CommandData("suggest", "Suggest a feature to be added to Bean's Beans!")
 				.addOptions(
@@ -114,5 +111,5 @@ public class DiscordCommandSuggest extends DiscordCommand {
 			}
 		}
 	}
-	
+	*/
 }

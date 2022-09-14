@@ -68,7 +68,7 @@ public abstract class RegionBase {
 	public <T extends Flag<V>, V> V getEffectiveFlag(T flag) {
 		V val = (V) flags.get(flag);
 		boolean world = isWorldRegion();
-		if (val == null && !world && flag.inheritsFromWorld())
+		if (val == null && !world && flag.inheritsFromWorld() && (getDefaultValue(flag) == flag.getWorldDefault()))
 			val = rm.getWorldRegion(getWorld()).getFlag(flag);
 		if (val == null)
 			val = getDefaultValue(flag);

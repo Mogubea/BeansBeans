@@ -217,9 +217,9 @@ public class BeanGuiEnchantingTable extends BeanGui {
 
 				if (p.getGameMode() != GameMode.CREATIVE) {
 					pp.getSkills().addExperience(Skill.ENCHANTING, xpCost * 33 + lapisCost * 100); // Only give XP if not in Creative Mode.
-					if (pp.hasPermission(Permission.BYPASS_COSTS_CREATIVE))
-						useLapisLazuli(lapisCost);
-				}
+					useLapisLazuli(lapisCost);
+				} else if (!pp.hasPermission(Permission.BYPASS_COSTS_CREATIVE))
+					useLapisLazuli(lapisCost);
 
 				updateEnchantSlot(); // Done by global gui update
 				p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, table != null ? table.getLocation() : p.getEyeLocation(), 12, 0.5, 0.5, 0.5);
@@ -416,7 +416,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 	@Override
 	public boolean preInventoryClick(InventoryClickEvent e) {
 		e.setCancelled(true);
-		return (!(e.getRawSlot() > i.getSize()) && pp.onCdElseAdd("guiClick", 200, true));
+		return ((!(e.getRawSlot() > i.getSize()) || e.isShiftClick() && itemToModify == null) && pp.onCdElseAdd("guiClick", 200, true));
 	}
 	
 	@Override
@@ -535,7 +535,12 @@ public class BeanGuiEnchantingTable extends BeanGui {
 	
 	private void useLapisLazuli(int count) {
 		if (table == null) return;
-		table.getPersistentDataContainer().set(KEY_LAPIS, PersistentDataType.SHORT, (short)(lapis - count));
+		int remaining = lapis - count;
+		if (remaining < 0)
+			p.getInventory().removeItem(new ItemStack(Material.LAPIS_LAZULI, -remaining));
+		remaining = 0;
+
+		table.getPersistentDataContainer().set(KEY_LAPIS, PersistentDataType.SHORT, (short)remaining);
 		getPlugin().getItemTrackingManager().incrementDemanifestationCount(new ItemStack(Material.LAPIS_LAZULI), DemanifestationReason.FUEL, count);
 		forceUpdateLapis(table);
 	}
@@ -622,8 +627,13 @@ public class BeanGuiEnchantingTable extends BeanGui {
 				confirm.addFakeCost(Component.text(remainingRunicScore + " \u269D Remaining Runic Capacity", BeanColor.ENCHANT), remainingRunicScore >= 0);
 				confirm.addExperienceCost(xpCost);
 
+				// Allow the usage of Lapis Lazuli inside the player's inventory
+				boolean can = true;
+				if (lapisCost > lapis)
+					can = p.getInventory().containsAtLeast(new ItemStack(Material.LAPIS_LAZULI), lapisCost - lapis);
+
 				if (lapisCost > 0)
-					confirm.addFakeCost(Component.text("" + lapisCost + " Lapis Lazuli", BeanColor.ENCHANT_LAPIS), lapis >= lapisCost);
+					confirm.addFakeCost(Component.text("" + lapisCost + " Lapis Lazuli", BeanColor.ENCHANT_LAPIS), can);
 
 				//lore.add(Component.text((remainingRunicScore < 0 ? "\u00a7c\u274c " : "") + "\u00a77Your item has \u00a7r" + remainingRunicScore + " \u269D Runic Capacity\u00a77 remaining.").colorIfAbsent(BeanColor.ENCHANT).decoration(TextDecoration.ITALIC, false));
 

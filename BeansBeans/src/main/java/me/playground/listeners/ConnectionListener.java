@@ -3,16 +3,17 @@ package me.playground.listeners;
 import java.util.ArrayList;
 
 import me.playground.items.lore.Lore;
+import me.playground.items.tracking.ManifestationReason;
 import me.playground.ranks.Permission;
 import me.playground.regions.Region;
 
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.player.*;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 
 import me.playground.items.BeanItem;
 import me.playground.main.Main;
@@ -27,6 +28,7 @@ import me.playground.utils.Calendar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.event.server.ServerListPingEvent;
+import org.bukkit.inventory.ItemStack;
 
 public class ConnectionListener extends EventListener {
 
@@ -97,6 +99,10 @@ public class ConnectionListener extends EventListener {
 		pp.updateCurrentRegion(region);
 
 		permManager.updatePlayerPermissions(p);
+
+		// Disallow game-modes that the player shouldn't be in.
+		if (!p.hasPermission("bean.gm." + p.getGameMode().name().toLowerCase()))
+			p.setGameMode(GameMode.SURVIVAL);
 		
 		p.sendPlayerListHeader(
 				Component.text("\u00a77It is currently \u00a7b" + Calendar.getTimeString(Calendar.getTime(p.getWorld()), true)
@@ -130,6 +136,7 @@ public class ConnectionListener extends EventListener {
 		// New user
 		if (!p.hasPlayedBefore()) {
 			e.joinMessage(!pp.isHidden() ? Component.text("» ", NamedTextColor.GREEN).append(pp.getComponentName()).append(Component.text(" joined the server for the first time!", NamedTextColor.YELLOW)) : null);
+			p.getInventory().addItem(BeanItem.BASIC_REGION_CAPSULE.getTrackedStack(p, ManifestationReason.FIRST_TIME_LOGIN, 1));
 		} else {
 			e.joinMessage(!pp.isHidden() ? Component.text("» ", NamedTextColor.GREEN).append(pp.getComponentName()).append(Component.text(" joined the server!", NamedTextColor.YELLOW)) : null);
 		}
@@ -154,15 +161,21 @@ public class ConnectionListener extends EventListener {
 	@EventHandler
 	public void onPlayerLeave(PlayerQuitEvent e) {
 		final Player p = e.getPlayer();
-		if (!p.hasPermission("bean.gm." + p.getGameMode().name().toLowerCase()))
-			p.setGameMode(GameMode.SURVIVAL);
-		
 		permManager.clearPlayerPermissions(p);
 		permManager.stopPreviewingRank(p);
 		PlayerProfile pp = PlayerProfile.from(p);
 		pp.getStats().setStat(StatType.GENERIC, "lastLogout", (int)(System.currentTimeMillis()/60000L));
 		pp.closeBeanGui(); // Just in case
 		e.quitMessage(!pp.isHidden() ? Component.text("« ", NamedTextColor.RED).append(pp.getComponentName()).append(Component.text(" left the server!", NamedTextColor.YELLOW)) : null);
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onPlayerKick(PlayerKickEvent e) {
+		switch (e.getCause()) {
+			case TIMEOUT -> e.reason(Lore.getBuilder("You timed out! This is usually occurs due to having poor connection with the server.").setCompact().build().getLore().get(0));
+			//case RESOURCE_PACK_REJECTION -> e.reason(Lore.getBuilder("You are required to use the Bean's Beans Resource Pack when playing here.").setCompact().build().getLore().get(0));
+			default -> {}
+		}
 	}
 
 }

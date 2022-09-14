@@ -3,6 +3,7 @@ package me.playground.listeners;
 import java.util.Random;
 
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Listener;
@@ -27,6 +28,20 @@ public abstract class EventListener implements Listener, IPluginRef {
 	@NotNull
 	public Main getPlugin() {
 		return plugin;
+	}
+
+	/**
+	 * Helper for {@link me.playground.main.BlockTracker#isBlockNatural(Block)}.
+	 */
+	public boolean isBlockNatural(Block block) {
+		return plugin.getBlockTracker().isBlockNatural(block);
+	}
+
+	public void setBlockNatural(Block block, boolean natural) {
+		if (natural)
+			plugin.getBlockTracker().untrackBlock(block);
+		else
+			plugin.getBlockTracker().trackBlock(block);
 	}
 	
 	/**

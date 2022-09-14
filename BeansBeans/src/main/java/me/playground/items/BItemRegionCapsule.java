@@ -37,6 +37,11 @@ public class BItemRegionCapsule extends BeanBlock {
 		final RegionManager rm = Main.getRegionManager();
 		final ItemStack itemStack = e.getItemInHand();
 
+		if (pp.getRegions().size() >= pp.getRegionLimit()) {
+			p.sendActionBar(Component.text("\u00a7cYou cannot create anymore regions."));
+			return;
+		}
+
 		if (!rm.getRegions(l).isEmpty()) {
 			p.sendActionBar(Component.text("\u00a7cThis area is already claimed."));
 			return;

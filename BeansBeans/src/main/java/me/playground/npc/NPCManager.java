@@ -83,7 +83,7 @@ public class NPCManager implements IPluginRef {
 	}
 	
 	private NPC<?> createNPC(int creatorId, Location location, NPCType type, String name, int id, JSONObject json) {
-		NPC<?> ack = null;
+		NPC<?> ack;
 		final DedicatedServer server = ((CraftServer)Bukkit.getServer()).getServer();
 		final ServerLevel world = ((CraftWorld)location.getWorld()).getHandle();
 		LivingEntity entityNpc;

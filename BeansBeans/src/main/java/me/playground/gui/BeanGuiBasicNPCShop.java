@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import me.playground.items.BeanItem;
+import me.playground.items.tracking.DemanifestationReason;
 import me.playground.items.tracking.ManifestationReason;
 import me.playground.items.values.ItemValues;
 import me.playground.playerprofile.stats.StatType;
@@ -102,6 +103,7 @@ public class BeanGuiBasicNPCShop extends BeanGui {
 				pp.getStats().addToStat(StatType.NPC_SHOPS, "itemsSold_" + shop.getIdentifier(), quantity);
 				pp.getStats().addToStat(StatType.NPC_SHOPS, "coinsEarned", (int) value);
 				pp.getStats().addToStat(StatType.NPC_SHOPS, "coinsEarned_" + shop.getIdentifier(), (int) value);
+				getPlugin().getItemTrackingManager().incrementDemanifestationCount(toSell, DemanifestationReason.SOLD, quantity);
 				e.getClickedInventory().setItem(e.getSlot(), withSellValue(toSell));
 			}
 			return;
@@ -113,6 +115,12 @@ public class BeanGuiBasicNPCShop extends BeanGui {
 		
 		// Buy single
 		if (e.isLeftClick()) {
+			// TODO: do a better check that takes into consideration any stackable slots
+			if (p.getInventory().firstEmpty() < 0) {
+				p.sendActionBar(Component.text("Your inventory is full.", NamedTextColor.RED));
+				return;
+			}
+
 			if (opt.purchase(p)) {
 				ItemStack item = opt.getOriginalStack();
 				BeanItem custom = opt.getCustomItem();
@@ -121,6 +129,8 @@ public class BeanGuiBasicNPCShop extends BeanGui {
 
 				if (custom != null)
 					item = custom.getTrackedStack(p, ManifestationReason.SHOP, amount.get());
+				else
+					getPlugin().getItemTrackingManager().incrementManifestationCount(item, ManifestationReason.SHOP, amount.get());
 
 				truePlayerInventory.addItem(item).forEach((idx, itemStack) -> amount.addAndGet(-itemStack.getAmount()));
 				pp.getStats().addToStat(StatType.ITEM_PURCHASE, "total", item.getAmount());
