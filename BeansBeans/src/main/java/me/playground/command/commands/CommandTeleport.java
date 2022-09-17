@@ -56,7 +56,11 @@ public class CommandTeleport extends BeanCommand {
 			teleporter.setGameMode(GameMode.SPECTATOR);
 		
 		teleporter.teleport(target, TeleportCause.COMMAND);
-		target.sendMessage(tepp.getComponentName().append(Component.text("\u00a77 teleported to you!")));
+
+		// Don't send a message if spectating or in hide
+		if (teleporter.getGameMode() != GameMode.SPECTATOR && !PlayerProfile.from(teleporter).isHidden())
+			target.sendMessage(tepp.getComponentName().append(Component.text("\u00a77 teleported to you!")));
+
 		if (isOther)
 			sender.sendMessage(Component.text("\u00a77Successfully teleported ").append(tepp.getComponentName()).append(Component.text("\u00a77 to ")).append(tapp.getComponentName()).append(Component.text("\u00a77!")));
 		teleporter.sendMessage(Component.text("\u00a77Successfully teleported to ").append(tapp.getComponentName()).append(Component.text("\u00a77!")));

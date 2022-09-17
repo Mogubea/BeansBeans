@@ -30,46 +30,12 @@ public class SkillCombat extends Skill {
 	}
 	
 	private boolean isPassiveMob(EntityType e) {
-		switch(e) {
-		case AXOLOTL:
-		case BAT:
-		case BEE:
-		case CAT:
-		case CHICKEN:
-		case COD:
-		case COW:
-		case DOLPHIN:
-		case DONKEY:
-		case FOX:
-		case HORSE:
-		case IRON_GOLEM:
-		case LLAMA:
-		case MULE:
-		case MUSHROOM_COW:
-		case OCELOT:
-		case PANDA:
-		case PARROT:
-		case PIG:
-		case POLAR_BEAR:
-		case PUFFERFISH:
-		case RABBIT:
-		case SALMON:
-		case SHEEP:
-		case SKELETON_HORSE:
-		case SNOWMAN:
-		case SQUID:
-		case GLOW_SQUID:
-		case TRADER_LLAMA:
-		case TROPICAL_FISH:
-		case TURTLE:
-		case VILLAGER:
-		case WANDERING_TRADER:
-		case WOLF:
-		case ZOMBIE_HORSE:
-			return true;
-		default:
-			return false;
-		}
+		return switch (e) {
+			case AXOLOTL, BAT, BEE, CAT, CHICKEN, COD, COW, DOLPHIN, DONKEY, FOX, HORSE, IRON_GOLEM, LLAMA, MULE, MUSHROOM_COW, OCELOT, PANDA, PARROT, PIG,
+					POLAR_BEAR, PUFFERFISH, RABBIT, SALMON, SHEEP, SKELETON_HORSE, SNOWMAN, SQUID, GLOW_SQUID, TRADER_LLAMA, TROPICAL_FISH, TURTLE, VILLAGER,
+					WANDERING_TRADER, WOLF, ZOMBIE_HORSE -> true;
+			default -> false;
+		};
 	}
 
 	@Override

@@ -105,8 +105,8 @@ public class EntityListener extends EventListener {
 	public void onEntityDamageRegionChecks(EntityDamageByEntityEvent e) {
 		final Location loc1 = e.getDamager().getLocation();
 		final Location loc2 = e.getEntity().getLocation();
-		final Region r1 = getRegionAt(loc1);
-		final Region r2 = getRegionAt(loc2);
+		final Region regionAttacker = getRegionAt(loc1);
+		final Region regionDefender = getRegionAt(loc2);
 
 		if (e.getEntity() instanceof Player)
 			PlayerProfile.from((Player)e.getEntity()).getHeirlooms().doDamageTakenByEntityEvent(e);
@@ -114,17 +114,26 @@ public class EntityListener extends EventListener {
 			PlayerProfile.from((Player)e.getDamager()).getHeirlooms().doMeleeDamageEvent(e);
 
 		// Against a Player
-		if (e.getEntity() instanceof Player && (e.getDamager() instanceof LivingEntity || e.getDamager() instanceof Projectile)) {
+		if (e.getEntity() instanceof Player && (e.getDamager() instanceof LivingEntity || e.getDamager() instanceof Projectile || e.getDamager() instanceof Tameable)) {
 			boolean fromPlayer = e.getDamager() instanceof Player;
-			// Projectile from Player
-			if ((e.getDamager() instanceof Projectile && ((Projectile)e.getDamager()).getShooter() instanceof Player))
+
+			if ((e.getDamager() instanceof Projectile && ((Projectile)e.getDamager()).getShooter() instanceof Player)) // Projectile fired from the player
+				fromPlayer = true;
+			else if ((e.getDamager() instanceof Tameable tameable) && tameable.isTamed()) { // Tamed entity attack
 				fromPlayer = true;
 
+				// Check for animal protection with tame-ables, if they are protected from being attacked here, don't let them attack.
+				if (regionAttacker.getEffectiveFlag(Flags.PROTECT_ANIMALS)) {
+					e.setCancelled(true);
+					return;
+				}
+			}
+
 			if (fromPlayer) {
-				if (!(r1.getEffectiveFlag(Flags.PVP) && r2.getEffectiveFlag(Flags.PVP))) // XXX: PVP
+				if (!(regionAttacker.getEffectiveFlag(Flags.PVP) && regionDefender.getEffectiveFlag(Flags.PVP)))
 					e.setCancelled(true);
 			} else {
-				e.setDamage(e.getDamage() * r2.getEffectiveFlag(Flags.MOB_DAMAGE_FROM));
+				e.setDamage(e.getDamage() * regionDefender.getEffectiveFlag(Flags.MOB_DAMAGE_FROM));
 				if (e.getDamage() <= 0)
 					e.setCancelled(true);
 			}
@@ -135,23 +144,29 @@ public class EntityListener extends EventListener {
 				p = (Player) ((Projectile)e.getDamager()).getShooter();
 
 			// Check for Animal/Villager Protection
-			if ((e.getEntity() instanceof Villager || e.getEntity() instanceof Animals || (e.getEntity() instanceof Fish fish && fish.isFromBucket())) && r2.getEffectiveFlag(Flags.PROTECT_ANIMALS))
-				if (p == null || !r2.getMember(p).higherThan(MemberLevel.VISITOR))
+			if ((e.getEntity() instanceof Villager || e.getEntity() instanceof Animals || (e.getEntity() instanceof Fish fish && fish.isFromBucket())) && regionDefender.getEffectiveFlag(Flags.PROTECT_ANIMALS))
+				if (p == null || !regionDefender.getMember(p).higherThan(MemberLevel.VISITOR))
 					e.setDamage(0);
 
 			// Check specifically for Villager Protection against Players only
-			if (e.getEntity() instanceof Villager && p != null && !checkRegionPermission(r2, e, p, Flags.VILLAGER_ACCESS))
+			if (e.getEntity() instanceof Villager && p != null && !checkRegionPermission(regionDefender, e, p, Flags.VILLAGER_ACCESS))
 				e.setDamage(0);
 
 			if (e.getDamage() > 0) {
-				e.setDamage(e.getDamage() * r2.getEffectiveFlag(Flags.MOB_DAMAGE_TO));
+				e.setDamage(e.getDamage() * regionDefender.getEffectiveFlag(Flags.MOB_DAMAGE_TO));
 				if (e.getDamage() > 0) {
-					// Prevent tameable entities from dying to anyone except the Owner
 					if (e.getEntity() instanceof Cat || e.getEntity() instanceof Wolf || e.getEntity() instanceof Parrot || e.getEntity() instanceof AbstractHorse) {
 						Tameable tamed = (Tameable) e.getEntity();
-						if (tamed.isTamed()) // TODO: pvp region check
+
+						if (tamed.isTamed()) {
+							// Allow mobs to kill pets, disallow players to kill pets
+							if (p == null || regionAttacker.getEffectiveFlag(Flags.PVP) && regionDefender.getEffectiveFlag(Flags.PVP))
+								return;
+
+							// Otherwise, if not the owner, set the damage to 0.
 							if (tamed.getOwner() != null && tamed.getOwner().getUniqueId() != e.getDamager().getUniqueId())
 								e.setDamage(0);
+						}
 					}
 				}
 			}
@@ -247,7 +262,7 @@ public class EntityListener extends EventListener {
 		if (e.getEntity() instanceof Animals && !((Animals)e.getEntity()).isAdult()) return;
 		
 		final LootTable lootTable = getPlugin().lootManager().getLootTable(e.getEntityType());
-		boolean chargedKill = false, skeletonKill = false, nerfDrops = true, isMonster = e.getEntity() instanceof Monster;
+		boolean chargedKill = false, skeletonKill = false, petKill = false, nerfDrops = true, isMonster = e.getEntity() instanceof Monster;
 		Player p = null;
 		if (e.getEntity().getLastDamageCause() != null) {
 			if ((e.getEntity().getLastDamageCause()) instanceof EntityDamageByEntityEvent) {
@@ -259,18 +274,16 @@ public class EntityListener extends EventListener {
 						skeletonKill = true;
 				} else if (ev.getDamager() instanceof Creeper && ((Creeper)ev.getDamager()).isPowered()) {
 					chargedKill = true;
+				} else if (ev.getDamager() instanceof Tameable tameable && tameable.isTamed()) {
+					petKill = true;
 				}
 			}
 		}
 		
 		if (e.getEntity().getKiller() != null) {
-			nerfDrops = false;
+			nerfDrops = petKill;
 			// If the player kill designation hasn't timed out, check the local area if it's a grinder.
 			p = e.getEntity().getKiller();
-			
-			if (isMonster)
-				if (e.getEntity().fromMobSpawner() || e.getEntity().getNearbyEntities(3, 7, 3).size() > 7)
-					nerfDrops = true;
 		} else if (chargedKill || skeletonKill) {
 			nerfDrops = false;
 			// If the player kill designation timed out, just check for the entities' current player target, which 99.999% of the time they will have one when attempting these special drops.
@@ -279,22 +292,28 @@ public class EntityListener extends EventListener {
 					p = (Player) ((Monster)e.getEntity()).getTarget();
 		}
 
+		// Nerf entities from spawners or in grinders ALWAYS.
+		if (e.getEntity().fromMobSpawner() || e.getEntity().getNearbyEntities(3, 7, 3).size() > 7)
+			nerfDrops = true;
+
 		PlayerProfile pp = p != null ? PlayerProfile.from(p) : null;
 		int looting = p != null ? p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS) : nerfDrops ? -1 : 0;
 		float luck = p != null ? pp.getLuck() : nerfDrops ? -10 : 0;
 
 		if (p != null) {
 			// Do the magic of the custom stuff for this server.
-			// Add to the player's statistics if it's a non grinded mob, add coin drops, apply the multipliers and drop the custom loot.
+			// Add to the player's statistics if it's a non-grinder mob, add coin drops, apply the multipliers and drop the custom loot.
 			final Region region = getRegionAt(e.getEntity().getLocation());
 			
 			// Stats
 			pp.getStats().addToStat(StatType.KILLS, e.getEntityType().name(), 1);
-			pp.getStats().addToStat(StatType.KILLS, "total", 1, true);
+			pp.getStats().addToStat(StatType.KILLS, "total", 1, false);
 			if (skeletonKill) 
-				pp.getStats().addToStat(StatType.KILLS, "withSkeletonShot", 1);
+				pp.getStats().addToStat(StatType.KILLS, "withSkeletonShot", 1, false);
 			if (chargedKill) 
-				pp.getStats().addToStat(StatType.KILLS, "withChargedCreeper", 1);
+				pp.getStats().addToStat(StatType.KILLS, "withChargedCreeper", 1, false);
+			if (petKill)
+				pp.getStats().addToStat(StatType.KILLS, "withVanillaPet", 1, false);
 			
 			// Coin Drops
 			/*if (isMonster) {
