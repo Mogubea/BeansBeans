@@ -28,7 +28,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 	protected static final ItemStack icon_flags = newItem(new ItemStack(Material.LIGHT_BLUE_BANNER), Component.text("Flags", BeanColor.REGION), "\u00a77View the Region Flags");
 	protected static final ItemStack icon_priority = newItem(new ItemStack(Material.CRIMSON_SIGN), Component.text("Priority", BeanColor.REGION));
 	protected static final ItemStack icon_size = newItem(new ItemStack(Material.FILLED_MAP), Component.text("Size", BeanColor.REGION));
-	private static final ItemStack removeCrystal = newItem(BeanItem.REGION_CRYSTAL.getItemStack(), Component.text("Drop Region Crystal", NamedTextColor.RED), Lore.getBuilder("Click to drop this &fRegion Crystal&r as an item.").setCompact().setLineLimit(32).build().getLore().get(0));
+	private static final ItemStack removeCrystal = newItem(BeanItem.REGION_CRYSTAL.getItemStack(), Component.text("Drop Region Crystal", NamedTextColor.RED), Lore.getBuilder("Click to drop this &fRegion Crystal&r as an item.").build().getLoree());
 
 	public BeanGuiRegionMain(Player p) {
 		super(p);
@@ -57,7 +57,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 	@Override
 	public void onInventoryClicked(InventoryClickEvent e) {
 		final int slot = e.getRawSlot();
-		if (slot > 31) return;
+		if (slot > 54) return;
 		final boolean canEdit = getRegion().canModify(p) && !getRegion().isWorldRegion();
 		
 		switch(slot) {
@@ -145,7 +145,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 				new BeanGuiRegionExpansion(p, regionIdx).openInventory();
 				break;*/
 			case 52: // Remove Crystal
-				if (getCrystal() != null && getCrystal().isAlive()) {
+				if (getCrystal() != null && !getCrystal().isRemoved()) {
 					p.getInventory().addItem(BeanItem.REGION_CRYSTAL.getItemStack()).forEach((idx, item) -> getCrystal().getBukkitEntity().getWorld().dropItem(getCrystal().getBukkitEntity().getLocation(), item));
 					getCrystal().remove(Entity.RemovalReason.DISCARDED);
 					getAllViewers(BeanGuiRegion.class).forEach((gui) -> {

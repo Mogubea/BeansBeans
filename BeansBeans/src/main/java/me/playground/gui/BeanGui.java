@@ -317,6 +317,17 @@ public abstract class BeanGui implements IPluginRef {
 	}
 
 	@NotNull
+	protected static ItemStack newItem(@NotNull ItemStack it, Component name, List<Component> lore) {
+		ItemStack i = it.clone();
+		ItemMeta meta = i.getItemMeta();
+		meta.displayName(name.decoration(TextDecoration.ITALIC, false));
+		meta.addItemFlags(ItemFlag.HIDE_DYE, ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+		meta.lore(lore);
+		i.setItemMeta(meta);
+		return i;
+	}
+
+	@NotNull
 	protected static ItemStack newItem(@NotNull ItemStack it, Component name, Component... lore) {
 		ItemStack i = it.clone();
 		ItemMeta meta = i.getItemMeta();
