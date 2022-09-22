@@ -2,8 +2,6 @@ package me.playground.command.commands;
 
 import me.playground.command.BeanCommand;
 import me.playground.command.CommandException;
-import me.playground.gui.stations.BeanGuiAnvil;
-import me.playground.items.values.ItemValues;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.TabCompleter;
@@ -59,7 +57,7 @@ public class CommandValue extends BeanCommand {
 			ItemStack itemToValue = toItemStack(sender, args[0], 1);
 			double value = getPlugin().getItemValueManager().getValue(itemToValue);
 			if (value > 0) {
-				sender.sendMessage(toHover(itemToValue).append(Component.text(" can typically be sold to Beansfolk for ", NamedTextColor.GRAY)).append(Component.text(dec.format(value) + " Coins ").append(Component.text(" each.", NamedTextColor.GRAY))));
+				sender.sendMessage(Component.empty().append(toHover(itemToValue)).append(Component.text(" can typically be sold to Beansfolk for ", NamedTextColor.GRAY)).append(Component.text(dec.format(value) + " Coins", NamedTextColor.GOLD).append(Component.text(" each.", NamedTextColor.GRAY))));
 			} else {
 				sender.sendMessage(Component.text("Beansfolk aren't currently willing to purchase ").append(toHover(itemToValue)).append(Component.text(".", NamedTextColor.GRAY)));
 			}
@@ -71,7 +69,7 @@ public class CommandValue extends BeanCommand {
 	public @Nullable List<String> runTabComplete(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		if (args.length == 1) {
 			List<String> params = isPlayer(sender) ? TabCompleter.completeString(args[0], this.args) : TabCompleter.completeItems(args[0]);
-			if (!isPlayer(sender)) params.addAll(TabCompleter.completeItems(args[0]));
+			if (isPlayer(sender)) params.addAll(TabCompleter.completeItems(args[0]));
 			return params;
 		}
 		return Collections.emptyList();
