@@ -3,14 +3,16 @@ package me.playground.listeners;
 import me.playground.main.Main;
 import org.bukkit.Chunk;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class RedstoneManager {
 
     private final short maxRedstoneActions = 4000; // The maximum amount of actions per second, per chunk, we permit before stopping the Redstone
-    private final Map<Long, Integer> averageChunkRedstoneActions = new TreeMap<>();
-    private final Map<Long, int[]> chunkRedstoneActions = new TreeMap<>();
+    private final Map<Long, Integer> averageChunkRedstoneActions = new HashMap<>();
+    private final Map<Long, int[]> chunkRedstoneActions = new ConcurrentHashMap<>();
     private final Main plugin;
 
     private int currentIdx = 0;
@@ -26,7 +28,7 @@ public class RedstoneManager {
             // With an async timer and a value this active we must make sure the value is always within boundaries.
             currentIdx = (currentIdx + 1 >= secondsToAverage) ? 0 : currentIdx + 1;
 
-            // A clone is required here to prevent ConcurrentModificationExceptions
+            // A clone is required here for entry looping
             Map<Long, int[]> chunkRedstoneActionsCopy = new TreeMap<>(chunkRedstoneActions);
             for (Map.Entry<Long, int[]> entry : chunkRedstoneActionsCopy.entrySet()) {
                 long id = entry.getKey();

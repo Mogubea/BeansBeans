@@ -97,7 +97,7 @@ public class DiscordBot extends ListenerAdapter {
 	public void sendChatMessage(int playerId, String message) {
 		if (!this.isOnline() || !this.isChatClientOnline()) return;
 		try {
-			chatClient.send("[<t:"+(System.currentTimeMillis()/1000L)+":R>] <:augh:1022248059884810291> **"+ProfileStore.from(playerId).getDisplayName()+"**: " + message);
+			chatClient.send("[<t:"+((System.currentTimeMillis()/1000L)-60)+":R>] <:augh:1022248059884810291> **"+ProfileStore.from(playerId).getDisplayName()+"**: " + message);
 		} catch (ErrorResponseException ignored) {
 		}
 	}
@@ -105,7 +105,7 @@ public class DiscordBot extends ListenerAdapter {
 	public void sendChatBroadcast(String broadcastString) {
 		if (!this.isOnline() || !this.isChatClientOnline()) return;
 		try {
-			chatClient.send("[<t:"+(System.currentTimeMillis()/1000L)+":R>] " + broadcastString);
+			chatClient.send("[<t:"+((System.currentTimeMillis()/1000L)-60)+":R>] " + broadcastString);
 		} catch (ErrorResponseException ignored) {
 		}
 	}

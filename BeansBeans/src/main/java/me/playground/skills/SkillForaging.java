@@ -19,8 +19,7 @@ public class SkillForaging extends Skill {
 	
 	@Override
 	protected boolean doSkillEvent(final Skills s, final Event e) {
-		if (!(e instanceof BlockBreakEvent)) return false;
-		final BlockBreakEvent event = (BlockBreakEvent) e;
+		if (!(e instanceof final BlockBreakEvent event)) return false;
 		Block b = event.getBlock();
 		
 		int skillXP = getExperienceValue(b);
@@ -38,7 +37,7 @@ public class SkillForaging extends Skill {
 		
 		return switch (material) {
 			case WARPED_WART_BLOCK, NETHER_WART_BLOCK, WARPED_ROOTS, CRIMSON_ROOTS -> 3;
-			case MUSHROOM_STEM, RED_MUSHROOM_BLOCK, BROWN_MUSHROOM_BLOCK -> 4;
+			case MUSHROOM_STEM, RED_MUSHROOM_BLOCK, BROWN_MUSHROOM_BLOCK, MUDDY_MANGROVE_ROOTS, ROOTED_DIRT -> 4;
 			case VINE, GLOW_LICHEN, WEEPING_VINES -> 4;
 			case TUBE_CORAL, TUBE_CORAL_BLOCK, TUBE_CORAL_FAN, TUBE_CORAL_WALL_FAN, BRAIN_CORAL, BRAIN_CORAL_BLOCK, BRAIN_CORAL_FAN, BRAIN_CORAL_WALL_FAN, BUBBLE_CORAL,
 					BUBBLE_CORAL_BLOCK, BUBBLE_CORAL_FAN, BUBBLE_CORAL_WALL_FAN, FIRE_CORAL, FIRE_CORAL_BLOCK, FIRE_CORAL_FAN, FIRE_CORAL_WALL_FAN, HORN_CORAL, HORN_CORAL_BLOCK,
