@@ -79,7 +79,7 @@ public class BeanGuiRegionFlags extends BeanGuiRegion {
 					i.setItem(slot, getFlagItem(flag));
 					refreshRegionViewers();
 				} else if (flag instanceof FlagMember) {
-					new BeanGuiRegionFlagMember(p, regionIdx, (FlagMember)flag).openInventory();
+					new BeanGuiRegionFlagMember(p, regionIdx, (FlagMember)flag).setCrystal(getCrystal()).openInventory();
 				} else if (flag instanceof FlagFloat) {
 					getPlugin().getSignMenuFactory().requestSignResponse(p, Material.WARPED_WALL_SIGN, (strings -> {
 						getRegion().setFlag(flag, Float.parseFloat(strings[0]));

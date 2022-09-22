@@ -2,6 +2,11 @@ package me.playground.gui;
 
 import java.util.Arrays;
 
+import me.playground.entity.EntityRegionCrystal;
+import me.playground.items.BeanItem;
+import me.playground.items.lore.Lore;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.minecraft.world.entity.Entity;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -14,6 +19,7 @@ import me.playground.regions.flags.MemberLevel;
 import me.playground.utils.BeanColor;
 import me.playground.utils.SignMenuFactory;
 import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.Nullable;
 
 public class BeanGuiRegionMain extends BeanGuiRegion {
 	
@@ -22,6 +28,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 	protected static final ItemStack icon_flags = newItem(new ItemStack(Material.LIGHT_BLUE_BANNER), Component.text("Flags", BeanColor.REGION), "\u00a77View the Region Flags");
 	protected static final ItemStack icon_priority = newItem(new ItemStack(Material.CRIMSON_SIGN), Component.text("Priority", BeanColor.REGION));
 	protected static final ItemStack icon_size = newItem(new ItemStack(Material.FILLED_MAP), Component.text("Size", BeanColor.REGION));
+	private static final ItemStack removeCrystal = newItem(BeanItem.REGION_CRYSTAL.getItemStack(), Component.text("Drop Region Crystal", NamedTextColor.RED), Lore.getBuilder("Click to drop this &fRegion Crystal&r as an item.").setCompact().setLineLimit(32).build().getLore().get(0));
 
 	public BeanGuiRegionMain(Player p) {
 		super(p);
@@ -137,6 +144,17 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 			/*case 31: // Size Button
 				new BeanGuiRegionExpansion(p, regionIdx).openInventory();
 				break;*/
+			case 52: // Remove Crystal
+				if (getCrystal() != null && getCrystal().isAlive()) {
+					p.getInventory().addItem(BeanItem.REGION_CRYSTAL.getItemStack()).forEach((idx, item) -> getCrystal().getBukkitEntity().getWorld().dropItem(getCrystal().getBukkitEntity().getLocation(), item));
+					getCrystal().remove(Entity.RemovalReason.DISCARDED);
+					getAllViewers(BeanGuiRegion.class).forEach((gui) -> {
+						if (gui.getRegion() == getRegion() && gui.getCrystal() == getCrystal())
+							setCrystal(null);
+					});
+					p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.25F, 0.8F);
+				}
+				return;
 		default:
 			super.onInventoryClicked(e);
 			return;
@@ -169,6 +187,13 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 		
 		i.setContents(contents);
 		super.onInventoryOpened();
+	}
+
+	@Override
+	public BeanGuiRegion setCrystal(@Nullable EntityRegionCrystal crystal) {
+		this.crystal = crystal;
+		i.setItem(52, getCrystal() != null ? removeCrystal : rBlank);
+		return this;
 	}
 
 	@Override

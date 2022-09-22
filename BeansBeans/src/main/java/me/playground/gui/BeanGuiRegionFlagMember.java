@@ -69,7 +69,7 @@ public class BeanGuiRegionFlagMember extends BeanGuiRegion {
 		}
 		
 		p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
-		new BeanGuiRegionFlags(p, regionIdx).openInventory();
+		new BeanGuiRegionFlags(p, regionIdx).setCrystal(getCrystal()).openInventory();
 	}
 	
 	@Override
