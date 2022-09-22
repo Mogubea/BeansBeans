@@ -362,7 +362,7 @@ public class PlayerListener extends EventListener {
 		final Material blockMat = block.getType();
 
 		// Stick to quickly check protection bounds
-		if (e.getItem() != null && e.getItem().getType() == Material.STICK && e.useInteractedBlock().equals(Result.DENY)) {
+		if (e.getItem() != null && e.getItem().getType() == Material.STICK) {
 			p.sendActionBar(region.isWorldRegion() ?
 					Component.text("This block is not protected by any player regions.", NamedTextColor.GRAY) :
 					Component.text("This block is protected by ", NamedTextColor.GRAY).append(region.getColouredName()).append(Component.text(".", NamedTextColor.GRAY)));
