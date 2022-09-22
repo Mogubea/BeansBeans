@@ -149,8 +149,10 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 					p.getInventory().addItem(BeanItem.REGION_CRYSTAL.getItemStack()).forEach((idx, item) -> getCrystal().getBukkitEntity().getWorld().dropItem(getCrystal().getBukkitEntity().getLocation(), item));
 					getCrystal().remove(Entity.RemovalReason.DISCARDED);
 					getAllViewers(BeanGuiRegion.class).forEach((gui) -> {
-						if (gui.getRegion() == getRegion() && gui.getCrystal() == getCrystal())
+						if (gui.getRegion() == getRegion() && gui.getCrystal() == getCrystal()) {
 							setCrystal(null);
+							refresh();
+						}
 					});
 					p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.25F, 0.8F);
 				}
@@ -184,7 +186,8 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 			iPriority.lore(Arrays.asList(Component.text("\u00a7f" + getRegion().getPriority())));
 		
 		contents[25] = iPriority;
-		
+		contents[52] = getCrystal() != null ? removeCrystal : rBlank;
+
 		i.setContents(contents);
 		super.onInventoryOpened();
 	}
@@ -192,7 +195,6 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 	@Override
 	public BeanGuiRegion setCrystal(@Nullable EntityRegionCrystal crystal) {
 		this.crystal = crystal;
-		i.setItem(52, getCrystal() != null ? removeCrystal : rBlank);
 		return this;
 	}
 
