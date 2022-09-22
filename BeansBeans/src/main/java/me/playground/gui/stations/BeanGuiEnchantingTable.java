@@ -536,9 +536,10 @@ public class BeanGuiEnchantingTable extends BeanGui {
 	private void useLapisLazuli(int count) {
 		if (table == null) return;
 		int remaining = lapis - count;
-		if (remaining < 0)
+		if (remaining < 0) {
 			p.getInventory().removeItem(new ItemStack(Material.LAPIS_LAZULI, -remaining));
-		remaining = 0;
+			remaining = 0;
+		}
 
 		table.getPersistentDataContainer().set(KEY_LAPIS, PersistentDataType.SHORT, (short)remaining);
 		getPlugin().getItemTrackingManager().incrementDemanifestationCount(new ItemStack(Material.LAPIS_LAZULI), DemanifestationReason.FUEL, count);
