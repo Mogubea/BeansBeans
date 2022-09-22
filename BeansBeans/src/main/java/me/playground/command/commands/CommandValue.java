@@ -8,6 +8,7 @@ import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.TabCompleter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -23,7 +24,7 @@ import java.util.List;
 public class CommandValue extends BeanCommand {
 
 	public CommandValue(Main plugin) {
-		super(plugin, "bean.cmd.value", false, "value", "itemvalue");
+		super(plugin, "bean.cmd.value", true, "value", "itemvalue");
 		description = "Check the sell value of your items!";
 	}
 
@@ -31,18 +32,21 @@ public class CommandValue extends BeanCommand {
 
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
-		Player p = (Player) sender;
+		boolean isPlayer = isPlayer(sender);
+
+		if (!isPlayer && args.length < 1)
+			throw new CommandException(sender, Component.text("Usage: ", NamedTextColor.RED).append(Component.text("/value <item>", NamedTextColor.WHITE)));
 
 		boolean mainHand = args.length == 0 || args[0].equalsIgnoreCase("hand");
-		if (mainHand || args[0].equalsIgnoreCase("offhand")) {
-			ItemStack hand = mainHand ? p.getInventory().getItemInMainHand() : p.getInventory().getItemInOffHand();
+		if (isPlayer && (mainHand || args[0].equalsIgnoreCase("offhand"))) {
+			ItemStack hand = mainHand ? ((Player)sender).getInventory().getItemInMainHand() : ((Player)sender).getInventory().getItemInOffHand();
 
 			if (hand.getType().isAir())
-				throw new CommandException(p, "Hold the item you wish to get the value of.");
+				throw new CommandException(sender, "Either hold the item you wish to get the value of, or specify the item in the command.");
 
-			p.sendMessage(Component.text("\u00a77Your ").append(toHover(hand)).append(Component.text("\u00a77 can be sold for \u00a76" + dec.format(getPlugin().getItemValueManager().getTotalValue(hand, true)) + " Coins\u00a77.")));
-		} else if (args[0].equalsIgnoreCase("inventory") || args[0].equalsIgnoreCase("inv")) {
-			Inventory inv = p.getInventory();
+			sender.sendMessage(Component.text("\u00a77Your ").append(toHover(hand)).append(Component.text("\u00a77 can be sold for \u00a76" + dec.format(getPlugin().getItemValueManager().getTotalValue(hand, true)) + " Coins\u00a77.")));
+		} else if (isPlayer && (args[0].equalsIgnoreCase("inventory") || args[0].equalsIgnoreCase("inv"))) {
+			Inventory inv = ((Player)sender).getInventory();
 			float val = 0;
 
 			for (ItemStack item : inv.getContents()) {
@@ -50,15 +54,26 @@ public class CommandValue extends BeanCommand {
 				val += getPlugin().getItemValueManager().getTotalValue(item, true);
 			}
 
-			p.sendMessage(Component.text("\u00a77Your inventory can be sold for \u00a76" + dec.format(val) + " Coins\u00a77."));
+			sender.sendMessage(Component.text("\u00a77Your inventory can be sold for \u00a76" + dec.format(val) + " Coins\u00a77."));
+		} else {
+			ItemStack itemToValue = toItemStack(sender, args[0], 1);
+			double value = getPlugin().getItemValueManager().getValue(itemToValue);
+			if (value > 0) {
+				sender.sendMessage(toHover(itemToValue).append(Component.text(" can typically be sold to Beansfolk for ", NamedTextColor.GRAY)).append(Component.text(dec.format(value) + " Coins ").append(Component.text(" each.", NamedTextColor.GRAY))));
+			} else {
+				sender.sendMessage(Component.text("Beansfolk aren't currently willing to purchase ").append(toHover(itemToValue)).append(Component.text(".", NamedTextColor.GRAY)));
+			}
 		}
 		return true;
 	}
 
 	@Override
 	public @Nullable List<String> runTabComplete(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
-		if (args.length == 1)
-			return TabCompleter.completeString(args[0], this.args);
+		if (args.length == 1) {
+			List<String> params = isPlayer(sender) ? TabCompleter.completeString(args[0], this.args) : TabCompleter.completeItems(args[0]);
+			if (!isPlayer(sender)) params.addAll(TabCompleter.completeItems(args[0]));
+			return params;
+		}
 		return Collections.emptyList();
 	}
 	

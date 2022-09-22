@@ -14,7 +14,7 @@ public enum PlayerSetting {
 	FLIGHT("Flight Test", "bean.cmd.fly", false, "Toggle flight."),
 	SHOW_ACHIEVEMENTS("Achievements in Chat", true, "\u00a77Display whenever a player gets an \u00a76Achievement\u00a77."),
 	SHOW_DEATH_MESSAGES("Death Messages in Chat", true, "\u00a77Display whenever a player kicks the bucket."),
-	SHOW_JOB_MESSAGES("Skill Level Up Messages in Chat", true, "\u00a77Display whenever a player levels up", "\u00a77a skill."),
+	SHOW_LEVEL_UP_MESSAGES("Skill Level Up Messages in Chat", true, "\u00a77Display whenever a player levels up", "\u00a77a skill."),
 	QUICK_WOOL_DYE("Quick Wool Dye (Plebeian+)", Permission.QUICK_WOOL_DYE, true, "\u00a77Right Click a Block of Wool or Carpet","\u00a77with a dye to change its colour."),
 	SHOW_SIDEBAR("Show Sidebar", true, "\u00a77Display the Sidebar on the right."),
 	HIDE("Hide Test", "bean.cmd.hide", false, "\u00a7b/hide\u00a77 toggle test."),

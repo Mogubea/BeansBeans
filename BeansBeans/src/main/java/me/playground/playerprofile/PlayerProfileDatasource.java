@@ -383,7 +383,7 @@ public class PlayerProfileDatasource extends PrivateDatasource {
         } finally {
             close(rs, c, s);
         }
-        return null;
+        return new Skills(pp);
     }
 
     /**

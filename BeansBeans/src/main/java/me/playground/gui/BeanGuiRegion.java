@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import me.playground.entity.EntityRegionCrystal;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 
 import me.playground.regions.Region;
@@ -19,6 +19,7 @@ import me.playground.utils.BeanColor;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class BeanGuiRegion extends BeanGui {
 
@@ -37,7 +38,8 @@ public abstract class BeanGuiRegion extends BeanGui {
 	protected final RegionManager rm;
 	protected int regionIdx;
 	final protected List<Region> localRegions;
-	
+	private EntityRegionCrystal crystal; // The crystal used to access this GUI.
+
 	public BeanGuiRegion(Player p) {
 		super(p);
 		
@@ -61,14 +63,6 @@ public abstract class BeanGuiRegion extends BeanGui {
 	}
 
 	@Override
-	public void onInventoryClosed(InventoryCloseEvent e) {
-	}
-
-	@Override
-	public void onInventoryOpened() {
-	}
-
-	@Override
 	public void onInventoryClicked(InventoryClickEvent e) {
 		if (e.getRawSlot() == 4) {
 			if (getRegions().size() <= 1) return;
@@ -78,6 +72,13 @@ public abstract class BeanGuiRegion extends BeanGui {
 			updateRegionItems();
 			openInventory();
 		}
+
+		/*if (e.getRawSlot() == 53) {
+			if (getCrystal() != null) {
+				p.getInventory().addItem(BeanItem.REGION_CRYSTAL.getItemStack()).forEach((idx, item) -> crystal.getBukkitEntity().getWorld().dropItem(crystal.getBukkitEntity().getLocation(), item));
+				crystal.remove(Entity.RemovalReason.DISCARDED);
+			}
+		}*/
 	}
 
 	@Override
@@ -137,6 +138,16 @@ public abstract class BeanGuiRegion extends BeanGui {
 	@NotNull
 	public List<Region> getRegions() {
 		return localRegions;
+	}
+
+	public BeanGuiRegion setCrystal(@Nullable EntityRegionCrystal crystal) {
+		this.crystal = crystal;
+		return this;
+	}
+
+	@Nullable
+	private EntityRegionCrystal getCrystal() {
+		return crystal;
 	}
 
 	/**

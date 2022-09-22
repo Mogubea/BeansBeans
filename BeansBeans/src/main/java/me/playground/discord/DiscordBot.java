@@ -94,18 +94,19 @@ public class DiscordBot extends ListenerAdapter {
 		return "https://cravatar.eu/helmavatar/" + ProfileStore.from(playerId, false).getRealName()+"/64.png";
 	}
 	
-	public void sendWebhookMessage(int playerId, String message) {
+	public void sendChatMessage(int playerId, String message) {
 		if (!this.isOnline() || !this.isChatClientOnline()) return;
 		try {
-			if (lastId != playerId) {
-				final String name = ProfileStore.from(playerId, false).getDisplayName();
-				Icon icon = getHeadIcon(playerId);
-				hook.getManager().setName(name).setAvatar(icon).queue(woo -> chatClient.send(message));
-				lastId = playerId;
-			} else {
-				chatClient.send(message);
-			}
-		} catch (ErrorResponseException e) { // Just in-case there's a situation where discord doesn't respond
+			chatClient.send("[<t:"+(System.currentTimeMillis()/1000L)+":R>] <:augh:1022248059884810291> **"+ProfileStore.from(playerId).getDisplayName()+"**: " + message);
+		} catch (ErrorResponseException ignored) {
+		}
+	}
+
+	public void sendChatBroadcast(String broadcastString) {
+		if (!this.isOnline() || !this.isChatClientOnline()) return;
+		try {
+			chatClient.send("[<t:"+(System.currentTimeMillis()/1000L)+":R>] " + broadcastString);
+		} catch (ErrorResponseException ignored) {
 		}
 	}
 	
@@ -172,7 +173,7 @@ public class DiscordBot extends ListenerAdapter {
 
 	private void attemptChatClientConnection(boolean first) {
 		try {
-			this.hook = chatChannel().createWebhook("Chat Webhook").complete(false);
+			this.hook = chatChannel().createWebhook("Bean's Beans Server Chat").setAvatar(Icon.from(new URL("https://img.icons8.com/nolan/344/filled-chat.png").openStream())).complete(false);
 			this.chatClient = WebhookClient.withId(hook.getIdLong(), hook.getToken());
 		} catch (RateLimitedException ex) {
 			if (first)
@@ -182,6 +183,8 @@ public class DiscordBot extends ListenerAdapter {
 			getPlugin().getServer().getScheduler().runTaskLaterAsynchronously(getPlugin(), () -> {
 				attemptChatClientConnection(false);
 			}, ex.getRetryAfter() / 50);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 

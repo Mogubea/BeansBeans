@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import me.playground.utils.TabCompleter;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -42,6 +43,8 @@ public class CommandGod extends BeanCommand {
 
 	@Override
 	public @Nullable List<String> runTabComplete(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
+		if (args.length == 1 && sender.hasPermission("bean.cmd.god.others"))
+			return TabCompleter.completeOnlinePlayer(sender, args[0]);
 		return Collections.emptyList();
 	}
 	

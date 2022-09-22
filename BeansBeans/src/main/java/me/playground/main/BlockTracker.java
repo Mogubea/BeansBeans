@@ -2,7 +2,6 @@ package me.playground.main;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -38,7 +37,7 @@ public class BlockTracker {
      * @return true or false
      */
     public boolean isBlockNatural(Block block) {
-        return trackedBlocks.get(block.getWorld()).contains(getBlockKey(block));
+        return !trackedBlocks.get(block.getWorld()).contains(getBlockKey(block));
     }
 
     /**

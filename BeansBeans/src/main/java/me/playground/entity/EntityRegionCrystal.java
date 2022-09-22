@@ -18,7 +18,7 @@ import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
-import org.bukkit.craftbukkit.v1_18_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -105,7 +105,7 @@ public class EntityRegionCrystal extends ArmorStand implements IBeanEntity {
 	@Override
 	public InteractionResult interactAt(Player entityhuman, Vec3 vec3d, InteractionHand enumhand) {
 		org.bukkit.entity.Player player = (org.bukkit.entity.Player) entityhuman.getBukkitEntity();
-		new BeanGuiRegionMain(player).openInventory();
+		new BeanGuiRegionMain(player).setCrystal(this).openInventory();
 
 		return InteractionResult.SUCCESS;
 	}

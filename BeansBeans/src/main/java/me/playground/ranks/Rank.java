@@ -96,7 +96,7 @@ public enum Rank {
 			"bean.cmd.teleport.others",
 			"bean.cmd.home.others",
 			"bean.region.modifyothers",
-			Flags.BLOCK_SPREAD.getPermission(),
+			Flags.GRASS_SPREAD.getPermission(),
 			Flags.OBSIDIAN_FORMATION.getPermission(),
 			"bean.gm.moderator"),
 	ADMINISTRATOR(90, 0x3378FF, 500, 500, 546771706769965070L,

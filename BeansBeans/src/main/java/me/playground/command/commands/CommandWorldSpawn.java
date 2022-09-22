@@ -17,15 +17,14 @@ import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.utils.TabCompleter;
 import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.NotNull;
 
 public class CommandWorldSpawn extends BeanCommand {
-	
+
 	public CommandWorldSpawn(Main plugin) {
 		super(plugin, false, "wspawn", "worldspawn");
 		description = "Warp to the world's spawnpoint!";
 	}
-	
+
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		final Player p = (Player) sender;
@@ -39,13 +38,8 @@ public class CommandWorldSpawn extends BeanCommand {
 	@Override
 	public @Nullable List<String> runTabComplete(@Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
 		if (args.length == 1 && sender.hasPermission("bean.cmd.world"))
-			return TabCompleter.completeString(args[0], TabCompleter.completeObject(args[0], w -> ((World)w).getName(), Bukkit.getWorlds()));
+			return TabCompleter.completeString(args[0], TabCompleter.completeObject(args[0], World::getName, Bukkit.getWorlds()));
 		return Collections.emptyList();
-	}
-	
-	@Override
-	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
-		return Component.text("\u00a7cUsage: \u00a7f/"+str);
 	}
 
 }

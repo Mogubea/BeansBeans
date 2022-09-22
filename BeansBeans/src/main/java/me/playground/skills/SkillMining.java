@@ -42,14 +42,11 @@ public class SkillMining extends Skill {
 		
 		if (!b.isValidTool(i)) return false;
 		boolean isSilk = i.containsEnchantment(Enchantment.SILK_TOUCH);
-		
-		// Allow for XP and Skill Abilities to work on Ores that have been placed before, and disallow the obtaining of XP when Silk Touching an Ore.
-		boolean isOre = (b.getType().name().endsWith("ORE") || b.getType().equals(Material.GILDED_BLACKSTONE) || b.getType().equals(Material.ANCIENT_DEBRIS));
-		if ((isOre && isSilk) || (b.hasMetadata("placed") && !isOre)) return false;
+
 		int skillXP = getExperienceValue(b);
 		if (skillXP < 1) return false;
 		
-		return blockBreak ? onBlockBreak(s, (BlockBreakEvent) e, skillXP) : onBlockDrop(s, (BlockDropItemEvent) e, isOre, isSilk);
+		return blockBreak ? onBlockBreak(s, (BlockBreakEvent) e, skillXP) : onBlockDrop(s, (BlockDropItemEvent) e, isSilk);
 	}
 	
 	/**
@@ -70,7 +67,7 @@ public class SkillMining extends Skill {
 	/**
 	 * Handles any drop changes
 	 */
-	private boolean onBlockDrop(Skills s, BlockDropItemEvent e, boolean isOre, boolean isSilk) {
+	private boolean onBlockDrop(Skills s, BlockDropItemEvent e, boolean isSilk) {
 		// Extra Item Drop
 		/*double chance = -1;
 		int bonusDrops = 0;

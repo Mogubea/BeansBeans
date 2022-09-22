@@ -37,11 +37,15 @@ public abstract class EventListener implements Listener, IPluginRef {
 		return plugin.getBlockTracker().isBlockNatural(block);
 	}
 
-	public void setBlockNatural(Block block, boolean natural) {
-		if (natural)
-			plugin.getBlockTracker().untrackBlock(block);
-		else
+	public void setBlockPlaced(Block block) {
+		setBlockPlaced(block, true);
+	}
+
+	public void setBlockPlaced(Block block, boolean placed) {
+		if (placed)
 			plugin.getBlockTracker().trackBlock(block);
+		else
+			plugin.getBlockTracker().untrackBlock(block);
 	}
 	
 	/**

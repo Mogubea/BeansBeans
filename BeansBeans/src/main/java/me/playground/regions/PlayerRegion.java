@@ -19,8 +19,8 @@ public class PlayerRegion extends Region {
 	private BlockVector originPoint;
 	private String displayOverride;
 
-	public PlayerRegion(RegionManager rm, int ownerId, int id, String name, World world, BlockVector min, BlockVector max, @NotNull BlockVector originPoint) {
-		super(rm, id, ownerId, 0, 0, name, world, min, max);
+	protected PlayerRegion(RegionManager rm, int ownerId, int id, int priority, String name, World world, BlockVector min, BlockVector max, @NotNull BlockVector originPoint) {
+		super(rm, id, ownerId, priority, 0, name, world, min, max);
 		this.originPoint = originPoint;
 		checkName();
 	}

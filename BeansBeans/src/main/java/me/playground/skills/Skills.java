@@ -142,11 +142,13 @@ public class Skills {
 			getProfile().getPlayer().playSound(getProfile().getPlayer().getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.75F, 1F);
 			notifyLevelUp(skill);
 			Bukkit.getOnlinePlayers().forEach(player -> {
-				if (PlayerProfile.from(player).isSettingEnabled(PlayerSetting.SHOW_JOB_MESSAGES)) {
+				if (PlayerProfile.from(player).isSettingEnabled(PlayerSetting.SHOW_LEVEL_UP_MESSAGES)) {
 					player.sendMessage(Component.text("\u00a76\u2605 ").append(getProfile().getComponentName()).append(Component.text("\u00a77 just reached ")
 							.append(Component.text("\u00a7lGrade " + getSkillInfo(skill).getGrade(), skill.getColour()).append(Component.text("\u00a77 in ")).append(skill.toComponent()))));
 				}
 			});
+
+			Main.getInstance().getDiscord().sendChatBroadcast(":star: **" + getProfile().getDisplayName() + "** just reached **Grade " + getSkillInfo(skill).getGrade() + "** in ** " + skill.getName() + "**!");
 		} else if (!notifyingLevelUp) { // Not Leveling Up
 			if (lastSkill != skill)
 				recentAccumulation = 0;
@@ -245,9 +247,15 @@ public class Skills {
 			Bukkit.getScheduler().cancelTask(eck);
 		}, 120);
 	}
-	
+
+	@NotNull
 	public SkillInfo getSkillInfo(Skill skill) {
-		return skills.get(skill);
+		SkillInfo info = skills.get(skill);
+		if (info == null) {
+			info = new SkillInfo();
+			skills.put(skill, info);
+		}
+		return info;
 	}
 	
 	private final static DecimalFormat dff = new DecimalFormat("#,###");

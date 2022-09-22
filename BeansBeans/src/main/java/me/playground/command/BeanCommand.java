@@ -1,13 +1,11 @@
 package me.playground.command;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import javax.annotation.Nullable;
 
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -43,9 +41,12 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	protected final String permissionString;
 	protected final boolean canConsoleRun;
 	protected final String[] aliases;
+
+	protected final List<Component> usageHelp = new ArrayList<>();
 	
 	protected final int minArgs;
-	
+
+	private Component usageComponent;
 	protected String description = "";
 	protected int cooldown;
 	
@@ -77,7 +78,6 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	
 	public abstract boolean runCommand(@Nullable PlayerProfile profile, @NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args);
 	public abstract @Nullable List<String> runTabComplete(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args);
-	public abstract Component getUsage(@NotNull CommandSender sender, @NotNull String str, @NotNull String[] args);
 	
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args) {
@@ -133,12 +133,31 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 		
 		return runTabComplete(sender, cmd, str, newArgs);
 	}
+
+	protected Component getUsage(@NotNull CommandSender sender, @NotNull String str, @NotNull String[] args) {
+		if (usageComponent != null) return usageComponent;
+
+		Component usage = Component.text("Usage: ", NamedTextColor.RED).append(Component.text("/" + str, NamedTextColor.WHITE).hoverEvent(Component.text(getDescription())));
+		int length = args.length;
+		for (int x = -1; ++x < length;)
+			usage = usage.append(Component.text(" " + args[x], NamedTextColor.WHITE).hoverEvent(usageHelp.get(x).hoverEvent()));
+
+		int helpLength = usageHelp.size();
+
+		for (int x = length-1; ++x < helpLength;)
+			usage = usage.append(usageHelp.get(x));
+
+		return usageComponent = usage;
+	}
 	
 	public String getPermissionString() {
 		return permissionString;
 	}
-	
+
+	@NotNull
 	public String getDescription() {
+		if (description == null)
+			description = "A Bean's Beans command.";
 		return description;
 	}
 
@@ -320,7 +339,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 		final boolean ra = !isPlayer(sender) || getRank(sender).power() > getRank(target).power();
 		if (!ra)
 			throw new CommandException(sender, err);
-		return ra;
+		return true;
 	}
 	
 	protected boolean checkRank(CommandSender sender, Rank rank) {

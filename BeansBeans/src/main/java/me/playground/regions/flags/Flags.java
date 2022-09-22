@@ -176,12 +176,30 @@ public final class Flags {
 					Component.text("\u00a7aThis will allow CROP_ACCESS members to"),
 					Component.text("\u00a7aharvest crops without right clicking."));
 
-	public static final FlagBoolean BLOCK_SPREAD		= register(new FlagBoolean("block-spread", "Block Spreading", true))
+	public static final FlagBoolean GRASS_SPREAD 		= register(new FlagBoolean("grass-spread", "Grass Spreading", true))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
-			.setNeedsPermission()
-			.setDescription(
-					Component.text("\u00a77Blocks such as \u00a72vines\u00a77, \u00a7asugar canes"),
-					Component.text("\u00a77and \u00a7cmushrooms\u00a77 can grow and spread."));
+			.setDescription(Lore.fastBuild(false, 40, "Grass can spread across dirt."));
+
+	public static final FlagBoolean SCULK_SPREAD		= register(new FlagBoolean("sculk-spread", "Sculk Spreading", false))
+			.setPlayerDefault(true)
+			.setFlagCategory(Flag.FlagCategory.BLOCKS)
+			.setDescription(Lore.fastBuild(true, 40, "&eSkulk Catalysts&r can spread &bSculk&r by replacing blocks like &#444444Stone&r and &#888833Dirt&r when a nearby mob dies."));
+
+	public static final FlagBoolean CROP_GROWTH			= register(new FlagBoolean("crop-growth", "Crop Growth", true))
+			.setFlagCategory(Flag.FlagCategory.BLOCKS)
+			.setDescription(Lore.fastBuild(true, 40, "Single block crops like &#998844Wheat&r or &#cccc99Potatoes&r can grow."));
+
+	public static final FlagBoolean BIG_CROP_GROWTH		= register(new FlagBoolean("big-crop-growth", "Multi-Block Crop Growth", true))
+			.setFlagCategory(Flag.FlagCategory.BLOCKS)
+			.setDescription(Lore.fastBuild(true, 40, "Multi block crops like &#aaddbbSugar Cane&r, &#88cc99Bamboo&r or &aMelons&r can grow."));
+
+	public static final FlagBoolean VINE_GROWTH			= register(new FlagBoolean("vine-growth", "Vine Growth", true))
+			.setFlagCategory(Flag.FlagCategory.BLOCKS)
+			.setDescription(Lore.fastBuild(false, 40, "Vine based blocks can grow and yield crops."));
+
+	public static final FlagBoolean MUSHROOM_GROWTH		= register(new FlagBoolean("mushroom-growth", "Mushroom Growth", true))
+			.setFlagCategory(Flag.FlagCategory.BLOCKS)
+			.setDescription(Lore.fastBuild(false, 40, "Mushrooms can grow and spread around in dark places or on &dMycelium&r."));
 
 	public static final FlagBoolean PISTONS				= register(new FlagBoolean("piston", "Pistons", true, false, false))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
@@ -233,7 +251,7 @@ public final class Flags {
 			.setDescription(Lore.fastBuild(false, 40, "The colour that this region will show up as on the Dynmap."));
 
 	public static final FlagColour 	NAME_COLOUR			= register(new FlagColour("name-colour", "Name Colour", BeanColor.REGION.value(), BeanColor.REGION_WORLD.value(), false))
-			.setPlayerDefault(0x66cfbb)
+			.setPlayerDefault(BeanColor.REGION_PLAYER.value())
 			.setFlagCategory(Flag.FlagCategory.MISCELLANEOUS)
 			.setNeedsPermission()
 			.setConsumerOnUpdate(Region::updateColouredName)

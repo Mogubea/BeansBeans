@@ -76,6 +76,7 @@ public class CommandManager {
 //		registerCommand(new CommandBestiary(plugin));
 		registerCommand(new CommandLoot(plugin));
 		registerCommand(new CommandVote(plugin));
+		registerCommand(new CommandShowregions(plugin));
 		
 		// Other Commands
 		registerCommand(new CommandWho(plugin));

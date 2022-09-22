@@ -26,7 +26,6 @@ import me.playground.regions.flags.Flags;
 import me.playground.utils.TabCompleter;
 import me.playground.worlds.WorldManager;
 import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.NotNull;
 
 public class CommandWorld extends BeanCommand {
 	
@@ -114,7 +113,7 @@ public class CommandWorld extends BeanCommand {
 		if (args.length == 1)
 			return TabCompleter.completeString(args[0], this.subCmds);
 		if (!(args[0].equals("create")) && args.length == 2)
-			return TabCompleter.completeString(args[1], TabCompleter.completeObject(args[1], w -> ((World)w).getName(), Bukkit.getWorlds()));
+			return TabCompleter.completeString(args[1], TabCompleter.completeObject(args[1], World::getName, Bukkit.getWorlds()));
 		if (args[0].equals("create")) {
 			if (args.length == 3)
 				return TabCompleter.completeEnum(args[2], WorldType.class);
@@ -127,10 +126,4 @@ public class CommandWorld extends BeanCommand {
 		
 		return Collections.emptyList();
 	}
-	
-	@Override
-	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
-		return null;
-	}
-
 }

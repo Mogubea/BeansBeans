@@ -138,10 +138,12 @@ public class BeanGuiAnvil extends BeanGui {
 
 		ItemStack item1 = i.getItem(modifySlot);
 		if (item1 != null)
-			e.getPlayer().getInventory().addItem(item1).forEach((index, item) -> e.getPlayer().getWorld().dropItem(e.getPlayer().getLocation(), item));
+			p.getInventory().addItem(item1).forEach((index, item) -> e.getPlayer().getWorld().dropItem(e.getPlayer().getLocation(), item));
 		ItemStack item2 = i.getItem(infuseSlot);
 		if (item2 != null)
-			e.getPlayer().getInventory().addItem(item2).forEach((index, item) -> e.getPlayer().getWorld().dropItem(e.getPlayer().getLocation(), item));
+			p.getInventory().addItem(item2).forEach((index, item) -> e.getPlayer().getWorld().dropItem(e.getPlayer().getLocation(), item));
+		p.updateInventory();
+		p.saveData();
 	}
 
 	@Override
@@ -529,7 +531,7 @@ public class BeanGuiAnvil extends BeanGui {
 
 						// Increment the Coin cost of the repair based on % and durability repaired
 						int newDuraInt = (int) ((float) maxDuraInt * (newDurability / 100f));
-						repairCoinCost = (int) (((repairCost * 10) + ((newDuraInt - curDuraInt) * 2)) * (1 + (0.25 * enchantIrreparable)));
+						repairCoinCost = (int) (((repairCost * 10) + ((newDuraInt - curDuraInt) * 0.5)) * (1 + (0.25 * enchantIrreparable)));
 
 						BeanItem.setDurability(resultItem, (int) (BeanItem.getMaxDurability(resultItem) * (newDurability / 100f)));
 						BeanItem.setDurability(resultItem2, (int) (BeanItem.getMaxDurability(resultItem2) * (newDurability/100f)));
@@ -623,9 +625,9 @@ public class BeanGuiAnvil extends BeanGui {
 						case UNCOMMON -> { newCost[x] *= 1.1; coinCost[x] *= 1.1; }
 						case RARE -> { newCost[x] *= 1.25; coinCost[x] *= 1.25; }
 						case EPIC -> { newCost[x] *= 1.5; coinCost[x] *= 1.5; }
-						case LEGENDARY, EVENT, SPECIAL -> { newCost[x] *= 2; coinCost[x] *= 2; }
-						case MYTHIC, ASTRAL -> { newCost[x] *= 3; coinCost[x] *= 3; }
-						case IRIDESCENT -> { newCost[x] *= 4; coinCost[x] *= 4; }
+						case LEGENDARY, EVENT, SPECIAL -> { newCost[x] *= 1.75; coinCost[x] *= 1.75; }
+						case MYTHIC, ASTRAL -> { newCost[x] *= 3; coinCost[x] *= 2; }
+						case IRIDESCENT -> { newCost[x] *= 4; coinCost[x] *= 3; }
 					}
 
 					// Finalise the purchase

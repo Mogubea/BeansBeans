@@ -57,7 +57,7 @@ public class CommandI extends BeanCommand {
 	
 	@Override
 	public Component getUsage(@Nonnull CommandSender sender, @NotNull String str, String @NotNull [] args) {
-		return Component.text("\u00a7cUsage: /\u00a7f"+str+" ").append(usageArguments[0]).append(usageArguments[1]);
+		return Component.text("\u00a7cUsage: \u00a7f/"+str+" ").append(usageArguments[0]).append(usageArguments[1]);
 	}
 
 }

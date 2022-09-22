@@ -29,9 +29,9 @@ import org.bukkit.block.*;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.block.data.Lightable;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.craftbukkit.v1_18_R2.CraftWorld;
-import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_18_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event.Result;
@@ -204,7 +204,7 @@ public class PlayerListener extends EventListener {
 
 		getPlugin().getCelestiaManager().log(pp.getId(), CelestiaAction.CHAT, e.getPlayer().getLocation(), content);
 		getPlugin().getLogger().info("[CHAT] " + pp.getDisplayName() + ": " + content); // Console
-		getPlugin().getDiscord().sendWebhookMessage(pp.getId(), content); // Discord Chat
+		getPlugin().getDiscord().sendChatMessage(pp.getId(), content); // Discord Chat
 		getPlugin().getWebChatServer().sendWebMessage(pp.getId(), content); // Web Chat
 	}
 	
@@ -384,7 +384,8 @@ public class PlayerListener extends EventListener {
 				if (stop) return;
 				if (!region.getEffectiveFlag(Flags.ANVIL_DEGRADATION)) { // Handle anvil unbreakable flag by giving the Player a fake Anvil GUI.
 					e.setCancelled(true);
-					new BeanGuiAnvil(p, e.getClickedBlock());
+					new BeanGuiAnvil(p, e.getClickedBlock()).openInventory();
+					return;
 				}
 			} else if (blockMat == Material.FLOWER_POT || blockMat.name().startsWith("POTTED")) { // Flower Pots
 				stop = !enactRegionPermission(canBuild, e, p, "plant flowers");

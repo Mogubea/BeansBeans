@@ -31,7 +31,6 @@ public class ListenerManager {
 		pm.registerEvents(new VoteListener(pl), pl);
 		
 		pm.registerEvents(new PotionCauldronListener(pl), pl);
-//		pm.registerEvents(new JobListener(pl), pl);
 		pm.registerEvents(new EnchantmentListener(pl), pl);
 	}
 	

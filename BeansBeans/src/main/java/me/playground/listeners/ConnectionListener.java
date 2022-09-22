@@ -8,10 +8,8 @@ import me.playground.ranks.Permission;
 import me.playground.regions.Region;
 
 import org.bukkit.GameMode;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 
@@ -28,7 +26,6 @@ import me.playground.utils.Calendar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.event.server.ServerListPingEvent;
-import org.bukkit.inventory.ItemStack;
 
 public class ConnectionListener extends EventListener {
 
@@ -55,7 +52,7 @@ public class ConnectionListener extends EventListener {
 		if (motd == null) {
 			String line1 = "&#8f66ff&lB&r&#9369ffe&#966bffa&#996effn&#9c72ff'&#9f75ffs &#a278ff&lB&r&#a57bffe&#a87effa&#ab81ffn&#ae84ffs " +
 					(getPlugin().isDebugMode() ? "&#ff3390(Development)" : "&#653390(Alpha v" + getPlugin().getDescription().getVersion() + ")") + "\n";
-			String line2 = "&#545565New Enchantment and Forging Rework (WIP xd)";
+			String line2 = "&#545565Only a few months late to the 1.19 party..";
 			motd = Lore.getBuilder(line1 + line2).setCompact().build().getLoree().get(0);
 		}
 
@@ -156,6 +153,8 @@ public class ConnectionListener extends EventListener {
 					p.sendMessage(Component.text("There are \u00a7b" + reqs.size() + " \u00a7rpending nickname requests.", BeanColor.STAFF));
 			}
 		});
+
+		getPlugin().getServer().getScheduler().runTask(getPlugin(), () -> getPlugin().getDiscord().sendChatBroadcast(":green_square: **" + pp.getDisplayName() + "** joined the server! (**" + getPlugin().getServer().getOnlinePlayers().size() + "**/**" + NON_DONOR_LIMIT + "**)"));
 	}
 
 	@EventHandler
@@ -167,15 +166,17 @@ public class ConnectionListener extends EventListener {
 		pp.getStats().setStat(StatType.GENERIC, "lastLogout", (int)(System.currentTimeMillis()/60000L));
 		pp.closeBeanGui(); // Just in case
 		e.quitMessage(!pp.isHidden() ? Component.text("« ", NamedTextColor.RED).append(pp.getComponentName()).append(Component.text(" left the server!", NamedTextColor.YELLOW)) : null);
+
+		getPlugin().getServer().getScheduler().runTask(getPlugin(), () -> getPlugin().getDiscord().sendChatBroadcast(":red_square: **" + pp.getDisplayName() + "** left the server! (**" + getPlugin().getServer().getOnlinePlayers().size() + "**/**" + NON_DONOR_LIMIT + "**)"));
 	}
 
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	/*@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerKick(PlayerKickEvent e) {
 		switch (e.getCause()) {
 			case TIMEOUT -> e.reason(Lore.getBuilder("You timed out! This is usually occurs due to having poor connection with the server.").setCompact().build().getLore().get(0));
 			//case RESOURCE_PACK_REJECTION -> e.reason(Lore.getBuilder("You are required to use the Bean's Beans Resource Pack when playing here.").setCompact().build().getLore().get(0));
 			default -> {}
 		}
-	}
+	}*/
 
 }

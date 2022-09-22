@@ -75,6 +75,7 @@ public class BeanGuiBasicNPCShop extends BeanGui {
 		// Update the player's inventory to be their true inventory, which is identical but without the sell price lore
 		p.getInventory().setContents(truePlayerInventory.getContents());
 		p.updateInventory();
+		p.saveData();
 	}
 	
 	@Override

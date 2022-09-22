@@ -63,7 +63,7 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 
 				switch (type) {
 					case PLAYER ->
-							reg = new PlayerRegion(manager, r.getInt("creatorId"), id, r.getString("name"), w,
+							reg = new PlayerRegion(manager, r.getInt("creatorId"), id, r.getInt("priority"), r.getString("name"), w,
 							new BlockVector(r.getDouble("minX"), r.getDouble("minY"), r.getDouble("minZ")),
 							new BlockVector(r.getDouble("maxX"), r.getDouble("maxY"), r.getDouble("maxZ")),
 							new BlockVector(r.getDouble("originX"), r.getDouble("originY"), r.getDouble("originZ")));
@@ -196,7 +196,7 @@ public class RegionDatasource extends DynmapDatasource<Region> {
 
 			ResultSet rs = s.getGeneratedKeys();
 			rs.next();
-			reg = new PlayerRegion(manager, owner.getId(), rs.getInt(1), name, world, min, max, origin);
+			reg = new PlayerRegion(manager, owner.getId(), rs.getInt(1), 0, name, world, min, max, origin);
 			reg.addMember(owner.getId(), MemberLevel.OWNER);
 			CustomEntityType.REGION_CRYSTAL.spawn(new Location(world, origin.getBlockX() + 0.5, origin.getBlockY() + 0.2, origin.getBlockZ() + 0.5)).setRegion(reg);
 			updateMarker(reg);

@@ -33,12 +33,12 @@ public class JobListener extends EventListener {
 	
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onBlockBreak(BlockBreakEvent e) {
-		if (e.getBlock().hasMetadata("placed")) return;
+		if (!isBlockNatural(e.getBlock())) return;
 		
 		PlayerProfile pp = PlayerProfile.from(e.getPlayer());
 		Job job = pp.getJob();
 		
-		if (job == null || !(job instanceof IMiningJob)) return;
+		if (!(job instanceof IMiningJob)) return;
 		
 		doJobPay(pp, job, job.getPay(e.getBlock().getType().name()));
 	}
@@ -49,7 +49,7 @@ public class JobListener extends EventListener {
 		PlayerProfile pp = PlayerProfile.from(e.getEntity().getKiller());
 		Job job = pp.getJob();
 		
-		if (job == null || !(job instanceof IHuntingJob)) return;
+		if (!(job instanceof IHuntingJob)) return;
 		
 		doJobPay(pp, job, job.getPay(e.getEntityType().name()));
 	}
@@ -60,7 +60,7 @@ public class JobListener extends EventListener {
 		PlayerProfile pp = PlayerProfile.from(e.getPlayer());
 		Job job = pp.getJob();
 		
-		if (job == null || !(job instanceof IFishingJob)) return;
+		if (!(job instanceof IFishingJob)) return;
 		
 		doJobPay(pp, job, job.getPay(((Item)e.getCaught()).getItemStack().getType().name()));
 	}
@@ -70,7 +70,7 @@ public class JobListener extends EventListener {
 		PlayerProfile pp = e.getProfile();
 		Job job = pp.getJob();
 		
-		if (job == null || !(job instanceof IFarmingJob)) return;
+		if (!(job instanceof IFarmingJob)) return;
 		
 		doJobPay(pp, job, job.getPay(e.getMaterial().name()));
 	}

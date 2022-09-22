@@ -12,6 +12,7 @@ import me.playground.playerprofile.PlayerProfile;
 import me.playground.playerprofile.settings.PlayerSetting;
 import me.playground.playerprofile.stats.StatType;
 import me.playground.regions.Region;
+import me.playground.regions.flags.FlagBoolean;
 import me.playground.regions.flags.Flags;
 import me.playground.skills.Skill;
 import net.kyori.adventure.text.Component;
@@ -29,7 +30,6 @@ import org.bukkit.event.block.*;
 import org.bukkit.event.block.BlockIgniteEvent.IgniteCause;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
@@ -152,7 +152,7 @@ public class BlockListener extends EventListener {
 		
 		// Block placing, ignore crops to allow xp
 		if (!isHarvestableCrop(block.getType()))
-			block.setMetadata("placed", new FixedMetadataValue(getPlugin(), true));
+			setBlockPlaced(block);
 
 		// Check double high blocks a tick later
 		if (isDoubleBlock(block.getType())) {
@@ -160,9 +160,9 @@ public class BlockListener extends EventListener {
 				Block other = block.getLocation().subtract(0, 1, 0).getBlock();
 				Block other2 = block.getLocation().add(0, 1, 0).getBlock();
 				if (isDoubleBlock(other.getType())) // Below
-					other.setMetadata("placed", new FixedMetadataValue(getPlugin(), true));
+					setBlockPlaced(other);
 				else if (isDoubleBlock(other2.getType())) // Above
-					other2.setMetadata("placed", new FixedMetadataValue(getPlugin(), true));
+					setBlockPlaced(other2);
 			});
 		}
 		
@@ -205,9 +205,8 @@ public class BlockListener extends EventListener {
 		}
 
 		// Stop placing and breaking a block for xp.
-		if (e.getBlock().hasMetadata("placed")) {
+		if (!isBlockNatural(block)) {
 			if (p.getGameMode() == GameMode.CREATIVE) return;
-			pp.getSkills().doSkillEvents(e, Skill.MINING);
 		} else {
 			pp.getStats().addToStat(StatType.BLOCK_BREAK, blockName, 1);
 			pp.getStats().addToStat(StatType.BLOCK_BREAK, "total", 1, true);
@@ -224,7 +223,7 @@ public class BlockListener extends EventListener {
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onBlockBreakFinal(BlockBreakEvent e) {
 		e.getBlock().removeMetadata("noHopper", getPlugin());
-		e.getBlock().removeMetadata("placed", getPlugin());
+		setBlockPlaced(e.getBlock(), false);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -314,14 +313,14 @@ public class BlockListener extends EventListener {
 			}
 		}
 		if (b.getType() == Material.MELON) {
-			if (!b.hasMetadata("placed")) {
+			if (isBlockNatural(b)) {
 				track = true;
 				e.getDrops().clear();
 				if (rand.nextInt(8) > 0) // 12.5% chance for no melon
 					e.getDrops().add(new ItemStack(Material.MELON_SLICE, 1 + rand.nextInt(2)));
 			}
 		} else if (b.getType() == Material.PUMPKIN) {
-			if (!b.hasMetadata("placed")) {
+			if (isBlockNatural(b)) {
 				track = true;
 				e.getDrops().clear();
 				if (rand.nextInt(10) > 0) // 10% chance for no pumpkin seeds
@@ -332,7 +331,7 @@ public class BlockListener extends EventListener {
 
 		}
 
-		b.removeMetadata("placed", getPlugin());
+		setBlockPlaced(b, false);
 
 		if (track)
 			for (ItemStack item : e.getDrops())
@@ -430,44 +429,43 @@ public class BlockListener extends EventListener {
 		
 		PlayerProfile.from(e.getPlayer()).getSkills().doSkillEvents(e, Skill.MINING, Skill.FORAGING, Skill.AGRICULTURE);
 	}
-	
-	/**
-	 * Effects blocks such as Vines and Mushrooms
-	 */
-	@EventHandler(priority = EventPriority.LOW)
+
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onBlockSpread(BlockSpreadEvent e) {
-		if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.BLOCK_SPREAD))
-			e.setCancelled(true);
+		onBlockGrowthFlagCheck(e.getSource(), e);
 	}
-	
-	/**
-	 * Effects blocks such as Wheat, Sugar Cane, Bamboo, Cactus, Watermelon, Pumpkins and Eggs.
-	 */
-	@EventHandler(priority = EventPriority.LOW)
+
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onBlockGrow(BlockGrowEvent e) {
-		if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.BLOCK_SPREAD))
-			e.setCancelled(true);
+		onBlockGrowthFlagCheck(e.getNewState().getBlock(), e);
 	}
-	
-	/**
-	 * Effects the formation of things like Obsidian, Ice and Snow Layers.
-	 * We're only checking for snow and ice here.
-	 */
-	@EventHandler(priority = EventPriority.LOW)
+
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onBlockForm(BlockFormEvent e) {
-		if (e.getNewState().getType() == Material.SNOW) {
-			if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.SNOW_FORMATION))
-				e.setCancelled(true);
-		} else if (e.getNewState().getType() == Material.ICE) {
-			if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.ICE_FORMATION))
-				e.setCancelled(true);
-		} else if (e.getNewState().getType() == Material.STONE || e.getNewState().getType() == Material.COBBLESTONE) {
-			if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.STONE_FORMATION))
-				e.setCancelled(true);
-		} else if (e.getNewState().getType() == Material.OBSIDIAN) {
-			if (!getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.OBSIDIAN_FORMATION))
-				e.setCancelled(true);
-		}
+		onBlockGrowthFlagCheck(e.getNewState().getBlock(), e);
+	}
+
+	/**
+	 * Due to the inconsistent determination and lack of documentation of what block fires a {@link BlockGrowEvent}, {@link BlockSpreadEvent} or {@link BlockFormEvent},
+	 * we will just have a simple method which is fired by all three of these events.
+	 */
+	private void onBlockGrowthFlagCheck(Block b, BlockGrowEvent e) {
+		FlagBoolean flag = switch(b.getType()) {
+			case SNOW -> Flags.SNOW_FORMATION;
+			case ICE -> Flags.ICE_FORMATION;
+			case STONE, COBBLESTONE -> Flags.STONE_FORMATION;
+			case OBSIDIAN -> Flags.OBSIDIAN_FORMATION;
+			case VINE, CAVE_VINES_PLANT, CAVE_VINES, TWISTING_VINES, WEEPING_VINES, WEEPING_VINES_PLANT, TWISTING_VINES_PLANT, GLOW_LICHEN -> Flags.VINE_GROWTH;
+			case SCULK_CATALYST -> Flags.SCULK_SPREAD; // Source
+			case GRASS_BLOCK -> Flags.GRASS_SPREAD; // Source
+			case WHEAT, COCOA, CARROTS, POTATOES, NETHER_WART, BEETROOT, SWEET_BERRY_BUSH, PUMPKIN_STEM, MELON_STEM -> Flags.CROP_GROWTH;
+			case SUGAR_CANE, BAMBOO, KELP_PLANT, PUMPKIN, MELON, BAMBOO_SAPLING, CHORUS_PLANT, CHORUS_FLOWER, GLOW_BERRIES -> Flags.BIG_CROP_GROWTH; // Source
+			case BROWN_MUSHROOM, RED_MUSHROOM, CRIMSON_FUNGUS, WARPED_FUNGUS -> Flags.MUSHROOM_GROWTH; // Source
+			default -> null;
+		};
+
+		if (flag == null) return;
+		e.setCancelled(!getRegionAt(e.getNewState().getBlock().getLocation()).getEffectiveFlag(flag)); // Always get the region at the new location
 	}
 
 	/**

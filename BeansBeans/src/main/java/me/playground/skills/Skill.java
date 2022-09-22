@@ -3,8 +3,10 @@ package me.playground.skills;
 import java.util.*;
 
 import me.playground.items.lore.Lore;
+import me.playground.main.Main;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.event.Event;
 import org.bukkit.inventory.ItemStack;
@@ -35,7 +37,8 @@ public abstract class Skill {
 		for (Skill skill : skills.values())
 			skill.perkTree = Collections.unmodifiableMap(skill.perkTree);
 	}
-	
+
+	private final Main plugin;
 	private final String stringName;
 	private final TextColor colour;
 	private final Component simpleName;
@@ -50,6 +53,7 @@ public abstract class Skill {
 	private Map<Integer, SkillPerk> perkTree = new HashMap<>();
 	
 	protected Skill(String name, int colour, BarColor barColour, char colourChar, String icon, Material displayStack, Material skillTreeItem, String description) {
+		this.plugin = Main.getInstance();
 		this.colour = TextColor.color(colour);
 		this.simpleName = Component.text(name, this.colour);
 		this.stringName = name;
@@ -132,6 +136,13 @@ public abstract class Skill {
 	
 	public static Skill getByName(String name) {
 		return skills.getOrDefault(name, null);
+	}
+
+	/**
+	 * Helper for {@link me.playground.main.BlockTracker#isBlockNatural(Block)}.
+	 */
+	protected boolean isBlockNatural(Block block) {
+		return plugin.getBlockTracker().isBlockNatural(block);
 	}
 	
 }

@@ -1,5 +1,6 @@
 package me.playground.items;
 
+import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -55,7 +56,7 @@ public class BItemPickyAxe extends BItemDurable {
 
 	@Override
 	public void onBlockMined(BlockBreakEvent e) {
-		if (e.getBlock().hasMetadata("placed")) return;
+		if (!Main.getInstance().getBlockTracker().isBlockNatural(e.getBlock())) return;
 		if (!e.getBlock().getType().name().endsWith("_LOG")) return;
 
 		final ItemStack item = e.getPlayer().getInventory().getItemInMainHand();

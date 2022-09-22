@@ -19,7 +19,7 @@ import net.minecraft.world.entity.Entity;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_18_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_19_R1.entity.CraftEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BlockIterator;
 import org.jetbrains.annotations.NotNull;
@@ -143,11 +143,6 @@ public class CommandHologram extends BeanCommand {
 		if (args.length == 1)
 			return TabCompleter.completeString(args[0], subCmds);
 		return Collections.emptyList();
-	}
-	
-	@Override
-	public Component getUsage(@NotNull CommandSender sender, @NotNull String str, String @NotNull [] args) {
-		return Component.text("\u00a7cUsage: \u00a7f/"+str);
 	}
 
 	private TextComponent createComponent(PlayerProfile profile, Player p, String[] args) {

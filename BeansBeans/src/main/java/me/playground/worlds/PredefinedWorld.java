@@ -2,7 +2,6 @@ package me.playground.worlds;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Lifecycle;
-import me.playground.regions.flags.Flag;
 import me.playground.worlds.generation.TestChunkGenerator;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -16,26 +15,25 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.datafix.DataFixers;
+import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.ai.village.VillageSiege;
 import net.minecraft.world.entity.npc.CatSpawner;
 import net.minecraft.world.entity.npc.WanderingTraderSpawner;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.biome.BiomeManager;
-import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.PatrolSpawner;
 import net.minecraft.world.level.levelgen.PhantomSpawner;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.PrimaryLevelData;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_18_R2.CraftServer;
-import org.bukkit.craftbukkit.v1_18_R2.generator.CraftWorldInfo;
-import org.bukkit.craftbukkit.v1_18_R2.generator.CustomWorldChunkManager;
+import org.bukkit.craftbukkit.v1_19_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_19_R1.generator.CraftWorldInfo;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BiomeProvider;
 import org.bukkit.generator.ChunkGenerator;
@@ -53,7 +51,7 @@ public class PredefinedWorld {
     private static final Map<String, PredefinedWorld> byIdentifier = new HashMap<>();
 
     static {
-        new PredefinedWorld("MINING", OptionalLong.of(18000L), false, true, false, false, 4D, false, false, false, false, false, -256, 384, 384, 0.0F)
+        new PredefinedWorld("MINING", OptionalLong.of(18000L), false, true, false, false, 4D, false, false, false, false, -256, 384, 384, 0.0F)
                 .setChunkGenerator(new TestChunkGenerator());
     }
 
@@ -63,7 +61,6 @@ public class PredefinedWorld {
     private final boolean ultraWarm;
     private final boolean natural;
     private final double coordinateScaling;
-    private final boolean createDragonFight;
     private final boolean piglinSafe;
     private final boolean bedWorks;
     private final boolean respawnAnchorWorks;
@@ -73,6 +70,7 @@ public class PredefinedWorld {
     private final int logicalY;
     private final float ambientLight;
 
+    private Difficulty difficulty = Difficulty.NORMAL;
     private ChunkGenerator chunkGenerator;
     private BiomeProvider biomeProvider;
     private WorldBorder worldBorder;
@@ -85,7 +83,6 @@ public class PredefinedWorld {
      * @param ultraWarm Determines if water can be placed and if lava flow is accelerated.
      * @param natural Does many things, including determining if a clock will work in that dimension.
      * @param coordinateScaling How distance travelled in this world is reflected in the base world.
-     * @param createDragonFight Create the Dragon Fight.
      * @param piglinSafe Whether this world is safe for Piglins.
      * @param bedWorks Whether beds work or explode in this world.
      * @param respawnAnchorWorks Whether respawn anchors work or explode in this world.
@@ -95,14 +92,13 @@ public class PredefinedWorld {
      * @param logicalY The logical Y axis which determines the maximum spawn height for various things such as portals and entities. <b>Must be equal to or below maxY</b>
      * @param ambientLight This affects how bright lighting shadows are.
      */
-    protected PredefinedWorld(@NotNull String identifier, OptionalLong fixedTime, boolean hasSkylight, boolean hasCeiling, boolean ultraWarm, boolean natural, double coordinateScaling, boolean createDragonFight, boolean piglinSafe, boolean bedWorks, boolean respawnAnchorWorks, boolean hasRaids, int minY, int maxY, int logicalY, float ambientLight) {
+    protected PredefinedWorld(@NotNull String identifier, OptionalLong fixedTime, boolean hasSkylight, boolean hasCeiling, boolean ultraWarm, boolean natural, double coordinateScaling, boolean piglinSafe, boolean bedWorks, boolean respawnAnchorWorks, boolean hasRaids, int minY, int maxY, int logicalY, float ambientLight) {
         this.fixedTime = fixedTime;
         this.hasSkylight = hasSkylight;
         this.hasCeiling = hasCeiling;
         this.ultraWarm = ultraWarm;
         this.natural = natural;
         this.coordinateScaling = coordinateScaling;
-        this.createDragonFight = createDragonFight;
         this.piglinSafe = piglinSafe;
         this.bedWorks = bedWorks;
         this.respawnAnchorWorks = respawnAnchorWorks;
@@ -130,6 +126,11 @@ public class PredefinedWorld {
     protected PredefinedWorld setChunkGenerator(@NotNull ChunkGenerator generator) {
         if (chunkGenerator != null) throw new IllegalArgumentException("Default ChunkGenerator is already set.");
         chunkGenerator = generator;
+        return this;
+    }
+
+    protected PredefinedWorld setDifficulty(@NotNull Difficulty difficulty) {
+        this.difficulty = difficulty;
         return this;
     }
 
@@ -163,11 +164,11 @@ public class PredefinedWorld {
 
             TagKey<Block> infiniburnTag = BlockTags.INFINIBURN_OVERWORLD;
             ResourceKey actualDimension = LevelStem.OVERWORLD;
-            ResourceLocation dimensionEffects = DimensionType.OVERWORLD_EFFECTS;
+            ResourceLocation dimensionEffects = BuiltinDimensionTypes.OVERWORLD_EFFECTS;
 
             switch (creator.environment()) {
-                case NETHER -> { actualDimension = LevelStem.NETHER; infiniburnTag = BlockTags.INFINIBURN_NETHER; dimensionEffects = DimensionType.NETHER_EFFECTS; }
-                case THE_END -> { actualDimension = LevelStem.END; infiniburnTag = BlockTags.INFINIBURN_END; dimensionEffects = DimensionType.END_EFFECTS; }
+                case NETHER -> { actualDimension = LevelStem.NETHER; infiniburnTag = BlockTags.INFINIBURN_NETHER; dimensionEffects = BuiltinDimensionTypes.NETHER_EFFECTS; }
+                case THE_END -> { actualDimension = LevelStem.END; infiniburnTag = BlockTags.INFINIBURN_END; dimensionEffects = BuiltinDimensionTypes.END_EFFECTS; }
             }
 
             LevelStorageSource.LevelStorageAccess worldSession;
@@ -183,8 +184,8 @@ public class PredefinedWorld {
             PrimaryLevelData worlddata = (PrimaryLevelData)worldSession.getDataTag(console.registryreadops, console.datapackconfiguration, console.registryHolder.allElementsLifecycle());
             if (worlddata == null) {
                 DedicatedServerProperties.WorldGenProperties properties = new DedicatedServerProperties.WorldGenProperties(Objects.toString(creator.seed()), GsonHelper.parse(creator.generatorSettings().isEmpty() ? "{}" : creator.generatorSettings()), creator.generateStructures(), creator.type().name().toLowerCase(Locale.ROOT));
-                WorldGenSettings generatorsettings = WorldGenSettings.create(console.registryAccess(), properties);
-                LevelSettings worldSettings = new LevelSettings(name, GameType.byId(Bukkit.getDefaultGameMode().getValue()), hardcore, Difficulty.EASY, false, new GameRules(), console.datapackconfiguration);
+                WorldGenSettings generatorsettings = properties.create(console.registryAccess());
+                LevelSettings worldSettings = new LevelSettings(name, GameType.byId(Bukkit.getDefaultGameMode().getValue()), hardcore, Difficulty.NORMAL, false, new GameRules(), console.datapackconfiguration);
                 worlddata = new PrimaryLevelData(worldSettings, generatorsettings, Lifecycle.stable());
             }
 
@@ -197,30 +198,18 @@ public class PredefinedWorld {
             long j = BiomeManager.obfuscateSeed(creator.seed());
             List<CustomSpawner> list = ImmutableList.of(new PhantomSpawner(), new PatrolSpawner(), new CatSpawner(), new VillageSiege(), new WanderingTraderSpawner(worlddata));
             Registry<LevelStem> iregistry = worlddata.worldGenSettings().dimensions();
-            LevelStem worlddimension = iregistry.get(actualDimension);
-            Holder holder;
-            net.minecraft.world.level.chunk.ChunkGenerator chunkgenerator;
+            LevelStem worldDimension = iregistry.get(actualDimension);
 
-            // Set the DimensionType Holder and Chunk Generator.
-            if (worlddimension == null) {
-                holder = console.registryHolder.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY).getOrCreateHolder(DimensionType.OVERWORLD_LOCATION);
-                chunkgenerator = WorldGenSettings.makeDefaultOverworld(console.registryHolder, (new Random()).nextLong());
-            } else {
-                holder = Holder.direct(DimensionType.create(fixedTime, hasSkylight, hasCeiling, ultraWarm, natural, coordinateScaling, createDragonFight, piglinSafe, bedWorks, respawnAnchorWorks,
-                        hasRaids, minY, maxY, logicalY, infiniburnTag, dimensionEffects, ambientLight));
-                chunkgenerator = worlddimension.generator();
-            }
+            // Set the DimensionType Holder
+            DimensionType type = new DimensionType(fixedTime, hasSkylight, hasCeiling, ultraWarm, natural, coordinateScaling, bedWorks, respawnAnchorWorks,
+                   minY, maxY, logicalY, infiniburnTag, dimensionEffects, ambientLight, new DimensionType.MonsterSettings(piglinSafe, hasRaids, UniformInt.of(0, 7), 0));
+            Holder<DimensionType> holder = Holder.direct(type);
+            worldDimension = new LevelStem(holder, worldDimension.generator());
 
             // World Info, the thing before the World.
-            WorldInfo worldInfo = new CraftWorldInfo(worlddata, worldSession, creator.environment(), (DimensionType)holder.value());
+            WorldInfo worldInfo = new CraftWorldInfo(worlddata, worldSession, creator.environment(), holder.value());
             if (biomeProvider == null && chunkGenerator != null)
                 biomeProvider = chunkGenerator.getDefaultBiomeProvider(worldInfo);
-
-            if (biomeProvider != null) {
-                BiomeSource worldChunkManager = new CustomWorldChunkManager(worldInfo, biomeProvider, console.registryHolder.ownedRegistryOrThrow(Registry.BIOME_REGISTRY));
-                if (chunkgenerator instanceof NoiseBasedChunkGenerator cga)
-                    chunkgenerator = new NoiseBasedChunkGenerator(cga.structureSets, cga.noises, worldChunkManager, cga.ringPlacementSeed, cga.settings);
-            }
 
             // Silly Bukkit level name stuff.
             String levelName = console.getProperties().levelName;
@@ -234,11 +223,11 @@ public class PredefinedWorld {
             }
 
             // Create the NMS World
-            ServerLevel internal = new ServerLevel(console, console.executor, worldSession, worlddata, worldKey, holder, console.progressListenerFactory.create(11), chunkgenerator, worlddata.worldGenSettings().isDebug(), j, creator.environment() == World.Environment.NORMAL ? list : ImmutableList.of(), true, creator.environment(), chunkGenerator, biomeProvider);
+            ServerLevel internal = new ServerLevel(console, console.executor, worldSession, worlddata, worldKey, worldDimension, console.progressListenerFactory.create(11), worlddata.worldGenSettings().isDebug(), j, creator.environment() == World.Environment.NORMAL ? list : ImmutableList.of(), true, creator.environment(), chunkGenerator, biomeProvider);
 
             console.initWorld(internal, worlddata, worlddata, worlddata.worldGenSettings());
             internal.setSpawnSettings(true, true);
-            console.levels.put(internal.dimension(), internal);
+            console.addLevel(internal);
             console.prepareLevels(internal.getChunkSource().chunkMap.progressListener, internal);
             internal.entityManager.tick();
             Bukkit.getPluginManager().callEvent(new WorldLoadEvent(internal.getWorld()));

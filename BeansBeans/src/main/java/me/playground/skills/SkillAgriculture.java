@@ -42,19 +42,19 @@ public class SkillAgriculture extends Skill {
 		if (heightCheck > 0) {
 			Location loc = b.getLocation().clone();
 			int height = 0;
-			int sugar = b.getLocation().subtract(0, 1, 0).getBlock().getType() != b.getType() || b.hasMetadata("placed") ? 0 : 1;
+			int sugar = isBlockNatural(b) ? 1 : 0;
 
 			while(height < heightCheck) {
 				Block block = loc.add(0, 1, 0).getBlock();
 				if (block.getType() != b.getType()) break;
-				if (!block.hasMetadata("placed")) sugar++;
+				if (isBlockNatural(block)) sugar++;
 				height++;
 			}
 			
 			skillXP *= sugar;
 			if (skillXP <= 0) return false;
 		} else {
-			if (b.hasMetadata("placed")) return false;
+			if (!isBlockNatural(b)) return false;
 
 			// Check age if age-able, excluding Sugar Cane since they age weirdly.
 			if (b.getBlockData() instanceof Ageable crop)
