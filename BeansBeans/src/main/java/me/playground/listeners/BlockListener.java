@@ -1,5 +1,6 @@
 package me.playground.listeners;
 
+import com.destroystokyo.paper.event.block.BlockDestroyEvent;
 import io.papermc.paper.event.block.BlockBreakBlockEvent;
 import me.playground.gui.stations.BeanGuiEnchantingTable;
 import me.playground.items.BeanBlock;
@@ -222,6 +223,12 @@ public class BlockListener extends EventListener {
 	
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onBlockBreakFinal(BlockBreakEvent e) {
+		e.getBlock().removeMetadata("noHopper", getPlugin());
+		setBlockPlaced(e.getBlock(), false);
+	}
+
+	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onBlockDestroyFinal(BlockDestroyEvent e) {
 		e.getBlock().removeMetadata("noHopper", getPlugin());
 		setBlockPlaced(e.getBlock(), false);
 	}

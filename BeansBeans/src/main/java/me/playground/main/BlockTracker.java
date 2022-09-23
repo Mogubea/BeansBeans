@@ -13,9 +13,9 @@ import java.util.Map;
 
 /**
  * A class specifically designed to track if a block has been placed by a player as efficiently as possible
- * 12 Bits are allocated to Y co-ordinate.
- * 26 Bits are allocated to X co-ordinate.
- * 26 Bits are allocated to Z co-ordinate.
+ * 16 Bits are allocated to Y co-ordinate.
+ * 24 Bits are allocated to X co-ordinate.
+ * 24 Bits are allocated to Z co-ordinate.
  */
 public class BlockTracker {
 
@@ -57,8 +57,7 @@ public class BlockTracker {
     protected void save() {
         File trackingFile = getTrackingFile();
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(trackingFile);
-        Map<World, LongSet> clone = Map.copyOf(trackedBlocks);
-        clone.forEach((world, set) -> cfg.set("worlds." + world.getUID() + ".blocks", set));
+        trackedBlocks.forEach((world, set) -> cfg.set("worlds." + world.getUID() + ".blocks", set.toLongArray()));
         try {
             cfg.save(trackingFile);
         } catch (IOException e) {
@@ -66,15 +65,24 @@ public class BlockTracker {
         }
     }
 
+    /**
+     * Load the list of block keys that have been saved previously
+     */
     private void load() {
         File trackingFile = getTrackingFile();
-
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(trackingFile);
         plugin.getWorldManager().getWorlds().forEach(world -> trackedBlocks.put(world, new LongOpenHashSet(cfg.getLongList("worlds." + world.getUID() + ".blocks"))));
     }
 
+    /**
+     * Get the block key for the provided block, this is unique for every single block at any position
+     * @return a long key.
+     */
     private long getBlockKey(Block block) {
-        return ((long) block.getY() << 52) | ((block.getX() & 0xFFFFFFFL) << 26) | (block.getZ() & 0xFFFFFFFL);
+        long yBits = block.getY() & 0xFFFL; // 12
+        long xBits = block.getX() & 0xFFFFFFL; // 24
+        long zBits = block.getZ() & 0xFFFFFFL; // 24, each F represents 4 bits
+        return (yBits << 52) | (xBits << 24) | (zBits);
     }
 
     private File getTrackingFile() {
