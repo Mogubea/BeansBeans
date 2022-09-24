@@ -396,7 +396,7 @@ public class DiscordBot extends ListenerAdapter {
 
 			if (lastOnlineCheck != online) {
 				if (online)
-					chatChannel().getManager().setTopic("Have a chat with the players currently on the server!\n\nThere is currently **"+pString1+"** online;\n" + playerList).queue();
+					chatChannel().getManager().setTopic("Have a chat with the players currently on the server!").queue();
 				else
 					chatChannel().getManager().setTopic("Have a chat with the players that would be on the server.. If it was open!!").queue();
 			}
@@ -477,9 +477,7 @@ public class DiscordBot extends ListenerAdapter {
 		Datasource.breakDiscordLink(playerId);
 
 		PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
-
-		// Incredibly unlikely to be null
-		if (pp == null) return;
+		if (pp == null) return; // Unlikely
 
 		updateNickname(pp);
 		updateRoles(pp);
@@ -491,6 +489,12 @@ public class DiscordBot extends ListenerAdapter {
 
 		this.linkedAccounts.put(playerId, discordId);
 		Datasource.setDiscordLink(playerId, discordId);
+
+		PlayerProfile pp = PlayerProfile.fromIfExists(playerId);
+		if (pp == null) return; // Unlikely
+
+		updateNickname(pp);
+		updateRoles(pp);
 	}
 
 	public int getLinkedIdFromDiscordId(long discordId) {
