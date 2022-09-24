@@ -43,7 +43,7 @@ public class CommandBan extends BeanCommand {
 		if (profile != null && target.getId() == profile.getId())
 			throw new CommandException(sender, "It would be a bit silly to ban yourself, no?");
 
-		if (getRank(sender).power() <= target.getHighestRank().power())
+		if (isPlayer(sender) && getRank(sender).power() <= target.getHighestRank().power())
 			throw new CommandException(sender, "You can't ban players of equal or higher ranking!");
 
 		boolean appeal = true;

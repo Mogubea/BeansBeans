@@ -175,23 +175,6 @@ public class Main extends JavaPlugin {
 	}
 
 	public void onDisable() {
-//		if (npcManager != null)
-//			npcManager.hideAllNPCsFromAll();
-		
-		if (permissionManager != null) {
-			for (UUID uuid : permissionManager.getRankPreviewers())
-				permissionManager.stopPreviewingRank(Bukkit.getPlayer(uuid));
-			
-			for (Player p : Bukkit.getOnlinePlayers())
-				permissionManager.clearPlayerPermissions(p);
-		}
-		
-		for (Player p : Bukkit.getOnlinePlayers()) {
-			PlayerProfile.from(p).closeBeanGui(); // Reassuring closure before kick
-			p.kick(Component.text("Bean's Beans is reloading.", NamedTextColor.YELLOW), Cause.RESTART_COMMAND);
-		}
-
-		
 		if (recipeManager != null)
 			recipeManager.unregisterRecipes();
 		

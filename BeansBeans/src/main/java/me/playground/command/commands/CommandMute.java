@@ -41,7 +41,7 @@ public class CommandMute extends BeanCommand {
 		if (profile != null && target.getId() == profile.getId())
 			throw new CommandException(sender, "It would be a bit silly to mute yourself, no?");
 
-		if (getRank(sender).power() <= target.getHighestRank().power())
+		if (isPlayer(sender) && getRank(sender).power() <= target.getHighestRank().power())
 			throw new CommandException(sender, "You can't mute players of equal or higher ranking!");
 
 		boolean appeal = true;

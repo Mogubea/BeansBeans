@@ -2,14 +2,18 @@ package me.playground.listeners;
 
 import java.util.ArrayList;
 
+import com.destroystokyo.paper.event.player.PlayerConnectionCloseEvent;
 import me.playground.items.lore.Lore;
 import me.playground.items.tracking.ManifestationReason;
 import me.playground.ranks.Permission;
 import me.playground.regions.Region;
 
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 
@@ -25,6 +29,7 @@ import me.playground.utils.BeanColor;
 import me.playground.utils.Calendar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 
 public class ConnectionListener extends EventListener {
@@ -160,23 +165,34 @@ public class ConnectionListener extends EventListener {
 	@EventHandler
 	public void onPlayerLeave(PlayerQuitEvent e) {
 		final Player p = e.getPlayer();
+		p.closeInventory();
 		permManager.clearPlayerPermissions(p);
 		permManager.stopPreviewingRank(p);
 		PlayerProfile pp = PlayerProfile.from(p);
 		pp.getStats().setStat(StatType.GENERIC, "lastLogout", (int)(System.currentTimeMillis()/60000L));
-		pp.closeBeanGui(); // Just in case
 		e.quitMessage(!pp.isHidden() ? Component.text("« ", NamedTextColor.RED).append(pp.getComponentName()).append(Component.text(" left the server!", NamedTextColor.YELLOW)) : null);
 
 		getPlugin().getServer().getScheduler().runTask(getPlugin(), () -> getPlugin().getDiscord().sendChatBroadcast(":red_square: **" + pp.getDisplayName() + "** left the server! (**" + getPlugin().getServer().getOnlinePlayers().size() + "**/**" + NON_DONOR_LIMIT + "**)"));
 	}
 
+	@EventHandler
+	public void onDisable(PluginDisableEvent e) {
+		getPlugin().getDiscord().sendChatBroadcast("<:ben:1018609630127067269> **Bean's Beans is restarting.**");
+		for (Player p : Bukkit.getOnlinePlayers())
+			p.kick(Component.text("Bean's Beans is restarting!"), PlayerKickEvent.Cause.RESTART_COMMAND);
+	}
+
 	/*@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerKick(PlayerKickEvent e) {
-		switch (e.getCause()) {
-			case TIMEOUT -> e.reason(Lore.getBuilder("You timed out! This is usually occurs due to having poor connection with the server.").setCompact().build().getLore().get(0));
-			//case RESOURCE_PACK_REJECTION -> e.reason(Lore.getBuilder("You are required to use the Bean's Beans Resource Pack when playing here.").setCompact().build().getLore().get(0));
-			default -> {}
-		}
+		Lore.PersistentLoreBuilder builder = switch (e.getCause()) {
+			case TIMEOUT -> Lore.getBuilder("You timed out! This is usually occurs due to having poor connection with the server.");
+			case RESTART_COMMAND -> Lore.getBuilder("Bean's Beans is restarting.");
+			default -> null;
+		};
+
+		if (builder == null) return;
+
+		e.reason(Component.text("\u00a74\u26a0 \u00a7rYou were kicked from Bean's Beans! \u00a74\u26a0\n\n", BeanColor.BAN).append(builder.setCompact().build().getLore().get(0)));
 	}*/
 
 }

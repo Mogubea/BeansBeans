@@ -148,7 +148,7 @@ public class Skills {
 				}
 			});
 
-			Main.getInstance().getDiscord().sendChatBroadcast(":star: **" + getProfile().getDisplayName() + "** just reached **Grade " + getSkillInfo(skill).getGrade() + "** in ** " + skill.getName() + "**!");
+			Main.getInstance().getDiscord().sendChatBroadcast(":star: **" + getProfile().getDisplayName() + "** just reached **Grade " + getSkillInfo(skill).getGrade() + "** in **" + skill.getName() + "**!");
 		} else if (!notifyingLevelUp) { // Not Leveling Up
 			if (lastSkill != skill)
 				recentAccumulation = 0;
