@@ -84,7 +84,7 @@ public class BEnchantment extends Enchantment {
 	}.setLore(Lore.getBuilder("Causes hoes to also reap &a{0} &radjacent crops to the &#666666left &rand &#666666right&r.").build());
 
 	public static final BEnchantment REPLENISH = new BEnchantment("replenish", "Replenish", BEnchantmentTarget.HOE, 1, 1, false, false, false, 4, 0, 15, 0)
-			.setLore(Lore.getBuilder("Upon harvesting a &#77cc77replant-able crop&r, a seed from the drops will be used to automatically replant the &#77cc77crop&d.").build())
+			.setLore(Lore.getBuilder("Upon harvesting a &#77cc77replant-able crop&r, a seed from the drops will be used to automatically replant the &#77cc77crop&r.").build())
 			.setBookPowerRequirement(50);
 	public static final BEnchantment PRESERVATION = new BEnchantment("preservation", "Preservation", BEnchantmentTarget.HOE, 1, 1, false, false, false, 4, 0, 15, 0)
 			.setLore(Lore.getBuilder("Prevents hoes from destroying &#aaaa33melon stems&r, &#ddaa33pumpkin stems &rand &#77cc77premature crops&r.").build())
@@ -411,6 +411,13 @@ public class BEnchantment extends Enchantment {
 			.setItemRarity(ItemRarity.RARE, 5)
 			.setBookPowerRequirement(5, 15, 30, 45);
 
+	public static final BEnchantment SWIFT_SNEAK = new BEnchantment(Enchantment.SWIFT_SNEAK, "Swift Sneak", 2, 1, 4, 2) {
+		public List<TextComponent> getLore(int level) {
+			return getLoreInstance().getLore(((Math.min(100F, 30F + (15F * level)) / 30F) - 1) * 100F);
+		}
+	}.setLore(Lore.getBuilder("The wearer's &#a8baef\ud83c\udf0a Crouch Speed&r is increased by &#a8baef{0}%&r.").build())
+			.setItemRarity(ItemRarity.RARE);
+
 	private final boolean isCustom;
 	private final String englishString;
 	private final String translationKey;
@@ -473,7 +480,6 @@ public class BEnchantment extends Enchantment {
 		// Reverse set conflict
 		for (Enchantment conflict : conflicts) {
 			BEnchantment bEnchantment = BEnchantment.from(conflict);
-			if (bEnchantment == null) continue;
 			bEnchantment.conflicts.add(this);
 		}
 
@@ -522,10 +528,19 @@ public class BEnchantment extends Enchantment {
 	/**
 	 * Grab the {@link BEnchantment} version of an {@link Enchantment}.
 	 */
+	@NotNull
 	public static BEnchantment from(Enchantment enchant) {
 		if (enchant instanceof BEnchantment bEnchantment)
 			return bEnchantment;
-		return byKeyString.get(enchant.key().asString());
+
+		BEnchantment bEnchantment = byKeyString.get(enchant.key().asString());
+		if (bEnchantment == null) {
+			bEnchantment = new BEnchantment(enchant, Utils.readableString(enchant.getKey().value()), 0, 0, 0, 0);
+			byNameString.put(enchant.key().value(), bEnchantment);
+			byKeyString.put(enchant.key().asString(), bEnchantment);
+		}
+
+		return bEnchantment;
 	}
 
 	@NotNull

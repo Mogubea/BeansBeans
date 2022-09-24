@@ -100,6 +100,10 @@ public class BeanItem {
 
 			put(Material.ANCIENT_DEBRIS, ItemRarity.UNCOMMON);
 
+			put(Material.SCULK_SHRIEKER, ItemRarity.UNCOMMON);
+			put(Material.SCULK_CATALYST, ItemRarity.UNCOMMON);
+
+			put(Material.ECHO_SHARD, ItemRarity.RARE);
 			put(Material.NETHER_STAR, ItemRarity.RARE);
 			put(Material.TRIDENT, ItemRarity.RARE);
 			put(Material.ELYTRA, ItemRarity.RARE);

@@ -75,6 +75,27 @@ public class Utils {
 		return (str.charAt(0) + "").toUpperCase() + str.substring(1).toLowerCase();
 	}
 
+	/**
+	 * Turn a string like "swift_strike" into Swift Strike.
+	 */
+	public static String readableString(String string) {
+		StringBuilder builder = new StringBuilder();
+		char[] arr = string.toCharArray();
+		boolean nextToCapitalise = true;
+		for (int x = -1; ++x < arr.length;) {
+			String s = "" + arr[x];
+			if (s.equals("_") || s.equals(" ")) {
+				s = " ";
+				nextToCapitalise = true;
+			} else if (nextToCapitalise) {
+				s = s.toUpperCase();
+				nextToCapitalise = false;
+			}
+			builder.append(s);
+		}
+		return builder.toString();
+	}
+
 	public static void setPacketValue(Object obj, String name, Object value) {
 		try {
 			Field field = obj.getClass().getDeclaredField(name);

@@ -14,6 +14,7 @@ import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
+import org.bukkit.block.ShulkerBox;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
@@ -43,6 +44,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.network.protocol.game.ClientboundHorseScreenOpenPacket;
 import org.bukkit.inventory.MerchantRecipe;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.jetbrains.annotations.NotNull;
 
@@ -323,19 +325,10 @@ public class CommandOp extends BeanCommand {
 		if (isPlayer(sender)) {
 			if ("fixformatting".equals(cmdStr)) {
 				Player t = args.length > 1 ? toPlayer(sender, args[1]) : p;
-				for (ItemStack item : t.getInventory().getContents())
-					if (item != null && item.getType() != Material.AIR)
-						BeanItem.resetItemFormatting(item);
-				for (ItemStack item : t.getInventory().getArmorContents())
-					if (item != null && item.getType() != Material.AIR)
-						BeanItem.resetItemFormatting(item);
-				for (ItemStack item : t.getEnderChest().getContents())
-					if (item != null && item.getType() != Material.AIR)
-						BeanItem.resetItemFormatting(item);
-				PlayerProfile tp = PlayerProfile.from(t);
-				for (ItemStack item : tp.getArmourWardrobe())
-					if (item != null && item.getType() != Material.AIR)
-						BeanItem.resetItemFormatting(item);
+				formatInventory(t.getInventory().getContents());
+				formatInventory(t.getInventory().getArmorContents());
+				formatInventory(t.getEnderChest().getContents());
+				formatInventory(PlayerProfile.from(t).getArmourWardrobe());
 				sender.sendMessage(PlayerProfile.from(t).getComponentName().append(Component.text("\u00a77's Containers have been updated.")));
 			} else if ("customitems".equals(cmdStr)) {
 				new BeanGuiBeanItems(p).openInventory();
@@ -346,7 +339,7 @@ public class CommandOp extends BeanCommand {
 				} else {
 					PlayerProfile tpp = PlayerProfile.fromIfExists(args[1]);
 					if (tpp != null) {
-						sender.sendMessage("Set profile viewing override to " + tpp.getColouredName());
+						sender.sendMessage("Set profile viewing override to " + tpp.getDisplayName());
 						profile.profileOverride = tpp.getUniqueId();
 					}
 				}
@@ -355,6 +348,22 @@ public class CommandOp extends BeanCommand {
 		}
 		
 		return false;
+	}
+
+	// AUGH
+	private void formatInventory(ItemStack[] items) {
+		int size = items.length;
+		for (int x = -1; ++x < size;) {
+			ItemStack item = items[x];
+			if (item != null && item.getType() != Material.AIR) {
+				if (item.getItemMeta() instanceof BlockStateMeta meta)
+					if (meta.getBlockState() instanceof ShulkerBox shulker)
+						for (ItemStack sItem : shulker.getInventory().getContents())
+							if (sItem != null)
+								BeanItem.resetItemFormatting(sItem);
+				BeanItem.resetItemFormatting(item);
+			}
+		}
 	}
 
 	@Override
