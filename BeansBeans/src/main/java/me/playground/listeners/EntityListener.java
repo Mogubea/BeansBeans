@@ -262,7 +262,7 @@ public class EntityListener extends EventListener {
 		if (e.getEntity() instanceof Animals && !((Animals)e.getEntity()).isAdult()) return;
 		
 		final LootTable lootTable = getPlugin().lootManager().getLootTable(e.getEntityType());
-		boolean chargedKill = false, skeletonKill = false, petKill = false, nerfDrops = true, isMonster = e.getEntity() instanceof Monster;
+		boolean chargedKill = false, skeletonKill = false, petKill = false, nerfDrops = true, isMonster = e.getEntity() instanceof Monster, isNatural = true;
 		Player p = null;
 		if (e.getEntity().getLastDamageCause() != null) {
 			if ((e.getEntity().getLastDamageCause()) instanceof EntityDamageByEntityEvent) {
@@ -293,8 +293,10 @@ public class EntityListener extends EventListener {
 		}
 
 		// Nerf entities from spawners or in grinders ALWAYS.
-		if (e.getEntity().fromMobSpawner() || e.getEntity().getNearbyEntities(3, 7, 3).size() > 7)
+		if (e.getEntity().fromMobSpawner() || e.getEntity().getNearbyEntities(3, 7, 3).size() > 7) {
+			isNatural = false;
 			nerfDrops = true;
+		}
 
 		PlayerProfile pp = p != null ? PlayerProfile.from(p) : null;
 		int looting = p != null ? p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS) : nerfDrops ? -1 : 0;
@@ -351,10 +353,17 @@ public class EntityListener extends EventListener {
 					.entity(e.getEntity())
 					.creeper(chargedKill)
 					.luck(luck)
+					.natural(isNatural)
 					.getLoot());
 		}
 	}
-	
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onExplosionPrime(ExplosionPrimeEvent e) {
+		if (!getRegionAt(e.getEntity().getLocation()).getEffectiveFlag(Flags.ENTITY_EXPLOSIONS))
+			e.setCancelled(true);
+	}
+
 	@EventHandler(priority = EventPriority.LOW)
 	public void onExplosion(EntityExplodeEvent e) {
 		boolean cancelBlockDamage;

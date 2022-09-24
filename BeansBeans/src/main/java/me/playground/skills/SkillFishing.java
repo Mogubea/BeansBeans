@@ -20,7 +20,7 @@ public class SkillFishing extends Skill {
 	protected boolean doSkillEvent(final Skills s, final Event e) {
 		if (!(e instanceof PlayerFishEvent event)) return false;
 		if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH)
-			s.addExperience(this, (73 + rand.nextInt(5)) * event.getExpToDrop());
+			s.addExperience(this, (60 + rand.nextInt(5)) * event.getExpToDrop());
 		return true;
 	}
 

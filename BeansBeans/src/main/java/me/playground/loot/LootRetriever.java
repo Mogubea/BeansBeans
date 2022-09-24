@@ -35,6 +35,7 @@ public class LootRetriever {
 	private boolean creeper;
 	private boolean skeleton;
 	private boolean burn;
+	private boolean natural;
 	private Biome biome;
 	private float luckInfluence;
 	private int lootingInfluence;
@@ -93,6 +94,7 @@ public class LootRetriever {
 		case INDIVIDUAL_CHANCE:
 			for (int x = -1; ++x < size;) {
 				LootEntry entry = entries.get(x);
+				if (entry.requiresNaturalKill() && !natural) continue;
 				if (entry.requiresPlayer() && player == null) continue;
 				if (entry.requiresChargedCreeper() && !creeper) continue;
 				if (entry.requiresSkeletonShot() && !skeleton) continue;
@@ -209,6 +211,15 @@ public class LootRetriever {
 	 */
 	public LootRetriever entity(LivingEntity entity) {
 		this.entity = entity;
+		return this;
+	}
+
+	/**
+	 * Allows the possibility of generating loot from entries with the {@link LootEntry#requiresNaturalKill()} requirement.
+	 * <p>Only applicable when the RetrieveMethod is {@link RetrieveMethod#INDIVIDUAL_CHANCE}.
+	 */
+	public LootRetriever natural(boolean natural) {
+		this.natural = natural;
 		return this;
 	}
 	

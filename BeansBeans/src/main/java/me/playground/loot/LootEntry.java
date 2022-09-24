@@ -58,7 +58,7 @@ public class LootEntry {
 	private final LootTable table;
 	private final ItemStack baseStack;
 	
-	private ArrayList<LootEnchantEntry> possibleEnchants = new ArrayList<LootEnchantEntry>();
+	private ArrayList<LootEnchantEntry> possibleEnchants = new ArrayList<>();
 	private String descriptionOverride;
 	private LootTable tableRedirect;
 	private Material cookedMaterial;
@@ -73,9 +73,10 @@ public class LootEntry {
 	private float chance;
 	private float luckEffectiveness;
 	private boolean requiresPlayer = false;
+	private boolean mustBeNatural = false;
 	private boolean dirty;
 	
-	private ArrayList<Biome> requiredBiome = new ArrayList<Biome>();
+	private ArrayList<Biome> requiredBiome = new ArrayList<>();
 	
 	public LootEntry(int id, LootTable tb, ItemStack itemStack, float chance) {
 		this(id, tb, itemStack, null, 1, 1, chance, 0.2F, null);
@@ -150,6 +151,13 @@ public class LootEntry {
 
 	public LootEntry setRequiresPlayer(boolean player, boolean dirty) {
 		this.requiresPlayer = player;
+		if (dirty)
+			this.dirty = true;
+		return this;
+	}
+
+	public LootEntry setRequiresNaturalKill(boolean natural, boolean dirty) {
+		this.mustBeNatural = natural;
 		if (dirty)
 			this.dirty = true;
 		return this;
@@ -266,8 +274,18 @@ public class LootEntry {
 		return (flags & 1<<FLAG_CHARGED_CREEPER_KILL) != 0;
 	}
 
+	/**
+	 * @return If th entity killed needs to be killed directly by the player and not by a pet.
+	 */
 	public boolean requiresPlayer() {
 		return requiresPlayer;
+	}
+
+	/**
+	 * @return If the entity killed needs to be detected as a naturally spawning mob.
+	 */
+	public boolean requiresNaturalKill() {
+		return mustBeNatural;
 	}
 	
 	public ArrayList<Biome> getRequiredBiomes() {
@@ -279,7 +297,7 @@ public class LootEntry {
 	}
 	
 	public boolean hasPossibleEnchants() {
-		return !this.possibleEnchants.isEmpty() && this.possibleEnchants.size() > 0;
+		return !this.possibleEnchants.isEmpty();
 	}
 	
 	public ArrayList<LootEnchantEntry> getPossibleEnchants() {
@@ -357,10 +375,7 @@ public class LootEntry {
 			size = baseStack.getMaxStackSize();
 		return (byte)size;
 	}
-	
-	/**
-	 * @return
-	 */
+
 	public JSONObject getJsonData() {
 		JSONObject object = new JSONObject();
 		

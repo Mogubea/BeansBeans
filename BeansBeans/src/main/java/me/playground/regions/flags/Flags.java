@@ -199,11 +199,15 @@ public final class Flags {
 
 	public static final FlagBoolean MUSHROOM_GROWTH		= register(new FlagBoolean("mushroom-growth", "Mushroom Growth", true))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
-			.setDescription(Lore.fastBuild(false, 40, "Mushrooms can grow and spread around in dark places or on &dMycelium&r."));
+			.setDescription(Lore.fastBuild(true, 40, "Mushrooms can grow and spread around in dark places or on &dMycelium&r."));
 
 	public static final FlagBoolean PISTONS				= register(new FlagBoolean("piston", "Pistons", true, false, false))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
 			.setDescription(Lore.fastBuild(true, 40, "&#666666Pistons &rto react to &#ef6666Redstone &rsignals."));
+
+	public static final FlagBoolean SNOW_MELT			= register(new FlagBoolean("snow-melt", "Melt Snow Layers", true))
+			.setFlagCategory(Flag.FlagCategory.BLOCKS)
+			.setDescription(Lore.fastBuild(true, 40, "&fSnow Layers&r will melt when next to a heat source such as a Torch or Lava."));
 
 	public static final FlagBoolean SNOW_FORMATION		= register(new FlagBoolean("snow-form", "Form Snow Layers", true))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
@@ -215,6 +219,10 @@ public final class Flags {
 			.setNeedsPermission()
 			.setDescription(
 					Component.text("\u00a77Automatically form \u00a7bIce Blocks\u00a77 in cold biomes."));
+
+	public static final FlagBoolean ICE_MELT			= register(new FlagBoolean("ice-melt", "Melt Ice", true))
+			.setFlagCategory(Flag.FlagCategory.BLOCKS)
+			.setDescription(Lore.fastBuild(true, 40, "&bIce Blocks&r will melt when next to a heat source such as a Torch or Lava."));
 
 	public static final FlagBoolean STONE_FORMATION		= register(new FlagBoolean("stone-form", "Form Stones", false, false, true))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)

@@ -395,6 +395,8 @@ public class PlayerListener extends EventListener {
 				stop = !enactRegionPermission(canBuild, e, p, "play music");
 			} else if (blockMat == Material.REDSTONE_WIRE) { // Mess with Redstone wires
 				stop = !enactRegionPermission(canBuild, e, p, "alter redstone");
+			} else if (blockMat == Material.BEACON) { // Alter beacons
+				stop = !enactRegionPermission(region, e, p, Flags.CONTAINER_ACCESS, "edit beacons");
 			}
 			
 			if (stop) return;

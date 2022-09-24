@@ -18,7 +18,7 @@ public class SkillAcrobatics extends Skill {
 	@Override
 	protected boolean doSkillEvent(Skills s, Event e) {
 		if (!(e instanceof EntityDamageEvent event)) return false;
-		s.addExperience(this, (int)(event.getDamage() * 4 + rand.nextInt(4)));
+		s.addExperience(this, (int)(event.getDamage() * (12 + rand.nextInt(4))));
 		return true;
 	}
 

@@ -505,7 +505,12 @@ public class BeanGuiAnvil extends BeanGui {
 					double repairCost = 0;
 					int repairCoinCost = 0;
 
-					int curDuraInt = BeanItem.getDurability(upgradeItem);
+					// Check the lowest durability so people don't try to avoid costs by going inverse
+					ItemStack toRepair = upgradeItem;
+					if (BeanItem.getDurability(infuseItem) < BeanItem.getDurability(upgradeItem))
+						toRepair = infuseItem;
+
+					int curDuraInt = BeanItem.getDurability(toRepair);
 					int maxDuraInt = BeanItem.getMaxDurability(upgradeItem);
 					float currentDurability = ((float)curDuraInt / (float)maxDuraInt) * 100f;
 					float newDurability = currentDurability;

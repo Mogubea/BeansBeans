@@ -476,6 +476,22 @@ public class BlockListener extends EventListener {
 	}
 
 	/**
+	 * Ice and Snow melting flags
+	 */
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onBlockFade(BlockFadeEvent e) {
+		Block block = e.getBlock();
+		FlagBoolean flag = switch (block.getType()) {
+			case SNOW, SNOW_BLOCK, POWDER_SNOW -> Flags.SNOW_MELT;
+			case ICE -> Flags.ICE_MELT;
+			default -> null;
+		};
+
+		if (flag == null) return;
+		e.setCancelled(!getRegionAt(block.getLocation()).getEffectiveFlag(flag));
+	}
+
+	/**
 	 * Prevent the flowing of liquids and warping of Ender Dragon Egg into other Regions
 	 */
 	@EventHandler(priority = EventPriority.LOW)

@@ -70,6 +70,12 @@ public class CommandReload extends BeanCommandParent {
 		getPlugin().npcManager().reload();
 		sender.sendMessage(Component.text("Reloaded " + getPlugin().npcManager().getAllNPCs().size() + " NPCs.", NamedTextColor.GREEN));
 	}
+
+	@SubCommand(permissionString = "bean.cmd.reload.loot")
+	public void loot(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull String[] args) {
+		getPlugin().lootManager().reload();
+		sender.sendMessage(Component.text("Reloaded " + getPlugin().lootManager().getAllEntries().size() + " Loot Entries.", NamedTextColor.GREEN));
+	}
 	
 	@SubCommand(permissionString = "bean.cmd.reload.all")
 	public void all(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull String[] args) {

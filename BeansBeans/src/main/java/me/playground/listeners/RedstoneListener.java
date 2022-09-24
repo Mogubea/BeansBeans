@@ -2,6 +2,7 @@ package me.playground.listeners;
 
 import me.playground.main.Main;
 import me.playground.regions.flags.Flags;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.event.EventHandler;
@@ -60,8 +61,12 @@ public class RedstoneListener extends EventListener {
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onHopper(InventoryMoveItemEvent e) {
-        manager.incrementAction(e.getSource().getLocation().getChunk(), 8);
-        if (manager.getAverageRedstoneActions(e.getSource().getLocation().getChunk()) > manager.getMaximumActions())
+        Location sourceLocation = e.getSource().getLocation();
+        if (sourceLocation == null) sourceLocation = e.getDestination().getLocation();
+        if (sourceLocation == null) return; // Unlikely
+
+        manager.incrementAction(sourceLocation.getChunk(), 8);
+        if (manager.getAverageRedstoneActions(sourceLocation.getChunk()) > manager.getMaximumActions())
             e.setCancelled(true); // Shut it down
     }
 

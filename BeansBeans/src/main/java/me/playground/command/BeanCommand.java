@@ -77,7 +77,6 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	}
 	
 	public abstract boolean runCommand(@Nullable PlayerProfile profile, @NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args);
-	public abstract @Nullable List<String> runTabComplete(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args);
 	
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args) {
@@ -123,7 +122,7 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	}
 	
 	@Override
-	public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args) {
+	public final @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args) {
 		if (!this.canConsoleRun && !(sender instanceof Player))
 			return new ArrayList<>();
 		
@@ -132,6 +131,10 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 			newArgs[x] = args[x].toLowerCase();
 		
 		return runTabComplete(sender, cmd, str, newArgs);
+	}
+
+	public @Nullable List<String> runTabComplete(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String str, @NotNull String[] args) {
+		return Collections.emptyList();
 	}
 
 	protected Component getUsage(@NotNull CommandSender sender, @NotNull String str, @NotNull String[] args) {

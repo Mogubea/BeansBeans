@@ -51,7 +51,8 @@ public class LootDatasource extends PrivateDatasource {
                 }
 
                 table.addEntry(new LootEntry(r.getInt("id"), table, i, cookedType, r.getInt("minStack"), r.getInt("maxStack"), r.getFloat("chance"), r.getFloat("chanceLuckChange"), data == null ? null : new JSONObject(data)).setFlags(r.getByte("flags"))
-                        .setRequiresPlayer(r.getBoolean("requiresPlayer"), false));
+                        .setRequiresPlayer(r.getBoolean("requiresPlayer"), false)
+                        .setRequiresNaturalKill(r.getBoolean("requiresNaturalKill"), false));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -72,7 +73,7 @@ public class LootDatasource extends PrivateDatasource {
     }
 
     protected void updateLootEntry(LootEntry entry) {
-        try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("UPDATE loot SET tableName = ?, chance = ?, chanceLuckChange = ?, minStack = ?, maxStack = ?, itemType = ?, flags = ?, compressedStack = ?, data = ?, cookedType = ?, requiresPlayer = ? WHERE id = ?")) {
+        try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("UPDATE loot SET tableName = ?, chance = ?, chanceLuckChange = ?, minStack = ?, maxStack = ?, itemType = ?, flags = ?, compressedStack = ?, data = ?, cookedType = ?, requiresPlayer = ?, requiresNaturalKill = ? WHERE id = ?")) {
             int idx = 0;
 
             s.setString(++idx, entry.getTable().getName());
@@ -93,6 +94,7 @@ public class LootDatasource extends PrivateDatasource {
             s.setString(++idx, entry.getCookedMaterial().name());
 
             s.setBoolean(++idx, entry.requiresPlayer());
+            s.setBoolean(++idx, entry.requiresNaturalKill());
 
             s.setInt(++idx, entry.getId());
             s.executeUpdate();
