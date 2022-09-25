@@ -360,8 +360,12 @@ public class EntityListener extends EventListener {
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onExplosionPrime(ExplosionPrimeEvent e) {
-		if (!getRegionAt(e.getEntity().getLocation()).getEffectiveFlag(Flags.ENTITY_EXPLOSIONS))
-			e.setCancelled(true);
+		switch(e.getEntityType()) {
+			case WITHER_SKULL, WITHER -> {
+				if (!getRegionAt(e.getEntity().getLocation()).getEffectiveFlag(Flags.ENTITY_EXPLOSIONS))
+					e.setCancelled(true);
+			}
+		}
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
