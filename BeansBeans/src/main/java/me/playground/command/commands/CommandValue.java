@@ -59,7 +59,7 @@ public class CommandValue extends BeanCommand {
 			if (value > 0) {
 				sender.sendMessage(Component.empty().append(toHover(itemToValue)).append(Component.text(" can typically be sold to Beansfolk for ", NamedTextColor.GRAY)).append(Component.text(dec.format(value) + " Coins", NamedTextColor.GOLD).append(Component.text(" each.", NamedTextColor.GRAY))));
 			} else {
-				sender.sendMessage(Component.text("Beansfolk aren't currently willing to purchase ").append(toHover(itemToValue)).append(Component.text(".", NamedTextColor.GRAY)));
+				sender.sendMessage(Component.text("Beansfolk aren't willing to purchase ", NamedTextColor.GRAY).append(toHover(itemToValue)).append(Component.text(".", NamedTextColor.GRAY)));
 			}
 		}
 		return true;
