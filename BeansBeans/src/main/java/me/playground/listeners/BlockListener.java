@@ -457,8 +457,6 @@ public class BlockListener extends EventListener {
 	 * we will just have a simple method which is fired by all three of these events.
 	 */
 	private void onBlockGrowthFlagCheck(Material b, BlockGrowEvent e) {
-		System.out.println("Fuck off: " + b);
-
 		FlagBoolean flag = switch(b) {
 			case SNOW -> Flags.SNOW_FORMATION;
 			case ICE -> Flags.ICE_FORMATION;
