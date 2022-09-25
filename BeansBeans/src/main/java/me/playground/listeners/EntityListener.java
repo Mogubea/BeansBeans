@@ -292,8 +292,9 @@ public class EntityListener extends EventListener {
 					p = (Player) ((Monster)e.getEntity()).getTarget();
 		}
 
+		// TODO: Have a better check for grinder entities than just checking nearby entity count
 		// Nerf entities from spawners or in grinders ALWAYS.
-		if (e.getEntity().fromMobSpawner() || e.getEntity().getNearbyEntities(3, 7, 3).size() > 7) {
+		if (e.getEntity().fromMobSpawner() || e.getEntity().getWorld().getNearbyEntitiesByType(e.getEntityType().getEntityClass(), e.getEntity().getLocation(), 3).size() > 3) {
 			isNatural = false;
 			nerfDrops = true;
 		}

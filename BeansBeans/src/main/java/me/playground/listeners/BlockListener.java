@@ -439,25 +439,27 @@ public class BlockListener extends EventListener {
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onBlockSpread(BlockSpreadEvent e) {
-		onBlockGrowthFlagCheck(e.getSource(), e);
+		onBlockGrowthFlagCheck(e.getSource().getType(), e);
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onBlockGrow(BlockGrowEvent e) {
-		onBlockGrowthFlagCheck(e.getNewState().getBlock(), e);
+		onBlockGrowthFlagCheck(e.getNewState().getType(), e);
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onBlockForm(BlockFormEvent e) {
-		onBlockGrowthFlagCheck(e.getNewState().getBlock(), e);
+		onBlockGrowthFlagCheck(e.getNewState().getType(), e);
 	}
 
 	/**
 	 * Due to the inconsistent determination and lack of documentation of what block fires a {@link BlockGrowEvent}, {@link BlockSpreadEvent} or {@link BlockFormEvent},
 	 * we will just have a simple method which is fired by all three of these events.
 	 */
-	private void onBlockGrowthFlagCheck(Block b, BlockGrowEvent e) {
-		FlagBoolean flag = switch(b.getType()) {
+	private void onBlockGrowthFlagCheck(Material b, BlockGrowEvent e) {
+		System.out.println("Fuck off: " + b);
+
+		FlagBoolean flag = switch(b) {
 			case SNOW -> Flags.SNOW_FORMATION;
 			case ICE -> Flags.ICE_FORMATION;
 			case STONE, COBBLESTONE -> Flags.STONE_FORMATION;
