@@ -27,13 +27,13 @@ public class CelestiaDatasource extends PrivateDatasource implements LoggingData
     @Override
     public boolean saveLogs(List<CelestiaLog> logs) {
         try (Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("INSERT INTO celestia (date, playerId, action, world, x, y, z, data) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
-            int size = logs.size();
+            int size = logs.size(), idx;
             for (int x = -1; ++x < size;) {
+                idx = 0;
                 CelestiaLog log = logs.get(x);
                 Location loc = log.getLocation();
 
-                int idx = 0;
-                s.setTimestamp(++idx, Timestamp.from(log.getTime()));
+                s.setTimestamp(++idx, log.getTimestamp());
                 s.setInt(++idx, log.getPlayerId());
                 s.setString(++idx, log.getAction().getIdentifier());
                 s.setInt(++idx, getWorldId(loc.getWorld()));

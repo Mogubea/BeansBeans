@@ -108,16 +108,16 @@ public class EntityListener extends EventListener {
 		final Region regionAttacker = getRegionAt(loc1);
 		final Region regionDefender = getRegionAt(loc2);
 
-		if (e.getEntity() instanceof Player)
-			PlayerProfile.from((Player)e.getEntity()).getHeirlooms().doDamageTakenByEntityEvent(e);
-		if (e.getDamager() instanceof Player)
-			PlayerProfile.from((Player)e.getDamager()).getHeirlooms().doMeleeDamageEvent(e);
+		if (e.getEntity() instanceof Player p)
+			PlayerProfile.from(p).getHeirlooms().doDamageTakenByEntityEvent(e);
+		if (e.getDamager() instanceof Player p)
+			PlayerProfile.from(p).getHeirlooms().doMeleeDamageEvent(e);
 
 		// Against a Player
 		if (e.getEntity() instanceof Player && (e.getDamager() instanceof LivingEntity || e.getDamager() instanceof Projectile || e.getDamager() instanceof Tameable)) {
 			boolean fromPlayer = e.getDamager() instanceof Player;
 
-			if ((e.getDamager() instanceof Projectile && ((Projectile)e.getDamager()).getShooter() instanceof Player)) // Projectile fired from the player
+			if ((e.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player)) // Projectile fired from the player
 				fromPlayer = true;
 			else if ((e.getDamager() instanceof Tameable tameable) && tameable.isTamed()) { // Tamed entity attack
 				fromPlayer = true;
@@ -227,8 +227,18 @@ public class EntityListener extends EventListener {
 			e.setCancelled(true);
 	}
 	
-	@EventHandler(priority = EventPriority.LOW)
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onEntityDamage(EntityDamageEvent e) {
+		if (e.getEntity() instanceof Player p) {
+			PlayerProfile pp = PlayerProfile.from(p);
+			// Teleport Invulnerability check
+			if (pp.onCooldown("teleportInvulnerability")) {
+//				p.getWorld().spawnParticle(Particle.SONIC_BOOM, p.getEyeLocation(), 1, 0, 0, 0, 0.1);
+				e.setCancelled(true);
+			}
+			return;
+		}
+
 		if (e.getEntity() instanceof Item item) {
 			// Protect Dropped Items from being blown up
 			if (e.getCause() == DamageCause.BLOCK_EXPLOSION || e.getCause() == DamageCause.ENTITY_EXPLOSION) {
@@ -396,6 +406,12 @@ public class EntityListener extends EventListener {
 				cloud.setRadiusPerTick(0.04F);
 			});
 		}
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onEntityTransform(EntityTransformEvent e) {
+		if (e.getTransformReason() == EntityTransformEvent.TransformReason.LIGHTNING)
+			getRegionAt(e.getEntity().getLocation()).getEffectiveFlag(Flags.PROTECT_ANIMALS);
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)

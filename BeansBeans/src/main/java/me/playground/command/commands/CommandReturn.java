@@ -23,6 +23,7 @@ public class CommandReturn extends BeanCommand {
 	public CommandReturn(Main plugin) {
 		super(plugin, "bean.cmd.return", false, "return", "back");
 		description = "Return to your previous location before warping or dying.";
+		cooldown = 8;
 	}
 	
 	@Override

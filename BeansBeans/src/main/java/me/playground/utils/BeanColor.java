@@ -8,6 +8,7 @@ public class BeanColor implements TextColor {
 	public static final BeanColor WORLD 		= new BeanColor(0x109b3a);
 	public static final BeanColor COMMAND		= new BeanColor(0xA5AAFF);
 	public static final BeanColor ENCHANT 		= new BeanColor(0x75EFFF);
+	public static final BeanColor ENCHANT_STACK = new BeanColor(0x2D6666);
 	public static final BeanColor ENCHANT_OP 	= new BeanColor(0x35FFFF);
 	public static final BeanColor ENCHANT_BURDEN= new BeanColor(0xef256f);
 	public static final BeanColor ENCHANT_ASTRAL= new BeanColor(0x4a1fbf);

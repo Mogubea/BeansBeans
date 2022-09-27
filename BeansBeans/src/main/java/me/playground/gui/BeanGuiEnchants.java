@@ -63,15 +63,13 @@ public class BeanGuiEnchants extends BeanGui {
 					lore.add(Component.text("\u00a77 • \u00a7r" + enchant.getExperienceCost(1) + " \u25CE Experience Levels").colorIfAbsent(BeanColor.EXPERIENCE).decoration(TextDecoration.ITALIC, false));
 
 				// List Conflicts
-				List<Enchantment> conflicts = enchant.getConflicts();
-				if (!conflicts.isEmpty()) {
+				if (!enchant.getConflicts().isEmpty()) {
 					lore.add(Component.empty());
 					lore.add(Component.text("\u00a7fConflicts: "));
-					for (Enchantment conflict : conflicts) {
+					enchant.getConflicts().forEach(conflict -> {
 						BEnchantment conf = BEnchantment.from(conflict);
 						lore.add(Component.text("\u00a77 • ").append(conf.displayName()).decoration(TextDecoration.ITALIC, false));
-					}
-					//lore.add(Component.empty());
+					});
 				}
 
 				meta.lore(lore);

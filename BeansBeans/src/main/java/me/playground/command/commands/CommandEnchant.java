@@ -20,7 +20,6 @@ import me.playground.command.CommandException;
 import me.playground.items.BeanItem;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
-import me.playground.utils.BeanColor;
 import me.playground.utils.TabCompleter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -74,7 +73,7 @@ public class CommandEnchant extends BeanCommand {
 				throw new CommandException(sender, e.displayName(level).append(Component.text("\u00a7c cannot be added to \u00a7f")).append(toHover(i)));
 			}
 			BeanItem.formatItem(i);
-			p.sendMessage(e.displayName(level).color(BeanColor.ENCHANT).append(Component.text("\u00a77 has been \u00a7aadded \u00a77to \u00a7f")).append(toHover(i)));
+			p.sendMessage(e.displayName(level).append(Component.text("\u00a77 has been \u00a7aadded \u00a77to \u00a7f")).append(toHover(i)));
 		}
 		
 		return true;

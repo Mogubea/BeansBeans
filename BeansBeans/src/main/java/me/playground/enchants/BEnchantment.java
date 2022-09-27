@@ -6,12 +6,14 @@ import me.playground.items.ItemRarity;
 import me.playground.items.lore.Lore;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.enchantments.EnchantmentTarget;
 import org.bukkit.entity.EntityCategory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 import io.papermc.paper.enchantments.EnchantmentRarity;
@@ -30,6 +32,8 @@ public class BEnchantment extends Enchantment {
 	private static final List<BEnchantment> customEnchants = new ArrayList<>();
 	private static final Map<String, BEnchantment> byKeyString = new TreeMap<>();
 	private static final Map<String, BEnchantment> byNameString = new TreeMap<>();
+
+	public static final NamespacedKey KEY_REJUVENATION = Main.getInstance().getKey("REJUVENATION_ENCHANTMENT");
 
 	// Replaced Vanilla Enchantments
 	public static final BEnchantment LEGACY_DURABILITY = new BEnchantment(Enchantment.DURABILITY, "Unbreaking", 4, 2, 5, 5)
@@ -56,6 +60,15 @@ public class BEnchantment extends Enchantment {
 	}.setLore(Lore.getBuilder("Grants the item a &a{0}%&r chance to avoid losing durability.").build())
 			.setBookPowerRequirement(30, 45, 60);
 
+	// pants
+	public static final BEnchantment SWIFT_SPRINT = new BEnchantment("swift_sprint", "Swift Sprint", BEnchantmentTarget.ARMOR_LEGS, 1, 3, false, false, false, 1, 1, 3, 3) {
+		public List<TextComponent> getLore(int level) {
+			return getLoreInstance().getLore(3 * level);
+		}
+	}.setLore(Lore.getBuilder("The wearer's &#a8baef\ud83c\udf0a Sprinting Speed&r is increased by &#a8baef{0}%&r.").build())
+			.setItemRarity(ItemRarity.UNCOMMON, 4)
+			.setItemRarity(ItemRarity.RARE, 6);
+
 	// tools
 	public static final BEnchantment EXPERIENCED = new BEnchantment("experienced", "Experienced", BEnchantmentTarget.TOOL, 1, 3, false, false, false, 4, 2, 6, 4) {
 		public List<TextComponent> getLore(int level) {
@@ -64,6 +77,16 @@ public class BEnchantment extends Enchantment {
 	}.setLore(Lore.getBuilder("Blocks have a &a{0}%&r chance to drop some experience orbs. There is also a &a{1}%&r chance to drop a significantly larger amount.").build())
 			.setItemRarity(ItemRarity.UNCOMMON, 3)
 			.setBookPowerRequirement(50, 80, 110);
+
+	public static final BEnchantment REJUVENATING = new BEnchantment("rejuvenating", "Rejuvenating", BEnchantmentTarget.TOOL, 1, 1, false, false, false, 3, 0, 50, 0) {
+		public @NotNull Component toComponent(@NotNull ItemStack item, int level) {
+			short value = item.hasItemMeta() ? item.getItemMeta().getPersistentDataContainer().getOrDefault(KEY_REJUVENATION, PersistentDataType.SHORT, (short)0) : 0;
+			if (value >= 500) return Component.text("Rejuvenated").color(displayName().color());
+			return displayName().append(Component.text(" " + value, BeanColor.ENCHANT_STACK));
+		}
+	}.setLore(Lore.getBuilder("Using this tool will randomly increase its &a\u26cf Maximum Durability &rby &a1&r. Becomes &"+BeanColor.ENCHANT.asHexString()+"Rejuvenated&r at &a500&r. \n\nWhen &"+BeanColor.ENCHANT.asHexString()+"Rejuvenated&r, it will instead randomly repair itself for &a10 &r- &a30 \u26cf Durability&r.").setLineLimit(36).build())
+			.setItemRarity(ItemRarity.RARE)
+			.setBookPowerRequirement(150);
 	
 	// pickaxe, axe, shovel
 	public static final BEnchantment SMELTING_EDGE = new BEnchantment("smelting_edge", "Smelting Edge", BEnchantmentTarget.TOOL_NO_HOE, 1, 1, false, false, false, 5, 0, 20, 0)
@@ -141,6 +164,12 @@ public class BEnchantment extends Enchantment {
 		}
 	}.setLore(Lore.getBuilder("Increases the material, coin and experience cost of repairing this item by &c{0}%&r.").build())
 			.setBookPowerRequirement(50, 60, 70);
+	/**
+	 * Using this item has a chance to consume more hunger and saturation
+	 */
+	public static final BEnchantment BURDEN_ENERVATING = new BEnchantment("enervating", "Enervating", BEnchantmentTarget.TOOL_AND_SWORD, 1, 1, true, false, false, -2, 0, 0, 0) {
+	}.setLore(Lore.getBuilder("The user has increased hunger drain while using this item.").build())
+			.setBookPowerRequirement(60);
 	/**
 	 * Items steal common drops, items, xp and coins at random.
 	 */
@@ -411,12 +440,22 @@ public class BEnchantment extends Enchantment {
 			.setItemRarity(ItemRarity.RARE, 5)
 			.setBookPowerRequirement(5, 15, 30, 45);
 
-	public static final BEnchantment SWIFT_SNEAK = new BEnchantment(Enchantment.SWIFT_SNEAK, "Swift Sneak", 2, 1, 4, 2) {
+	public static final BEnchantment SWIFT_SNEAK = new BEnchantment(Enchantment.SWIFT_SNEAK, "Swift Sneak", 2, 1, 4, 2, BEnchantment.SWIFT_SPRINT) {
 		public List<TextComponent> getLore(int level) {
 			return getLoreInstance().getLore(((Math.min(100F, 30F + (15F * level)) / 30F) - 1) * 100F);
 		}
 	}.setLore(Lore.getBuilder("The wearer's &#a8baef\ud83c\udf0a Crouch Speed&r is increased by &#a8baef{0}%&r.").build())
 			.setItemRarity(ItemRarity.RARE);
+
+	static {
+		// Reverse set conflicts
+		for (BEnchantment enchant : byKeyString.values()) {
+			for (Enchantment conflict : enchant.conflicts) {
+				BEnchantment bEnchantment = BEnchantment.from(conflict);
+				bEnchantment.conflicts.add(enchant);
+			}
+		}
+	}
 
 	private final boolean isCustom;
 	private final String englishString;
@@ -431,7 +470,7 @@ public class BEnchantment extends Enchantment {
 
 	private final EnchantmentRarity vanillaRarity;
 	private final BEnchantmentTarget target;
-	private final List<Enchantment> conflicts;
+	private final Set<Enchantment> conflicts;
 	
 	private final int baseRunicValue;
 	private final int runicValuePerLevel;
@@ -477,13 +516,7 @@ public class BEnchantment extends Enchantment {
 		this.componentName = Component.text(engName, getColour()).decoration(TextDecoration.ITALIC, false);
 		this.target = target;
 
-		// Reverse set conflict
-		for (Enchantment conflict : conflicts) {
-			BEnchantment bEnchantment = BEnchantment.from(conflict);
-			bEnchantment.conflicts.add(this);
-		}
-
-		this.conflicts = new ArrayList<>(Arrays.asList(conflicts));
+		this.conflicts = new HashSet<>(List.of(conflicts));
 		this.baseRunicValue = runicCost;
 		this.runicValuePerLevel = runicIncrease;
 		this.baseXpCost = xpCost;
@@ -511,7 +544,7 @@ public class BEnchantment extends Enchantment {
 		this.translationKey = enchant.translationKey();
 		this.componentName = Component.translatable(translationKey, getColour()).decoration(TextDecoration.ITALIC, false);
 		this.target = BEnchantmentTarget.valueOf(enchant.getItemTarget().name());
-		this.conflicts = Arrays.asList(conflicts);
+		this.conflicts = new HashSet<>(List.of(conflicts));
 		this.baseRunicValue = runicValue;
 		this.runicValuePerLevel = runicPerLevel;
 		this.baseXpCost = xpCost;
@@ -711,6 +744,9 @@ public class BEnchantment extends Enchantment {
 	}
 
 	@NotNull
+	public Component toComponent(@NotNull ItemStack item, int level) { return displayName(level); }
+
+	@NotNull
 	public BEnchantmentTarget getEnchantmentTarget() {
 		return target;
 	}
@@ -770,7 +806,7 @@ public class BEnchantment extends Enchantment {
     	return false;
     }
     
-    public List<Enchantment> getConflicts() {
+    public Collection<Enchantment> getConflicts() {
     	return this.conflicts;
     }
     

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import me.playground.entity.EntityRegionCrystal;
 import me.playground.items.BeanItem;
 import me.playground.items.lore.Lore;
+import me.playground.regions.flags.Flags;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.world.entity.Entity;
 import org.bukkit.Bukkit;
@@ -145,6 +146,8 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 				new BeanGuiRegionExpansion(p, regionIdx).openInventory();
 				break;*/
 			case 52: // Remove Crystal
+				if (!getRegion().doesPlayerBypass(p, Flags.BUILD_ACCESS)) return;
+
 				if (getCrystal() != null && !getCrystal().isRemoved()) {
 					p.getInventory().addItem(BeanItem.REGION_CRYSTAL.getItemStack()).forEach((idx, item) -> getCrystal().getBukkitEntity().getWorld().dropItem(getCrystal().getBukkitEntity().getLocation(), item));
 					getCrystal().remove(Entity.RemovalReason.DISCARDED);
@@ -186,7 +189,7 @@ public class BeanGuiRegionMain extends BeanGuiRegion {
 			iPriority.lore(Arrays.asList(Component.text("\u00a7f" + getRegion().getPriority())));
 		
 		contents[25] = iPriority;
-		contents[52] = getCrystal() != null ? removeCrystal : rBlank;
+		contents[52] = getCrystal() != null && getRegion().doesPlayerBypass(p, Flags.BUILD_ACCESS) ? removeCrystal : rBlank;
 
 		i.setContents(contents);
 		super.onInventoryOpened();

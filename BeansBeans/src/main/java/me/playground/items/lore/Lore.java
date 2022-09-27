@@ -240,6 +240,8 @@ public class Lore {
                         char[] b = word.toCharArray();
                         int charLength = b.length;
                         for(int i = -1; ++i < charLength;) {
+                            if (b[i] == ' ' && currentLineLength <= 0) continue;
+
                             if (b[i] == '\n') {
                                 // Split the word
                                 if (newWord.length() > 0) {
@@ -267,7 +269,7 @@ public class Lore {
                                         finishLine(false);
 
                                     currentComponent = currentComponent.content(currentComponent.content() + newWord);
-                                    length += newWord.length();
+//                                    length += newWord.length();
                                     newWord = new StringBuilder();
                                 }
 
@@ -275,7 +277,6 @@ public class Lore {
                                 appendComponent();
 
                                 // Numbers
-                                length-=2;
                                 i++;
 
                                 // Do charAt instead of case checking idx for readability’s sake
@@ -297,7 +298,7 @@ public class Lore {
                                         int counted = 0;
 
                                         for (int c = -1; ++c < remaining;) {
-                                            if ("0123456789AaBbCcDdEeFf".indexOf(b[i + 1 + c]) <= -1) break;
+                                            if ("0123456789AaBbCcDdEeFf".indexOf(b[i + 1 + c]) == -1) break;
                                             colourWord.append(b[i + 1 + c]);
                                             counted++;
                                         }
@@ -314,6 +315,8 @@ public class Lore {
                                     }
                                     default -> currentComponent = Component.text(currentComponent.content(), ChatColor.namedOfChar(b[i])); // Clears previous formatting
                                 }
+
+                                length -= 2;
                             } else {
                                 newWord.append(b[i]);
                             }
@@ -325,13 +328,15 @@ public class Lore {
                         finishLine(false);
 
                     if (s < (sSize - 1)) { // Before last word
-                        currentComponent = currentComponent.content(currentComponent.content() + word + " ");
-                        length++;
-
-                        currentLineLength += length;
+                        if (currentLineLength + 1 <= maximumLineLength) {
+                            currentComponent = currentComponent.content(currentComponent.content() + word + " ");
+                            length++;
+                        }
                     } else { // Last Word
                         currentComponent = currentComponent.content(currentComponent.content() + word);
                     }
+
+                    currentLineLength += length;
                 }
             }
 

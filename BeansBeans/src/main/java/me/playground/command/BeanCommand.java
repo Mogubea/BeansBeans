@@ -89,36 +89,39 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 		
 			if (!this.canConsoleRun && !isPlayer(sender))
 				throw new CommandException(sender, "You must be in-game to use /"+str+".");
-			
-			if (isPlayer(sender)) {
-				PlayerProfile pp = PlayerProfile.from(((Player)sender));
-				if (cooldown > 0 && pp.onCdElseAdd("cmd." + cmd.getName(), cooldown)) {
+
+			PlayerProfile pp = isPlayer(sender) ? PlayerProfile.from((Player) sender) : null;
+
+			// Check for cool-downs if they are a player
+			if (pp != null) {
+				if (pp.onCooldown("cmd." + cmd.getName())) {
 					sender.sendActionBar(Component.text("\u00a7cPlease wait " + Utils.timeStringFromNow(pp.getCooldown("cmd."+cmd.getName())) + " before using /"+str+" again."));
 					return false;
 				}
-				
+
 				if (pp.onCdElseAdd("cmd", 600)) {
 					sender.sendActionBar(Component.text("\u00a7cYou are sending commands too fast!"));
 					return false;
 				}
-				
+
 				pp.getStats().addToStat(StatType.GENERIC, "commandsRun", 1);
 			}
-			
+
 			if (args.length < minArgs)
 				throw new CommandException(sender, getUsage(sender, str.toLowerCase(), args));
-			
-			return runCommand(isPlayer(sender) ? PlayerProfile.from((Player)sender) : null, sender, cmd, str.toLowerCase(), args);
+
+			boolean successful = runCommand(isPlayer(sender) ? PlayerProfile.from((Player)sender) : null, sender, cmd, str.toLowerCase(), args);
+
+			// Add command cooldown after a successful run.
+			if (successful && pp != null && cooldown > 0)
+				pp.addCooldown("cmd." + cmd.getName(), cooldown);
+
+			return successful;
 		} catch (CommandException e) {
 			e.notifySender();
-			if (isPlayer(sender)) { // if an error during the command, remove the cooldown. TODO: make all of this more efficient.
-				PlayerProfile pp = PlayerProfile.from(((Player)sender));
-				if (pp.onCooldown("cmd." + cmd.getName()))
-					pp.clearCooldown("cmd." + cmd.getName());
-			}
-				
-			return false;
 		}
+
+		return false;
 	}
 	
 	@Override

@@ -56,7 +56,8 @@ public class BeanGuiEnchantingTable extends BeanGui {
 			Component.text("Enchantments", BeanColor.ENCHANT),
 			Component.text("\u00a77The list of positive enchantments"), Component.text("\u00a77that can be added to your item. Each"), Component.text("\u00a77enchantment applied will deplete some"),
 			Component.text("\u269D Runic Capacity \u00a77from your item.").colorIfAbsent(BeanColor.ENCHANT).decoration(TextDecoration.ITALIC, false), Component.empty(), 
-			Component.text("\u00a77Removing enchantments is \u00a7aFree\u00a77."));
+			Component.text("\u00a77Removing and downgrading Enchantments"),
+			Component.text("\u00a77is \u00a7aFree\u00a77."));
 	
 	protected static final ItemStack pageBurdensDetails = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTNhNjljM2NhYTMxMzA0ZTk5NTIzMjhjNzJjZWUwYjU3YjJhMmJkNDZjZTljNWNiODhjMDdkMTI2NjI3N2Q2YSJ9fX0="), 
 			Component.text("Burdens", BeanColor.ENCHANT_BURDEN),
@@ -64,7 +65,8 @@ public class BeanGuiEnchantingTable extends BeanGui {
 			Component.text("\u00a77applied will restore some \u00a7r\u269D Runic").colorIfAbsent(BeanColor.ENCHANT).decoration(TextDecoration.ITALIC, false),
 			Component.text("Capacity \u00a77to your item, allowing").colorIfAbsent(BeanColor.ENCHANT).decoration(TextDecoration.ITALIC, false), 
 			Component.text("\u00a77for more positive enchantments."), Component.empty(),
-			Component.text("\u00a77Removing burdens is \u00a7cExpensive\u00a77."));
+			Component.text("\u00a7cRemoving burdens requires your"),
+			Component.text("\u00a7citem to be at full durability."));
 	
 	protected static final ItemStack confNone = newItem(new ItemStack(Material.WHITE_STAINED_GLASS_PANE), Component.empty());
 	protected static final ItemStack confRed = newItem(new ItemStack(Material.RED_STAINED_GLASS_PANE), Component.empty());
@@ -134,7 +136,10 @@ public class BeanGuiEnchantingTable extends BeanGui {
 		};
 		
 		this.table = table;
-		
+
+		if (p.getGameMode() == GameMode.CREATIVE)
+			bookPower += 1000;
+
 		// Book Power
 		if (table != null) {
 			int oX = table.getX();
@@ -216,7 +221,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 				i.setItem(enchantingSlot, displayItem);
 
 				if (p.getGameMode() != GameMode.CREATIVE) {
-					pp.getSkills().addExperience(Skill.ENCHANTING, xpCost * 33 + lapisCost * 100); // Only give XP if not in Creative Mode.
+					pp.getSkills().addExperience(Skill.ENCHANTING, xpCost * 41 + lapisCost * 100); // Only give XP if not in Creative Mode.
 					useLapisLazuli(lapisCost);
 				} else if (!pp.hasPermission(Permission.BYPASS_COSTS_CREATIVE))
 					useLapisLazuli(lapisCost);
@@ -307,8 +312,13 @@ public class BeanGuiEnchantingTable extends BeanGui {
 				int enchSlot = 12 + (level-1) + (4 * ((level-1)/5));
 				ItemStack book = new ItemStack(Material.ENCHANTED_BOOK);
 				ItemMeta meta = book.getItemMeta();
-				
-				if (bookPower >= selEnch.getBookRequirement(level) || oldLvl == level) {
+
+				if (selEnch.isCursed() && !BeanItem.isFullyRepaired(itemToModify) && oldLvl >= level) { // Burden removal but the item is not fully repaired
+					book.setType(Material.BOOK);
+					meta = book.getItemMeta();
+					meta.displayName(selEnch.displayName(level).color(NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false));
+					lore.addAll(Lore.fastBuild(true, 40, "\n&c\u26a0 Your item must be fully repaired in order to remove this burden!"));
+				} else if (bookPower >= selEnch.getBookRequirement(level) || oldLvl == level) { // Enough book power or the item already has this enchantment level
 					meta.displayName(selEnch.displayName(level).decoration(TextDecoration.ITALIC, false));
 					
 					int oldLevel = pendingChanges.getOrDefault(enchant, oldLvl);
@@ -683,6 +693,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 				page = 0;
 				xpCost = 0;
 				lapisCost = 0;
+				selEnch = null;
 				mapping.clear();
 				pendingChanges.clear();
 				

@@ -203,10 +203,10 @@ public class EntityHologram extends ArmorStand implements IBeanEntity {
 
 	@Override
 	public void remove(RemovalReason entity_removalreason) {
-		super.remove(entity_removalreason);
 		int size = lines.size();
 		for (int x = size; --x > -1;)
 			lines.remove(x);
+		super.remove(entity_removalreason);
 	}
 
 }

@@ -527,12 +527,16 @@ public class BeanItem {
 	public Multimap<Attribute, AttributeModifier> getAttributes() {
 		return baseAttributes;
 	}
-	
+
+	public static boolean isFullyRepaired(ItemStack item) {
+		return getDurability(item) >= getMaxDurability(item);
+	}
+
 	public static ItemStack reduceItemDurabilityBy(ItemStack item, int amt) {
 		int dura = getDurability(item);
 		return setDurability(item, dura - amt);
 	}
-	
+
 	public static ItemStack addDurability(ItemStack item, int amt) {
 		int dura = getDurability(item);
 		return setDurability(item, Math.min(getMaxDurability(item), dura + amt));
@@ -636,7 +640,7 @@ public class BeanItem {
 
 			for (Entry<Enchantment, Integer> enchant : enchants.entrySet()) {
 				BEnchantment bEnchantment = BEnchantment.from(enchant.getKey());
-				if (bEnchantment == null || bEnchantment.isHiddenFromLore()) continue;
+				if (bEnchantment.isHiddenFromLore()) continue;
 				lore.add(Component.text(" • ", NamedTextColor.GRAY).append(bEnchantment.displayName(enchant.getValue())).decoration(TextDecoration.ITALIC, false));
 				totalExperienceCost += bEnchantment.getExperienceCost(enchant.getValue());
 				totalRunicUsage += bEnchantment.getRunicValue(enchant.getValue());
@@ -816,12 +820,13 @@ public class BeanItem {
 		if (enchants.size() > 0) {
 			Map<Enchantment, Integer> burdens = new LinkedHashMap<>();
 			for (Entry<Enchantment, Integer> enchant : enchants.entrySet()) {
-				if (BEnchantment.from(enchant.getKey()).isHiddenFromLore()) continue;
-				
-				if (enchant.getKey().isCursed())
+				BEnchantment bEnchantment = BEnchantment.from(enchant.getKey());
+				if (bEnchantment.isHiddenFromLore()) continue;
+
+				if (bEnchantment.isCursed())
 					burdens.put(enchant.getKey(), enchant.getValue());
 				else
-					lore.add(Component.text("\u269D ").color(TextColor.color(0x99CCCC)).append(enchant.getKey().displayName(enchant.getValue()).color(enchant.getKey().getMaxLevel() < enchant.getValue() ? BeanColor.ENCHANT_OP : BeanColor.ENCHANT)).decoration(TextDecoration.ITALIC, false));
+					lore.add(Component.text("\u269D ").color(TextColor.color(0x99CCCC)).append(bEnchantment.toComponent(item, enchant.getValue()).color(enchant.getKey().getMaxLevel() < enchant.getValue() ? BeanColor.ENCHANT_OP : BeanColor.ENCHANT)).decoration(TextDecoration.ITALIC, false));
 			}
 			
 			// Do Burdens after
@@ -1115,17 +1120,18 @@ public class BeanItem {
 		else if (baseDurability <= 0)
 			return;
 
-		int newDurability = baseDurability;
-		int refinementLevel = BItemDurable.getRefinementTier(item);
-		newDurability += (double)baseDurability * (0.1 * (refinementLevel * 2));
-
-		final int finalDurability = newDurability;
+		int refinementDurability = (int) ((double)baseDurability * (0.1 * (BItemDurable.getRefinementTier(item) * 2)));
+		final int newDurability = baseDurability + refinementDurability;
 
 		item.editMeta(meta -> {
 			PersistentDataContainer pdc = meta.getPersistentDataContainer();
-			pdc.set(KEY_MAX_DURABILITY, PersistentDataType.INTEGER, finalDurability);
-		});
+			// TODO: Add a better way of checking for this without having to hard code it here.
+			if (!meta.hasEnchant(BEnchantment.REJUVENATING))
+				pdc.remove(BEnchantment.KEY_REJUVENATION);
 
+			int rejuvenationDurability = pdc.getOrDefault(BEnchantment.KEY_REJUVENATION, PersistentDataType.SHORT, (short)0);
+			pdc.set(KEY_MAX_DURABILITY, PersistentDataType.INTEGER, newDurability + rejuvenationDurability);
+		});
 	}
 
 	public boolean is(BeanItem item) {

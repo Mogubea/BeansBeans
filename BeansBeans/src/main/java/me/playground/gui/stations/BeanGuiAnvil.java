@@ -197,8 +197,8 @@ public class BeanGuiAnvil extends BeanGui {
 							p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, p.getEyeLocation(), 16, 1, 1, 1);
 						}
 
-						if (p.getGameMode() == GameMode.SURVIVAL)
-							pp.getSkills().addExperience(isEnchant ? Skill.ENCHANTING : Skill.FORGING, 29 * purchase[option].getExperienceCost() + (purchase[option].getCoinCost()/12));
+						if (p.getGameMode() != GameMode.CREATIVE) // XP when not in Creative Mode
+							pp.getSkills().addExperience(isEnchant ? Skill.ENCHANTING : Skill.FORGING, 47 * purchase[option].getExperienceCost() + (purchase[option].getCoinCost()/20));
 
 						// Degrade anvil
 						if (anvil != null) {
@@ -296,6 +296,7 @@ public class BeanGuiAnvil extends BeanGui {
 			boolean isRepairing = false;
 			boolean isBookEnchanting = false;
 			boolean checkForEnchants = true;
+			boolean areSimilar = false;
 
 			List<List<TextComponent>> enchantWarning = Arrays.asList(null, null);
 
@@ -325,11 +326,12 @@ public class BeanGuiAnvil extends BeanGui {
 				boolean infuseBook = infuseItem.getType() == Material.ENCHANTED_BOOK;
 
 				int enchantIrreparable = Math.min(3, upgradeItem.getItemMeta().getEnchantLevel(BEnchantment.BURDEN_IRREPARABLE));
+				areSimilar = areSimilar();
 
 				BItemDurable custom = BeanItem.from(upgradeItem, BItemDurable.class);
 
 				// If the two items are of the same type.
-				if (areSimilar()) {
+				if (areSimilar) {
 					if (upgradeBook) { // Book Combining
 						purchase[0] = new PurchaseOption(purchaseConfirm, Component.text("\u00a7bCombine Books"), Lore.getBuilder("Combine the two Enchanted Books for 25% of any enchantment costs. Enchantments of the same level will upgrade for a cost.").build());
 						purchase[0].addSkillRequirement(Skill.ENCHANTING, 1);
@@ -505,9 +507,9 @@ public class BeanGuiAnvil extends BeanGui {
 					double repairCost = 0;
 					int repairCoinCost = 0;
 
-					// Check the lowest durability so people don't try to avoid costs by going inverse
+					// Check the lowest durability so people don't try to avoid costs by going inverse, assuming the items are the same.
 					ItemStack toRepair = upgradeItem;
-					if (BeanItem.getDurability(infuseItem) < BeanItem.getDurability(upgradeItem))
+					if (areSimilar && BeanItem.getDurability(infuseItem) < BeanItem.getDurability(upgradeItem))
 						toRepair = infuseItem;
 
 					int curDuraInt = BeanItem.getDurability(toRepair);
@@ -524,7 +526,7 @@ public class BeanGuiAnvil extends BeanGui {
 							newDurability += repairVal;
 						}
 
-						if (!areSimilar())
+						if (!areSimilar)
 							this.rightConsumeCount += consumeCount;
 
 						// 100% cap
@@ -532,7 +534,7 @@ public class BeanGuiAnvil extends BeanGui {
 							newDurability = 100f;
 
 						// Increment the XP cost of the repair based on % repaired
-						repairCost = ((newDurability - currentDurability) / 22) * (1 + (0.25 * enchantIrreparable));
+						repairCost = ((newDurability - currentDurability) / 30) * (1 + (0.25 * enchantIrreparable));
 
 						// Increment the Coin cost of the repair based on % and durability repaired
 						int newDuraInt = (int) ((float) maxDuraInt * (newDurability / 100f));
@@ -547,7 +549,7 @@ public class BeanGuiAnvil extends BeanGui {
 					}
 
 					if (!isRefining) {
-						if (areSimilar()) {
+						if (areSimilar) {
 							purchase[0] = new PurchaseOption(purchaseConfirm, Component.text("\u00a7aCombine and Repair"),
 									Lore.getBuilder("Combine the two items provided, repairing and attempting to merge enchantments, burdens, refinement tier and more.").dontFormatColours().build());
 							left = indicatorCombine;
@@ -631,8 +633,8 @@ public class BeanGuiAnvil extends BeanGui {
 						case RARE -> { newCost[x] *= 1.25; coinCost[x] *= 1.25; }
 						case EPIC -> { newCost[x] *= 1.5; coinCost[x] *= 1.5; }
 						case LEGENDARY, EVENT, SPECIAL -> { newCost[x] *= 1.75; coinCost[x] *= 1.75; }
-						case MYTHIC, ASTRAL -> { newCost[x] *= 3; coinCost[x] *= 2; }
-						case IRIDESCENT -> { newCost[x] *= 4; coinCost[x] *= 3; }
+						case MYTHIC, ASTRAL -> { newCost[x] *= 2; coinCost[x] *= 2; }
+						case IRIDESCENT -> { newCost[x] *= 3; coinCost[x] *= 3; }
 					}
 
 					// Finalise the purchase

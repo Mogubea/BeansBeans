@@ -109,7 +109,7 @@ public final class Flags {
 			.setDescription(
 					Component.text("\u00a77Prevent \u00a74Hostile mobs\u00a77 and \u00a79Non-Members\u00a77 from harming"),
 					Component.text("\u00a77or capturing animals, captured fish and villagers inside"),
-					Component.text("\u00a77of the region."));
+					Component.text("\u00a77of the region. Also prevents lightning transforming."));
 	
 	public static final FlagBoolean ENTITY_TRAILS		= register(new FlagBoolean("entity-trail", "Mob Trails", true))
 			.setFlagCategory(Flag.FlagCategory.ENTITIES)
@@ -200,6 +200,18 @@ public final class Flags {
 	public static final FlagBoolean MUSHROOM_GROWTH		= register(new FlagBoolean("mushroom-growth", "Mushroom Growth", true))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)
 			.setDescription(Lore.fastBuild(true, 40, "Mushrooms can grow and spread around in dark places or on &dMycelium&r."));
+
+	public static final FlagBoolean FIRE_SPREAD 		= register(new FlagBoolean("fire-spread", "Fire Spreading", false))
+			.setFlagCategory(Flag.FlagCategory.BLOCKS)
+			.setDescription(Lore.fastBuild(false, 40, "Fire can form and spread across flammable blocks."));
+
+	public static final FlagBoolean FIRE_BURN 			= register(new FlagBoolean("fire-burn", "Fire Burn", false))
+			.setFlagCategory(Flag.FlagCategory.BLOCKS)
+			.setDescription(Lore.fastBuild(false, 40, "Fire can burn and destroy flammable blocks."));
+
+	public static final FlagBoolean FIRE_EXTINGUISH 	= register(new FlagBoolean("fire-extinguish", "Fire Extinguish", true))
+			.setFlagCategory(Flag.FlagCategory.BLOCKS)
+			.setDescription(Lore.fastBuild(false, 40, "Fire can naturally extinguish."));
 
 	public static final FlagBoolean PISTONS				= register(new FlagBoolean("piston", "Pistons", true, false, false))
 			.setFlagCategory(Flag.FlagCategory.BLOCKS)

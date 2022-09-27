@@ -84,41 +84,40 @@ public class SkillMining extends Skill {
 		final Material material = b.getType();
 		
 		switch(material) {
-		case NETHERRACK: return 1;
-		case STONE: return 3;
-		case DEEPSLATE: return 6;
-		case SANDSTONE: case TUFF: case DIORITE: case ANDESITE: case GRANITE: case BASALT: case SMOOTH_BASALT: case BLACKSTONE: case CALCITE: return 6;
-		case MAGMA_BLOCK: case GLOWSTONE: return 10;
-		case DRIPSTONE_BLOCK: case END_STONE: return 11;
-		case AMETHYST_BLOCK: return 14;
-		case MOSSY_COBBLESTONE: return 20;
-		case AMETHYST_CLUSTER: return 24;
-		case COAL_ORE: return 35;
-		case OBSIDIAN: case CRYING_OBSIDIAN: return 45;
-		case IRON_ORE: return 50;
-		case COPPER_ORE: return 55;
-		case DEEPSLATE_IRON_ORE: return 75;
-		case DEEPSLATE_COPPER_ORE: return 80;
-		case GOLD_ORE: return 95;
-		case DEEPSLATE_GOLD_ORE: return 105;
-		case BUDDING_AMETHYST: return 110;
-		case NETHER_QUARTZ_ORE: return 105;
-		case NETHER_GOLD_ORE: return 125;
-		case DEEPSLATE_REDSTONE_ORE: return 150;
-		case REDSTONE_ORE: return 160;
-		case GILDED_BLACKSTONE: return 180;
-		case LAPIS_ORE: return 300;
-		case DEEPSLATE_LAPIS_ORE: return 300;
-		case DEEPSLATE_DIAMOND_ORE: return 720;
-		case DIAMOND_ORE: return 770;
-		case EMERALD_ORE: return 850;
-		case DEEPSLATE_EMERALD_ORE: return 1100;
-		case DEEPSLATE_COAL_ORE: return 1300;
-		case ANCIENT_DEBRIS: return 2600; // Annoying bastard.
-		default: 
-			if (b.getType().name().endsWith("TERRACOTTA") && !b.getType().name().endsWith("GLAZED_TERRACOTTA"))
-				return 6;
-			return 0;
+			case NETHERRACK: return 1;
+			case STONE: return 3;
+			case DEEPSLATE: case SANDSTONE: case TUFF: case DIORITE: case ANDESITE: case GRANITE: case BASALT: case SMOOTH_BASALT: case BLACKSTONE: case CALCITE: return 5;
+			case MAGMA_BLOCK: case GLOWSTONE: return 10;
+			case DRIPSTONE_BLOCK: case END_STONE: return 11;
+			case AMETHYST_BLOCK: return 12;
+			case MOSSY_COBBLESTONE: return 16;
+			case AMETHYST_CLUSTER: return 22;
+			case COAL_ORE: return 32;
+			case OBSIDIAN: case CRYING_OBSIDIAN: return 45;
+			case IRON_ORE: return 45;
+			case COPPER_ORE: return 55;
+			case DEEPSLATE_IRON_ORE: return 75;
+			case DEEPSLATE_COPPER_ORE: return 80;
+			case GOLD_ORE: return 90;
+			case DEEPSLATE_GOLD_ORE: return 100;
+			case BUDDING_AMETHYST: return 103;
+			case NETHER_QUARTZ_ORE: return 105;
+			case NETHER_GOLD_ORE: return 110;
+			case DEEPSLATE_REDSTONE_ORE: return 130;
+			case REDSTONE_ORE: return 140;
+			case GILDED_BLACKSTONE: return 200;
+			case LAPIS_ORE: return 260;
+			case DEEPSLATE_LAPIS_ORE: return 260;
+			case DEEPSLATE_DIAMOND_ORE: return 650;
+			case DIAMOND_ORE: return 660;
+			case EMERALD_ORE: return 750;
+			case DEEPSLATE_COAL_ORE: return 800;
+			case DEEPSLATE_EMERALD_ORE: return 900;
+			case ANCIENT_DEBRIS: return 2400;
+			default: 
+				if (b.getType().name().endsWith("TERRACOTTA") && !b.getType().name().endsWith("GLAZED_TERRACOTTA"))
+					return 6;
+				return 0;
 		}
 	}
 

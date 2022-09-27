@@ -2,15 +2,12 @@ package me.playground.items;
 
 import java.util.*;
 
-import com.avaje.ebean.validation.NotNull;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 
 import me.playground.enchants.BEnchantment;
-import org.checkerframework.checker.units.qual.A;
-import org.w3c.dom.Attr;
 
 public enum ItemAttributes {
 	
@@ -111,7 +108,7 @@ public enum ItemAttributes {
 		final int size = enchants.length;
 		for (int x = -1; ++x < size;) {
 			BEnchantment enchant = enchants[x];
-			if (enchant == BEnchantment.BINDING_CURSE || enchant == BEnchantment.VANISHING_CURSE)
+			if (enchant == Enchantment.BINDING_CURSE || enchant == Enchantment.VANISHING_CURSE)
 				continue;
 			if (enchant.getEnchantmentTarget().includes(getMaterial()))
 				addValidEnchantment(enchant);

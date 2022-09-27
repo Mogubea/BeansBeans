@@ -79,10 +79,10 @@ public class BlockTracker {
      * @return a long key.
      */
     private long getBlockKey(Block block) {
-        long yBits = block.getY() & 0xFFFL; // 12
+        long yBits = block.getY() & 0xFFFL; // 16
         long xBits = block.getX() & 0xFFFFFFL; // 24
         long zBits = block.getZ() & 0xFFFFFFL; // 24, each F represents 4 bits
-        return (yBits << 52) | (xBits << 24) | (zBits);
+        return (yBits << 48) | (xBits << 24) | (zBits);
     }
 
     private File getTrackingFile() {
@@ -96,6 +96,20 @@ public class BlockTracker {
             }
         }
         return trackingFile;
+    }
+
+    /**
+     * The maximum vertical world size allowed
+     */
+    public static int getMaximumVertical() {
+        return 0xFFFF - 1;
+    }
+
+    /**
+     * The maximum horizontal world size allowed
+     */
+    public static int getMaximumHorizontal() {
+        return 0xFFFFFF - 1;
     }
 
 }

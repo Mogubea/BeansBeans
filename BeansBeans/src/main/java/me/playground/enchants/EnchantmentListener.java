@@ -3,11 +3,15 @@ package me.playground.enchants;
 import me.playground.items.BeanItem;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.regions.flags.Flags;
+import me.playground.utils.BeanColor;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.Particle.DustTransition;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Ageable;
@@ -24,12 +28,16 @@ import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerFishEvent.State;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.event.player.PlayerRiptideEvent;
+import org.bukkit.event.player.PlayerToggleSprintEvent;
 import org.bukkit.inventory.ItemStack;
 
 import me.playground.listeners.BlockDestructionSequence;
 import me.playground.listeners.EventListener;
 import me.playground.listeners.events.CustomBlockBreakEvent;
 import me.playground.main.Main;
+import org.bukkit.persistence.PersistentDataType;
+
+import java.util.UUID;
 
 public class EnchantmentListener extends EventListener {
 	
@@ -84,13 +92,46 @@ public class EnchantmentListener extends EventListener {
 				pp.addToBalance(-coinDeduct);
 				e.setDamage(e.getDamage() + damage);
 			}
-
 		}
+
+		// Enervating Burden
+		// Each offensive swing has a 2.5% chance to drain the player of some saturation, however, there is an 8-second cooldown between drains.
+		if (e.getCause() != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK && item.containsEnchantment(BEnchantment.BURDEN_ENERVATING)) {
+			PlayerProfile pp = PlayerProfile.from(p);
+			if (!pp.onCooldown("enervating_drain")) {
+				int random = rand.nextInt(40);
+				if (random == 0) {
+					pp.addCooldown("enervating_drain", 1000 * 8, true);
+					if (p.getSaturation() > 0)
+						p.setSaturation(p.getSaturation() - 0.1F);
+					else if (p.getFoodLevel() > 0)
+						p.setFoodLevel(p.getFoodLevel() - 1);
+				}
+			}
+		}
+
 	}
-	
+
+	private final AttributeModifier MODIFIER_SWIFT_SPRINT = new AttributeModifier(UUID.fromString("c6a436f8-9b99-49a3-a31f-a3a1bdce9428"), Attribute.GENERIC_MOVEMENT_SPEED.translationKey(), 0.03, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
+
+	@EventHandler(ignoreCancelled = true)
+	public void onPlayerSprintToggle(PlayerToggleSprintEvent e) {
+		Player p = e.getPlayer();
+		ItemStack leggings = p.getEquipment().getLeggings();
+		int lv = leggings == null ? 0 : leggings.getEnchantmentLevel(BEnchantment.SWIFT_SPRINT);
+
+		if (e.isSprinting() && lv > 0) {
+			AttributeModifier modifier = new AttributeModifier(MODIFIER_SWIFT_SPRINT.getUniqueId(), MODIFIER_SWIFT_SPRINT.getName(), MODIFIER_SWIFT_SPRINT.getAmount() * lv, MODIFIER_SWIFT_SPRINT.getOperation());
+			p.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(modifier);
+		} else {
+			p.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).removeModifier(MODIFIER_SWIFT_SPRINT);
+		}
+
+	}
+
 	@EventHandler(ignoreCancelled = true)
 	public void onFishMob(PlayerFishEvent e) {
-		if (e.getState() != State.CAUGHT_ENTITY) return;
+		if (e.getState() != State.CAUGHT_ENTITY || e.getCaught() == null) return;
 		
 		Player p = e.getPlayer();
 		ItemStack rod = p.getEquipment().getItemInMainHand();
@@ -99,8 +140,8 @@ public class EnchantmentListener extends EventListener {
 		
 		if (!rod.containsEnchantment(BEnchantment.SCORCHING)) return;
 		
-		if (e.getCaught().getFireTicks() < 60)
-			e.getCaught().setFireTicks(60);
+		if (e.getCaught().getFireTicks() < 80)
+			e.getCaught().setFireTicks(80);
 	}
 	
 	@EventHandler(ignoreCancelled = true)
@@ -145,10 +186,10 @@ public class EnchantmentListener extends EventListener {
 		Player p = e.getPlayer();
 		Block b = e.getBlock();
 		ItemStack item = p.getEquipment().getItemInMainHand();
-		
-		if (item.containsEnchantment(BEnchantment.EXPERIENCED)) {
-			if ((item.getType().name().endsWith("_HOE") && (b.getBlockData() instanceof Ageable ageable && ageable.getAge() >= ageable.getMaximumAge())) // Hoes
-					|| b.isPreferredTool(item) && b.getType().getHardness() > 1F || b.getType() == Material.SNOW) { // Others
+
+		if (isPreferredTool(item, b)) {
+			// Experienced Enchantment
+			if (item.containsEnchantment(BEnchantment.EXPERIENCED)) {
 				double val = rand.nextDouble()*100;
 				if (val < (item.getEnchantmentLevel(BEnchantment.EXPERIENCED) * 0.01)) {
 					e.setExpToDrop((int) (e.getExpToDrop() + 50 * b.getType().getHardness()));
@@ -158,10 +199,46 @@ public class EnchantmentListener extends EventListener {
 					p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, e.getBlock().getLocation().add(0.5, 0.5, 0.5), 2, 0.15, 0.15, 0.15, 0.03);
 				}
 			}
+
+			// Invigorating Enchantment
+			// Axes typically do not have any reliable source of massive instant-breaking, so an axe's chance of activating Rejuvenating is higher.
+			if (item.containsEnchantment(BEnchantment.REJUVENATING)) {
+				int isAxe = BEnchantmentTarget.AXE.includes(item) ? 1 : 0;
+				int random = rand.nextInt(400);
+				if (random <= isAxe) { // 1 in 400 (1 in 200 for axes).
+					short oldValue = item.getItemMeta().getPersistentDataContainer().getOrDefault(BEnchantment.KEY_REJUVENATION, PersistentDataType.SHORT, (short)0);
+					if (oldValue < 500) {
+						item.editMeta(meta -> meta.getPersistentDataContainer().set(BEnchantment.KEY_REJUVENATION, PersistentDataType.SHORT, (short)(oldValue + 1)));
+						BeanItem.recalculateMaxDurability(item);
+						BeanItem.formatItem(item);
+					} else {
+						BeanItem.addDurability(item, 10 + rand.nextInt(21));
+					}
+					p.sendActionBar(Component.text("Your ").append(Component.translatable(item.translationKey()).append(Component.text(" feels rejuvenated."))).color(BeanColor.ENCHANT_STACK));
+					p.spawnParticle(Particle.VILLAGER_HAPPY, p.getEyeLocation().add(0.5, -0.4, 0.5), 8, 0.4, 0,4, 0.4);
+					p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 0.43F, 1.65F);
+				}
+			}
+		}
+
+		// Enervating Burden
+		// Each block broken has a 2.5% chance to drain the player of some saturation, however, there is an 8-second cooldown between drains.
+		if (item.containsEnchantment(BEnchantment.BURDEN_ENERVATING)) {
+			PlayerProfile pp = PlayerProfile.from(p);
+			if (!pp.onCooldown("enervating_drain")) {
+				int random = rand.nextInt(40);
+				if (random == 0) {
+					pp.addCooldown("enervating_drain", 1000 * 8, true);
+					if (p.getSaturation() > 0)
+						p.setSaturation(p.getSaturation() - 0.1F);
+					else if (p.getFoodLevel() > 0)
+						p.setFoodLevel(p.getFoodLevel() - 1);
+				}
+			}
 		}
 		
 		if (!(e.getBlock().getBlockData() instanceof Ageable)) return; // Prevent non age-ables
-		if (e instanceof CustomBlockBreakEvent && ((CustomBlockBreakEvent)e).getEnchantmentCause() == BEnchantment.REAPING) return; // Prevent infinite loop
+		if (e instanceof CustomBlockBreakEvent custom && custom.getEnchantmentCause() == BEnchantment.REAPING) return; // Prevent infinite loop
 		
 		if (item.containsEnchantment(BEnchantment.REAPING)) {
 			int power = item.getEnchantmentLevel(BEnchantment.REAPING) + 1;
@@ -251,5 +328,9 @@ public class EnchantmentListener extends EventListener {
 	public void onPlayerRiptide(PlayerRiptideEvent e) {
 		BeanItem.reduceItemDurabilityBy(e.getItem(), e.getItem().getEnchantmentLevel(Enchantment.RIPTIDE) * 2);
 	}
-	
+
+	private boolean isPreferredTool(ItemStack item, Block b) {
+		return b.isPreferredTool(item) || (item.getType().name().endsWith("_HOE") && ((b.getBlockData() instanceof Ageable ageable && ageable.getAge() >= ageable.getMaximumAge()) || b.getType().name().endsWith("_LEAVES")));
+	}
+
 }

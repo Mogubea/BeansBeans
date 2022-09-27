@@ -993,8 +993,13 @@ public class PlayerProfile {
 		return getStat(StatType.GENERIC, "lastLogout") * 60000L;
 	}
 	
-	public void addCooldown(String id, int mili) {
-		this.cooldowns.put(id, System.currentTimeMillis() + mili);
+	public void addCooldown(String id, int milli) {
+		addCooldown(id, milli, false);
+	}
+
+	public void addCooldown(String id, int milli, boolean force) {
+		if (!force && hasPermission(Permission.BYPASS_COOLDOWNS)) return;
+		this.cooldowns.put(id, System.currentTimeMillis() + milli);
 	}
 	
 	public void clearCooldown(String id) {
@@ -1018,7 +1023,7 @@ public class PlayerProfile {
 			return false;
 		boolean onCd = onCooldown(id);
 		if (!onCd)
-			addCooldown(id, milli);
+			this.cooldowns.put(id, System.currentTimeMillis() + milli);
 		return onCd;
 	}
 	

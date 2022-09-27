@@ -213,6 +213,20 @@ public enum BEnchantmentTarget {
     },
 
     /**
+     * Allows the Enchantment to be placed on tools (spades, pickaxe, axes)
+     */
+    TOOL_AND_SWORD("Swords", "Axes", "Pickaxes", "Shovels", "Hoes") {
+        @Override
+        public boolean includes(@NotNull Material item) {
+            return HOE.includes(item)
+                    || SHOVEL.includes(item)
+                    || PICKAXE.includes(item)
+                    || AXE.includes(item)
+                    || WEAPON.includes(item);
+        }
+    },
+
+    /**
      * Allows the Enchantment to be placed on bows.
      */
     BOW("Bows") {

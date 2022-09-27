@@ -205,14 +205,12 @@ public class BlockListener extends EventListener {
 				blockName = customBlock.getIdentifier();
 		}
 
+		if (p.getGameMode() == GameMode.CREATIVE) return;
+
 		// Stop placing and breaking a block for xp.
-		if (!isBlockNatural(block)) {
-			if (p.getGameMode() == GameMode.CREATIVE) return;
-		} else {
+		if (isBlockNatural(block)) {
 			pp.getStats().addToStat(StatType.BLOCK_BREAK, blockName, 1);
 			pp.getStats().addToStat(StatType.BLOCK_BREAK, "total", 1, true);
-			if (p.getGameMode() == GameMode.CREATIVE) return;
-
 			pp.getSkills().doSkillEvents(e, Skill.MINING, Skill.FORAGING);
 		}
 
@@ -349,18 +347,19 @@ public class BlockListener extends EventListener {
 	/**
 	 * Blocks burning due to fire
 	 */
-	@EventHandler(priority = EventPriority.LOW)
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onBurn(BlockBurnEvent e) {
-		e.setCancelled(true);
+		if (e.getIgnitingBlock() == null) return;
+		getRegionAt(e.getIgnitingBlock().getLocation()).getEffectiveFlag(Flags.FIRE_BURN);
 	}
 
 	/**
 	 * Blocks igniting on fire
 	 */
-	@EventHandler(priority = EventPriority.LOW)
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onSpread(BlockIgniteEvent e) {
-		if (e.getCause() == IgniteCause.SPREAD || e.getCause() == IgniteCause.LIGHTNING)
-			e.setCancelled(true);
+		if (e.getCause() != IgniteCause.FLINT_AND_STEEL)
+			getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.FIRE_SPREAD);
 	}
 
 	/**
@@ -458,6 +457,7 @@ public class BlockListener extends EventListener {
 	 */
 	private void onBlockGrowthFlagCheck(Material b, BlockGrowEvent e) {
 		FlagBoolean flag = switch(b) {
+			case FIRE -> Flags.FIRE_SPREAD;
 			case SNOW -> Flags.SNOW_FORMATION;
 			case ICE -> Flags.ICE_FORMATION;
 			case STONE, COBBLESTONE -> Flags.STONE_FORMATION;
@@ -476,12 +476,13 @@ public class BlockListener extends EventListener {
 	}
 
 	/**
-	 * Ice and Snow melting flags
+	 * Ice and Snow melting flags and Fire Extinguish flag
 	 */
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onBlockFade(BlockFadeEvent e) {
 		Block block = e.getBlock();
 		FlagBoolean flag = switch (block.getType()) {
+			case FIRE -> Flags.FIRE_EXTINGUISH;
 			case SNOW, SNOW_BLOCK, POWDER_SNOW -> Flags.SNOW_MELT;
 			case ICE -> Flags.ICE_MELT;
 			default -> null;

@@ -161,8 +161,10 @@ public class ContainerListener extends EventListener {
 	 */
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onItemCraft(CraftItemEvent e) {
+		if (e.getInventory().getResult() == null) return;
+
 		Inventory botInv = e.getView().getBottomInventory();
-		ItemStack result = e.getInventory().getResult().clone(); // Never null
+		ItemStack result = e.getInventory().getResult().clone();
 		ItemStack cursor = e.getCursor(); // Never null
 
 		// Left-clicking the slot.

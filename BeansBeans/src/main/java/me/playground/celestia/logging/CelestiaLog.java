@@ -5,11 +5,13 @@ import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 
 public class CelestiaLog {
 
     private final Instant time; // Time of change
+    private final Timestamp timestamp;
     private final int playerId;
     private final CelestiaAction action;
     private final Location location;
@@ -23,11 +25,17 @@ public class CelestiaLog {
         this.location = location;
         this.data = data;
         this.time = Instant.now();
+        this.timestamp = Timestamp.from(time);
     }
 
     @NotNull
     public Instant getTime() {
         return time;
+    }
+
+    @NotNull
+    protected Timestamp getTimestamp() {
+        return timestamp;
     }
 
     public int getPlayerId() {

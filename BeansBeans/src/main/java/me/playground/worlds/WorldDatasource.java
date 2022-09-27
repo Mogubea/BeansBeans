@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import me.playground.main.BlockTracker;
 import org.bukkit.*;
 import org.bukkit.World.Environment;
 
@@ -54,7 +55,7 @@ public class WorldDatasource extends PrivateDatasource {
 					environment = Environment.valueOf(r.getString("environment"));
 				} catch (Exception ignored) {}
 
-				final int border = r.getInt("borderSize");
+				int border = r.getInt("borderSize");
 				WorldCreator wc = new WorldCreator(name);
 				wc.type(type);
 				wc.environment(environment);
@@ -67,6 +68,8 @@ public class WorldDatasource extends PrivateDatasource {
 				if (world != null) {
 					world.setGameRule(GameRule.DISABLE_RAIDS, true);
 					world.setGameRule(GameRule.MOB_GRIEFING, true);
+					if (border > BlockTracker.getMaximumHorizontal())
+						border = BlockTracker.getMaximumHorizontal();
 					world.getWorldBorder().setSize(border);
 
 					manager.addWorldToMap(id, world);

@@ -1,9 +1,14 @@
 package me.playground.listeners;
 
+import io.papermc.paper.event.world.border.WorldBorderBoundsChangeEvent;
+import io.papermc.paper.event.world.border.WorldBorderBoundsChangeFinishEvent;
+import io.papermc.paper.event.world.border.WorldBorderCenterChangeEvent;
+import me.playground.main.BlockTracker;
 import me.playground.worlds.WorldManager;
 import org.bukkit.Bukkit;
 import org.bukkit.World.Environment;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.world.WorldSaveEvent;
 
 import me.playground.main.Main;
@@ -27,5 +32,11 @@ public class WorldListener extends EventListener {
 				getPlugin().saveAll();
 		}
 	}
-	
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onWorldBorderEdit(WorldBorderBoundsChangeEvent e) {
+		if (e.getNewSize() > BlockTracker.getMaximumHorizontal())
+			e.setNewSize(BlockTracker.getMaximumHorizontal());
+	}
+
 }
