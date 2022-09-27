@@ -361,6 +361,8 @@ public class PlayerListener extends EventListener {
 				stop = !enactRegionPermission(region, e, p, Flags.CONTAINER_ACCESS, "use containers");
 			} else if (blockMat.name().endsWith("DOOR") || blockMat.name().endsWith("GATE")) { // Using Doors
 				stop = !enactRegionPermission(region, e, p, Flags.DOOR_ACCESS, "open door");
+			} else if (blockMat == Material.ENCHANTING_TABLE) {
+				stop = !enactRegionPermission(region, e, p, Flags.CONTAINER_ACCESS, "use enchanting table");
 			} else if (blockMat.name().endsWith("ANVIL")) { // Using Anvils
 				stop = !enactRegionPermission(region, e, p, Flags.ANVIL_ACCESS, "use anvils");
 				if (stop) return;
