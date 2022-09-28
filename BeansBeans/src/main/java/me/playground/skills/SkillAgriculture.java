@@ -73,8 +73,8 @@ public class SkillAgriculture extends Skill {
 			case MOSS_CARPET, MOSS_BLOCK -> 3;
 			case CHORUS_PLANT -> 4;
 			case AZALEA, FLOWERING_AZALEA, SUGAR_CANE -> 5;
-			case GLOW_BERRIES -> 8;
 			case SWEET_BERRY_BUSH -> 7;
+			case CAVE_VINES, CAVE_VINES_PLANT -> 8;
 			case CARROTS, POTATOES, NETHER_WART -> 9;
 			case COCOA, WHEAT -> 10;
 			case BEETROOTS -> 11;

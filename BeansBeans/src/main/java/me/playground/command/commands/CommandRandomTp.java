@@ -45,7 +45,7 @@ public class CommandRandomTp extends BeanCommand {
 		
 		final Location oldLoc = p.getLocation();
 			
-		final int max = (int) w.getWorldBorder().getSize() / 7;
+		final int max = (int) w.getWorldBorder().getSize() / 5;
 		
 		Location randomLoc = new Location(w, -max + getRandom().nextInt(max*2) + 0.5, 60, -max + getRandom().nextInt(max*2) + 0.5);
 		Block b = w.getHighestBlockAt(randomLoc);
