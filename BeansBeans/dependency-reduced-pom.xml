@@ -3,14 +3,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>BeansBeans</groupId>
   <artifactId>BeansBeans</artifactId>
-  <version>0.4.5-ALPHA</version>
+  <version>0.5.2-ALPHA</version>
   <build>
     <plugins>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.2.2</version>
         <configuration>
-          <outputDirectory>${user.home}/Desktop/Minecraft Server/Bukkit Server/plugins/</outputDirectory>
+          <outputDirectory>${user.home}/Desktop/Minecraft Servers/Bukkit Server/plugins/</outputDirectory>
         </configuration>
       </plugin>
       <plugin>
@@ -106,13 +106,9 @@
     <dependency>
       <groupId>io.papermc.paper</groupId>
       <artifactId>paper-api</artifactId>
-      <version>1.18.2-R0.1-SNAPSHOT</version>
+      <version>1.19.2-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
       <exclusions>
-        <exclusion>
-          <artifactId>commons-lang</artifactId>
-          <groupId>commons-lang</groupId>
-        </exclusion>
         <exclusion>
           <artifactId>guava</artifactId>
           <groupId>com.google.guava</groupId>
@@ -182,7 +178,7 @@
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot</artifactId>
-      <version>1.18.2-R0.1-SNAPSHOT</version>
+      <version>1.19.2-R0.1-SNAPSHOT</version>
       <classifier>remapped-mojang</classifier>
       <scope>provided</scope>
       <exclusions>
@@ -223,8 +219,48 @@
           <groupId>commons-io</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>netty-all</artifactId>
+          <artifactId>netty-buffer</artifactId>
           <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-codec</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-common</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-handler</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-resolver</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-transport</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-transport-classes-epoll</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-transport-native-epoll</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-transport-native-epoll</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-transport-native-unix-common</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jna-platform</artifactId>
+          <groupId>net.java.dev.jna</groupId>
         </exclusion>
         <exclusion>
           <artifactId>jopt-simple</artifactId>
@@ -241,6 +277,10 @@
         <exclusion>
           <artifactId>log4j-slf4j18-impl</artifactId>
           <groupId>org.apache.logging.log4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-lang</artifactId>
+          <groupId>commons-lang</groupId>
         </exclusion>
         <exclusion>
           <artifactId>sqlite-jdbc</artifactId>
@@ -291,7 +331,7 @@
     <dependency>
       <groupId>com.sk89q.worldedit</groupId>
       <artifactId>worldedit-bukkit</artifactId>
-      <version>7.2.10</version>
+      <version>7.2.12</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -319,7 +359,7 @@
     <dependency>
       <groupId>us.dynmap</groupId>
       <artifactId>dynmap-api</artifactId>
-      <version>3.4-beta-2</version>
+      <version>3.4</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -336,6 +376,6 @@
   <properties>
     <maven.compiler.target>17</maven.compiler.target>
     <maven.compiler.source>17</maven.compiler.source>
-    <spigotversion>1.18.2-R0.1-SNAPSHOT</spigotversion>
+    <spigotversion>1.19.2-R0.1-SNAPSHOT</spigotversion>
   </properties>
 </project>
