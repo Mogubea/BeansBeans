@@ -254,7 +254,7 @@ public class Lore {
 
                                 finishLine(false);
                                 length = 0;
-                            } else if (b[i] == '&') {
+                            } else if (b[i] == '&' && (i + 1 < charLength)) {
                                 String check = "0123456789AaBbCcDdEeFfLlMmNnOoRr#";
                                 int idx = check.indexOf(b[i + 1]);
 

@@ -54,9 +54,9 @@ public class BeanGuiMainMenu extends BeanGui {
 	
 	private static final ItemStack icon_resetOverride = newItem(new ItemStack(Material.BARRIER), "\u00a7cReset GUI Override", "\u00a77Go back to normal!");
 	
-	private static final ItemStack icon_echest = newItem(new ItemStack(Material.ENDER_CHEST), Component.text("Ender Chest", BeanColor.CRYSTALS), "\u00a77ye", "", "\u00a76» \u00a7eClick to open!");
-	private static final ItemStack icon_crafting = newItem(new ItemStack(Material.CRAFTING_TABLE), Component.text("Virtual Workbench", BeanColor.CRYSTALS), "\u00a77ye", "", "\u00a76» \u00a7eClick to craft!");
-	private static final ItemStack icon_anvil = newItem(new ItemStack(Material.ANVIL), Component.text("Virtual Anvil", BeanColor.CRYSTALS), "\u00a77ye", "", "\u00a76» \u00a7eClick to smith!");
+	private static final ItemStack icon_echest = newItem(new ItemStack(Material.ENDER_CHEST), Component.text("Ender Chest", BeanColor.CRYSTALS), "\u00a77Open up your Ender Chest!\n\n\u00a76» \u00a7eClick to open!");
+	private static final ItemStack icon_crafting = newItem(new ItemStack(Material.CRAFTING_TABLE), Component.text("Virtual Workbench", BeanColor.CRYSTALS), "\u00a77Open up a Crafting Table!\n\n\u00a76» \u00a7eClick to craft!");
+	private static final ItemStack icon_anvil = newItem(new ItemStack(Material.ANVIL), Component.text("Virtual Anvil", BeanColor.CRYSTALS), "\u00a77Open up an Anvil!\n\n\u00a76» \u00a7eClick to forge!");
 	private static final ItemStack icon_deliveries = newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvY2RiY2E0YjY5ZWFmOGRjYjdhYzM3MjgyMjhkZThhNjQ0NDA3ODcwMTMzNDJkZGFhYmMxYjAwZWViOGVlYzFlMiJ9fX0="), Component.text("\u00a76Deliveries"));
 
 	private static final ItemStack icon_skills = newItem(new ItemStack(Material.GOLDEN_PICKAXE), Component.text("Your Skills", NamedTextColor.GOLD));
