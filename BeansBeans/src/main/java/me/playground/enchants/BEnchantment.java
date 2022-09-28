@@ -67,7 +67,8 @@ public class BEnchantment extends Enchantment {
 		}
 	}.setLore(Lore.getBuilder("The wearer's &#a8baef\ud83c\udf0a Sprinting Speed&r is increased by &#a8baef{0}%&r.").build())
 			.setItemRarity(ItemRarity.UNCOMMON, 4)
-			.setItemRarity(ItemRarity.RARE, 6);
+			.setItemRarity(ItemRarity.RARE, 6)
+			.setBookPowerRequirement(20, 40, 60);
 
 	// tools
 	public static final BEnchantment EXPERIENCED = new BEnchantment("experienced", "Experienced", BEnchantmentTarget.TOOL, 1, 3, false, false, false, 4, 2, 6, 4) {
