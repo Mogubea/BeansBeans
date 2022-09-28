@@ -427,7 +427,7 @@ public class BEnchantment extends Enchantment {
 	}.setLore(Lore.getBuilder("Arrows fired can pierce up to &a{0}&r targets.").build())
     		.setBookPowerRequirement(5, 15, 25);
 
-    public static final BEnchantment MENDING = new BEnchantment(Enchantment.MENDING, "Mending", 0, 0, 250, 0, true, Enchantment.ARROW_INFINITE, BEnchantment.BURDEN_IRREPARABLE, BEnchantment.UNBREAKING)
+    public static final BEnchantment MENDING = new BEnchantment(Enchantment.MENDING, "Mending", 0, 0, 250, 0, true, Enchantment.ARROW_INFINITE)
 			.setLore(Lore.getBuilder("Collecting experience while the item is worn or held will consume the experience and repair this item slightly.").build());
 
     public static final BEnchantment VANISHING_CURSE = new BEnchantment(Enchantment.VANISHING_CURSE, "Curse of Vanishing", 0, 0, 0, 0)
