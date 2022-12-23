@@ -39,13 +39,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.inventory.AnvilInventory;
-import org.bukkit.inventory.EnchantingInventory;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -131,19 +127,7 @@ public class PlayerListener extends EventListener {
 		
 		pp.getStats().addToStat(StatType.GENERIC, "chatMessages", 1, true);
 
-		TextComponent chat = pp.getComponentName();
-
-		if (pp.isRank(Rank.MODERATOR)) {
-			chat = Component.empty().append(Component.text("\u24E2", BeanColor.STAFF)
-							.hoverEvent(HoverEvent.showText(Component.text("Staff Member", BeanColor.STAFF))))
-					.append(Component.text(" "))
-					.append(pp.getComponentName());
-		} else if (pp.isRank(Rank.PLEBEIAN)) {
-			chat = Component.empty().append(Component.text("\u2b50", pp.getDonorRank().getRankColour())
-							.hoverEvent(HoverEvent.showText(Component.text("Supporter", pp.getDonorRank().getRankColour()))))
-					.append(Component.text(" "))
-					.append(pp.getComponentName());
-		}
+		TextComponent playerName = pp.getChatComponentName();
 
 		final String content = ((TextComponent)e.message()).content();
 		final ArrayList<UUID> pinged = new ArrayList<>();
@@ -176,12 +160,12 @@ public class PlayerListener extends EventListener {
 			e.message(newMessage);
 		}
 		
-		chat = chat.append(Component.text("\u00a78 » \u00a7r").append(e.message()));
+		playerName = playerName.append(Component.text("\u00a78 » \u00a7r").append(e.message()));
 		
 		for (Player pl : Bukkit.getOnlinePlayers()) {
 			PlayerProfile ppl = PlayerProfile.from(pl);
 			if (pp.isRank(Rank.MODERATOR) || !ppl.getIgnoredPlayers().contains(pp.getId()))
-				pl.sendMessage(chat.colorIfAbsent(TextColor.color(pinged.contains(pl.getUniqueId()) ? 0xffffff : 0xe8e8e8)));
+				pl.sendMessage(playerName.colorIfAbsent(TextColor.color(pinged.contains(pl.getUniqueId()) ? 0xffffff : 0xe8e8e8)));
 		}
 
 		getPlugin().getCelestiaManager().log(pp.getId(), CelestiaAction.CHAT, e.getPlayer().getLocation(), content);
@@ -202,7 +186,7 @@ public class PlayerListener extends EventListener {
 	public void onPlayerDeath(PlayerDeathEvent e) {
 		Player p = e.getEntity();
 		PlayerProfile pp = PlayerProfile.from(p);
-		
+
 		Location old = p.getLocation();
 		final Location loc = new Location(p.getWorld(), old.getX(), old.getY(), old.getZ(), old.getYaw(), old.getPitch());
 		pp.updateLastLocation(loc, 0);
@@ -346,7 +330,7 @@ public class PlayerListener extends EventListener {
 		// Stick to quickly check protection bounds
 		if (e.getItem() != null && e.getItem().getType() == Material.STICK) {
 			p.sendActionBar(region.isWorldRegion() ?
-					Component.text("This block is not protected by any player regions.", NamedTextColor.GRAY) :
+					Component.text("This block is not protected by any regions.", NamedTextColor.GRAY) :
 					Component.text("This block is protected by ", NamedTextColor.GRAY).append(region.getColouredName()).append(Component.text(".", NamedTextColor.GRAY)));
 			swingHand(p, e.getHand());
 		}
@@ -357,10 +341,12 @@ public class PlayerListener extends EventListener {
 
 			if (blockMat.name().endsWith("_BED")) { // Use Beds to set home
 				stop = !enactRegionPermission(region, e, p, Flags.WARP_CREATION, "sleep");
-			} else if (block.getState() instanceof Container) { // Using Containers
-				stop = !enactRegionPermission(region, e, p, Flags.CONTAINER_ACCESS, "use containers");
 			} else if (blockMat.name().endsWith("DOOR") || blockMat.name().endsWith("GATE")) { // Using Doors
-				stop = !enactRegionPermission(region, e, p, Flags.DOOR_ACCESS, "open door");
+				stop = !enactRegionPermission(region, e, p, Flags.DOOR_ACCESS, "open doors");
+			} else if (block.getState() instanceof Beacon) {
+				stop = !enactRegionPermission(region, e, p, Flags.CONTAINER_ACCESS, "open beacons");
+			} else if (block.getState() instanceof Container) {
+				stop = !enactRegionPermission(region, e, p, Flags.CONTAINER_ACCESS, "open containers");
 			} else if (blockMat == Material.ENCHANTING_TABLE) {
 				stop = !enactRegionPermission(region, e, p, Flags.CONTAINER_ACCESS, "use enchanting table");
 			} else if (blockMat.name().endsWith("ANVIL")) { // Using Anvils
@@ -377,14 +363,12 @@ public class PlayerListener extends EventListener {
 				stop = !enactRegionPermission(canBuild, e, p, "tune notes");
 			} else if (blockMat == Material.JUKEBOX) { // Mess with Music Discs
 				stop = !enactRegionPermission(canBuild, e, p, "play music");
-			} else if (blockMat == Material.REDSTONE_WIRE) { // Mess with Redstone wires
+			} else if (blockMat == Material.REDSTONE_WIRE || blockMat == Material.DAYLIGHT_DETECTOR || blockMat == Material.REPEATER || blockMat == Material.COMPARATOR) { // Mess with Redstone wires
 				stop = !enactRegionPermission(canBuild, e, p, "alter redstone");
-			} else if (blockMat == Material.BEACON) { // Alter beacons
-				stop = !enactRegionPermission(region, e, p, Flags.CONTAINER_ACCESS, "edit beacons");
 			}
 			
 			if (stop) return;
-			
+
 			// Post-Region Check Custom Blocks method
 			if (BeanBlock.from(block, (custom) -> custom.onBlockInteract(e)) != null) return;
 		}
@@ -422,8 +406,6 @@ public class PlayerListener extends EventListener {
 				enactRegionPermission(canBuild, e, p, "dye signs");
 			} else if (itemMat == Material.SHEARS && blockMat == Material.PUMPKIN) { // Carve Pumpkins 
 				enactRegionPermission(canBuild, e, p, "carve pumpkins");
-			} else if (itemMat.name().endsWith("BOAT") || itemMat.name().endsWith("MINECART")) { // Placing Vehicles
-				enactRegionPermission(canBuild, e, p, "place vehicles");
 			} else if (itemMat == Material.END_CRYSTAL || itemMat == Material.ARMOR_STAND || itemMat == Material.GLOW_ITEM_FRAME || itemMat == Material.ITEM_FRAME || itemMat == Material.PAINTING || itemMat == Material.LEAD) {
 				enactRegionPermission(canBuild, e, p, "build");
 			} else if (itemMat.name().endsWith("_DYE") && (blockMat.name().endsWith("_WOOL") || (blockMat.name().endsWith("_CARPET") && blockMat != Material.MOSS_CARPET))) { // Dye Wool and Carpets
@@ -901,17 +883,6 @@ public class PlayerListener extends EventListener {
         
         metadata.setObject(byteValue, ogValue ^= 0b01000000); // Flip it back
 		*/
-	}
-
-	/**
-	 * This is a precautionary event handler to prevent any and all players from opening these GUIs which no longer are valid on the server.
-	 */
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onOpenInventory(InventoryOpenEvent e) {
-		if (e.getInventory() instanceof EnchantingInventory)
-			e.setCancelled(true);
-		else if (e.getInventory() instanceof AnvilInventory)
-			e.setCancelled(true);
 	}
 
 	private boolean hasGmPerm(Player p, GameMode gm) {

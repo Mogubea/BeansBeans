@@ -281,13 +281,12 @@ public abstract class BeanCommand implements TabExecutor, IPluginRef {
 	}
 	
 	protected PlayerProfile toProfile(CommandSender sender, String s) {
+		Player p = getPlugin().searchForPlayer(s);
+		if (p != null) return PlayerProfile.from(p);
 		PlayerProfile pp = PlayerProfile.fromIfExists(s);
-		if (pp == null) {
-			Player p = toPlayer(sender, s);
-			if (p != null)
-				pp = PlayerProfile.from(p);
-		}
-			
+
+		if (pp == null)
+			throw new CommandException(sender, "Couldn't find player '"+s+"'");
 		return pp;
 	}
 	

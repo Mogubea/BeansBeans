@@ -46,7 +46,7 @@ public class DiscordCommandWho extends DiscordCommand {
 					embed.addField("Civilization", tier.getNiceName() + " of " + pp.getCivilization().getName() + " (" + (job != null ? job.getNiceName() : " Unemployed") +")", false);
 				}
 				
-				int mins = pp.getOfflinePlayer().getStatistic(Statistic.PLAY_ONE_MINUTE)/20/60;
+				int mins = Math.floorDiv(pp.getPlaytime(), 60);
 				int hours = Math.floorDiv(mins, 60);
 				int days = Math.floorDiv(hours, 24);
 				mins -= hours*60;
@@ -62,7 +62,7 @@ public class DiscordCommandWho extends DiscordCommand {
 						"**, <:logcutting:879514418306744441> **" + pp.getSkillGrade(Skill.FORAGING) +
 						"**, <:agriculture:879514439890657340> **" + pp.getSkillGrade(Skill.AGRICULTURE) +
 						"**, <:fishing:879514461495525446> **" + pp.getSkillGrade(Skill.FISHING) +
-						"**, <:combat:879518113144651816> **" + pp.getSkillGrade(Skill.COMBAT), false);
+						"**, <:combat:879518113144651816> **" + pp.getSkillGrade(Skill.COMBAT) + "**", false);
 				e.replyEmbeds(embed.build()).queue();
 			} else {
 				final EmbedBuilder eb = embedBuilder(0xff4455, "Sorry, we couldn't find a player by the name of **"+e.getOption("ign").getAsString()+"**, please make sure you've spelt their name correctly!");

@@ -33,6 +33,7 @@ import me.playground.regions.RegionManager;
 import me.playground.regions.flags.FlagString;
 import me.playground.regions.flags.Flags;
 import me.playground.shop.ShopManager;
+import me.playground.skills.MilestoneManager;
 import me.playground.skills.Skill;
 import me.playground.threads.StatusResponseThread;
 import me.playground.threads.WhateverChat;
@@ -42,11 +43,9 @@ import me.playground.utils.Utils;
 import me.playground.warps.WarpManager;
 import me.playground.worlds.WorldManager;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerKickEvent.Cause;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
@@ -81,6 +80,7 @@ public class Main extends JavaPlugin {
 	private PlayerProfileManager profileManager;
 	private PunishmentManager punishmentManager;
 	private CelestiaManager celestiaManager;
+	private MilestoneManager milestoneManager;
 
 	private ItemTrackingManager itemTrackingManager;
 	private ItemValueManager itemValueManager;
@@ -113,6 +113,8 @@ public class Main extends JavaPlugin {
 		
 		datasource = new DatasourceCore(this);
 		Datasource.init(this);
+
+		milestoneManager = new MilestoneManager(this);
 
 		celestiaManager = new CelestiaManager(this);
 		profileManager = new PlayerProfileManager(this);
@@ -324,6 +326,8 @@ public class Main extends JavaPlugin {
 		return celestiaManager;
 	}
 
+	public MilestoneManager getMilestoneManager() { return milestoneManager; }
+
 	/**
 	 * Save everything that is involved with a {@link me.playground.data.PrivateDatasource}, which should be everything.
 	 */
@@ -420,6 +424,8 @@ public class Main extends JavaPlugin {
 						lastScoreboardUpdate = mili;
 						if (pp.needsScoreboardUpdate())
 							pp.updateScoreboard();
+
+						pp.getSkills().updatePendingMilestoneData();
 					}
 
 					// Every 15 Seconds
@@ -479,5 +485,5 @@ public class Main extends JavaPlugin {
 	public boolean isDebugMode() {
 		return this.isDebug;
 	}
-	
+
 }

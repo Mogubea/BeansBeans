@@ -559,8 +559,8 @@ public class BeanItem {
 		if (item.getType().getMaxDurability() < 1) return item;
 		
 		if (newDura < 0) {
-			item.setAmount(item.getAmount() - 1);
 			Main.getInstance().getItemTrackingManager().incrementDemanifestationCount(item, DemanifestationReason.TOOL_BREAK, 1);
+			item.setAmount(item.getAmount() - 1);
 			return item;
 		}
 

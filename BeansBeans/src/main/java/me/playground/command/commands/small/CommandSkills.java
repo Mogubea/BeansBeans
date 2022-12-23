@@ -17,7 +17,7 @@ import me.playground.gui.BeanGuiSkills;
 import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.skills.Skill;
-import me.playground.skills.Skills;
+import me.playground.skills.PlayerSkillData;
 import me.playground.utils.TabCompleter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -44,7 +44,7 @@ public class CommandSkills extends BeanCommand {
 			
 			String action = args[1].toLowerCase();
 			Skill skill = Skill.getByName(args[2].toLowerCase());
-			Skills skills = prof.getSkills();
+			PlayerSkillData skills = prof.getSkills();
 			if (skill == null)
 				throw new CommandException(sender, "Couldn't find skill '" + args[2] + "'");
 			
@@ -52,8 +52,8 @@ public class CommandSkills extends BeanCommand {
 			
 			Component details = Component.text(skill.getName() + " XP", skill.getColour());
 			Component msg;
-			String oldGrade = skills.getSkillInfo(skill).getGrade();
-			long oldXp = skills.getTotalExperience(skill);
+			String oldGrade = skills.getSkillData(skill).getGrade();
+			double oldXp = skills.getTotalExperience(skill);
 
 			switch (action) {
 				case "givexp", "gxp" -> {
@@ -69,7 +69,7 @@ public class CommandSkills extends BeanCommand {
 				case "setlevel", "sl" -> {
 					prof.getSkills().setLevel(skill, value);
 					msg = Component.text("Set ", NamedTextColor.GRAY).append(prof.getComponentName()).append(Component.text("'s ", NamedTextColor.GRAY)).append(details)
-							.append(Component.text(" to ", NamedTextColor.GRAY)).append(Component.text(skills.getSkillInfo(skill).getGrade(), NamedTextColor.WHITE))
+							.append(Component.text(" to ", NamedTextColor.GRAY)).append(Component.text(skills.getSkillData(skill).getGrade(), NamedTextColor.WHITE))
 							.append(Component.text(".", NamedTextColor.GRAY));
 				}
 				default -> {
@@ -78,7 +78,7 @@ public class CommandSkills extends BeanCommand {
 			}
 			
 			sender.sendMessage(msg.hoverEvent(HoverEvent.showText(Component.text(skill.getName() + " Changes", skill.getColour())
-					.append(Component.text("\n\u00a77Grade: \u00a77\u00a7l" + oldGrade + " \u00a78\u00a7l\u2192\u00a7f\u00a7l " + skills.getSkillInfo(skill).getGrade()))
+					.append(Component.text("\n\u00a77Grade: \u00a77\u00a7l" + oldGrade + " \u00a78\u00a7l\u2192\u00a7f\u00a7l " + skills.getSkillData(skill).getGrade()))
 					.append(Component.text("\n\u00a77XP: \u00a73" + df.format(oldXp) + " \u00a78\u00a7l\u2192\u00a7b " + df.format(skills.getTotalExperience(skill)))))));
 			
 			return true;

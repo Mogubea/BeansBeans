@@ -1,14 +1,10 @@
 package me.playground.skills;
 
-import java.util.List;
-
 import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-
-import net.kyori.adventure.text.Component;
 
 public class SkillCombat extends Skill {
 	
@@ -18,7 +14,7 @@ public class SkillCombat extends Skill {
 	}
 	
 	@Override
-	protected boolean doSkillEvent(final Skills s, final Event e) {
+	protected boolean doSkillEvent(final PlayerSkillData s, final Event e) {
 		if (!(e instanceof EntityDamageByEntityEvent event)) return false;
 
 		float mult = 0.2F;
@@ -31,16 +27,11 @@ public class SkillCombat extends Skill {
 	
 	private boolean isPassiveMob(EntityType e) {
 		return switch (e) {
-			case AXOLOTL, BAT, BEE, CAT, CHICKEN, COD, COW, DOLPHIN, DONKEY, FOX, HORSE, IRON_GOLEM, LLAMA, MULE, MUSHROOM_COW, OCELOT, PANDA, PARROT, PIG,
+			case AXOLOTL, BAT, BEE, CAT, CHICKEN, COD, COW, DOLPHIN, DONKEY, FOX, FROG, GOAT, HORSE, IRON_GOLEM, LLAMA, MULE, MUSHROOM_COW, OCELOT, PANDA, PARROT, PIG,
 					POLAR_BEAR, PUFFERFISH, RABBIT, SALMON, SHEEP, SKELETON_HORSE, SNOWMAN, SQUID, GLOW_SQUID, TRADER_LLAMA, TROPICAL_FISH, TURTLE, VILLAGER,
 					WANDERING_TRADER, WOLF, ZOMBIE_HORSE -> true;
 			default -> false;
 		};
-	}
-
-	@Override
-	public List<Component> getGUIDescription(Skills s) {
-		return null;
 	}
 
 }

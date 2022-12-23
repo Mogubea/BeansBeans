@@ -6,15 +6,14 @@ import me.playground.enchants.BEnchantment;
 import me.playground.items.*;
 import me.playground.items.tracking.DemanifestationReason;
 import me.playground.items.tracking.ManifestationReason;
-import org.bukkit.Bukkit;
-import org.bukkit.Keyed;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.block.Chest;
-import org.bukkit.block.Hopper;
+import me.playground.regions.flags.Flags;
+import org.bukkit.*;
+import org.bukkit.block.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Tameable;
+import org.bukkit.entity.Vehicle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockCookEvent;
@@ -37,6 +36,7 @@ import me.playground.main.Main;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.ranks.Permission;
 import net.kyori.adventure.text.Component;
+import org.bukkit.persistence.PersistentDataType;
 
 public class ContainerListener extends EventListener {
 
@@ -261,6 +261,33 @@ public class ContainerListener extends EventListener {
 				pp.closeBeanGui();
 			}
 		}
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void preInventoryOpen(InventoryOpenEvent e) {
+		Player p = (Player) e.getPlayer();
+
+		// Prevent opening invalid inventory screens
+		if (e.getInventory() instanceof EnchantingInventory || e.getInventory() instanceof AnvilInventory) {
+			e.setCancelled(true); return;
+		}
+
+		boolean check = false;
+		Location loc = e.getInventory().getLocation();
+		InventoryHolder holder = e.getInventory().getHolder();
+
+		if (loc == null) return; // Don't bother
+		if (holder == null) return; // Don't bother
+
+		if (holder instanceof Tameable tameable && tameable.getOwnerUniqueId() != p.getUniqueId())
+			check = true; // Perform region check if it's not the player's own pet
+		else if (holder instanceof Vehicle vehicle && vehicle.getPersistentDataContainer().getOrDefault(KEY_VEHICLE_CREATOR, PersistentDataType.INTEGER, 0) != PlayerProfile.getDBID(p))
+			check = true; // Perform region check if the player didn't place this vehicle
+		else if (holder instanceof Container || e.getInventory() instanceof BeaconInventory || e.getInventory() instanceof DoubleChestInventory)
+			check = true; // Perform region check if it's a container, an extra layer of protection in case a modded user bypasses the interaction check
+
+		if (check)
+			enactRegionPermission(getRegionAt(loc), e, p, Flags.CONTAINER_ACCESS, "open containers");
 	}
 	
 	@EventHandler(priority = EventPriority.LOW)

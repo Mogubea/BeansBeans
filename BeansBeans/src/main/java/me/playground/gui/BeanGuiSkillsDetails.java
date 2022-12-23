@@ -1,31 +1,14 @@
 package me.playground.gui;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.inventory.ItemFlag;
-import org.bukkit.inventory.ItemStack;
 
-import me.playground.highscores.Highscore;
-import me.playground.playerprofile.PlayerProfile;
-import me.playground.skills.Skill;
-import me.playground.skills.SkillPerk;
-import me.playground.utils.Utils;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-
+@Deprecated
 public class BeanGuiSkillsDetails extends BeanGui {
+	public BeanGuiSkillsDetails(Player p) {
+		super(p);
+	}
 	
-	private static final ItemStack blank = newItem(new ItemStack(Material.ORANGE_STAINED_GLASS_PANE, 1), "\u00a76Skills");
+	/*private static final ItemStack blank = newItem(new ItemStack(Material.ORANGE_STAINED_GLASS_PANE, 1), "\u00a76Skills");
 	
 	private static final ItemStack[] grades = {
 			newItem(Utils.getSkullWithCustomSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWYyMmQ3Y2Q1M2Q1YmZlNjFlYWZiYzJmYjFhYzk0NDQzZWVjMjRmNDU1MjkyMTM5YWM5ZmJkYjgzZDBkMDkifX19"), Component.text("Grade S")),
@@ -228,5 +211,5 @@ public class BeanGuiSkillsDetails extends BeanGui {
 			return true;
 		}
 		return false;
-	}
+	}*/
 }

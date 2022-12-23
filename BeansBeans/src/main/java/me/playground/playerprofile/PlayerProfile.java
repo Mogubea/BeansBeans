@@ -17,6 +17,9 @@ import me.playground.punishments.Punishment;
 import me.playground.punishments.PunishmentMinecraft;
 import me.playground.regions.PlayerRegion;
 import me.playground.regions.RegionVisualiser;
+import me.playground.skills.Milestone;
+import me.playground.skills.MilestoneManager;
+import me.playground.utils.BeanColor;
 import me.playground.warps.Warp;
 import net.dv8tion.jda.api.entities.Member;
 import org.bukkit.*;
@@ -50,7 +53,7 @@ import me.playground.ranks.Rank;
 import me.playground.regions.Region;
 import me.playground.regions.flags.MemberLevel;
 import me.playground.skills.Skill;
-import me.playground.skills.Skills;
+import me.playground.skills.PlayerSkillData;
 import me.playground.utils.Calendar;
 import me.playground.utils.ChatColor;
 import me.playground.utils.Utils;
@@ -113,7 +116,7 @@ public class PlayerProfile {
 	}
 	
 	public static int getDBID(String name) {
-		return ProfileStore.from(name, false).getId();
+		return ProfileStore.from(name, true).getId();
 	}
 	
 	public static int getDBID(OfflinePlayer p) {
@@ -144,7 +147,7 @@ public class PlayerProfile {
 	private final Set<String>			privatePermissions;
 	private long 						donorExpirationTime = 0L;
 	
-	private final Skills 				skillData;
+	private final PlayerSkillData skillData;
 	
 	private String 						name;
 	private String 						nickname;
@@ -179,12 +182,29 @@ public class PlayerProfile {
 	 * permission based system is far more reliable.
 	 */
 	private final Set<String>			permissions = new HashSet<>();
+	/**
+	 * Warps owned by this player
+	 */
 	private final Map<String, Warp> 	myWarps;
+	/**
+	 * Warps that aren't owned by the player, but were recently warped to.
+	 */
 	private final ArrayList<String>		recentWarps = new ArrayList<>(10);
+	/**
+	 * Actions that are currently on cooldown.
+	 */
 	private final HashMap<String, Long> cooldowns = new HashMap<>();
+	/**
+	 * List of Regions that are currently being visualised.
+	 */
 	private final Map<Region, RegionVisualiser>	visualisedRegions = new HashMap<>();
+	/**
+	 * Milestones that are being watched, these milestones will have a boss bar whenever their stat is changed.
+	 */
+	private final Set<Milestone>		watchedMilestones = new HashSet<>();
 	private BeanGui			 			currentlyViewedGUI;
-	private TextComponent 				chatLine;
+	private TextComponent 				componentName;
+	private TextComponent				chatComponentName;
 	private final Location[] 			lastLocation = new Location[2];
 	private Region 						currentRegion;
 	private Objective					scoreboardObj;
@@ -212,11 +232,11 @@ public class PlayerProfile {
 		this.booleanSettings = settings;
 		
 		this.home = manager.getDatasource().loadHome(id);
-		this.skillData = manager.getDatasource().loadSkills(this);
+		this.stats = manager.getDatasource().loadPlayerStats(this);
+		this.skillData = manager.getDatasource().loadSkills(this); // Milestones are dependant on stats.
 		this.armourWardrobe = manager.getDatasource().loadArmourWardrobe(id);
 		this.pickupBlacklist = manager.getDatasource().loadPickupBlacklist(id);
 		this.heirloomInventory = new HeirloomInventory(this, manager.getDatasource().loadPlayerHeirlooms(id));
-		this.stats = manager.getDatasource().loadPlayerStats(this);
 		this.myWarps = manager.getPlugin().warpManager().getWarpsOwnedBy(id);
 
 		this.punishments = manager.getPlugin().getPunishmentManager().loadPunishmnents(this);
@@ -638,7 +658,7 @@ public class PlayerProfile {
 	}
 
 	@NotNull
-	public Skills getSkills() {
+	public PlayerSkillData getSkills() {
 		return skillData;
 	}
 
@@ -749,7 +769,24 @@ public class PlayerProfile {
 		hoverComponents = hoverComponents.append(Component.text("\n\u00a77 • Playtime: \u00a7f" + Utils.timeStringFromMillis(getPlaytime() * 1000L)));
 		hoverComponents = hoverComponents.append(Component.text("\n\u00a77 • Id: \u00a7a" + getId()));
 		
-		this.chatLine = Component.empty().append(chatLine.hoverEvent(HoverEvent.showText(hoverComponents)));
+		this.componentName = Component.empty().append(chatLine.hoverEvent(HoverEvent.showText(hoverComponents)));
+
+		TextComponent prefix = Component.empty();
+		if (isRank(Rank.MODERATOR)) {
+			prefix = prefix.append(Component.text("\u24E2", BeanColor.STAFF)
+					.hoverEvent(HoverEvent.showText(Component.text("Staff Member", BeanColor.STAFF)))).append(Component.text(" "));
+		} else if (isRank(Rank.PLEBEIAN)) {
+			prefix = prefix.append(Component.text("\u2b50", getDonorRank().getRankColour())
+					.hoverEvent(HoverEvent.showText(Component.text("Supporter", getDonorRank().getRankColour())))).append(Component.text(" "));
+		}
+
+		Skill favouriteSkill = getSkills().getFavouriteSkill();
+
+		if (favouriteSkill != null)
+			prefix = prefix.append(Component.text(favouriteSkill.getIcon(), favouriteSkill.getColour())
+					.hoverEvent(HoverEvent.showText(Component.text("Test")))).append(Component.text(" "));
+
+		this.chatComponentName = prefix.append(componentName);
 	}
 
 	/**
@@ -758,9 +795,20 @@ public class PlayerProfile {
 	 */
 	@NotNull
 	public TextComponent getComponentName() {
-		if (chatLine == null)
+		if (componentName == null)
 			updateComponentName();
-		return chatLine;
+		return componentName;
+	}
+
+	/**
+	 * Gets the detailed {@link TextComponent} name for the {@link Player} of this profile, but including any necessary chat prefixes.
+	 * @return The component name shown when chatting.
+	 */
+	@NotNull
+	public TextComponent getChatComponentName() {
+		if (chatComponentName == null)
+			updateComponentName();
+		return chatComponentName;
 	}
 	
 	public void updateLastLocation(Location l, int type) {
@@ -784,7 +832,7 @@ public class PlayerProfile {
 
 	@Contract("null -> null")
 	public String getSkillGrade(Skill skill) {
-		return skill != null ? skillData.getSkillInfo(skill).getGrade() : null;
+		return skill != null ? skillData.getSkillData(skill).getGrade() : null;
 	}
 
 	/**
@@ -1311,7 +1359,18 @@ public class PlayerProfile {
 	public PunishmentMinecraft getMute() {
 		return relevantMute;
 	}
-	
+
+	public boolean isWatching(Milestone milestone) {
+		return this.watchedMilestones.contains(milestone);
+	}
+
+	public void setWatchingMilestone(Milestone milestone, boolean watching) {
+		if (watching)
+			watchedMilestones.add(milestone);
+		else
+			watchedMilestones.remove(milestone);
+	}
+
 	// AFK Stuff
 	private long lastAFKPoke = System.currentTimeMillis();
 	private long lastAFK = 0L; // Away from Keyboard

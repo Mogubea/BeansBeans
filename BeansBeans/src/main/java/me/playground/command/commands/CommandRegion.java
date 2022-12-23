@@ -119,7 +119,7 @@ public class CommandRegion extends BeanCommand {
 					return false;
 				}
 				
-				ArrayList<Integer> ownerIds = new ArrayList<Integer>();
+				ArrayList<Integer> ownerIds = new ArrayList<>();
 						
 				if (args.length > 2) {
 					for (int x = 2; x < args.length; x++) {
@@ -291,8 +291,9 @@ public class CommandRegion extends BeanCommand {
 				
 				 if (selector.selectPrimary(BlockVector3.at(min.getX(), min.getY(), min.getZ()), ActorSelectorLimits.forActor(BukkitAdapter.adapt(p))))
 					 selector.explainPrimarySelection(BukkitAdapter.adapt(p), session, BlockVector3.at(min.getX(), min.getY(), min.getZ()));
-				selector.selectPrimary(BlockVector3.at(max.getX(), max.getY(), max.getZ()), ActorSelectorLimits.forActor(BukkitAdapter.adapt(p)));
+				if (selector.selectSecondary(BlockVector3.at(max.getX(), max.getY(), max.getZ()), ActorSelectorLimits.forActor(BukkitAdapter.adapt(p))))
 					selector.explainSecondarySelection(BukkitAdapter.adapt(p), session, BlockVector3.at(max.getX(), max.getY(), max.getZ()));
+
 				session.setRegionSelector(BukkitAdapter.adapt(p.getWorld()), selector);
 				p.sendMessage(Component.text("\u00a77WorldEdit Selection has been mapped to ").append(region.toComponent()));
 			} catch (Exception e) {

@@ -1,13 +1,11 @@
 package me.playground.skills;
 
-import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
 import org.bukkit.event.Event;
 import org.bukkit.event.entity.EntityDamageEvent;
 
-import java.util.List;
-
+@Deprecated
 public class SkillAcrobatics extends Skill {
 
 	protected SkillAcrobatics() {
@@ -16,15 +14,10 @@ public class SkillAcrobatics extends Skill {
 	}
 
 	@Override
-	protected boolean doSkillEvent(Skills s, Event e) {
+	protected boolean doSkillEvent(PlayerSkillData s, Event e) {
 		if (!(e instanceof EntityDamageEvent event)) return false;
 		s.addExperience(this, (int)(event.getDamage() * (12 + rand.nextInt(4))));
 		return true;
-	}
-
-	@Override
-	public List<Component> getGUIDescription(Skills s) {
-		return null;
 	}
 
 }

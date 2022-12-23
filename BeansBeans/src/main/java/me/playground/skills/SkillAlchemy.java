@@ -2,7 +2,6 @@ package me.playground.skills;
 
 import java.util.List;
 
-import me.playground.items.lore.Lore;
 import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
 import org.bukkit.event.Event;
@@ -17,13 +16,8 @@ public class SkillAlchemy extends Skill {
 	}
 
 	@Override
-	protected boolean doSkillEvent(Skills s, Event e) {
+	protected boolean doSkillEvent(PlayerSkillData s, Event e) {
 		return false;
-	}
-
-	@Override
-	public List<Component> getGUIDescription(Skills s) {
-		return null;
 	}
 
 }

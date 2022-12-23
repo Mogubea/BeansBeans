@@ -1,12 +1,8 @@
 package me.playground.skills;
 
-import java.util.List;
-
 import org.bukkit.Material;
 import org.bukkit.boss.BarColor;
 import org.bukkit.event.Event;
-
-import net.kyori.adventure.text.Component;
 
 public class SkillForging extends Skill {
 
@@ -16,13 +12,8 @@ public class SkillForging extends Skill {
 	}
 
 	@Override
-	protected boolean doSkillEvent(Skills s, Event e) {
+	protected boolean doSkillEvent(PlayerSkillData s, Event e) {
 		return false;
-	}
-
-	@Override
-	public List<Component> getGUIDescription(Skills s) {
-		return null;
 	}
 
 }

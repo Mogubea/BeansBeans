@@ -1,8 +1,5 @@
 package me.playground.skills;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
@@ -14,26 +11,15 @@ import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.event.block.BlockEvent;
 import org.bukkit.inventory.ItemStack;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
-
 public class SkillMining extends Skill {
 	
 	protected SkillMining() {
 		super("Mining", 0x77cacf, BarColor.BLUE, '3', "\u26cf", Material.DIAMOND_PICKAXE, Material.CYAN_DYE,
 				"Earn Mining XP by excavating worlds of their many valuable ores and minerals!");
-		addPerk(0, 2, SkillPerk.MINING_TEST13); // S Tier
-		addPerk(1, 1, SkillPerk.MINING_TEST10).addPerk(1, 2, SkillPerk.MINING_TEST11).addPerk(1, 3, SkillPerk.MINING_TEST12); // A Tier
-		addPerk(2, 2, SkillPerk.MINING_TEST13); // B Tier
-		addPerk(3, 2, SkillPerk.MINING_TEST13); // C Tier
-		addPerk(4, 2, SkillPerk.MINING_TEST13); // D Tier
-		addPerk(5, 2, SkillPerk.MINING_TEST13); // E Tier
-		addPerk(6, 2, SkillPerk.MINING_PROFICIENCY); // F Tier
 	}
 	
 	@Override
-	protected boolean doSkillEvent(final Skills s, final Event e) {
+	protected boolean doSkillEvent(final PlayerSkillData s, final Event e) {
 		boolean blockBreak;
 		if (!((blockBreak = e instanceof BlockBreakEvent) || e instanceof BlockDropItemEvent)) return false;
 		Player p = blockBreak ? ((BlockBreakEvent)e).getPlayer() : ((BlockDropItemEvent)e).getPlayer();
@@ -52,7 +38,7 @@ public class SkillMining extends Skill {
 	/**
 	 * Handles the skill EXP and skills that occur on breaking the block
 	 */
-	private boolean onBlockBreak(Skills s, BlockBreakEvent e, int skillXP) {
+	private boolean onBlockBreak(PlayerSkillData s, BlockBreakEvent e, int skillXP) {
 		s.addExperience(this, skillXP);
 		
 		// Ore Experience Multiplier
@@ -67,7 +53,7 @@ public class SkillMining extends Skill {
 	/**
 	 * Handles any drop changes
 	 */
-	private boolean onBlockDrop(Skills s, BlockDropItemEvent e, boolean isSilk) {
+	private boolean onBlockDrop(PlayerSkillData s, BlockDropItemEvent e, boolean isSilk) {
 		// Extra Item Drop
 		/*double chance = -1;
 		int bonusDrops = 0;
@@ -108,6 +94,7 @@ public class SkillMining extends Skill {
 			case GILDED_BLACKSTONE: return 200;
 			case LAPIS_ORE: return 260;
 			case DEEPSLATE_LAPIS_ORE: return 260;
+			case RAW_IRON_BLOCK: return 400;
 			case DEEPSLATE_DIAMOND_ORE: return 650;
 			case DIAMOND_ORE: return 660;
 			case EMERALD_ORE: return 750;
@@ -120,21 +107,4 @@ public class SkillMining extends Skill {
 				return 0;
 		}
 	}
-
-	@Override
-	public List<Component> getGUIDescription(Skills s) {
-		List<Component> desc = new ArrayList<>();
-		
-		
-		int proficiency = s.getPerkLevel(SkillPerk.MINING_PROFICIENCY);
-		desc.add(Component.text("• ").append(Component.text(proficiency + "%", proficiency < 100 ? NamedTextColor.RED : NamedTextColor.GREEN)).append(Component.text(" Pickaxe Proficiency \u26a1", TextColor.color(0xaaaa11))));
-		desc.add(Component.text("Pickaxe Proficiency affects the amount of", NamedTextColor.DARK_GRAY));
-		desc.add(Component.text("\u00a77\u00a7oDurability \u00a78\u00a7oand \u00a76\u00a7oHunger \u00a78\u00a7oconsumed when using"));
-		desc.add(Component.text("Pickaxes. Your current Pickaxe proficiency equates to;", NamedTextColor.DARK_GRAY));
-		desc.add(Component.text("• ").append(Component.text(proficiency + "%", proficiency < 100 ? NamedTextColor.RED : NamedTextColor.GREEN)).append(Component.text(" Durability Usage")));
-		desc.add(Component.text("• ").append(Component.text(proficiency + "%", proficiency < 100 ? NamedTextColor.RED : NamedTextColor.GREEN)).append(Component.text(" Hunger Drain")));
-		
-		return desc;
-	}
-
 }

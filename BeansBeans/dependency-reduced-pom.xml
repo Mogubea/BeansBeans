@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>BeansBeans</groupId>
   <artifactId>BeansBeans</artifactId>
-  <version>0.5.2-ALPHA</version>
+  <version>0.5.3-ALPHA</version>
   <build>
     <plugins>
       <plugin>

@@ -29,15 +29,17 @@ public class CommandSay extends BeanCommand {
 	
 	@Override
 	public boolean runCommand(PlayerProfile profile, @Nonnull CommandSender sender, @Nonnull Command cmd, @Nonnull String str, @Nonnull String[] args) {
-		String msg = "["+sender.getName()+"] ";
+		StringBuilder msg = new StringBuilder("[" + sender.getName() + "] ");
 		for (String s : args)
-			msg += s + " ";
+			msg.append(s).append(" ");
 		
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			p.sendMessage(Component.text(msg).color(TextColor.color(0xff4298)));
-			p.sendActionBar(Component.text(msg).color(TextColor.color(0xff4298)));
+			p.sendMessage(Component.text(msg.toString()).color(TextColor.color(0xff4298)));
+			p.sendActionBar(Component.text(msg.toString()).color(TextColor.color(0xff4298)));
 		}
-		
+
+		getPlugin().getSLF4JLogger().info(msg.toString());
+		getPlugin().getDiscord().sendChatBroadcast(":loud_sound: **"+ msg +"**");
 		return true;
 	}
 

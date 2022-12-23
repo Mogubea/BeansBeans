@@ -4,12 +4,11 @@ import jline.internal.Nullable;
 import me.playground.data.Datasource;
 import me.playground.data.PrivateDatasource;
 import me.playground.main.Main;
+import me.playground.playerprofile.stats.DirtyByte;
 import me.playground.playerprofile.stats.DirtyInteger;
 import me.playground.playerprofile.stats.PlayerStats;
 import me.playground.playerprofile.stats.StatType;
-import me.playground.skills.Skill;
-import me.playground.skills.SkillInfo;
-import me.playground.skills.Skills;
+import me.playground.skills.*;
 import me.playground.utils.Utils;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
@@ -25,7 +24,9 @@ import java.util.*;
 public class PlayerProfileDatasource extends PrivateDatasource {
     private final String table_profiles = "player_profiles";
     private final String table_blacklist = "pickup_blacklists";
-    private final String table_experience = "player_experience";
+    private final String table_skills = "player_experience";
+    private final String table_skillPerks = "player_skill_perks";
+    private final String table_skillMilestones = "player_skill_milestones";
     private final String table_homes = "homes";
 
     private final String statement_saveskills;
@@ -37,11 +38,11 @@ public class PlayerProfileDatasource extends PrivateDatasource {
         this.manager = manager;
 
         // Create the statement for saving skills.
-        StringBuilder statementStr = new StringBuilder("UPDATE " + table_experience + " SET ");
+        StringBuilder statementStr = new StringBuilder("UPDATE " + table_skills + " SET ");
         int max = Skill.getRegisteredSkills().size();
         for (Skill src : Skill.getRegisteredSkills()) {
             max--;
-            statementStr.append(src.getName()).append(" = ?,").append(src.getName()).append("_xp = ?").append(max > 0 ? "," : "");
+            statementStr.append(src.getName()).append(" = ?,").append(src.getName()).append("_xp = ?,").append(src.getName()).append("_ess = ?").append(max > 0 ? "," : "");
         }
 
         statementStr.append(" WHERE playerId = ?");
@@ -319,7 +320,7 @@ public class PlayerProfileDatasource extends PrivateDatasource {
      */
     @NotNull
     protected PlayerStats loadPlayerStats(@NotNull final PlayerProfile pp) {
-        final PlayerStats stats = new PlayerStats(pp);
+        final PlayerStats stats = new PlayerStats(pp, getPlugin().getMilestoneManager());
         ResultSet rs = null;
 
         try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement("SELECT category,stat,value FROM stats WHERE playerId = ?")) {
@@ -355,48 +356,83 @@ public class PlayerProfileDatasource extends PrivateDatasource {
         }
     }
 
-    public Skills loadSkills(@NotNull final PlayerProfile pp) {
+    public PlayerSkillData loadSkills(@NotNull final PlayerProfile pp) {
         Connection c = null;
         PreparedStatement s = null;
         ResultSet rs = null;
 
         try {
+            Map<Skill, SkillData> xpSources = new HashMap<>();
+            Map<SkillTreeEntry<?>, DirtyByte> treeLevels = new HashMap<>();
+            Map<Milestone, SingleMilestoneData> milestoneData = new HashMap<>();
+
             c = getNewConnection();
-            s = c.prepareStatement("SELECT * FROM " + table_experience + " WHERE playerId = ?");
+            s = c.prepareStatement("SELECT * FROM " + table_skills + " WHERE playerId = ?");
             s.setInt(1, pp.getId());
             rs = s.executeQuery();
             if (rs.next()) {
-                Map<Skill, SkillInfo> xpSources = new HashMap<>();
                 for (Skill skill : Skill.getRegisteredSkills())
-                    xpSources.put(skill, new SkillInfo(rs.getLong(skill.getName() + "_xp")));
-                return new Skills(pp, xpSources);
+                    xpSources.put(skill, new SkillData(rs.getDouble(skill.getName() + "_xp"), rs.getInt(skill.getName() + "_ess")));
             } else {
                 close(c, s);
                 c = getNewConnection();
-                s = c.prepareStatement("INSERT INTO " + table_experience + "(playerId) VALUES (?)");
+                s = c.prepareStatement("INSERT INTO " + table_skills + "(playerId) VALUES (?)");
                 s.setInt(1, pp.getId());
                 s.executeUpdate();
-                return new Skills(pp);
             }
+
+            close(c, s, rs);
+            c = getNewConnection();
+            s = c.prepareStatement("SELECT treePerk,level FROM " + table_skillPerks + " WHERE playerId = ?");
+            s.setInt(1, pp.getId());
+            rs = s.executeQuery();
+
+            while (rs.next()) {
+                SkillTreeEntry<?> entry = SkillTreeEntry.getByName(rs.getString("treePerk"));
+                if (entry == null) continue;
+                treeLevels.put(entry, new DirtyByte(rs.getByte("level"))); // "What a dirty byte" - minibike 1/10/22
+            }
+
+            close(c, s, rs);
+            c = getNewConnection();
+            s = c.prepareStatement("SELECT time,milestone,tier FROM " + table_skillMilestones + " WHERE playerId = ? ORDER BY time ASC, milestone ASC, tier ASC");
+            s.setInt(1, pp.getId());
+            rs = s.executeQuery();
+
+            while(rs.next()) {
+                Milestone milestone = getPlugin().getMilestoneManager().getMilestone(rs.getString("milestone"));
+                if (milestone == null) continue;
+
+                SingleMilestoneData smd = milestoneData.get(milestone);
+                if (smd == null)
+                    smd = new SingleMilestoneData(pp, milestone);
+
+                smd.addTierUpTime(MilestoneTier.fromIdentifier(rs.getString("tier")), rs.getTimestamp("time").toInstant());
+                milestoneData.put(milestone, smd);
+            }
+
+            return new PlayerSkillData(pp, getPlugin().getMilestoneManager(), xpSources, treeLevels, milestoneData);
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
             close(rs, c, s);
         }
-        return new Skills(pp);
+
+        return new PlayerSkillData(pp, getPlugin().getMilestoneManager());
     }
 
     /**
-     * Save the player's {@link Skills}.
+     * Save the player's {@link PlayerSkillData}.
      */
     protected void saveSkills(@NotNull final PlayerProfile pp) {
-        Skills skills = pp.getSkills();
+        PlayerSkillData skills = pp.getSkills();
         try(Connection c = getNewConnection(); PreparedStatement s = c.prepareStatement(statement_saveskills)) {
             int idx = 0;
 
             for (Skill src : Skill.getRegisteredSkills()) {
                 s.setInt(++idx, skills.getLevel(src));
-                s.setLong(++idx, skills.getTotalExperience(src));
+                s.setDouble(++idx, skills.getTotalExperience(src));
+                s.setInt(++idx, skills.getEssence(src));
             }
 
             s.setInt(++idx, pp.getId());

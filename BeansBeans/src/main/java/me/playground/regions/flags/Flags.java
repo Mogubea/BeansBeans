@@ -66,6 +66,12 @@ public final class Flags {
 					Component.text("\u00a77Players equal to or above the designated"),
 					Component.text("\u00a79Membership Level\u00a77 will be able to access and"),
 					Component.text("\u00a77trade with \u00a7aVillagers\u00a77."));
+	public static final FlagMember 	VEHICLE_ACCESS 		= register(new FlagMember("vehicle-access", "Vehicle Access", MemberLevel.MEMBER, MemberLevel.NONE))
+			.setFlagCategory(Flag.FlagCategory.ENTITIES)
+			.setDescription(Lore.fastBuild(true, 40, """
+					Players with the specified &9Membership Level&r are able to create, ride and destroy vehicles such as &#aaaaaaMinecarts&r and &#bb9944Boats&r.
+					
+					&8&oPlayers will always be able to access and destroy their own vehicles regardless of this setting."""));
 	
 	/*
 	 * Player related boolean flags

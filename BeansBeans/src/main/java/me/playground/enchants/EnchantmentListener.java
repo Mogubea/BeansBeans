@@ -201,11 +201,9 @@ public class EnchantmentListener extends EventListener {
 			}
 
 			// Invigorating Enchantment
-			// Axes typically do not have any reliable source of massive instant-breaking, so an axe's chance of activating Rejuvenating is higher.
 			if (item.containsEnchantment(BEnchantment.REJUVENATING)) {
-				int isAxe = BEnchantmentTarget.AXE.includes(item) ? 1 : 0;
 				int random = rand.nextInt(400);
-				if (random <= isAxe) { // 1 in 400 (1 in 200 for axes).
+				if (random == 0) { // 1 in 400
 					short oldValue = item.getItemMeta().getPersistentDataContainer().getOrDefault(BEnchantment.KEY_REJUVENATION, PersistentDataType.SHORT, (short)0);
 					if (oldValue < 500) {
 						item.editMeta(meta -> meta.getPersistentDataContainer().set(BEnchantment.KEY_REJUVENATION, PersistentDataType.SHORT, (short)(oldValue + 1)));

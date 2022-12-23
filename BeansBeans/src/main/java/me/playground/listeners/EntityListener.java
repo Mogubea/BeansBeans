@@ -22,6 +22,8 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -81,23 +83,19 @@ public class EntityListener extends EventListener {
 		// If it's Invulnerable, it is likely that for a good reason.
 		if (e.getEntity().isInvulnerable()) {
 			e.setCancelled(true);
-			return;
 		}
 
-		// stupid entities
-		if (isDumbEntity(e.getEntityType())) {
+		// stupid entities, prevent mobs from breaking these entities in general
+		else if (isDumbEntity(e.getEntityType())) {
 			final Region r = getRegionAt(e.getEntity().getLocation());
-			if (e.getDamager() instanceof Player) {
-				enactRegionPermission(r, e, (Player)e.getDamager(), Flags.BUILD_ACCESS, "break");
-			} else if (e.getDamager() instanceof Projectile) {
-				if (((Projectile) e.getDamager()).getShooter() instanceof Player p) {
-					enactRegionPermission(r, e, p, Flags.BUILD_ACCESS, "break");
-				} else {
-					e.setCancelled(true);
-				}
-			} else if (!r.isWorldRegion()) {
+			Player p = (e.getDamager() instanceof Player pl) ? pl : null;
+			if (e.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player pl)
+				p = pl;
+
+			if (p != null)
+				enactRegionPermission(r, e, p, Flags.BUILD_ACCESS, "break");
+			else if (!r.isWorldRegion())
 				e.setCancelled(true);
-			}
 		}
 	}
 
@@ -232,10 +230,8 @@ public class EntityListener extends EventListener {
 		if (e.getEntity() instanceof Player p) {
 			PlayerProfile pp = PlayerProfile.from(p);
 			// Teleport Invulnerability check
-			if (pp.onCooldown("teleportInvulnerability")) {
-//				p.getWorld().spawnParticle(Particle.SONIC_BOOM, p.getEyeLocation(), 1, 0, 0, 0, 0.1);
+			if (pp.onCooldown("teleportInvulnerability"))
 				e.setCancelled(true);
-			}
 			return;
 		}
 
@@ -249,14 +245,6 @@ public class EntityListener extends EventListener {
 			// Log the destruction of the item
 			getPlugin().getItemTrackingManager().incrementDemanifestationCount(item.getItemStack(), DemanifestationReason.DESTROYED, item.getItemStack().getAmount());
 		}
-	}
-
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onPlayerFallDamage(EntityDamageEvent e) {
-		if (!(e.getEntity() instanceof Player p)) return;
-		if (e.getCause() != DamageCause.FALL) return;
-
-		Skill.ACROBATICS.performSkillEvent(PlayerProfile.from(p).getSkills(), e);
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
@@ -370,6 +358,47 @@ public class EntityListener extends EventListener {
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
+	public void onEntityPlace(EntityPlaceEvent e) {
+		if (e.getPlayer() == null) return;
+		Region r = getRegionAt(e.getEntity().getLocation());
+		Player p = e.getPlayer();
+
+		if (e.getEntity() instanceof Vehicle vehicle) {
+			if (!enactRegionPermission(r, e, p, Flags.VEHICLE_ACCESS, "place vehicles")) return;
+			vehicle.getPersistentDataContainer().set(KEY_VEHICLE_CREATOR, PersistentDataType.INTEGER, PlayerProfile.getDBID(p));
+		} else {
+			enactRegionPermission(r, e, p, Flags.BUILD_ACCESS, "build");
+		}
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onVehicleEnter(VehicleEnterEvent e) {
+		if (!(e.getEntered() instanceof Player p)) return;
+		if (e.getVehicle() instanceof Tameable tameable && tameable.getOwnerUniqueId() == p.getUniqueId()) return;
+		if (e.getVehicle().getPersistentDataContainer().getOrDefault(KEY_VEHICLE_CREATOR, PersistentDataType.INTEGER, 0) == PlayerProfile.getDBID(p)) return;
+
+		enactRegionPermission(getRegionAt(e.getVehicle().getLocation()), e, p, Flags.VEHICLE_ACCESS, "ride vehicles");
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onVehicleDamage(VehicleDamageEvent e) {
+		if (e.getAttacker() == null) return; // If damaged by other sources, still damage
+
+		// Vehicle Damaging Check, prevent mobs from breaking vehicles in general
+		Player p = (e.getAttacker() instanceof Player pl) ? pl : null;
+		if (e.getAttacker() instanceof Projectile projectile && projectile.getShooter() instanceof Player pl)
+			p = pl;
+
+		if (p != null && e.getVehicle().getPersistentDataContainer().getOrDefault(KEY_VEHICLE_CREATOR, PersistentDataType.INTEGER, 0) == PlayerProfile.getDBID(p)) return;
+		final Region r = getRegionAt(e.getVehicle().getLocation());
+
+		if (p != null)
+			enactRegionPermission(r, e, p, Flags.VEHICLE_ACCESS, "break vehicles");
+		else if (!r.isWorldRegion())
+			e.setCancelled(true);
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onExplosionPrime(ExplosionPrimeEvent e) {
 		switch(e.getEntityType()) {
 			case WITHER_SKULL, WITHER -> {
@@ -414,7 +443,7 @@ public class EntityListener extends EventListener {
 			getRegionAt(e.getEntity().getLocation()).getEffectiveFlag(Flags.PROTECT_ANIMALS);
 	}
 	
-	@EventHandler(priority = EventPriority.LOW)
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onItemSpawn(ItemSpawnEvent e) {
 		ItemStack item = e.getEntity().getItemStack();
 		e.getEntity().setItemStack(BeanItem.formatItem(item));
@@ -527,9 +556,9 @@ public class EntityListener extends EventListener {
 		e.setRecipe(newRecipe);
 	}
 
-	@EventHandler(priority = EventPriority.LOW)
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onVillagerCareerChange(VillagerCareerChangeEvent e) {
-		e.getEntity().setVillagerExperience(2);
+		e.getEntity().setVillagerExperience(1);
 	}
 
 	/*@EventHandler(priority = EventPriority.LOW)
@@ -583,6 +612,10 @@ public class EntityListener extends EventListener {
 
 		// Cancel Pig Zombies spawning in portals
 		if (e.getSpawnReason() == SpawnReason.NETHER_PORTAL)
+			e.setCancelled(true);
+
+		// Cancel Chickens spawning from eggs
+		if (e.getSpawnReason() == SpawnReason.EGG)
 			e.setCancelled(true);
 	}
 

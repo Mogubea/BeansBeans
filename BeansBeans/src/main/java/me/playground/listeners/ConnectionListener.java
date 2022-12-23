@@ -57,7 +57,7 @@ public class ConnectionListener extends EventListener {
 		if (motd == null) {
 			String line1 = "&#8f66ff&lB&r&#9369ffe&#966bffa&#996effn&#9c72ff'&#9f75ffs &#a278ff&lB&r&#a57bffe&#a87effa&#ab81ffn&#ae84ffs " +
 					(getPlugin().isDebugMode() ? "&#ff3390(Development)" : "&#653390(Alpha v" + getPlugin().getDescription().getVersion() + ")") + "\n";
-			String line2 = "&#545565Only a few months late to the 1.19 party..";
+			String line2 = "&#545565Major Skill Update!";
 			motd = Lore.getBuilder(line1 + line2).setCompact().build().getLoree().get(0);
 		}
 

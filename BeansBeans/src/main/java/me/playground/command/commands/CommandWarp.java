@@ -139,7 +139,7 @@ public class CommandWarp extends BeanCommand {
 			canDo(sender, warp, "invite people to");
 
 			for (int x = 2; x < args.length; x++) {
-				int id = toId(p, args[x]);
+				int id = toProfile(sender, args[x]).getId();
 				if (warp.isInvited(id)) {
 					p.sendMessage(PlayerProfile.getDisplayName(id).append(Component.text("\u00a7c is already invited to ")).append(warp.toComponent()));
 				} else {
@@ -152,7 +152,7 @@ public class CommandWarp extends BeanCommand {
 			canDo(sender, warp, "uninvite people from");
 
 			for (int x = 2; x < args.length; x++) {
-				int id = toId(p, args[x]);
+				int id = toProfile(sender, args[x]).getId();
 
 				if (warp.uninvitePlayer(id)) {
 					p.sendMessage(Component.text("\u00a77Successfully uninvited ").append(PlayerProfile.getDisplayName(id)).append(Component.text("\u00a77 from ")).append(warp.toComponent()));
@@ -208,7 +208,7 @@ public class CommandWarp extends BeanCommand {
 			p.sendMessage(warp.toComponent().append(Component.text("\u00a77 is now a " + warp.getType().getName())));
 		} else if ("give".equals(subcmd) && sender.hasPermission("bean.cmd.warp.*")) {
 			if (args.length < 3) throw new CommandException(sender, "Usage: \u00a7f/warp give " + (warp!=null ? args[1] : "\u00a77<warp>") + "\u00a77 <player>");
-			int id = toId(p, args[2]);
+			int id = toProfile(sender, args[2]).getId();
 			warp.setOwnerId(id);
 			p.sendMessage(Component.text("\u00a77Given ").append(warp.toComponent()).append(Component.text("\u00a77 to ")).append(PlayerProfile.getDisplayName(id)));
 		} else { // find warp
@@ -222,15 +222,6 @@ public class CommandWarp extends BeanCommand {
 			profile.addToRecentWarps(warp.getName());
 		
 		return true;
-	}
-	
-	private int toId(Player p, String name) {
-		try {
-			int id = PlayerProfile.getDBID(name);
-			return id;
-		} catch (Exception e) {
-			throw new CommandException(p, "Couldn't find player '"+name+"'");
-		}
 	}
 	
 	private Warp toWarp(CommandSender sender, String s) {

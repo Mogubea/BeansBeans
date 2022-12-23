@@ -1,14 +1,10 @@
 package me.playground.skills;
 
-import java.util.List;
-
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.boss.BarColor;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockBreakEvent;
-
-import net.kyori.adventure.text.Component;
 
 public class SkillForaging extends Skill {
 	
@@ -18,7 +14,7 @@ public class SkillForaging extends Skill {
 	}
 	
 	@Override
-	protected boolean doSkillEvent(final Skills s, final Event e) {
+	protected boolean doSkillEvent(final PlayerSkillData s, final Event e) {
 		if (!(e instanceof final BlockBreakEvent event)) return false;
 		Block b = event.getBlock();
 		
@@ -62,9 +58,4 @@ public class SkillForaging extends Skill {
 		};
 	}
 
-	@Override
-	public List<Component> getGUIDescription(Skills s) {
-		return null;
-	}
-	
 }

@@ -1,5 +1,7 @@
 package me.playground.playerprofile.stats;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Arrays;
 
 public enum StatType {
@@ -44,13 +46,19 @@ public enum StatType {
 		return null;
 	}
 	
-	public static StatType fromString(String s) {
+	public static StatType fromString(@Nullable String s) {
+		if (s == null) return null;
+
 		for (StatType type : StatType.values()) {
 			if (s.equals(""+type.type) || Arrays.stream(type.strings).anyMatch(s::equalsIgnoreCase)) {
 				return type;
 			}
 		}
 		return null;
+	}
+
+	public String getString() {
+		return strings[0];
 	}
 	
 }

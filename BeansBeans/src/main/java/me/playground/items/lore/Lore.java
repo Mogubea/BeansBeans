@@ -126,7 +126,7 @@ public class Lore {
     /**
      * To be used when creating lore for actual items.
      */
-    public static PersistentLoreBuilder getBuilder(String... content) {
+    public static PersistentLoreBuilder getBuilder(@NotNull String... content) {
         return new PersistentLoreBuilder(content);
     }
 

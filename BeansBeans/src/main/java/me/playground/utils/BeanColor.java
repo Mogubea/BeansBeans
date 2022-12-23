@@ -30,6 +30,9 @@ public class BeanColor implements TextColor {
 	public static final BeanColor CRYSTALS		= new BeanColor(0xdf9bff);
 	public static final BeanColor STAFF			= new BeanColor(Rank.MODERATOR.getRankHex());
 
+	public static final BeanColor MILESTONE		= new BeanColor(0xcd65ff);
+	public static final BeanColor MILESTONE_TIME= new BeanColor(0x353539);
+
 	public static final BeanColor BAN			= new BeanColor(0xf53c3c);
 	public static final BeanColor BAN_REASON    = new BeanColor(0xffcfcf);
 	

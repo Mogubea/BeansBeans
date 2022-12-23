@@ -17,15 +17,11 @@ public class SkillFishing extends Skill {
 	}
 	
 	@Override
-	protected boolean doSkillEvent(final Skills s, final Event e) {
+	protected boolean doSkillEvent(final PlayerSkillData s, final Event e) {
 		if (!(e instanceof PlayerFishEvent event)) return false;
 		if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH)
 			s.addExperience(this, (60 + rand.nextInt(5)) * event.getExpToDrop());
 		return true;
 	}
 
-	@Override
-	public List<Component> getGUIDescription(Skills s) {
-		return null;
-	}
 }

@@ -11,7 +11,8 @@ import me.playground.items.lore.Lore;
 import me.playground.items.tracking.DemanifestationReason;
 import me.playground.ranks.Permission;
 import me.playground.ranks.Rank;
-import me.playground.skills.SkillInfo;
+import me.playground.skills.Grade;
+import me.playground.skills.SkillData;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -237,7 +238,7 @@ public class PurchaseOption {
 
 				for (Entry<Skill, Integer> entry : skillRequirement.entrySet()) {
 					boolean has = pp.getSkillLevel(entry.getKey()) >= entry.getValue();
-					lore.add(Component.text("\u00a78 • ").append(Component.text(entry.getKey().getNameWithIcon() + " Grade " + SkillInfo.getGrade(entry.getValue()) + " " + (!has ? " \u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")).colorIfAbsent(entry.getKey().getColour()).decoration(TextDecoration.ITALIC, false)));
+					lore.add(Component.text("\u00a78 • ").append(Component.text(entry.getKey().getNameWithIcon() + " Grade " + Grade.fromLevel(entry.getValue()) + " " + (!has ? " \u00a78(\u00a7c\u274c\u00a78)" : "\u00a78(\u00a7a\u2714\u00a78)")).colorIfAbsent(entry.getKey().getColour()).decoration(TextDecoration.ITALIC, false)));
 					if (!has) can = false;
 				}
 			}
@@ -286,13 +287,20 @@ public class PurchaseOption {
 		PlayerProfile pp = PlayerProfile.from(p);
 		if (p.getGameMode() == GameMode.CREATIVE && pp.hasPermission(Permission.BYPASS_COSTS_CREATIVE)) return true;
 
+		// Currency Checks
 		if (p.getLevel() < xpCost) return false;
 		if (pp.getCrystals() < crystalCost) return false;
 		if (pp.getBalance() < coinCost) return false;
 
+		// Skill Level Check
+		for (Entry<Skill, Integer> entry : skillRequirement.entrySet())
+			if (pp.getSkillLevel(entry.getKey()) < entry.getValue()) return false;
+
+		// Material Check
 		for (Entry<ItemStack, Integer> entry : materialCost.entrySet())
 			if (!p.getInventory().containsAtLeast(entry.getKey(), entry.getValue())) return false;
 
+		// Other Checks
 		for (boolean ack : fakeCosts.values())
 			if (!ack) return false;
 		return true;

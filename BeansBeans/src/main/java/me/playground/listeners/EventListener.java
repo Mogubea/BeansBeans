@@ -3,6 +3,7 @@ package me.playground.listeners;
 import java.util.Random;
 
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -18,10 +19,14 @@ public abstract class EventListener implements Listener, IPluginRef {
 	
 	private final Main plugin;
 	protected final Random rand;
+
+	protected final NamespacedKey KEY_VEHICLE_CREATOR;
 	
 	public EventListener(Main plugin) {
 		this.plugin = plugin;
 		this.rand = plugin.getRandom();
+
+		KEY_VEHICLE_CREATOR = plugin.getKey("VEHICLE_CREATOR");
 	}
 	
 	@Override

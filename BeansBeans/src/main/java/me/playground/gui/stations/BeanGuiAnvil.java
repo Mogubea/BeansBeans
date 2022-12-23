@@ -710,6 +710,8 @@ public class BeanGuiAnvil extends BeanGui {
 			switch (item.getType()) {
 				case NETHERITE_INGOT -> { return 100; }
 				case NETHERITE_SCRAP -> { return 45; }
+				case DIAMOND -> { return 10; }
+				case DIAMOND_BLOCK -> { return 90; }
 			}
 		}
 

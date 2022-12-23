@@ -22,7 +22,7 @@ public class SkillAgriculture extends Skill {
 	}
 	
 	@Override
-	protected boolean doSkillEvent(final Skills s, final Event e) {
+	protected boolean doSkillEvent(final PlayerSkillData s, final Event e) {
 		Block b = null;
 		if (e instanceof BlockBreakEvent)
 			b = ((BlockBreakEvent)e).getBlock();
@@ -95,9 +95,4 @@ public class SkillAgriculture extends Skill {
 		};
 	}
 
-	@Override
-	public List<Component> getGUIDescription(Skills s) {
-		return null;
-	}
-	
 }

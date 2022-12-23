@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import me.playground.skills.SkillData;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -13,7 +14,6 @@ import org.bukkit.inventory.ItemStack;
 import me.playground.highscores.Highscore;
 import me.playground.playerprofile.PlayerProfile;
 import me.playground.skills.Skill;
-import me.playground.skills.SkillInfo;
 import me.playground.utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -24,7 +24,7 @@ public class BeanGuiSkills extends BeanGui {
 	
 	private static final ItemStack blank = newItem(new ItemStack(Material.ORANGE_STAINED_GLASS_PANE, 1), "\u00a76Skills");
 	private final HashMap<Integer, Skill> mappings = new HashMap<>();
-	private final int[] skillSlots = {20,21,22,23,24,28,29,30,31,32,33,34};
+	private final int[] skillSlots = {20,21,22,23,24,28,29,30,32,33,34};
 	
 	public BeanGuiSkills(Player p) {
 		super(p);
@@ -47,10 +47,10 @@ public class BeanGuiSkills extends BeanGui {
 
 	@Override
 	public void onInventoryClicked(InventoryClickEvent e) {
-		/*Skill skill = mappings.get(e.getRawSlot());
+		Skill skill = mappings.get(e.getRawSlot());
 		if (skill == null) return;
-		
-		new BeanGuiSkillsDetails(p, skill).openInventory();*/
+
+		new BeanGuiSkill(p, skill).openInventory();
 	}
 
 	@Override // TODO:
@@ -62,15 +62,14 @@ public class BeanGuiSkills extends BeanGui {
 		
 		for (int x = -1; ++x < size;) {
 			Skill skill = skills.get(x);
-			SkillInfo skillInfo = tpp.getSkills().getSkillInfo(skill);
-			Highscore highscore = getPlugin().highscores.getHighscore(skill.getName() + " XP");
+			SkillData skillInfo = tpp.getSkills().getSkillData(skill);
 			int col = skill.getColour().value();
 			TextColor lighter = TextColor.color(col | 0x3d3d3d);
 			
 			// copium
-			int spaces = 25 - (skillInfo.getLevelXP() + "/" + skillInfo.getXPRequirement() + " ("+dec.format(skillInfo.getLevelProgress() * 100)+"%)").length();
+			int spaces = (int) (20 - ((skillInfo.getLevelExperience() + "/" + skillInfo.getXPRequirement() + " ("+dec.format(skillInfo.getLevelProgress() * 100)+"%)").length() * 0.75F));
 			StringBuilder spaceb = new StringBuilder();
-			spaces += skillInfo.getGrade().length();
+			spaces += skillInfo.getGrade().length() * 2;
 			for (int a = -1; ++a < spaces;)
 				spaceb.append(" ");
 			final String space = spaceb.toString();
@@ -81,26 +80,23 @@ public class BeanGuiSkills extends BeanGui {
 				List<Component> lore = new ArrayList<>();
 				lore.add(Component.text("\u00a78 • \u00a7rGrade: ", lighter).append(Component.text("\u00a7f\u00a7l" + skillInfo.getGrade())).decoration(TextDecoration.ITALIC, false));
 				lore.add(Component.empty());
-				if (skill.getDescription() != null)
-					lore.addAll(skill.getDescription());
+				lore.addAll(skill.getDescription());
 				lore.add(Component.empty());
 				lore.add(Component.text("\u00a7l " + skillInfo.getGrade() + " \u00a7r", lighter)
-						.append(Utils.getProgressBar('-', 20, skillInfo.getLevelXP(), skillInfo.getXPRequirement(), 0x454545, col))
+						.append(Utils.getProgressBar('-', 20, (long)skillInfo.getLevelExperience(), skillInfo.getXPRequirement(), 0x454545, col))
 						.append(Component.text(" \u00a7l"+skillInfo.getNextGrade()+" ", skill.getColour())).decoration(TextDecoration.ITALIC, false));
-				lore.add(Component.text(space + "\u00a7" + skill.getColourCode() + df.format(skillInfo.getLevelXP()))
+				lore.add(Component.text(space + "\u00a7" + skill.getColourCode() + df.format(skillInfo.getLevelExperience()))
 						.append(Component.text("/", NamedTextColor.DARK_GRAY))
 						.append(Component.text("\u00a7" + skill.getColourCode() + df.format(skillInfo.getXPRequirement()))
 						.append(Component.text(" (", NamedTextColor.DARK_GRAY).append(Component.text(dec.format(skillInfo.getLevelProgress() * 100) + "%", NamedTextColor.GRAY)
 						.append(Component.text(")", NamedTextColor.DARK_GRAY))))).decoration(TextDecoration.ITALIC, false));
 				lore.add(Component.empty());
+				lore.add(Component.text("\u00a78 • \u00a7rEssence: ", NamedTextColor.GRAY)
+						.append(Component.text(df.format(skillInfo.getEssence()) + " \ud83d\udd25", skill.getColour())).decoration(TextDecoration.ITALIC, false));
 				lore.add(Component.text("\u00a78 • \u00a7rTotal Exp: ", NamedTextColor.GRAY)
-						.append(Component.text(df.format(skillInfo.getTotalXP()) + " XP", NamedTextColor.AQUA)).decoration(TextDecoration.ITALIC, false));
-				lore.add(Component.text("\u00a78 • \u00a7rServer Position: ", NamedTextColor.GRAY)
-						.append(Component.text("#" + highscore.getPositionOf(tpp.getId()), TextColor.color(0xffffff)))
-						.append(Component.text(" of " + highscore.getSize(), NamedTextColor.GRAY)).decoration(TextDecoration.ITALIC, false));
+						.append(Component.text(df.format(skillInfo.getTotalExperience()) + " XP", NamedTextColor.AQUA)).decoration(TextDecoration.ITALIC, false));
 				lore.add(Component.empty());
-				//lore.add(Component.text("\u00a76» \u00a7eClick for details!"));
-				lore.add(Component.text("\u00a78» Skill Tree coming soon."));
+				lore.add(Component.text("\u00a76» \u00a7eClick for details!"));
 				
 				meta.lore(lore);
 			});
