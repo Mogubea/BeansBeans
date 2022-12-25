@@ -59,7 +59,7 @@ public class BeanGuiEnchantingTableLapis extends BeanGui {
 	public void onInventoryClicked(InventoryClickEvent e) {
 		final int slot = e.getRawSlot();
 		
-		if (slot >= 10 && slot < 18) {
+		if (slot >= 10 && slot < 17) {
 			PurchaseOption ppp = lapisUpgrades.get(slot - 10);
 			if (lapisLevel + 1 == (slot - 10) && ppp.canPurchase(p)) {
 				new BeanGuiConfirmPurchase(p, ppp) {

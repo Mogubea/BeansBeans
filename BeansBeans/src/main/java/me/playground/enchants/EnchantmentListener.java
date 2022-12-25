@@ -35,6 +35,7 @@ import me.playground.listeners.BlockDestructionSequence;
 import me.playground.listeners.EventListener;
 import me.playground.listeners.events.CustomBlockBreakEvent;
 import me.playground.main.Main;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.UUID;
@@ -149,9 +150,12 @@ public class EnchantmentListener extends EventListener {
 	public void onItemDrop(BlockDropItemEvent e) {
 		Player p = e.getPlayer();
 		ItemStack item = p.getEquipment().getItemInMainHand();
+		ItemMeta meta = item.getItemMeta();
+
 		if (!e.getBlockState().getBlock().isPreferredTool(item)) return;
+		if (meta == null) return;
 		
-		if (item.getItemMeta().hasEnchant(BEnchantment.SMELTING_EDGE)) {
+		if (meta.hasEnchant(BEnchantment.SMELTING_EDGE)) {
 			for (Item i : e.getItems()) {
 				ItemStack is = i.getItemStack();
 				if (!getPlugin().recipeManager().hasCookedVersion(is.getType())) continue;
@@ -168,7 +172,10 @@ public class EnchantmentListener extends EventListener {
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onBlockBreakFirst(BlockBreakEvent e) {
 		if (!(e.getBlock().getBlockData() instanceof Ageable)) return; // Prevent non age-ables
-		if (!e.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasEnchant(BEnchantment.PRESERVATION)) return;
+
+		ItemMeta meta = e.getPlayer().getInventory().getItemInMainHand().getItemMeta();
+		if (meta == null || !meta.hasEnchant(BEnchantment.PRESERVATION)) return;
+
 		Material m = e.getBlock().getType();
 		
 		if (m == Material.BAMBOO || m == Material.SUGAR_CANE) return; // Ignore these
@@ -187,12 +194,15 @@ public class EnchantmentListener extends EventListener {
 		Player p = e.getPlayer();
 		Block b = e.getBlock();
 		ItemStack item = p.getEquipment().getItemInMainHand();
+		ItemMeta meta = item.getItemMeta();
+
+		if (meta == null) return;
 
 		if (isPreferredTool(item, b)) {
 			// Experienced Enchantment
-			if (item.getItemMeta().hasEnchant(BEnchantment.EXPERIENCED)) {
+			if (meta.hasEnchant(BEnchantment.EXPERIENCED)) {
 				double val = rand.nextDouble()*100;
-				if (val < (item.getItemMeta().getEnchantLevel(BEnchantment.EXPERIENCED) * 0.01)) {
+				if (val < (meta.getEnchantLevel(BEnchantment.EXPERIENCED) * 0.01)) {
 					e.setExpToDrop((int) (e.getExpToDrop() + 50 * b.getType().getHardness()));
 					p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, e.getBlock().getLocation().add(0.5, 0.5, 0.5), 2, 0.25, 0.25, 0.25, 0.03);
 				} else if (val < (item.getItemMeta().getEnchantLevel(BEnchantment.EXPERIENCED) * 6)) {
@@ -203,13 +213,13 @@ public class EnchantmentListener extends EventListener {
 
 			// Invigorating Enchantment
 			// Axes typically do not have any reliable source of massive instant-breaking, so an axe's chance of activating Rejuvenating is higher.
-			if (item.getItemMeta().hasEnchant(BEnchantment.REJUVENATING)) {
+			if (meta.hasEnchant(BEnchantment.REJUVENATING)) {
 				int isAxe = BEnchantmentTarget.AXE.includes(item) ? 1 : 0;
 				int random = rand.nextInt(400);
 				if (random <= isAxe) { // 1 in 400 (1 in 200 for axes).
-					short oldValue = item.getItemMeta().getPersistentDataContainer().getOrDefault(BEnchantment.KEY_REJUVENATION, PersistentDataType.SHORT, (short)0);
+					short oldValue = meta.getPersistentDataContainer().getOrDefault(BEnchantment.KEY_REJUVENATION, PersistentDataType.SHORT, (short)0);
 					if (oldValue < 500) {
-						item.editMeta(meta -> meta.getPersistentDataContainer().set(BEnchantment.KEY_REJUVENATION, PersistentDataType.SHORT, (short)(oldValue + 1)));
+						item.editMeta(mete -> mete.getPersistentDataContainer().set(BEnchantment.KEY_REJUVENATION, PersistentDataType.SHORT, (short)(oldValue + 1)));
 						BeanItem.recalculateMaxDurability(item);
 						BeanItem.formatItem(item);
 					} else {
@@ -265,11 +275,13 @@ public class EnchantmentListener extends EventListener {
 	public void onItemDropLast(BlockDropItemEvent e) {
 		Player p = e.getPlayer();
 		ItemStack item = p.getEquipment().getItemInMainHand();
+		ItemMeta meta = item.getItemMeta();
+		if (meta == null) return;
 
 		BlockState state = e.getBlockState();
 		Material type = state.getType();
 		if (type == Material.WHEAT || type == Material.CARROTS || type == Material.POTATOES || type == Material.BEETROOTS || type == Material.NETHER_WART || type == Material.COCOA) {
-			if (item.getItemMeta().hasEnchant(BEnchantment.REPLENISH) || getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.CROP_REPLENISH)) {
+			if (meta.hasEnchant(BEnchantment.REPLENISH) || getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.CROP_REPLENISH)) {
 				int size = e.getItems().size();
 				for (int x = size; --x >= 0;) {
 					ItemStack i = e.getItems().get(x).getItemStack();
@@ -294,7 +306,7 @@ public class EnchantmentListener extends EventListener {
 			}
 		}
 		
-		if (item.getItemMeta().hasEnchant(BEnchantment.TELEKINESIS)) {
+		if (meta.hasEnchant(BEnchantment.TELEKINESIS)) {
 			int size = e.getItems().size();
 			for (int x = size; --x >= 0;) { // Reverse iteration to make sure we get all the items without causing out of bound issues.
 				ItemStack overflow = p.getInventory().addItem(e.getItems().get(x).getItemStack()).getOrDefault(0, null);
@@ -311,9 +323,11 @@ public class EnchantmentListener extends EventListener {
 	public void onItemDropLast(EntityDeathEvent e) {
 		Player p = e.getEntity().getKiller();
 		if (p == null) return;
-		ItemStack item = p.getEquipment().getItemInMainHand();
+
+		ItemMeta meta = p.getEquipment().getItemInMainHand().getItemMeta();
+		if (meta == null) return;
 		
-		if (item.getItemMeta().hasEnchant(BEnchantment.TELEKINESIS)) {
+		if (meta.hasEnchant(BEnchantment.TELEKINESIS)) {
 			int size = e.getDrops().size();
 			for (int x = size; --x >= 0;) { // Reverse iteration to make sure we get all the items without causing out of bound issues.
 				ItemStack overflow = p.getInventory().addItem(e.getDrops().get(x)).getOrDefault(0, null);

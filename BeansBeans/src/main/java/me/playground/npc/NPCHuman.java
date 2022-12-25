@@ -1,7 +1,6 @@
 package me.playground.npc;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -85,7 +84,8 @@ public class NPCHuman extends NPC<ServerPlayer> {
 	@Override
 	public void showTo(Player p) {
 		ServerGamePacketListenerImpl connection = ((CraftPlayer)p).getHandle().connection;
-		connection.send(new ClientboundAddPlayerPacket(getEntity())); // add npc to existence
+		//connection.send(new ClientboundAddPlayerPacket(getEntity())); // add npc to existence
+		connection.send(ClientboundPlayerInfoUpdatePacket.createPlayerInitializing(List.of(getEntity())));
 		getPlugin().getServer().getScheduler().runTask(getPlugin(), () -> {
 			connection.send(new ClientboundAddPlayerPacket(getEntity())); // Spawns the Entity for the player
 			connection.send(new ClientboundRotateHeadPacket(entity, getFixedRot(getLocation().getYaw()))); // Rotates the head for the player
@@ -93,7 +93,7 @@ public class NPCHuman extends NPC<ServerPlayer> {
 
 		// Equipment and nullification of profile has to be sent slightly later
 		getPlugin().getServer().getScheduler().runTaskLater(getPlugin(), () -> {
-			connection.send(new ClientboundPlayerInfoRemovePacket(new ArrayList<>(Collections.singleton(getEntity().getUUID())))); // Removes from tab by nullifying the profile
+			connection.send(new ClientboundPlayerInfoRemovePacket(List.of(getEntity().getUUID()))); // Removes from tab by nullifying the profile
 			showEquipment(p); // Sends equipment
 		}, 5L);
 	}

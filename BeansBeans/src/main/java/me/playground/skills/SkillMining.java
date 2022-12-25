@@ -40,7 +40,7 @@ public class SkillMining extends Skill {
 		ItemStack i = p.getInventory().getItemInMainHand();
 		Block b = ((BlockEvent)e).getBlock();
 		
-		if (!b.isValidTool(i)) return false;
+		if (!b.isValidTool(i) || !i.hasItemMeta()) return false;
 		boolean isSilk = i.getItemMeta().hasEnchant(Enchantment.SILK_TOUCH);
 
 		int skillXP = getExperienceValue(b);
