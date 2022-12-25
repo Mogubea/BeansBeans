@@ -347,15 +347,6 @@ public class ContainerListener extends EventListener {
 					}
 				}
 			}
-			
-			// Main Menu Item
-			if (stack.equals(BeanItem.PLAYER_MENU.getOriginalStack())) {
-				e.setCancelled(true);
-				if (!(bui instanceof BeanGuiMainMenu)) { // Schedule the task so client side doesn't end up with a ghost item.
-					Bukkit.getServer().getScheduler().runTask(getPlugin(), () -> new BeanGuiMainMenu(p).openInventory());
-					return;
-				}
-			}
 		}
 		
 		if (bui != null && !bui.preInventoryClick(e))

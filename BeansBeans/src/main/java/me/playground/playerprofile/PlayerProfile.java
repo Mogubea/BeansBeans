@@ -850,15 +850,6 @@ public class PlayerProfile {
 				} else
 					hideSidebar();
 				break;
-			case MENU_ITEM:
-				if (enabled) {
-					ItemStack prevItem = getPlayer().getInventory().getItem(9);
-					getPlayer().getInventory().setItem(9, BeanItem.PLAYER_MENU.getOriginalStack());
-					if (prevItem != null && !prevItem.equals(BeanItem.PLAYER_MENU.getOriginalStack()))
-						giveItem(prevItem);
-				} else {
-					getPlayer().getInventory().setItem(9, null);
-				}
 			default:
 				break;
 		}

@@ -118,9 +118,8 @@ public class ConnectionListener extends EventListener {
 		if (pp.isSettingEnabled(PlayerSetting.FLIGHT))
 			p.setAllowFlight(true);
 
-		// Place menu item
-		if (pp.isSettingEnabled(PlayerSetting.MENU_ITEM))
-			p.getInventory().setItem(9, BeanItem.PLAYER_MENU.getOriginalStack());
+		// To remove
+		p.getInventory().remove(BeanItem.PLAYER_MENU.getOriginalStack());
 		
 		pp.getSkills().setBarPlayer();
 		pp.getStats().setStat(StatType.GENERIC, "lastLogin", (int)(System.currentTimeMillis()/60000L));

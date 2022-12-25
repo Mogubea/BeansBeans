@@ -79,30 +79,6 @@ public class CommandOp extends BeanCommand {
 			return true;
 		}
 		
-		if ("horsegui".equals(cmdStr) && checkPlayer(sender)) {
-			TraderLlama horse = (TraderLlama) p.getWorld().spawnEntity(p.getLocation(), EntityType.TRADER_LLAMA);
-			horse.setCarryingChest(true);
-			horse.setStrength(5); // 5 * 3 = inventory space lol
-			horse.setAI(false);
-			horse.setCollidable(false);
-			horse.setInvisible(true);
-			horse.setInvulnerable(true);
-			horse.setSilent(true);
-			horse.setAge(-99);
-			horse.setAgeLock(true);
-			horse.setOwner(p);
-			horse.customName(Component.text("Pet Test GUI"));
-			horse.setCustomNameVisible(true);
-			
-			AbstractHorseInventory inv = horse.getInventory();
-			inv.setMaxStackSize(100);
-			inv.setSaddle(BeanItem.PLAYER_MENU.getItemStack());
-			
-			horse.getInventory().setItem(5, BeanItem.PLAYER_MENU.getItemStack());
-	        Bukkit.getScheduler().scheduleSyncDelayedTask(getPlugin(), () -> ((CraftPlayer)p).getHandle().connection.send(new ClientboundHorseScreenOpenPacket(2, 15, horse.getEntityId())), 2L);
-			return true;
-		}
-		
 		if ("formatchunks".equals(cmdStr) && checkPlayer(sender)) {
 			int dist = args.length > 1 ? toIntDef(args[1], 0) : 0;
 			if (dist < 1) dist = 1;

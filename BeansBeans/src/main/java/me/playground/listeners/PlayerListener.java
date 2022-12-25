@@ -8,6 +8,7 @@ import java.util.UUID;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
+import me.playground.gui.BeanGuiMainMenu;
 import me.playground.gui.stations.BeanGuiAnvil;
 import me.playground.items.tracking.DemanifestationReason;
 import me.playground.listeners.events.PlayerSpawnCreatureEvent;
@@ -207,9 +208,9 @@ public class PlayerListener extends EventListener {
 		Location old = p.getLocation();
 		final Location loc = new Location(p.getWorld(), old.getX(), old.getY(), old.getZ(), old.getYaw(), old.getPitch());
 		pp.updateLastLocation(loc, 0);
-		
-		if (pp.isSettingEnabled(PlayerSetting.MENU_ITEM))
-			e.getDrops().remove(BeanItem.PLAYER_MENU.getOriginalStack());
+
+		// To remove
+		e.getDrops().remove(BeanItem.PLAYER_MENU.getOriginalStack());
 
 		// gross
 		TextReplacementConfig c = TextReplacementConfig.builder().match("\u24E2 ").replacement("").build();
@@ -290,7 +291,13 @@ public class PlayerListener extends EventListener {
 	public void onBucket(PlayerBucketEntityEvent e) {
 		enactRegionPermission(getRegionAt(e.getEntity().getLocation()), e, e.getPlayer(), Flags.BUILD_ACCESS, "use buckets");
 	}
-	
+
+	@EventHandler(priority = EventPriority.LOW)
+	public void onSwap(PlayerSwapHandItemsEvent e) {
+		e.setCancelled(true);
+		new BeanGuiMainMenu(e.getPlayer()).openInventory();
+	}
+
 	@EventHandler(priority = EventPriority.LOW)
 	public void onInteractDumb(PlayerInteractEvent e) {
 		final Block block = e.getClickedBlock();
