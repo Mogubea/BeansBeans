@@ -264,7 +264,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 				i.setItem(4, backToFront);
 				p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.5F, 1.0F);
 			} else if (slot >= 12 && slot < 17 && e.getCurrentItem().getType() == Material.ENCHANTED_BOOK) {
-				int oldLvl = itemToModify.getEnchantmentLevel(selEnch);
+				int oldLvl = itemToModify.getItemMeta().getEnchantLevel(selEnch);
 				int pendLvl = pendingChanges.getOrDefault(selEnch, -1);
 				int lvSlot = slot-12 + 1;
 				
@@ -302,7 +302,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 		// Set up specific enchantment level screen
 		} else if (mapping.containsKey(slot)) {
 			BEnchantment enchant = mapping.get(slot);
-			int oldLvl = itemToModify.getEnchantmentLevel(enchant);
+			int oldLvl = itemToModify.getItemMeta().getEnchantLevel(enchant);
 			selEnch = enchant;
 			resetBrowns();
 			p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.5F, 1.0F);
@@ -355,7 +355,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 							lore.add(Component.text("\u00a7c\u26a0 \u00a7cThese Enchantments will be removed:"));
 							for (Enchantment conflict : conflicts) {
 								lore.add(Component.text("\u00a7c • ").append(Component.translatable(conflict.translationKey(), NamedTextColor.RED).decoration(TextDecoration.ITALIC, false)));
-								runicCost -= BEnchantment.from(conflict).getRunicValue(displayItem.getEnchantmentLevel(conflict));
+								runicCost -= BEnchantment.from(conflict).getRunicValue(displayItem.getItemMeta().getEnchantLevel(conflict));
 							}
 						}
 					}
@@ -473,7 +473,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 				
 				lore.add(Component.text("\u00a78Maximum Level: " + ench.getMaxLevel()));
 				
-				int oldLevel = pendingChanges.getOrDefault(ench, itemToModify.getEnchantmentLevel(ench));
+				int oldLevel = pendingChanges.getOrDefault(ench, itemToModify.getItemMeta().getEnchantLevel(ench));
 				if (oldLevel > 0) {
 					lore.add(Component.text("\u00a73» \u00a7bClick to modify!"));
 				} else {
@@ -527,7 +527,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 				
 				lore.add(Component.text("\u00a78Maximum Level: " + ench.getMaxLevel()));
 				
-				int oldLevel = pendingChanges.getOrDefault(ench, itemToModify.getEnchantmentLevel(ench));
+				int oldLevel = pendingChanges.getOrDefault(ench, itemToModify.getItemMeta().getEnchantLevel(ench));
 				if (oldLevel > 0) {
 					lore.add(Component.text("\u00a73» \u00a7bClick to modify!"));
 				} else {
@@ -594,7 +594,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 				pendingChanges.forEach((ench, level) -> {
 					BEnchantment bEnch = BEnchantment.from(ench);
 					BeanColor color = bEnch.isCursed() ? BeanColor.ENCHANT_BURDEN : BeanColor.ENCHANT;
-					int oldLevel = itemToModify.getEnchantmentLevel(ench);
+					int oldLevel = itemToModify.getItemMeta().getEnchantLevel(ench);
 					if (oldLevel > 0) {
 						if (level <= 0) {
 							lore.add(Component.text("\u00a78 - \u00a77Remove ").append(bEnch.displayName(oldLevel)).decoration(TextDecoration.ITALIC, false));
@@ -619,7 +619,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 						List<Enchantment> conflicts = bEnch.getActiveConflicts(displayItem);
 						if (!conflicts.isEmpty()) {
 							for (Enchantment conflict : conflicts) {
-								lore.add(Component.text("\u00a78 - \u00a77Remove ").append(conflict.displayName(displayItem.getEnchantmentLevel(conflict)).append(Component.text("\u00a78 (Conflict)"))).decoration(TextDecoration.ITALIC, false));
+								lore.add(Component.text("\u00a78 - \u00a77Remove ").append(conflict.displayName(displayItem.getItemMeta().getEnchantLevel(conflict)).append(Component.text("\u00a78 (Conflict)"))).decoration(TextDecoration.ITALIC, false));
 								displayItem.removeEnchantment(conflict);
 							}
 						}
@@ -717,7 +717,7 @@ public class BeanGuiEnchantingTable extends BeanGui {
 	private boolean isEnchantable(ItemStack item) {
 		if (item == null) return false;
 		BeanItem customItem = BeanItem.from(item);
-		return Enchantment.DURABILITY.canEnchantItem(item) && (customItem == null || customItem.isEnchantable()/* && !item.containsEnchantment(BEnchantment.BURDEN_IRREVOCABLE)*/);
+		return Enchantment.DURABILITY.canEnchantItem(item) && (customItem == null || customItem.isEnchantable()/* && !item.getItemMeta().hasEnchant(BEnchantment.BURDEN_IRREVOCABLE)*/);
 	}
 	
 	/**

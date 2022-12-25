@@ -76,9 +76,9 @@ public class BeanGuiBestiary extends BeanGui {
 					if (entry == null) return; // The odds of a LootEntry vanishing while you're looking at it is unlikely, but not zero.
 					ItemStack i = p.getInventory().getItemInMainHand();
 					p.getInventory().addItem(entry.generateReward(
-							i.getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS), 
+							i.getItemMeta().getEnchantLevel(Enchantment.LOOT_BONUS_MOBS), 
 							pp.getLuck(), 
-							i.getEnchantmentLevel(Enchantment.FIRE_ASPECT) > 0 || i.getEnchantmentLevel(Enchantment.ARROW_FIRE) > 0));
+							i.getItemMeta().getEnchantLevel(Enchantment.FIRE_ASPECT) > 0 || i.getItemMeta().getEnchantLevel(Enchantment.ARROW_FIRE) > 0));
 					p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.4F, 0.8F);
 				}
 			}
@@ -116,7 +116,7 @@ public class BeanGuiBestiary extends BeanGui {
 		
 		float luckLevel = pp.getLuck();
 		if (table.getName().equals("fishing"))
-			luckLevel += p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LUCK);
+			luckLevel += p.getInventory().getItemInMainHand().getItemMeta().getEnchantLevel(Enchantment.LUCK);
 		
 		for (int e = -1; ++e < loots;) {
 			ItemStack entryDisplay;
@@ -133,7 +133,7 @@ public class BeanGuiBestiary extends BeanGui {
 						lore.add(Component.text(s));
 				} else {
 					int maxStack = entry.getMaxStackSize();
-					int lootingMax = (entry.allowsLooting() ? maxStack + p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS) : maxStack);
+					int lootingMax = (entry.allowsLooting() ? maxStack + p.getInventory().getItemInMainHand().getItemMeta().getEnchantLevel(Enchantment.LOOT_BONUS_MOBS) : maxStack);
 					
 					float chance, luckChance;
 					if (system1) {

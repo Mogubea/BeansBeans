@@ -310,7 +310,7 @@ public class EntityListener extends EventListener {
 		}
 
 		PlayerProfile pp = p != null ? PlayerProfile.from(p) : null;
-		int looting = p != null ? p.getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_MOBS) : nerfDrops ? -1 : 0;
+		int looting = p != null ? p.getInventory().getItemInMainHand().getItemMeta().getEnchantLevel(Enchantment.LOOT_BONUS_MOBS) : nerfDrops ? -1 : 0;
 		float luck = p != null ? pp.getLuck() : nerfDrops ? -10 : 0;
 
 		if (p != null) {

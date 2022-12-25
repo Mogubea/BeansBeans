@@ -775,20 +775,20 @@ public class BeanItem {
 			}
 			*/
 
-			if (item.containsEnchantment(Enchantment.DAMAGE_ALL)) {
-				double x = ((item.getEnchantmentLevel(Enchantment.DAMAGE_ALL)+1) * 0.5D);
+			if (item.getItemMeta().hasEnchant(Enchantment.DAMAGE_ALL)) {
+				double x = ((item.getItemMeta().getEnchantLevel(Enchantment.DAMAGE_ALL)+1) * 0.5D);
 				modifiers.put("Damage", modifiers.getOrDefault("Damage", 0.0) + x);
 //				modsuffix.put("Damage", Component.text(" ("+(x>0?"+"+x:x)+")").color(BeanColor.ENCHANT));
 			}
 			
-			if (item.containsEnchantment(Enchantment.DAMAGE_UNDEAD)) {
-				double x = (item.getEnchantmentLevel(Enchantment.DAMAGE_UNDEAD) * 2.5D);
+			if (item.getItemMeta().hasEnchant(Enchantment.DAMAGE_UNDEAD)) {
+				double x = (item.getItemMeta().getEnchantLevel(Enchantment.DAMAGE_UNDEAD) * 2.5D);
 				modifiers.put("Undead Damage", modifiers.getOrDefault("Damage", 0.0) + x);
 //				modsuffix.put("Undead Damage", Component.text(" ("+(x>0?"+"+x:x)+")").color(BeanColor.ENCHANT));
 			}
 			
-			if (item.containsEnchantment(Enchantment.DAMAGE_ARTHROPODS)) {
-				double x = (item.getEnchantmentLevel(Enchantment.DAMAGE_ARTHROPODS) * 2.5D);
+			if (item.getItemMeta().hasEnchant(Enchantment.DAMAGE_ARTHROPODS)) {
+				double x = (item.getItemMeta().getEnchantLevel(Enchantment.DAMAGE_ARTHROPODS) * 2.5D);
 				modifiers.put("Arthro Damage", modifiers.getOrDefault("Damage", 0.0) + x);
 //				modsuffix.put("Arthro Damage", Component.text(" ("+(x>0?"+"+x:x)+")").color(BeanColor.ENCHANT));
 			}

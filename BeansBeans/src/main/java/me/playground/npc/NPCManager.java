@@ -10,8 +10,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_19_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_19_R2.CraftServer;
+import org.bukkit.craftbukkit.v1_19_R2.CraftWorld;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
@@ -95,7 +95,7 @@ public class NPCManager implements IPluginRef {
 				uuid = UUID.fromString(json.getString("uuid"));
 			
 			GameProfile profile = new GameProfile(uuid, name);
-			entityNpc = new ServerPlayer(server, world, profile, null);
+			entityNpc = new ServerPlayer(server, world, profile);
 			((ServerPlayer) entityNpc).spawnIn(world);
 			ack = new NPCHuman(creatorId, id, getPlugin(), ((ServerPlayer) entityNpc), location, json);
 			break;

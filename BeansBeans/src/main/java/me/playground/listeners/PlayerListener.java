@@ -29,15 +29,16 @@ import org.bukkit.block.*;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.block.data.Lightable;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_19_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.*;
@@ -249,8 +250,9 @@ public class PlayerListener extends EventListener {
 				net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(new ItemStack(item));
 				net.minecraft.world.entity.EntityType<?> entity = ((SpawnEggItem) nmsItem.getItem()).getType(nmsItem.getTag());
 				Location l = ent.getLocation();
-				LivingEntity newent = (LivingEntity) entity.spawn((((CraftWorld)ent.getWorld()).getHandle()), nmsItem.getTag(), null, ((CraftPlayer)e.getPlayer()).getHandle(),
-						new BlockPos(l.getBlockX(), l.getBlockY(), l.getBlockZ()), MobSpawnType.SPAWN_EGG, true, false).getBukkitEntity();
+
+				LivingEntity newent = (LivingEntity) entity.spawn((((CraftWorld)ent.getWorld()).getHandle()), nmsItem, ((CraftPlayer)e.getPlayer()).getHandle(), new BlockPos(l.getBlockX(), l.getBlockY(), l.getBlockZ()),
+						MobSpawnType.SPAWN_EGG, true, false, CreatureSpawnEvent.SpawnReason.SPAWNER_EGG).getBukkitEntity();
 				if (new PlayerSpawnCreatureEvent(newent, e.getPlayer(), item).callEvent()) {
 					newent.spawnAt(newent.getLocation());
 					item.subtract(1);
@@ -405,8 +407,8 @@ public class PlayerListener extends EventListener {
 					net.minecraft.world.entity.EntityType<?> entity = ((SpawnEggItem) nmsItem.getItem()).getType(nmsItem.getTag());
 					BlockFace face = e.getBlockFace();
 					Location l = block.getLocation().add(face.getModX(), face.getModY(), face.getModZ());
-					LivingEntity newent = (LivingEntity) entity.spawn((((CraftWorld)p.getWorld()).getHandle()), nmsItem.getTag(), null, ((CraftPlayer)e.getPlayer()).getHandle(),
-							new BlockPos(l.getBlockX(), l.getBlockY(), l.getBlockZ()), MobSpawnType.SPAWN_EGG, e.getBlockFace() == BlockFace.UP, false).getBukkitEntity();
+					LivingEntity newent = (LivingEntity) entity.spawn((((CraftWorld)p.getWorld()).getHandle()), nmsItem, ((CraftPlayer)e.getPlayer()).getHandle(),
+							new BlockPos(l.getBlockX(), l.getBlockY(), l.getBlockZ()), MobSpawnType.SPAWN_EGG, e.getBlockFace() == BlockFace.UP, false, CreatureSpawnEvent.SpawnReason.SPAWNER_EGG).getBukkitEntity();
 					if (new PlayerSpawnCreatureEvent(newent, e.getPlayer(), item).callEvent()) {
 						newent.spawnAt(newent.getLocation());
 						item.subtract(1);
@@ -835,9 +837,9 @@ public class PlayerListener extends EventListener {
 
 			if (table != null)
 				caught.setItemStack(LootRetriever.from(table, RetrieveMethod.CUMULATIVE_CHANCE, p)
-						.luck(PlayerProfile.from(p).getLuck() + rod.getEnchantmentLevel(Enchantment.LUCK))
+						.luck(PlayerProfile.from(p).getLuck() + rod.getItemMeta().getEnchantLevel(Enchantment.LUCK))
 						.biome(e.getHook().getLocation().getBlock().getBiome())
-						.burn(rod.getEnchantmentLevel(BEnchantment.SCORCHING) > 0)
+						.burn(rod.getItemMeta().getEnchantLevel(BEnchantment.SCORCHING) > 0)
 						.getLoot().get(0));
 		}
 		

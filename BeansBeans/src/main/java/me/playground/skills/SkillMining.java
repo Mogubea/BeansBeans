@@ -41,7 +41,7 @@ public class SkillMining extends Skill {
 		Block b = ((BlockEvent)e).getBlock();
 		
 		if (!b.isValidTool(i)) return false;
-		boolean isSilk = i.containsEnchantment(Enchantment.SILK_TOUCH);
+		boolean isSilk = i.getItemMeta().hasEnchant(Enchantment.SILK_TOUCH);
 
 		int skillXP = getExperienceValue(b);
 		if (skillXP < 1) return false;

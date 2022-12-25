@@ -1,6 +1,7 @@
 package me.playground.npc;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,8 +11,8 @@ import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.entity.EquipmentSlot;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_19_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.json.JSONObject;
@@ -84,7 +85,7 @@ public class NPCHuman extends NPC<ServerPlayer> {
 	@Override
 	public void showTo(Player p) {
 		ServerGamePacketListenerImpl connection = ((CraftPlayer)p).getHandle().connection;
-		connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.ADD_PLAYER, getEntity())); // add npc to existence
+		connection.send(new ClientboundAddPlayerPacket(getEntity())); // add npc to existence
 		getPlugin().getServer().getScheduler().runTask(getPlugin(), () -> {
 			connection.send(new ClientboundAddPlayerPacket(getEntity())); // Spawns the Entity for the player
 			connection.send(new ClientboundRotateHeadPacket(entity, getFixedRot(getLocation().getYaw()))); // Rotates the head for the player
@@ -92,7 +93,7 @@ public class NPCHuman extends NPC<ServerPlayer> {
 
 		// Equipment and nullification of profile has to be sent slightly later
 		getPlugin().getServer().getScheduler().runTaskLater(getPlugin(), () -> {
-			connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, getEntity())); // Removes from tab by nullifying the profile
+			connection.send(new ClientboundPlayerInfoRemovePacket(new ArrayList<>(Collections.singleton(getEntity().getUUID())))); // Removes from tab by nullifying the profile
 			showEquipment(p); // Sends equipment
 		}, 5L);
 	}

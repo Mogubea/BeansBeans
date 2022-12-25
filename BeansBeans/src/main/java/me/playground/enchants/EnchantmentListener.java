@@ -48,7 +48,7 @@ public class EnchantmentListener extends EventListener {
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onItemDamage(PlayerItemDamageEvent e) {
 		// New and nerfed Unbreaking
-		int level = e.getItem().getEnchantmentLevel(BEnchantment.UNBREAKING);
+		int level = e.getItem().getItemMeta().getEnchantLevel(BEnchantment.UNBREAKING);
 		if (level > 0) {
 			double odds = ((level+1) * 12.5);
 			if ((rand.nextDouble() * 100) < odds)
@@ -57,7 +57,7 @@ public class EnchantmentListener extends EventListener {
 		}
 
 		// 20% per level to take 1 - 1+level additional damage.
-		int fragile = e.getItem().getEnchantmentLevel(BEnchantment.BURDEN_FRAGILE);
+		int fragile = e.getItem().getItemMeta().getEnchantLevel(BEnchantment.BURDEN_FRAGILE);
 		if (fragile > 0)
 			if (rand.nextInt(100) < (fragile * 20))
 				e.setDamage(e.getDamage() + 1 + rand.nextInt(fragile + 1));
@@ -69,15 +69,16 @@ public class EnchantmentListener extends EventListener {
 		if (!(e.getEntity() instanceof LivingEntity ent)) return;
 
 		ItemStack item = p.getEquipment().getItemInMainHand();
-		if ((ent.getCategory() == EntityCategory.ARTHROPOD && item.containsEnchantment(BEnchantment.BURDEN_ARACHNOPHOBIC)) ||
-				(ent.getCategory() == EntityCategory.UNDEAD && item.containsEnchantment(BEnchantment.BURDEN_NECROPHOBIC)) ||
-				(ent instanceof Animals && item.containsEnchantment(BEnchantment.BURDEN_ZOOPHOBIC))) {
+
+		if ((ent.getCategory() == EntityCategory.ARTHROPOD && item.getItemMeta().hasEnchant(BEnchantment.BURDEN_ARACHNOPHOBIC)) ||
+				(ent.getCategory() == EntityCategory.UNDEAD && item.getItemMeta().hasEnchant(BEnchantment.BURDEN_NECROPHOBIC)) ||
+				(ent instanceof Animals && item.getItemMeta().hasEnchant(BEnchantment.BURDEN_ZOOPHOBIC))) {
 			p.getWorld().spawnParticle(Particle.VILLAGER_ANGRY, e.getEntity().getLocation().add(0, e.getEntity().getHeight()/2, 0), 4, 0.3, e.getEntity().getHeight()/2, 0.3, 0.02);
 			e.setCancelled(true);
 			return;
 		}
 
-		int investmentEnchant = item.getEnchantmentLevel(BEnchantment.PAY_TO_WIN);
+		int investmentEnchant = item.getItemMeta().getEnchantLevel(BEnchantment.PAY_TO_WIN);
 		if (investmentEnchant > 0) {
 			PlayerProfile pp = PlayerProfile.from(p);
 			int coinDeduct = ((2^investmentEnchant) + (investmentEnchant-1)) * 10; // 20, 50, 100
@@ -96,7 +97,7 @@ public class EnchantmentListener extends EventListener {
 
 		// Enervating Burden
 		// Each offensive swing has a 2.5% chance to drain the player of some saturation, however, there is an 8-second cooldown between drains.
-		if (e.getCause() != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK && item.containsEnchantment(BEnchantment.BURDEN_ENERVATING)) {
+		if (e.getCause() != EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK && item.getItemMeta().hasEnchant(BEnchantment.BURDEN_ENERVATING)) {
 			PlayerProfile pp = PlayerProfile.from(p);
 			if (!pp.onCooldown("enervating_drain")) {
 				int random = rand.nextInt(40);
@@ -118,7 +119,7 @@ public class EnchantmentListener extends EventListener {
 	public void onPlayerSprintToggle(PlayerToggleSprintEvent e) {
 		Player p = e.getPlayer();
 		ItemStack leggings = p.getEquipment().getLeggings();
-		int lv = leggings == null ? 0 : leggings.getEnchantmentLevel(BEnchantment.SWIFT_SPRINT);
+		int lv = leggings == null ? 0 : leggings.getItemMeta().getEnchantLevel(BEnchantment.SWIFT_SPRINT);
 
 		if (e.isSprinting() && lv > 0) {
 			AttributeModifier modifier = new AttributeModifier(MODIFIER_SWIFT_SPRINT.getUniqueId(), MODIFIER_SWIFT_SPRINT.getName(), MODIFIER_SWIFT_SPRINT.getAmount() * lv, MODIFIER_SWIFT_SPRINT.getOperation());
@@ -138,7 +139,7 @@ public class EnchantmentListener extends EventListener {
 		if (rod.getType() != Material.FISHING_ROD)
 			rod = p.getEquipment().getItemInOffHand();
 		
-		if (!rod.containsEnchantment(BEnchantment.SCORCHING)) return;
+		if (!rod.getItemMeta().hasEnchant(BEnchantment.SCORCHING)) return;
 		
 		if (e.getCaught().getFireTicks() < 80)
 			e.getCaught().setFireTicks(80);
@@ -150,7 +151,7 @@ public class EnchantmentListener extends EventListener {
 		ItemStack item = p.getEquipment().getItemInMainHand();
 		if (!e.getBlockState().getBlock().isPreferredTool(item)) return;
 		
-		if (item.containsEnchantment(BEnchantment.SMELTING_EDGE)) {
+		if (item.getItemMeta().hasEnchant(BEnchantment.SMELTING_EDGE)) {
 			for (Item i : e.getItems()) {
 				ItemStack is = i.getItemStack();
 				if (!getPlugin().recipeManager().hasCookedVersion(is.getType())) continue;
@@ -167,7 +168,7 @@ public class EnchantmentListener extends EventListener {
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onBlockBreakFirst(BlockBreakEvent e) {
 		if (!(e.getBlock().getBlockData() instanceof Ageable)) return; // Prevent non age-ables
-		if (!e.getPlayer().getInventory().getItemInMainHand().containsEnchantment(BEnchantment.PRESERVATION)) return;
+		if (!e.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasEnchant(BEnchantment.PRESERVATION)) return;
 		Material m = e.getBlock().getType();
 		
 		if (m == Material.BAMBOO || m == Material.SUGAR_CANE) return; // Ignore these
@@ -189,12 +190,12 @@ public class EnchantmentListener extends EventListener {
 
 		if (isPreferredTool(item, b)) {
 			// Experienced Enchantment
-			if (item.containsEnchantment(BEnchantment.EXPERIENCED)) {
+			if (item.getItemMeta().hasEnchant(BEnchantment.EXPERIENCED)) {
 				double val = rand.nextDouble()*100;
-				if (val < (item.getEnchantmentLevel(BEnchantment.EXPERIENCED) * 0.01)) {
+				if (val < (item.getItemMeta().getEnchantLevel(BEnchantment.EXPERIENCED) * 0.01)) {
 					e.setExpToDrop((int) (e.getExpToDrop() + 50 * b.getType().getHardness()));
 					p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, e.getBlock().getLocation().add(0.5, 0.5, 0.5), 2, 0.25, 0.25, 0.25, 0.03);
-				} else if (val < (item.getEnchantmentLevel(BEnchantment.EXPERIENCED) * 6)) {
+				} else if (val < (item.getItemMeta().getEnchantLevel(BEnchantment.EXPERIENCED) * 6)) {
 					e.setExpToDrop(e.getExpToDrop() + 1);
 					p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, e.getBlock().getLocation().add(0.5, 0.5, 0.5), 2, 0.15, 0.15, 0.15, 0.03);
 				}
@@ -202,7 +203,7 @@ public class EnchantmentListener extends EventListener {
 
 			// Invigorating Enchantment
 			// Axes typically do not have any reliable source of massive instant-breaking, so an axe's chance of activating Rejuvenating is higher.
-			if (item.containsEnchantment(BEnchantment.REJUVENATING)) {
+			if (item.getItemMeta().hasEnchant(BEnchantment.REJUVENATING)) {
 				int isAxe = BEnchantmentTarget.AXE.includes(item) ? 1 : 0;
 				int random = rand.nextInt(400);
 				if (random <= isAxe) { // 1 in 400 (1 in 200 for axes).
@@ -223,7 +224,7 @@ public class EnchantmentListener extends EventListener {
 
 		// Enervating Burden
 		// Each block broken has a 2.5% chance to drain the player of some saturation, however, there is an 8-second cooldown between drains.
-		if (item.containsEnchantment(BEnchantment.BURDEN_ENERVATING)) {
+		if (item.getItemMeta().hasEnchant(BEnchantment.BURDEN_ENERVATING)) {
 			PlayerProfile pp = PlayerProfile.from(p);
 			if (!pp.onCooldown("enervating_drain")) {
 				int random = rand.nextInt(40);
@@ -240,8 +241,8 @@ public class EnchantmentListener extends EventListener {
 		if (!(e.getBlock().getBlockData() instanceof Ageable)) return; // Prevent non age-ables
 		if (e instanceof CustomBlockBreakEvent custom && custom.getEnchantmentCause() == BEnchantment.REAPING) return; // Prevent infinite loop
 		
-		if (item.containsEnchantment(BEnchantment.REAPING)) {
-			int power = item.getEnchantmentLevel(BEnchantment.REAPING) + 1;
+		if (item.getItemMeta().hasEnchant(BEnchantment.REAPING)) {
+			int power = item.getItemMeta().getEnchantLevel(BEnchantment.REAPING) + 1;
 			float dir = p.getLocation().getYaw();
 			
 			boolean facingX = (dir >= 45 && dir <= 135) || (dir <= -45 && dir >= -135);
@@ -268,7 +269,7 @@ public class EnchantmentListener extends EventListener {
 		BlockState state = e.getBlockState();
 		Material type = state.getType();
 		if (type == Material.WHEAT || type == Material.CARROTS || type == Material.POTATOES || type == Material.BEETROOTS || type == Material.NETHER_WART || type == Material.COCOA) {
-			if (item.containsEnchantment(BEnchantment.REPLENISH) || getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.CROP_REPLENISH)) {
+			if (item.getItemMeta().hasEnchant(BEnchantment.REPLENISH) || getRegionAt(e.getBlock().getLocation()).getEffectiveFlag(Flags.CROP_REPLENISH)) {
 				int size = e.getItems().size();
 				for (int x = size; --x >= 0;) {
 					ItemStack i = e.getItems().get(x).getItemStack();
@@ -293,7 +294,7 @@ public class EnchantmentListener extends EventListener {
 			}
 		}
 		
-		if (item.containsEnchantment(BEnchantment.TELEKINESIS)) {
+		if (item.getItemMeta().hasEnchant(BEnchantment.TELEKINESIS)) {
 			int size = e.getItems().size();
 			for (int x = size; --x >= 0;) { // Reverse iteration to make sure we get all the items without causing out of bound issues.
 				ItemStack overflow = p.getInventory().addItem(e.getItems().get(x).getItemStack()).getOrDefault(0, null);
@@ -312,7 +313,7 @@ public class EnchantmentListener extends EventListener {
 		if (p == null) return;
 		ItemStack item = p.getEquipment().getItemInMainHand();
 		
-		if (item.containsEnchantment(BEnchantment.TELEKINESIS)) {
+		if (item.getItemMeta().hasEnchant(BEnchantment.TELEKINESIS)) {
 			int size = e.getDrops().size();
 			for (int x = size; --x >= 0;) { // Reverse iteration to make sure we get all the items without causing out of bound issues.
 				ItemStack overflow = p.getInventory().addItem(e.getDrops().get(x)).getOrDefault(0, null);
@@ -326,7 +327,7 @@ public class EnchantmentListener extends EventListener {
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onPlayerRiptide(PlayerRiptideEvent e) {
-		BeanItem.reduceItemDurabilityBy(e.getItem(), e.getItem().getEnchantmentLevel(Enchantment.RIPTIDE) * 2);
+		BeanItem.reduceItemDurabilityBy(e.getItem(), e.getItem().getItemMeta().getEnchantLevel(Enchantment.RIPTIDE) * 2);
 	}
 
 	private boolean isPreferredTool(ItemStack item, Block b) {

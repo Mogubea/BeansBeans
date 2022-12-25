@@ -392,7 +392,7 @@ public class BlockListener extends EventListener {
 
 		if (!isCustom) {
 			if (!isEmpty && state.getType() == Material.ANCIENT_DEBRIS) {
-				if (!e.getPlayer().getInventory().getItemInMainHand().containsEnchantment(Enchantment.SILK_TOUCH))
+				if (!e.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasEnchant(Enchantment.SILK_TOUCH))
 					// Make the non-silk drop from Ancient Debris into Netherite Scrap to support the anti Mining skill XP Server Restart Exploit.
 					e.getItems().get(0).setItemStack(new ItemStack(Material.NETHERITE_SCRAP));
 			}

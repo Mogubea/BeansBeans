@@ -72,8 +72,8 @@ public class EnchantmentManager {
                     item.setItemMeta(meta);
                 }
             } else {
-                if (!item.containsEnchantment(replacedEnchant)) return;
-                int level = item.getEnchantmentLevel(replacedEnchant);
+                if (!item.getItemMeta().hasEnchant(replacedEnchant)) return;
+                int level = item.getItemMeta().getEnchantLevel(replacedEnchant);
                 item.removeEnchantment(replacedEnchant);
                 item.addUnsafeEnchantment(replacementEnchant, level);
             }

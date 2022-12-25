@@ -1,13 +1,20 @@
 package me.playground.worlds;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.Lifecycle;
 import me.playground.worlds.generation.TestChunkGenerator;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.Main;
+import net.minecraft.server.WorldLoader;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.dedicated.DedicatedServerProperties;
 import net.minecraft.server.level.ServerLevel;
@@ -26,14 +33,13 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.levelgen.PatrolSpawner;
-import net.minecraft.world.level.levelgen.PhantomSpawner;
-import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.levelgen.*;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.PrimaryLevelData;
+import net.minecraft.world.level.storage.WorldData;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_19_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_19_R1.generator.CraftWorldInfo;
+import org.bukkit.craftbukkit.v1_19_R2.CraftServer;
+import org.bukkit.craftbukkit.v1_19_R2.generator.CraftWorldInfo;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BiomeProvider;
 import org.bukkit.generator.ChunkGenerator;
@@ -181,23 +187,35 @@ public class PredefinedWorld {
             DedicatedServer console = ((CraftServer)Bukkit.getServer()).getServer();
 
             boolean hardcore = creator.hardcore();
-            PrimaryLevelData worlddata = (PrimaryLevelData)worldSession.getDataTag(console.registryreadops, console.datapackconfiguration, console.registryHolder.allElementsLifecycle());
-            if (worlddata == null) {
-                DedicatedServerProperties.WorldGenProperties properties = new DedicatedServerProperties.WorldGenProperties(Objects.toString(creator.seed()), GsonHelper.parse(creator.generatorSettings().isEmpty() ? "{}" : creator.generatorSettings()), creator.generateStructures(), creator.type().name().toLowerCase(Locale.ROOT));
-                WorldGenSettings generatorsettings = properties.create(console.registryAccess());
-                LevelSettings worldSettings = new LevelSettings(name, GameType.byId(Bukkit.getDefaultGameMode().getValue()), hardcore, Difficulty.NORMAL, false, new GameRules(), console.datapackconfiguration);
-                worlddata = new PrimaryLevelData(worldSettings, generatorsettings, Lifecycle.stable());
+
+            WorldLoader.DataLoadContext worldloader_a = console.worldLoader;
+            net.minecraft.core.Registry<LevelStem> iregistry = worldloader_a.datapackDimensions().registryOrThrow(Registries.LEVEL_STEM);
+            DynamicOps<Tag> dynamicops = RegistryOps.create(NbtOps.INSTANCE, worldloader_a.datapackWorldgen());
+            Pair<WorldData, WorldDimensions.Complete> pair = worldSession.getDataTag(dynamicops, worldloader_a.dataConfiguration(), iregistry, worldloader_a.datapackWorldgen().allRegistriesLifecycle());
+            PrimaryLevelData worlddata;
+            if (pair != null) {
+                worlddata = (PrimaryLevelData)pair.getFirst();
+                iregistry = pair.getSecond().dimensions();
+            } else {
+                WorldOptions worldoptions = new WorldOptions(creator.seed(), creator.generateStructures(), false);
+                DedicatedServerProperties.WorldDimensionData properties = new DedicatedServerProperties.WorldDimensionData(GsonHelper.parse(creator.generatorSettings().isEmpty() ? "{}" : creator.generatorSettings()), creator.type().name().toLowerCase(Locale.ROOT));
+                LevelSettings worldsettings = new LevelSettings(name, GameType.byId(Bukkit.getDefaultGameMode().getValue()), hardcore, Difficulty.EASY, false, new GameRules(), worldloader_a.dataConfiguration());
+                WorldDimensions worlddimensions = properties.create(worldloader_a.datapackWorldgen());
+                WorldDimensions.Complete worlddimensions_b = worlddimensions.bake(iregistry);
+                Lifecycle lifecycle = worlddimensions_b.lifecycle().add(worldloader_a.datapackWorldgen().allRegistriesLifecycle());
+                worlddata = new PrimaryLevelData(worldsettings, worldoptions, worlddimensions_b.specialWorldProperty(), lifecycle);
+                iregistry = worlddimensions_b.dimensions();
             }
 
+            worlddata.customDimensions = iregistry;
             worlddata.checkName(name);
             worlddata.setModdedInfo(console.getServerModName(), console.getModdedStatus().shouldReportAsModified());
 
             if (console.options.has("forceUpgrade"))
-                Main.forceUpgrade(worldSession, DataFixers.getDataFixer(), console.options.has("eraseCache"), () -> true, worlddata.worldGenSettings());
+                net.minecraft.server.Main.forceUpgrade(worldSession, DataFixers.getDataFixer(), console.options.has("eraseCache"), () -> true, iregistry);
 
             long j = BiomeManager.obfuscateSeed(creator.seed());
             List<CustomSpawner> list = ImmutableList.of(new PhantomSpawner(), new PatrolSpawner(), new CatSpawner(), new VillageSiege(), new WanderingTraderSpawner(worlddata));
-            Registry<LevelStem> iregistry = worlddata.worldGenSettings().dimensions();
             LevelStem worldDimension = iregistry.get(actualDimension);
 
             // Set the DimensionType Holder
@@ -215,17 +233,17 @@ public class PredefinedWorld {
             String levelName = console.getProperties().levelName;
             ResourceKey worldKey;
             if (name.equals(levelName + "_nether")) {
-                worldKey = Level.NETHER;
+                worldKey = net.minecraft.world.level.Level.NETHER;
             } else if (name.equals(levelName + "_the_end")) {
-                worldKey = Level.END;
+                worldKey = net.minecraft.world.level.Level.END;
             } else {
-                worldKey = ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(name.toLowerCase(Locale.ENGLISH)));
+                worldKey = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(name.toLowerCase(Locale.ENGLISH)));
             }
 
             // Create the NMS World
-            ServerLevel internal = new ServerLevel(console, console.executor, worldSession, worlddata, worldKey, worldDimension, console.progressListenerFactory.create(11), worlddata.worldGenSettings().isDebug(), j, creator.environment() == World.Environment.NORMAL ? list : ImmutableList.of(), true, creator.environment(), chunkGenerator, biomeProvider);
+            ServerLevel internal = new ServerLevel(console, console.executor, worldSession, worlddata, worldKey, worldDimension, console.progressListenerFactory.create(11), worlddata.isDebugWorld(), j, creator.environment() == World.Environment.NORMAL ? list : ImmutableList.of(), true, creator.environment(), chunkGenerator, biomeProvider);
 
-            console.initWorld(internal, worlddata, worlddata, worlddata.worldGenSettings());
+            console.initWorld(internal, worlddata, worlddata, worlddata.worldGenOptions());
             internal.setSpawnSettings(true, true);
             console.addLevel(internal);
             console.prepareLevels(internal.getChunkSource().chunkMap.progressListener, internal);

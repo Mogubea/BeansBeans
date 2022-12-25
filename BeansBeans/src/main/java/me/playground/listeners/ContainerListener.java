@@ -73,7 +73,7 @@ public class ContainerListener extends EventListener {
 			// Also add any Default Enchantments that aren't on the item yet.
 			if (bi != null && bi.hasDefaultEnchantments()) {
 				bi.getDefaultEnchantments().forEach((enchantment, level) -> {
-					if (result.getEnchantmentLevel(enchantment) < level)
+					if (result.getItemMeta().getEnchantLevel(enchantment) < level)
 						result.addUnsafeEnchantment(enchantment, level);
 				});
 			}
@@ -368,15 +368,15 @@ public class ContainerListener extends EventListener {
 		for (ItemStack i : e.getLoot()) {
 
 			// If mending, refine it instead :)
-			if (i.containsEnchantment(Enchantment.MENDING)) {
+			if (i.getItemMeta().hasEnchant(Enchantment.MENDING)) {
 				i.removeEnchantment(Enchantment.MENDING);
 				BItemDurable.setRefinementTier(i, 1 + rand.nextInt(3), true);
 			}
 
 			// Remove cringe
-			if (i.containsEnchantment(Enchantment.BINDING_CURSE))
+			if (i.getItemMeta().hasEnchant(Enchantment.BINDING_CURSE))
 				i.removeEnchantment(Enchantment.BINDING_CURSE);
-			if (i.containsEnchantment(Enchantment.VANISHING_CURSE))
+			if (i.getItemMeta().hasEnchant(Enchantment.VANISHING_CURSE))
 				i.removeEnchantment(Enchantment.VANISHING_CURSE);
 
 			getPlugin().getEnchantmentManager().replaceEnchantments(i, true); // formats for us

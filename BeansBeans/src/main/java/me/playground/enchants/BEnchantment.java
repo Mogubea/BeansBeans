@@ -802,7 +802,7 @@ public class BEnchantment extends Enchantment {
     
     public boolean conflictsWith(@NotNull ItemStack item) {
     	for (Enchantment enchantment : conflicts)
-    		if (item.containsEnchantment(enchantment))
+    		if (item.getItemMeta().hasEnchant(enchantment))
     			return true;
     	return false;
     }
@@ -814,7 +814,7 @@ public class BEnchantment extends Enchantment {
     public List<Enchantment> getActiveConflicts(ItemStack item) {
     	List<Enchantment> konflicts = new ArrayList<>();
     	for (Enchantment ench : conflicts)
-    		if (item.containsEnchantment(ench))
+    		if (item.getItemMeta().hasEnchant(ench))
     			konflicts.add(ench);
     	return konflicts;
     }
