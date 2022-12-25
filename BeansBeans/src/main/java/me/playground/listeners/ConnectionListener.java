@@ -98,6 +98,7 @@ public class ConnectionListener extends EventListener {
 		final Player p = e.getPlayer();
 		final PlayerProfile pp = PlayerProfile.from(p);
 		final Region region = getRegionAt(p.getLocation());
+		pp.formatInventories();
 		pp.updateCurrentRegion(region);
 
 		permManager.updatePlayerPermissions(p);

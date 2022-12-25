@@ -23,11 +23,13 @@ import org.bukkit.*;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.block.ShulkerBox;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.CreativeCategory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
@@ -1570,6 +1572,37 @@ public class PlayerProfile {
 		String tpString = (tps[0] < 19.9 ? (tps[0] < 15 ? "\u00a74" : "\u00a76") : "\u00a7a") + "\u26a0 ";
 		tpString += "\u00a7f" + tpsf.format(tps[0]) + " \u00a77" + tpsf.format(tps[1]) + " \u00a78" + tpsf.format(tps[2]);
 		return tpString;
+	}
+
+	/**
+	 * Update the formatting of every inventory relating to this player.
+	 * <p>
+	 * If the player is offline, it will only format their Wardrobe.
+	 */
+	public void formatInventories() {
+		Player p = this.getPlayer();
+		if (p != null) {
+			formatInventory(p.getInventory().getContents());
+			formatInventory(p.getInventory().getArmorContents());
+			formatInventory(p.getEnderChest().getContents());
+		}
+
+		formatInventory(getArmourWardrobe());
+	}
+
+	private void formatInventory(ItemStack[] items) {
+		int size = items.length;
+		for (int x = -1; ++x < size;) {
+			ItemStack item = items[x];
+			if (item != null && item.getType() != Material.AIR) {
+				if (item.getItemMeta() instanceof BlockStateMeta meta)
+					if (meta.getBlockState() instanceof ShulkerBox shulker)
+						for (ItemStack sItem : shulker.getInventory().getContents())
+							if (sItem != null)
+								BeanItem.resetItemFormatting(sItem);
+				BeanItem.resetItemFormatting(item);
+			}
+		}
 	}
 
 	private static final RedstoneManager redstoneManager = Main.getInstance().getRedstoneManager();

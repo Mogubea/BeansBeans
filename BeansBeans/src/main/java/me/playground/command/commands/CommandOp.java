@@ -301,11 +301,9 @@ public class CommandOp extends BeanCommand {
 		if (isPlayer(sender)) {
 			if ("fixformatting".equals(cmdStr)) {
 				Player t = args.length > 1 ? toPlayer(sender, args[1]) : p;
-				formatInventory(t.getInventory().getContents());
-				formatInventory(t.getInventory().getArmorContents());
-				formatInventory(t.getEnderChest().getContents());
-				formatInventory(PlayerProfile.from(t).getArmourWardrobe());
-				sender.sendMessage(PlayerProfile.from(t).getComponentName().append(Component.text("\u00a77's Containers have been updated.")));
+				PlayerProfile tp = PlayerProfile.from(t);
+				tp.formatInventories();
+				sender.sendMessage(tp.getComponentName().append(Component.text("\u00a77's Containers have been updated.")));
 			} else if ("customitems".equals(cmdStr)) {
 				new BeanGuiBeanItems(p).openInventory();
 			} else if ("guiprofile".equals(cmdStr)) {
@@ -324,22 +322,6 @@ public class CommandOp extends BeanCommand {
 		}
 		
 		return false;
-	}
-
-	// AUGH
-	private void formatInventory(ItemStack[] items) {
-		int size = items.length;
-		for (int x = -1; ++x < size;) {
-			ItemStack item = items[x];
-			if (item != null && item.getType() != Material.AIR) {
-				if (item.getItemMeta() instanceof BlockStateMeta meta)
-					if (meta.getBlockState() instanceof ShulkerBox shulker)
-						for (ItemStack sItem : shulker.getInventory().getContents())
-							if (sItem != null)
-								BeanItem.resetItemFormatting(sItem);
-				BeanItem.resetItemFormatting(item);
-			}
-		}
 	}
 
 	@Override
