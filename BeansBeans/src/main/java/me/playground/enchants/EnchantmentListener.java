@@ -11,6 +11,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.Particle.DustTransition;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -121,14 +122,16 @@ public class EnchantmentListener extends EventListener {
 		Player p = e.getPlayer();
 		ItemStack leggings = p.getEquipment().getLeggings();
 		int lv = leggings == null ? 0 : leggings.getItemMeta().getEnchantLevel(BEnchantment.SWIFT_SPRINT);
+		AttributeInstance attributeInstance = p.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+		if (attributeInstance == null) return; // Don't think this is possible.
 
 		if (e.isSprinting() && lv > 0) {
 			AttributeModifier modifier = new AttributeModifier(MODIFIER_SWIFT_SPRINT.getUniqueId(), MODIFIER_SWIFT_SPRINT.getName(), MODIFIER_SWIFT_SPRINT.getAmount() * lv, MODIFIER_SWIFT_SPRINT.getOperation());
-			p.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(modifier);
+			if (!attributeInstance.getModifiers().contains(modifier)) // Because the server would rather complain rather than just... Idk... DEAL WITH IT?
+				attributeInstance.addModifier(modifier);
 		} else {
-			p.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).removeModifier(MODIFIER_SWIFT_SPRINT);
+			attributeInstance.removeModifier(MODIFIER_SWIFT_SPRINT);
 		}
-
 	}
 
 	@EventHandler(ignoreCancelled = true)
