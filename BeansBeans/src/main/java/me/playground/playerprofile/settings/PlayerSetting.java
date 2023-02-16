@@ -9,7 +9,7 @@ import net.kyori.adventure.text.Component;
 public enum PlayerSetting {
 	
 	ALLOW_TP("Teleport Attempts", false, "\u00a77While enabled players can \u00a7b/tp\u00a77 to you", "\u00a77when inside a \u00a79region\u00a77 or \u00a72world\u00a77 that permits it."),
-	MENU_ITEM("Player Menu Item", true, "\u00a7cLegacy Setting. Will be changed in the future."),
+	SWAP_TO_OPEN_MENU("Open Menu Shortcut", true, "\u00a77While enabled, pressing the Hand Swap Key", "\u00a77will instead open the \u00a7aMain Menu\u00a77."),
 	PING_SOUNDS("@Ping Sounds", true, "\u00a77While enabled you will hear a soft", "\u00a7dsound of amethyst\u00a77 when pinged."),
 	FLIGHT("Flight Test", "bean.cmd.fly", false, "Toggle flight."),
 	SHOW_ACHIEVEMENTS("Achievements in Chat", true, "\u00a77Display whenever a player gets an \u00a76Achievement\u00a77."),

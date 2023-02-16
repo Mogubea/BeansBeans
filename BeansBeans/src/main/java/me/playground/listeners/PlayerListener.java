@@ -294,6 +294,9 @@ public class PlayerListener extends EventListener {
 
 	@EventHandler(priority = EventPriority.LOW)
 	public void onSwap(PlayerSwapHandItemsEvent e) {
+		PlayerProfile pp = PlayerProfile.from(e.getPlayer());
+		if (!pp.isSettingEnabled(PlayerSetting.SWAP_TO_OPEN_MENU)) return;
+
 		e.setCancelled(true);
 		new BeanGuiMainMenu(e.getPlayer()).openInventory();
 	}
