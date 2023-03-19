@@ -73,7 +73,7 @@ public class BeanGuiRegionFlags extends BeanGuiRegion {
 				refreshRegionViewers();
 			} else { // Edit flag
 				if (flag instanceof FlagBoolean flagBoolean) {
-					boolean setting = getRegion().getFlag(flagBoolean);
+					boolean setting = getRegion().getEffectiveFlag(flagBoolean);
 					getRegion().setFlag(flag, !setting);
 					p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 0.8F);
 					i.setItem(slot, getFlagItem(flag));

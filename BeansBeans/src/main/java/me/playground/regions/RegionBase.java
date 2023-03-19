@@ -82,7 +82,7 @@ public abstract class RegionBase {
 	
 	@SuppressWarnings("unchecked")
 	public <T extends Flag<V>, V> V setFlag(T flag, @Nullable Object val, boolean markDirty) {
-		if (val == null || val.equals(getDefaultValue(flag)))
+		if (val == null)
 			flags.remove(flag);
 		else
 			flags.put(flag, flag.validateValue((V)val));
