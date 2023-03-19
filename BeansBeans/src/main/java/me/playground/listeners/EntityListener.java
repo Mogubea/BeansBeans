@@ -108,6 +108,8 @@ public class EntityListener extends EventListener {
 		final Region regionAttacker = getRegionAt(loc1);
 		final Region regionDefender = getRegionAt(loc2);
 
+		Player attackingPlayer = null;
+
 		if (e.getEntity() instanceof Player p)
 			PlayerProfile.from(p).getHeirlooms().doDamageTakenByEntityEvent(e);
 		if (e.getDamager() instanceof Player p)
@@ -115,12 +117,11 @@ public class EntityListener extends EventListener {
 
 		// Against a Player
 		if (e.getEntity() instanceof Player && (e.getDamager() instanceof LivingEntity || e.getDamager() instanceof Projectile || e.getDamager() instanceof Tameable)) {
-			boolean fromPlayer = e.getDamager() instanceof Player;
 
-			if ((e.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player)) // Projectile fired from the player
-				fromPlayer = true;
+			if ((e.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player p)) // Projectile fired from the player
+				attackingPlayer = p;
 			else if ((e.getDamager() instanceof Tameable tameable) && tameable.isTamed()) { // Tamed entity attack
-				fromPlayer = true;
+				attackingPlayer = (Player) tameable.getOwner();
 
 				// Check for animal protection with tame-ables, if they are protected from being attacked here, don't let them attack.
 				if (regionAttacker.getEffectiveFlag(Flags.PROTECT_ANIMALS)) {
@@ -129,27 +130,25 @@ public class EntityListener extends EventListener {
 				}
 			}
 
-			if (fromPlayer) {
+			if (attackingPlayer != null) {
 				if (!(regionAttacker.getEffectiveFlag(Flags.PVP) && regionDefender.getEffectiveFlag(Flags.PVP)))
 					e.setCancelled(true);
 			} else {
 				e.setDamage(e.getDamage() * regionDefender.getEffectiveFlag(Flags.MOB_DAMAGE_FROM));
-				if (e.getDamage() <= 0)
-					e.setCancelled(true);
 			}
 			// Against regular entities
 		} else if (e.getEntity() instanceof LivingEntity) {
-			Player p = (e.getDamager() instanceof Player) ? (Player)e.getDamager() : null;
+			attackingPlayer = (e.getDamager() instanceof Player) ? (Player)e.getDamager() : null;
 			if ((e.getDamager() instanceof Projectile && ((Projectile)e.getDamager()).getShooter() instanceof Player))
-				p = (Player) ((Projectile)e.getDamager()).getShooter();
+				attackingPlayer = (Player) ((Projectile)e.getDamager()).getShooter();
 
 			// Check for Animal/Villager Protection
 			if ((e.getEntity() instanceof Villager || e.getEntity() instanceof Animals || (e.getEntity() instanceof Fish fish && fish.isFromBucket())) && regionDefender.getEffectiveFlag(Flags.PROTECT_ANIMALS))
-				if (p == null || !regionDefender.getMember(p).higherThan(MemberLevel.VISITOR))
+				if (attackingPlayer == null || !regionDefender.getMember(attackingPlayer).higherThan(MemberLevel.VISITOR))
 					e.setDamage(0);
 
 			// Check specifically for Villager Protection against Players only
-			if (e.getEntity() instanceof Villager && p != null && !checkRegionPermission(regionDefender, e, p, Flags.VILLAGER_ACCESS))
+			if (e.getEntity() instanceof Villager && attackingPlayer != null && !checkRegionPermission(regionDefender, e, attackingPlayer, Flags.VILLAGER_ACCESS))
 				e.setDamage(0);
 
 			if (e.getDamage() > 0) {
@@ -160,7 +159,7 @@ public class EntityListener extends EventListener {
 
 						if (tamed.isTamed()) {
 							// Allow mobs to kill pets, disallow players to kill pets
-							if (p == null || regionAttacker.getEffectiveFlag(Flags.PVP) && regionDefender.getEffectiveFlag(Flags.PVP))
+							if (attackingPlayer == null || regionAttacker.getEffectiveFlag(Flags.PVP) && regionDefender.getEffectiveFlag(Flags.PVP))
 								return;
 
 							// Otherwise, if not the owner, set the damage to 0.
@@ -170,9 +169,13 @@ public class EntityListener extends EventListener {
 					}
 				}
 			}
+		}
 
-			if (e.getDamage() <= 0)
-				e.setCancelled(true);
+		if (e.getDamage() <= 0) {
+			e.setCancelled(true);
+		} else if (attackingPlayer != null) { // Remove invulnerability from teleporting if they're deciding to attack things already.
+			PlayerProfile.from(attackingPlayer).clearCooldown("teleportInvulnerability");
+			attackingPlayer.sendActionBar(Component.text("Your teleport protection has faded."));
 		}
 	}
 	

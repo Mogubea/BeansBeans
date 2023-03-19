@@ -256,7 +256,7 @@ public class CommandRegion extends BeanCommand {
 			if (args.length < 3)
 				throw new CommandException(p, "Usage: \u00a7f/"+str+" setflag \u00a77<region> <flag> <value or none>");
 			
-			Flag<?> f = null;
+			Flag<?> f;
 			try {
 				f = Flags.getFlag(args[2]);
 				region.setFlag(f, (args.length == 3) ? null : f.parseInput(args[3]));

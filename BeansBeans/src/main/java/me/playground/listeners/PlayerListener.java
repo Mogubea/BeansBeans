@@ -26,6 +26,8 @@ import org.bukkit.Particle;
 import org.bukkit.Particle.DustTransition;
 import org.bukkit.Sound;
 import org.bukkit.Statistic;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.*;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.block.data.Lightable;
@@ -204,7 +206,7 @@ public class PlayerListener extends EventListener {
 	public void onPlayerDeath(PlayerDeathEvent e) {
 		Player p = e.getEntity();
 		PlayerProfile pp = PlayerProfile.from(p);
-		
+
 		Location old = p.getLocation();
 		final Location loc = new Location(p.getWorld(), old.getX(), old.getY(), old.getZ(), old.getYaw(), old.getPitch());
 		pp.updateLastLocation(loc, 0);
@@ -222,6 +224,15 @@ public class PlayerListener extends EventListener {
 		getPlugin().getServer().getOnlinePlayers().forEach(player -> { if (PlayerProfile.from(player).isSettingEnabled(PlayerSetting.SHOW_DEATH_MESSAGES)) { player.sendMessage(e.deathMessage()); }});
 		
 		e.deathMessage(null);
+
+		// Hostile entities recover 25% of their maximum hp when killing a player.
+		// TODO: Create a helper class to obtain the maximum health of a monster rather than going through all this attribute shit every time.
+		if (p.getKiller() instanceof Monster monster) {
+			AttributeInstance maxHpAttr = monster.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+			if (maxHpAttr == null) return;
+			double hp = monster.getHealth(), maxHp = maxHpAttr.getValue();
+			monster.setHealth(Math.min(maxHp, hp + maxHp / 4));
+		}
 	}
 	
 	@EventHandler
