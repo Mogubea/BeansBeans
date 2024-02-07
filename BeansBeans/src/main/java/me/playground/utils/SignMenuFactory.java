@@ -1,15 +1,12 @@
 package me.playground.utils;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 import me.playground.gui.BeanGui;
-import me.playground.gui.BeanGuiNPCEdit;
 import me.playground.playerprofile.PlayerProfile;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -149,12 +146,8 @@ public final class SignMenuFactory {
             PacketContainer openSign = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.OPEN_SIGN_EDITOR);
             BlockPosition position = new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ());
             openSign.getBlockPositionModifier().write(0, position);
-            try {
-            	player.closeInventory();
-            	ProtocolLibrary.getProtocolManager().sendServerPacket(player, openSign);
-            } catch (InvocationTargetException exception) {
-            	exception.printStackTrace();
-            }	
+            player.closeInventory();
+            ProtocolLibrary.getProtocolManager().sendServerPacket(player, openSign);
 
             inputs.put(player, this);
         }

@@ -422,8 +422,8 @@ public class ContainerListener extends EventListener {
 				if (!stacks.isEmpty())
 					e.getSource().addItem(stacks.get(0));
 				customChest.saveInventory(chest, i.getContents(), true);
-				e.calledGetItem = false;
-				e.calledSetItem = false;
+//				e.calledGetItem = false;
+//				e.calledSetItem = false;
 			}
 		}
 		

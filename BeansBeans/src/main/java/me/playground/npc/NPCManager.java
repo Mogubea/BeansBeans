@@ -5,13 +5,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.mysql.cj.xdevapi.Client;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_19_R2.CraftServer;
-import org.bukkit.craftbukkit.v1_19_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_20_R3.CraftServer;
+import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
@@ -95,7 +98,7 @@ public class NPCManager implements IPluginRef {
 				uuid = UUID.fromString(json.getString("uuid"));
 			
 			GameProfile profile = new GameProfile(uuid, name);
-			entityNpc = new ServerPlayer(server, world, profile);
+			entityNpc = new ServerPlayer(server, world, profile, ClientInformation.createDefault());
 			((ServerPlayer) entityNpc).spawnIn(world);
 			ack = new NPCHuman(creatorId, id, getPlugin(), ((ServerPlayer) entityNpc), location, json);
 			break;

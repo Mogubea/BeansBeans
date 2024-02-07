@@ -2,18 +2,21 @@ package me.playground.worlds;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.Lifecycle;
+import me.playground.worlds.generation.ChunkGeneratorEmpty;
 import me.playground.worlds.generation.TestChunkGenerator;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.NbtException;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.ReportedNbtException;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.Main;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldLoader;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.dedicated.DedicatedServerProperties;
@@ -34,12 +37,11 @@ import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.*;
-import net.minecraft.world.level.storage.LevelStorageSource;
-import net.minecraft.world.level.storage.PrimaryLevelData;
-import net.minecraft.world.level.storage.WorldData;
+import net.minecraft.world.level.storage.*;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_19_R2.CraftServer;
-import org.bukkit.craftbukkit.v1_19_R2.generator.CraftWorldInfo;
+import org.bukkit.craftbukkit.v1_20_R3.CraftServer;
+import org.bukkit.craftbukkit.v1_20_R3.generator.CraftWorldInfo;
+import org.bukkit.craftbukkit.v1_20_R3.util.WorldUUID;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.generator.BiomeProvider;
 import org.bukkit.generator.ChunkGenerator;
@@ -59,6 +61,10 @@ public class PredefinedWorld {
     static {
         new PredefinedWorld("MINING", OptionalLong.of(18000L), false, true, false, false, 4D, false, false, false, false, -256, 384, 384, 0.0F)
                 .setChunkGenerator(new TestChunkGenerator());
+
+        new PredefinedWorld("ISLANDS", OptionalLong.empty(), true, false, false, true, 1D, false, true, true, false, 0, 320, 320, 0.0F)
+                .setDifficulty(Difficulty.EASY)
+                .setChunkGenerator(new ChunkGeneratorEmpty());
     }
 
     private final OptionalLong fixedTime;
@@ -184,18 +190,52 @@ public class PredefinedWorld {
                 throw new RuntimeException(var23);
             }
 
+            Dynamic dynamic;
+            if (worldSession.hasWorldData()) {
+                LevelSummary worldinfo;
+                try {
+                    dynamic = worldSession.getDataTag();
+                    worldinfo = worldSession.getSummary(dynamic);
+                } catch (ReportedNbtException | IOException | NbtException var23) {
+                    LevelStorageSource.LevelDirectory convertable_b = worldSession.getLevelDirectory();
+                    MinecraftServer.LOGGER.warn("Failed to load world data from {}", convertable_b.dataFile(), var23);
+                    MinecraftServer.LOGGER.info("Attempting to use fallback");
+
+                    try {
+                        dynamic = worldSession.getDataTagFallback();
+                        worldinfo = worldSession.getSummary(dynamic);
+                    } catch (ReportedNbtException | IOException | NbtException var22) {
+                        MinecraftServer.LOGGER.error("Failed to load world data from {}", convertable_b.oldDataFile(), var22);
+                        MinecraftServer.LOGGER.error("Failed to load world data from {} and {}. World files may be corrupted. Shutting down.", convertable_b.dataFile(), convertable_b.oldDataFile());
+                        return null;
+                    }
+
+                    worldSession.restoreLevelDataFromOld();
+                }
+
+                if (worldinfo.requiresManualConversion()) {
+                    MinecraftServer.LOGGER.info("This world must be opened in an older version (like 1.6.4) to be safely converted");
+                    return null;
+                }
+
+                if (!worldinfo.isCompatible()) {
+                    MinecraftServer.LOGGER.info("This world was created by an incompatible version.");
+                    return null;
+                }
+            } else {
+                dynamic = null;
+            }
+
             DedicatedServer console = ((CraftServer)Bukkit.getServer()).getServer();
 
             boolean hardcore = creator.hardcore();
-
             WorldLoader.DataLoadContext worldloader_a = console.worldLoader;
             net.minecraft.core.Registry<LevelStem> iregistry = worldloader_a.datapackDimensions().registryOrThrow(Registries.LEVEL_STEM);
-            DynamicOps<Tag> dynamicops = RegistryOps.create(NbtOps.INSTANCE, worldloader_a.datapackWorldgen());
-            Pair<WorldData, WorldDimensions.Complete> pair = worldSession.getDataTag(dynamicops, worldloader_a.dataConfiguration(), iregistry, worldloader_a.datapackWorldgen().allRegistriesLifecycle());
             PrimaryLevelData worlddata;
-            if (pair != null) {
-                worlddata = (PrimaryLevelData)pair.getFirst();
-                iregistry = pair.getSecond().dimensions();
+            if (dynamic != null) {
+                LevelDataAndDimensions leveldataanddimensions = LevelStorageSource.getLevelDataAndDimensions(dynamic, worldloader_a.dataConfiguration(), iregistry, worldloader_a.datapackWorldgen());
+                worlddata = (PrimaryLevelData)leveldataanddimensions.worldData();
+                iregistry = leveldataanddimensions.dimensions().dimensions();
             } else {
                 WorldOptions worldoptions = new WorldOptions(creator.seed(), creator.generateStructures(), false);
                 DedicatedServerProperties.WorldDimensionData properties = new DedicatedServerProperties.WorldDimensionData(GsonHelper.parse(creator.generatorSettings().isEmpty() ? "{}" : creator.generatorSettings()), creator.type().name().toLowerCase(Locale.ROOT));
@@ -221,13 +261,14 @@ public class PredefinedWorld {
             // Set the DimensionType Holder
             DimensionType type = new DimensionType(fixedTime, hasSkylight, hasCeiling, ultraWarm, natural, coordinateScaling, bedWorks, respawnAnchorWorks,
                    minY, maxY, logicalY, infiniburnTag, dimensionEffects, ambientLight, new DimensionType.MonsterSettings(piglinSafe, hasRaids, UniformInt.of(0, 7), 0));
+
             Holder<DimensionType> holder = Holder.direct(type);
             worldDimension = new LevelStem(holder, worldDimension.generator());
 
             // World Info, the thing before the World.
-            WorldInfo worldInfo = new CraftWorldInfo(worlddata, worldSession, creator.environment(), holder.value());
-            if (biomeProvider == null && chunkGenerator != null)
-                biomeProvider = chunkGenerator.getDefaultBiomeProvider(worldInfo);
+            //WorldInfo worldInfo = new CraftWorldInfo(worlddata.getLevelName(), WorldUUID.getUUID(worldSession.getLevelDirectory().path().toFile()), creator.environment(), worlddata.worldGenOptions().seed(), minY, maxY);
+//            if (biomeProvider == null && chunkGenerator != null)
+//                biomeProvider = chunkGenerator.getDefaultBiomeProvider()
 
             // Silly Bukkit level name stuff.
             String levelName = console.getProperties().levelName;
@@ -241,7 +282,10 @@ public class PredefinedWorld {
             }
 
             // Create the NMS World
-            ServerLevel internal = new ServerLevel(console, console.executor, worldSession, worlddata, worldKey, worldDimension, console.progressListenerFactory.create(11), worlddata.isDebugWorld(), j, creator.environment() == World.Environment.NORMAL ? list : ImmutableList.of(), true, creator.environment(), chunkGenerator, biomeProvider);
+            ServerLevel internal = new ServerLevel(console, console.executor, worldSession, worlddata, worldKey, worldDimension, console.progressListenerFactory.create(11), worlddata.isDebugWorld(), j, creator.environment() == World.Environment.NORMAL ? list : ImmutableList.of(), true, console.overworld().getRandomSequences(), creator.environment(), chunkGenerator, biomeProvider);
+            internal.keepSpawnInMemory = creator.keepSpawnInMemory();
+            if (Bukkit.getWorld(name) == null)
+                return null;
 
             console.initWorld(internal, worlddata, worlddata, worlddata.worldGenOptions());
             internal.setSpawnSettings(true, true);
@@ -250,12 +294,10 @@ public class PredefinedWorld {
             internal.entityManager.tick();
             Bukkit.getPluginManager().callEvent(new WorldLoadEvent(internal.getWorld()));
 
-            //
             if (worldBorder != null)
                 postWorldSetBorder(internal.getWorld());
 
             postWorldCreation(internal.getWorld());
-            //
 
             return internal.getWorld();
         }

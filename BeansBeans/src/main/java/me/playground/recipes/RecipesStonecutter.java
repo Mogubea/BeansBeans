@@ -40,10 +40,9 @@ public class RecipesStonecutter {
 		recipe(new ItemStack(Material.POLISHED_DEEPSLATE), Material.DEEPSLATE);
 	}
 	
-	private StonecuttingRecipe recipe(ItemStack result, Material source) {
+	private void recipe(ItemStack result, Material source) {
 		StonecuttingRecipe sr = new StonecuttingRecipe(plugin.keyRecipe("stonecutter_" + source.name().toLowerCase() + "_to_" + result.getType().name().toLowerCase()), result, source);
 		manager.addRecipe(sr);
-		return sr;
 	}
 	
 }

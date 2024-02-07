@@ -15,7 +15,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.data.type.Chest.Type;
-import org.bukkit.craftbukkit.v1_19_R2.inventory.util.CraftInventoryCreator;
+import org.bukkit.craftbukkit.v1_20_R3.inventory.util.CraftInventoryCreator;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;

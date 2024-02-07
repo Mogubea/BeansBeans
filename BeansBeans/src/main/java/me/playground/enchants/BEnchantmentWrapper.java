@@ -3,6 +3,7 @@ package me.playground.enchants;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.enchantments.EnchantmentTarget;
 import org.bukkit.inventory.ItemStack;
@@ -28,7 +29,7 @@ public class BEnchantmentWrapper extends Enchantment {
 	final private int xpCostPerLevel;
 	
 	protected BEnchantmentWrapper(String keyName, String engName, BEnchantmentTarget target, int minLevel, int maxLevel, boolean isCurse, boolean isTreasure, boolean isLegendary, int runicCost, int runicIncrease, int xpCost, int xpIncrease, Enchantment... conflicts) {
-        super(Main.getInstance().getKey(keyName));
+        super(/*Main.getInstance().getKey(keyName)*/);
         this.name = engName;
         this.target = target;
         this.minLevel = minLevel;
@@ -134,6 +135,16 @@ public class BEnchantmentWrapper extends Enchantment {
         return getEnchantment().isDiscoverable();
     }
 
+    @Override
+    public int getMinModifiedCost(int i) {
+        return getEnchantment().getMinModifiedCost(i);
+    }
+
+    @Override
+    public int getMaxModifiedCost(int i) {
+        return getEnchantment().getMaxModifiedCost(i);
+    }
+
     @NotNull
     @Override
     public io.papermc.paper.enchantments.EnchantmentRarity getRarity() {
@@ -149,6 +160,11 @@ public class BEnchantmentWrapper extends Enchantment {
     @Override
     public java.util.Set<org.bukkit.inventory.EquipmentSlot> getActiveSlots() {
         return getEnchantment().getActiveSlots();
+    }
+
+    @Override
+    public @NotNull NamespacedKey getKey() {
+        return null;
     }
     // Paper end
 }

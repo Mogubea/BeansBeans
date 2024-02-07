@@ -22,14 +22,14 @@ import net.kyori.adventure.text.format.TextDecoration;
 public enum Rank {
 	
 	// Donor Ranks
-	PLEBEIAN(1, 0xf19fd1, 20, 0, 873535964423794709L,
+	PLEBEIAN(1, 0xf19fd1, 20, 0, 873535964423794709L, '\uE00C',
 			"The simplest but most accessible **Supporter Rank**. This rank provides access to **/workbench**, "
 					+ "right-click wool dyeing and the ability to open Shulker Boxes from the Inventory!",
 			
 			"bean.cmd.workbench",
 			Permission.QUICK_SHULKER_BOX,
 			Permission.QUICK_WOOL_DYE),
-	PATRICIAN(2, 0xd64dd6, 50, 1, 873916287682756668L,
+	PATRICIAN(2, 0xd64dd6, 50, 1, 873916287682756668L, '\uE00D',
 			"The second tier of **Supporter Rank**. This rank provides access to custom nicknames, **/anvil**, **/hat**, delivery "
 					+ "claim shortcuts and everything that <@&873535964423794709> offers!",
 					
@@ -39,17 +39,17 @@ public enum Rank {
 			Permission.NICKNAME_APPLY,
 			Permission.BYPASS_MAX_PLAYERCOUNT,
 			Permission.DELIVERY_CLAIMALL),
-	SENATOR(3, 0xaa32da, 100, 1, 914921526158041089L,
+	SENATOR(3, 0xaa32da, 100, 1, 914921526158041089L, '\uE00E',
 			"The final tier of permanent **Supporter Rank**. This rank provides access to custom name colours, the ability to rename your regions "
 					+ "and everything that <@&873916287682756668> offers!",
 			"bean.region.rename",
 			Permission.NAMECOLOUR_CUSTOM),
-	VIB(4, 0xffffff, 0, 0, 998171528678080652L,
+	VIB(4, 0xffffff, 0, 0, 998171528678080652L, '\uE00F',
 			"Work in Progress. This subscription based **Supporter Rank** will not be released for a long while.",
 			Permission.FLIGHT_IN_OWNED_REGIONS),
 	
 	// Playtime Ranks
-	NEWBEAN(15, 0x2faf2f, 10, 1, 546771060415135747L, 0,
+	NEWBEAN(15, 0x2faf2f, 10, 1, 546771060415135747L, 0, '\uE001',
 			"Every single user that has ever played on Bean's Beans will be given this rank!",
 
 			"bean.cmd.value",
@@ -57,25 +57,25 @@ public enum Rank {
 			"bean.cmd.region.info",
 			"bean.cmd.teleport",
 			"bean.cmd.return"),
-	ROOKIE(20, 0x3fdf3f, 5, 1, 879785289642545192L, 60 * 60 * 6,
+	ROOKIE(20, 0x3fdf3f, 5, 1, 879785289642545192L, 60 * 60 * 6, '\uE002',
 			"The 2nd playtime rank. Light Green name!"),
-	APPRENTICE(25, 0x5fff5f, 5, 1, 879785586234384384L, 60 * 60 * 24,
+	APPRENTICE(25, 0x5fff5f, 5, 1, 879785586234384384L, 60 * 60 * 24, '\uE003',
 			"The 3rd playtime rank. Lighter Green name! Provides access to **/rtp**.",
 			
 			"bean.cmd.randomtp"),
-	FAMILIAR(30, 0xff937a, 10, 1, 879785746364506162L, 60 * 60 * 24 * 3,
+	FAMILIAR(30, 0xff937a, 10, 1, 879785746364506162L, 60 * 60 * 24 * 3, '\uE004',
 			"The 4th playtime rank. Peach name!"),
-	JOURNEYMAN(35, 0xff636a, 10, 1, 879785828216369242L, 60 * 60 * 24 * 7,
+	JOURNEYMAN(35, 0xff636a, 10, 1, 879785828216369242L, 60 * 60 * 24 * 7, '\uE005',
 			"The 5th playtime rank. Red name!"),
-	VETERAN(40, 0xff3f5f, 20, 1, 879785962668982303L, 60 * 60 * 24 * 21,
+	VETERAN(40, 0xff3f5f, 20, 1, 879785962668982303L, 60 * 60 * 24 * 21, '\uE006',
 			"The 6th playtime rank. Fucshia name!"),
-	PRESTIGIOUS(45, 0xffca3f, 40, 1, 879786041920327681L, 60 * 60 * 24 * 42,
+	PRESTIGIOUS(45, 0xffca3f, 40, 1, 879786041920327681L, 60 * 60 * 24 * 42, '\uE007',
 			"The 7th playtime rank. Golden name!"),
-	EXALTED(50, 0xffff6a, 100, 1, 879786137714065449L, 60 * 60 * 24 * 84,
+	EXALTED(50, 0xffff6a, 100, 1, 879786137714065449L, 60 * 60 * 24 * 84, '\uE008',
 			"The current final playtime rank. Yellow name!"),
 	
 	// Staff Ranks
-	MODERATOR(70, 0x55CAFF, 0, 0, 546771449365528604L,
+	MODERATOR(70, 0x55CAFF, 0, 0, 546771449365528604L, '\uE009',
 			"All members of Bean's Beans Staff will possess this rank and/or its permissions. " +
 			"If you ever need assistance with anything, don't be afraid to ask a Moderator for help!",
 			
@@ -99,7 +99,7 @@ public enum Rank {
 			Flags.GRASS_SPREAD.getPermission(),
 			Flags.OBSIDIAN_FORMATION.getPermission(),
 			"bean.gm.moderator"),
-	ADMINISTRATOR(90, 0x3378FF, 500, 500, 546771706769965070L,
+	ADMINISTRATOR(90, 0x3378FF, 500, 500, 546771706769965070L, '\uE00A',
 			"Administrators are in charge of managing the Moderator team, operating various systems " +
 			"and assisting with more severe issues that may arise.",
 					
@@ -144,7 +144,7 @@ public enum Rank {
 			"bean.shop.override",
 			"bean.gm.spectator",
 			"bean.gm.creative"),
-	OWNER(100, 0x6550ff, 30000, 30000, 546771982167965716L,
+	OWNER(100, 0x6550ff, 30000, 30000, 546771982167965716L, '\uE00B',
 			"The rank that represents Ownership of all that is Bean's Beans. There will only ever " + 
 			"be one Owner, <@170538991693725696>.",
 			
@@ -161,8 +161,9 @@ public enum Rank {
 	final TextColor textCol;
 	final String discordInformation;
 	final String niceName;
+	final char unicode;
 	
-	Rank(int rankLevel, int rgbColour, int warpBonus, int regionBonus, long discordRankID, int playtimeReq, String discordInfo, String...permissions) {
+	Rank(int rankLevel, int rgbColour, int warpBonus, int regionBonus, long discordRankID, int playtimeReq, char unicode, String discordInfo, String...permissions) {
 		this.rankLevel = (short) rankLevel;
 		this.col = rgbColour;
 		this.textCol = TextColor.color(rgbColour);
@@ -172,7 +173,8 @@ public enum Rank {
 		this.discordInformation = discordInfo;
 
 		Set<String> perms = new HashSet<>(Arrays.asList(permissions));
-		
+
+		this.unicode = unicode;
 		this.permissions = Collections.unmodifiableSet(perms);
 		this.discordRankID = discordRankID;
 		this.playtimeReq = playtimeReq;
@@ -180,8 +182,8 @@ public enum Rank {
 		this.component = Component.text(niceName).color(TextColor.color(col)).decoration(TextDecoration.ITALIC, false);
 	}
 	
-	Rank(int rankLevel, int rgbColour, int warpLimit, int regionBonus, long discordRankID, String discordInfo, String...permissions) {
-		this(rankLevel, rgbColour, warpLimit, regionBonus, discordRankID, -1, discordInfo, permissions);
+	Rank(int rankLevel, int rgbColour, int warpLimit, int regionBonus, long discordRankID, char unicode, String discordInfo, String...permissions) {
+		this(rankLevel, rgbColour, warpLimit, regionBonus, discordRankID, -1, unicode, discordInfo, permissions);
 	}
 	
 	public int power() {
@@ -284,5 +286,12 @@ public enum Rank {
 
 	public int getRegionBonus() {
 		return regionBonus;
+	}
+
+	/**
+	 * @return Resource pack unicode associated with this rank.
+	 */
+	public char getUnicode() {
+		return unicode;
 	}
 }

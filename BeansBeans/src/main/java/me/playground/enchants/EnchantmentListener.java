@@ -49,6 +49,8 @@ public class EnchantmentListener extends EventListener {
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onItemDamage(PlayerItemDamageEvent e) {
+		if (e.getItem().getItemMeta() == null) return; // Weird undefined nullability
+
 		// New and nerfed Unbreaking
 		int level = e.getItem().getItemMeta().getEnchantLevel(BEnchantment.UNBREAKING);
 		if (level > 0) {
@@ -71,6 +73,7 @@ public class EnchantmentListener extends EventListener {
 		if (!(e.getEntity() instanceof LivingEntity ent)) return;
 
 		ItemStack item = p.getEquipment().getItemInMainHand();
+		if (item.getItemMeta() == null) return; // Weird undefined nullability
 
 		if ((ent.getCategory() == EntityCategory.ARTHROPOD && item.getItemMeta().hasEnchant(BEnchantment.BURDEN_ARACHNOPHOBIC)) ||
 				(ent.getCategory() == EntityCategory.UNDEAD && item.getItemMeta().hasEnchant(BEnchantment.BURDEN_NECROPHOBIC)) ||
@@ -127,7 +130,7 @@ public class EnchantmentListener extends EventListener {
 
 		if (e.isSprinting() && lv > 0) {
 			AttributeModifier modifier = new AttributeModifier(MODIFIER_SWIFT_SPRINT.getUniqueId(), MODIFIER_SWIFT_SPRINT.getName(), MODIFIER_SWIFT_SPRINT.getAmount() * lv, MODIFIER_SWIFT_SPRINT.getOperation());
-			if (!attributeInstance.getModifiers().contains(modifier)) // Because the server would rather complain rather than just... Idk... DEAL WITH IT?
+			if (!attributeInstance.getModifiers().contains(modifier)) // Because the server would rather complain than just... Idk... DEAL WITH IT?
 				attributeInstance.addModifier(modifier);
 		} else {
 			attributeInstance.removeModifier(MODIFIER_SWIFT_SPRINT);

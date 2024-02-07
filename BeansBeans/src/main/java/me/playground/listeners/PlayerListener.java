@@ -32,9 +32,9 @@ import org.bukkit.block.*;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.block.data.Lightable;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.craftbukkit.v1_19_R2.CraftWorld;
-import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event.Result;
@@ -132,26 +132,21 @@ public class PlayerListener extends EventListener {
 			p.sendActionBar(Component.text("\u00a7cYou're sending messages too fast!"));
 			return;
 		}
-		
+
 		pp.getStats().addToStat(StatType.GENERIC, "chatMessages", 1, true);
 
-		TextComponent chat = pp.getComponentName();
+		TextComponent chat = Component.empty();
 
-		if (pp.isRank(Rank.MODERATOR)) {
-			chat = Component.empty().append(Component.text("\u24E2", BeanColor.STAFF)
-							.hoverEvent(HoverEvent.showText(Component.text("Staff Member", BeanColor.STAFF))))
-					.append(Component.text(" "))
-					.append(pp.getComponentName());
-		} else if (pp.isRank(Rank.PLEBEIAN)) {
-			chat = Component.empty().append(Component.text("\u2b50", pp.getDonorRank().getRankColour())
-							.hoverEvent(HoverEvent.showText(Component.text("Supporter", pp.getDonorRank().getRankColour()))))
-					.append(Component.text(" "))
-					.append(pp.getComponentName());
-		}
+		if (pp.getDonorRank() != null)
+			chat = Component.empty().append(Component.text('\uE020'));
+
+		chat = chat.append(Component.text(pp.getHighestRank().getUnicode()).hoverEvent(pp.getHighestRank().toComponent()))
+				.append(Component.text(" "))
+				.append(pp.getComponentName());
 
 		final String content = ((TextComponent)e.message()).content();
 		final ArrayList<UUID> pinged = new ArrayList<>();
-		
+
 		// @Name and /Command formatting.
 		if (content.contains("@") || content.contains("/")) {
 			final String[] spaceSplit = ((TextComponent)e.message()).content().split(" ");
@@ -232,6 +227,7 @@ public class PlayerListener extends EventListener {
 			if (maxHpAttr == null) return;
 			double hp = monster.getHealth(), maxHp = maxHpAttr.getValue();
 			monster.setHealth(Math.min(maxHp, hp + maxHp / 4));
+			monster.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, monster.getLocation(), 10);
 		}
 	}
 	
@@ -569,7 +565,7 @@ public class PlayerListener extends EventListener {
 			Material m = b.getType();
 
 			// Edit Existing Sign
-			if (item == null && m.toString().endsWith("_SIGN")) {
+			/*if (item == null && m.toString().endsWith("_SIGN")) {
 				if (!(p.isSneaking() && e.getItem() != null) && !p.isBlocking()) {
 					if (!enactRegionPermission(r, e, p, Flags.BUILD_ACCESS, "edit signs")) return;
 					e.setCancelled(true);
@@ -589,7 +585,7 @@ public class PlayerListener extends EventListener {
 					p.swingMainHand();
 					return;
 				}
-			}
+			}*/
 
 			// Farm shit
 			if (b.getBlockData() instanceof Ageable crop) {

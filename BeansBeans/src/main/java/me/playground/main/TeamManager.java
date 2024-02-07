@@ -70,7 +70,7 @@ public class TeamManager {
 		Scoreboard playerBoard = plugin.getServer().getScoreboardManager().getNewScoreboard();
 		Objective obj = playerBoard.registerNewObjective("showhealth", "health", Component.text("\u00a7c\u2764"));
 		obj.setDisplaySlot(DisplaySlot.BELOW_NAME);
-		obj.getScore(p).setScore((int)p.getHealth());
+//		obj.getScore(p).setScore((int)p.getHealth());
 
 		for (ItemRarity rarity : ItemRarity.values()) {
 			if (rarity.is(ItemRarity.UNCOMMON)) {

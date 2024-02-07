@@ -425,6 +425,7 @@ public class BeanItem {
 			case GENERIC_LUCK -> 10;
 			case HORSE_JUMP_STRENGTH -> 11;
 			case ZOMBIE_SPAWN_REINFORCEMENTS -> 12;
+			case GENERIC_MAX_ABSORPTION -> 13;
 		};
 	}
 
@@ -813,24 +814,24 @@ public class BeanItem {
 			meta.addItemFlags(ItemFlag.HIDE_DYE);
 		}
 		
-		if (enchants.size() > 0 || shouldFormatNameRarity)
-			meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_UNBREAKABLE);
+		if (!enchants.isEmpty() || shouldFormatNameRarity)
+			meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ITEM_SPECIFICS, ItemFlag.HIDE_UNBREAKABLE);
 		
 		// Enchantment Lore
-		if (enchants.size() > 0) {
-			Map<Enchantment, Integer> burdens = new LinkedHashMap<>();
+		if (!enchants.isEmpty()) {
+			Map<BEnchantment, Integer> burdens = new LinkedHashMap<>();
 			for (Entry<Enchantment, Integer> enchant : enchants.entrySet()) {
 				BEnchantment bEnchantment = BEnchantment.from(enchant.getKey());
 				if (bEnchantment.isHiddenFromLore()) continue;
 
 				if (bEnchantment.isCursed())
-					burdens.put(enchant.getKey(), enchant.getValue());
+					burdens.put(bEnchantment, enchant.getValue());
 				else
-					lore.add(Component.text("\u269D ").color(TextColor.color(0x99CCCC)).append(bEnchantment.toComponent(item, enchant.getValue()).color(enchant.getKey().getMaxLevel() < enchant.getValue() ? BeanColor.ENCHANT_OP : BeanColor.ENCHANT)).decoration(TextDecoration.ITALIC, false));
+					lore.add(Component.text("\u269D ").color(TextColor.color(0x99CCCC)).append(bEnchantment.displayName(enchant.getValue()).color(enchant.getKey().getMaxLevel() < enchant.getValue() ? BeanColor.ENCHANT_OP : BeanColor.ENCHANT)).decoration(TextDecoration.ITALIC, false));
 			}
 			
 			// Do Burdens after
-			for (Entry<Enchantment, Integer> burden : burdens.entrySet())
+			for (Entry<BEnchantment, Integer> burden : burdens.entrySet())
 				lore.add(Component.text("\u2623 ").color(TextColor.color(0xff7799)).append(burden.getKey().displayName(burden.getValue()).color(BeanColor.ENCHANT_BURDEN)).decoration(TextDecoration.ITALIC, false));
 		}
 		
@@ -838,8 +839,8 @@ public class BeanItem {
 		if (custom != null) {
 			final List<TextComponent> customLore = custom.getCustomLore(item);
 			
-			if (customLore != null && customLore.size() > 0) {
-				if (enchants.size() > 0)
+			if (customLore != null && !customLore.isEmpty()) {
+				if (!enchants.isEmpty())
 					lore.add(Component.empty());
 				lore.addAll(customLore);
 			}
@@ -847,7 +848,7 @@ public class BeanItem {
 
 		// Rarity String at the Bottom
 		if (shouldFormatNameRarity) {
-			if (lore.size() == 0 || !(lore.get(lore.size()-1).equals(Component.empty())))
+			if (lore.isEmpty() || !(lore.get(lore.size()-1).equals(Component.empty())))
 				lore.add(Component.empty());
 
 			if (refinementLevel > 0)
@@ -859,13 +860,13 @@ public class BeanItem {
 		
 		// Display Name
 		if (meta.hasDisplayName()) {
-			meta.displayName(meta.displayName().color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
+			meta.displayName(Objects.requireNonNull(meta.displayName()).color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
 			
 			if (hasBeenRenamed(item))
 				lore.add(0, custom != null ? custom.getDisplayName().color(NamedTextColor.DARK_GRAY) : Component.translatable(item, NamedTextColor.DARK_GRAY));
 		} else if (custom != null) {
 			meta.displayName(custom.getDisplayName().color(rarity.getColour()).decoration(TextDecoration.ITALIC, false));
-		} else if (rarity != ItemRarity.COMMON || item.getI18NDisplayName().contains("\u00a7")) { // Not Common or it's a vanilla item with custom colour (e.g. enchanted book)
+		} else if (rarity != ItemRarity.COMMON || item.getI18NDisplayName().contains("§")) { // Not Common or it's a vanilla item with custom colour (e.g. enchanted book)
 			meta.displayName(Component.translatable(item, rarity.getColour()).decoration(TextDecoration.ITALIC, false));
 		}
 

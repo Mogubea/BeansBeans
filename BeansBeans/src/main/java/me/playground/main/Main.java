@@ -186,8 +186,8 @@ public class Main extends JavaPlugin {
 		if (commandManager != null)
 			commandManager.unregisterCommands();
 		
-		if (enchantManager != null)
-			enchantManager.unregisterEnchantments();
+		//if (enchantManager != null)
+		//	enchantManager.unregisterEnchantments();
 		
 		if (listenerManager != null)
 			listenerManager.unregisterEvents();

@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.bukkit.plugin.Plugin;
 import org.dynmap.DynmapAPI;
 
 import me.playground.main.IPluginRef;
@@ -27,21 +28,24 @@ public class DatasourceCore implements IPluginRef {
 	private Connection connection;
 	
 	public DatasourceCore(Main pl) {
-		DynmapAPI dynmap1;
+		DynmapAPI dynmapAPI = null;
 		host = pl.getConfig().getString("host");
 		port = pl.getConfig().getInt("port");
 		username = pl.getConfig().getString("username");
 		database = pl.getConfig().getString("database");
 		password = pl.getConfig().getString("password");
 		plugin = pl;
-		
-		dynmap1 = (DynmapAPI) pl.getServer().getPluginManager().getPlugin("dynmap");
-		if (dynmap1 == null || !dynmap1.markerAPIInitialized()) {
-			pl.getSLF4JLogger().warn("DynmapAPI was not found, continuing without Dynmap...");
-			dynmap1 = null;
+
+		Plugin pluginDynmap = pl.getServer().getPluginManager().getPlugin("dynmap");
+		if (pluginDynmap != null && pluginDynmap.isEnabled()) {
+			dynmapAPI = (DynmapAPI) pluginDynmap;
+			if (!dynmapAPI.markerAPIInitialized())
+				dynmapAPI = null;
 		}
 
-		dynmap = dynmap1;
+		if ((dynmap = dynmapAPI) == null)
+			pl.getSLF4JLogger().warn("Dynmap API was not found, continuing without it...");
+
 		try {
 			synchronized (pl) {
 				if (connection != null && !connection.isClosed()) return;

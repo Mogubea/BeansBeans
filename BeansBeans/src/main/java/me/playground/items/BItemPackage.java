@@ -51,14 +51,10 @@ public class BItemPackage extends BeanItem {
 			PlayerProfile pp = PlayerProfile.from(p);
 			
 			if (e.getAction() == Action.RIGHT_CLICK_AIR) {
-				try {
-					PacketContainer arm = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.ANIMATION);
-		            arm.getEntityModifier(p.getWorld()).write(0, p);
-		            ProtocolLibrary.getProtocolManager().sendServerPacket(p, arm);
-				} catch (InvocationTargetException e1) {
-					e1.printStackTrace();
-				}
-			}
+                PacketContainer arm = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.ANIMATION);
+                arm.getEntityModifier(p.getWorld()).write(0, p);
+                ProtocolLibrary.getProtocolManager().sendServerPacket(p, arm);
+            }
 			
 			p.getWorld().playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_GOLD, 0.7F, 0.9F);
 			p.getWorld().spawnParticle(Particle.BLOCK_CRACK, p.getLocation().add(0, 1.5, 0), 5, visuals.createBlockData());

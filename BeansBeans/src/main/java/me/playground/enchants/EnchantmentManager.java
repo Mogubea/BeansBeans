@@ -2,11 +2,14 @@ package me.playground.enchants;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 import me.playground.items.BeanItem;
+import net.minecraft.core.MappedRegistry;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 
 import me.playground.main.Main;
@@ -45,11 +48,17 @@ public class EnchantmentManager {
 	
 	private void registerEnchantments() {
 		try {
-            Field acceptingNew = Enchantment.class.getDeclaredField("acceptingNew");
+            Field acceptingNew = MappedRegistry.class.getDeclaredField("l");
             acceptingNew.setAccessible(true);
-            acceptingNew.set(null, true);
+            acceptingNew.set(BuiltInRegistries.ENCHANTMENT, false);
+
+            Field hashMap = MappedRegistry.class.getDeclaredField("m");
+            hashMap.setAccessible(true);
+            hashMap.set(BuiltInRegistries.ENCHANTMENT, new IdentityHashMap<>());
+
             for (BEnchantment ench : BEnchantment.getCustomEnchants())
-            	Enchantment.registerEnchantment(ench);
+                Registry.register(BuiltInRegistries.ENCHANTMENT, ench.key().asString(), new CustomEnchantTest());
+
             plugin.getSLF4JLogger().info("Registered custom enchantments.");
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -81,9 +90,8 @@ public class EnchantmentManager {
 
         if (format) BeanItem.formatItem(item);
     }
-	
-	@SuppressWarnings("unchecked")
-	public void unregisterEnchantments() {
+
+	/*public void unregisterEnchantments() {
 		try {
            Field keyField = Enchantment.class.getDeclaredField("byKey");
            Field nameField = Enchantment.class.getDeclaredField("byName");
@@ -98,6 +106,6 @@ public class EnchantmentManager {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-	}
+	}*/
 	
 }

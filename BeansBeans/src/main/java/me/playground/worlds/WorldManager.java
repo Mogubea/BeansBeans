@@ -11,7 +11,8 @@ import me.playground.main.Main;
 
 public class WorldManager {
 	private final WorldDatasource datasource;
-	private final BiMap<Integer, World> idToWorld = HashBiMap.create();
+	private final BiMap<Integer, BeanWorld> idToWorld = HashBiMap.create();
+	private final BiMap<Integer, World> idToBukkitWorld = HashBiMap.create();
 
 	public WorldManager(Main plugin) {
 		datasource = new WorldDatasource(plugin, this);
@@ -22,20 +23,21 @@ public class WorldManager {
 	 * @return A World's database ID.
 	 */
 	public int getWorldId(World w) {
-		return idToWorld.inverse().get(w);
+		return idToBukkitWorld.inverse().get(w);
 	}
 	
 	/**
 	 * @return A World from its database ID.
 	 */
 	public World getWorld(int id) {
-		return idToWorld.get(id);
+		return idToBukkitWorld.get(id);
 	}
-	
+
 	protected void addWorldToMap(int id, World world) {
-		idToWorld.put(id, world);
+		idToBukkitWorld.put(id, world);
+		idToWorld.put(id, new BeanWorld(world));
 	}
-	
+
 	/**
 	 * Register the specified world into the database and set up the World Region.
 	 */
@@ -44,11 +46,11 @@ public class WorldManager {
 	}
 	
 	public Set<World> getWorlds() {
-		return idToWorld.values();
+		return idToBukkitWorld.values();
 	}
 
 	public int size() {
-		return idToWorld.size();
+		return idToBukkitWorld.size();
 	}
 
 }

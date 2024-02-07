@@ -151,12 +151,6 @@ public class BEnchantment extends Enchantment {
 			.setItemRarity(ItemRarity.UNCOMMON, 3)
 			.setBookPowerRequirement(60, 80, 120);
 	/**
-	 * Items slow the player and can fail at their main task
-	 */
-	/*public static final BEnchantment BURDEN_PONDEROUS = new BEnchantment("ponderous", "Ponderous", BEnchantmentTarget.TOOL, 1, 4, true, false, false, -1, -1, 0, 0)
-			.setItemRarity(ItemRarity.UNCOMMON, 3)
-			.setBookPowerRequirement(60, 80, 100, 120);*/
-	/**
 	 * Items take additional XP and Items to repair, cannot be removed until fully repaired.
 	 */
 	public static final BEnchantment BURDEN_IRREPARABLE = new BEnchantment("irreparable", "Irreparable", BEnchantmentTarget.BREAKABLE, 1, 3, true, false, false, -1, -1, 0, 0) {
@@ -459,6 +453,7 @@ public class BEnchantment extends Enchantment {
 	}
 
 	private final boolean isCustom;
+	private final NamespacedKey key;
 	private final String englishString;
 	private final String translationKey;
 	private Component componentName;
@@ -500,8 +495,9 @@ public class BEnchantment extends Enchantment {
 	private boolean enabled = true;
 	
 	protected BEnchantment(String keyName, String engName, BEnchantmentTarget target, int minLevel, int maxLevel, boolean isCurse, boolean isTreasure, boolean isAstral, int runicCost, int runicIncrease, int xpCost, int xpIncrease, Enchantment... conflicts) {
-		super(Main.getInstance().getKey(keyName));
+		super();
 
+		this.key = Main.getInstance().getKey(keyName);
 		this.vanillaRarity = EnchantmentRarity.VERY_RARE;
 		this.minLevel = minLevel;
 		this.maxLevel = maxLevel;
@@ -529,8 +525,9 @@ public class BEnchantment extends Enchantment {
 	}
 	
 	protected BEnchantment(Enchantment enchant, String engName, int runicValue, int runicPerLevel, int xpCost, int xpCostPerLevel, boolean isAstral, Enchantment...conflicts) {
-		super(enchant.getKey());
-		
+		super();
+
+		this.key = enchant.getKey();
 		this.vanillaRarity = enchant.getRarity();
 		this.minLevel = enchant.getStartLevel();
 		this.maxLevel = enchant.getMaxLevel();
@@ -745,9 +742,6 @@ public class BEnchantment extends Enchantment {
 	}
 
 	@NotNull
-	public Component toComponent(@NotNull ItemStack item, int level) { return displayName(level); }
-
-	@NotNull
 	public BEnchantmentTarget getEnchantmentTarget() {
 		return target;
 	}
@@ -820,6 +814,7 @@ public class BEnchantment extends Enchantment {
     }
     
     @NotNull
+	@Override
     public net.kyori.adventure.text.Component displayName(int level) {
     	Component heck = isCustom ? Component.text(englishString) : Component.translatable(translationKey);
     	if (maxLevel != 1)
@@ -839,7 +834,17 @@ public class BEnchantment extends Enchantment {
         return isDiscoverable;
     }
 
-    @NotNull
+	@Override
+	public int getMinModifiedCost(int i) {
+		return 0;
+	}
+
+	@Override
+	public int getMaxModifiedCost(int i) {
+		return 0;
+	}
+
+	@NotNull
     public EnchantmentRarity getRarity() {
         return vanillaRarity;
     }
@@ -885,5 +890,10 @@ public class BEnchantment extends Enchantment {
 
 	public boolean isLegacy() {
 		return isLegacy;
+	}
+
+	@Override
+	public @NotNull NamespacedKey getKey() {
+		return key;
 	}
 }

@@ -34,11 +34,12 @@ public class RegionManager {
 		}), RegionVisualiser.INTERVAL, RegionVisualiser.INTERVAL);
 	}
 	
-	public void initWorldRegion(World world) {
+	public WorldRegion initWorldRegion(World world) {
 		worldMaps.put(world.getUID(), new RegionMap<>(world));
-		Region nwr = new WorldRegion(this, -datasource.getWorldManager().getWorldId(world), world);
+		WorldRegion nwr = new WorldRegion(this, -datasource.getWorldManager().getWorldId(world), world);
 		worldRegions.put(world.getUID(), nwr);
 		registerRegion(nwr);
+		return nwr;
 	}
 
 	@NotNull

@@ -21,13 +21,13 @@ public class EntityHologramLine extends ArmorStand implements IBeanEntity {
 	private final TextComponent line;
 
 	protected EntityHologramLine(EntityHologram owner, TextComponent component) {
-		super(EntityType.ARMOR_STAND, owner.level);
+		super(EntityType.ARMOR_STAND, owner.level());
 		this.line = component;
 		this.owner = owner;
 		this.getBukkitEntity().customName(component);
 		this.getBukkitEntity().setCustomNameVisible(true);
 		postCreation();
-		level.addFreshEntity(this, CreatureSpawnEvent.SpawnReason.CUSTOM);
+		level().addFreshEntity(this, CreatureSpawnEvent.SpawnReason.CUSTOM);
 	}
 
 	@Override

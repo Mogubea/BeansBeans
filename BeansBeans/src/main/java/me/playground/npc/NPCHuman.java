@@ -1,5 +1,6 @@
 package me.playground.npc;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -10,8 +11,8 @@ import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.entity.EquipmentSlot;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.json.JSONObject;
@@ -84,10 +85,20 @@ public class NPCHuman extends NPC<ServerPlayer> {
 	@Override
 	public void showTo(Player p) {
 		ServerGamePacketListenerImpl connection = ((CraftPlayer)p).getHandle().connection;
-		//connection.send(new ClientboundAddPlayerPacket(getEntity())); // add npc to existence
-		connection.send(ClientboundPlayerInfoUpdatePacket.createPlayerInitializing(List.of(getEntity())));
+//		connection.send(new ClientboundAddEntityPacket(getEntity())); // add npc to existence
+//		connection.send(ClientboundPlayerInfoUpdatePacket.createPlayerInitializing(List.of(getEntity())));
+
+		try {
+			Field field = getEntity().getClass().getDeclaredField("c");
+			field.setAccessible(true);
+			field.set(getEntity(), connection);
+		} catch (Exception ignored) {
+
+		}
+
+		connection.send(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, getEntity()));
 		getPlugin().getServer().getScheduler().runTask(getPlugin(), () -> {
-			connection.send(new ClientboundAddPlayerPacket(getEntity())); // Spawns the Entity for the player
+			connection.send(new ClientboundAddEntityPacket(getEntity())); // Spawns the Entity for the player
 			connection.send(new ClientboundRotateHeadPacket(entity, getFixedRot(getLocation().getYaw()))); // Rotates the head for the player
 			});
 
@@ -115,8 +126,8 @@ public class NPCHuman extends NPC<ServerPlayer> {
 		Property texture = (Property) textures[0];
 		
 		obj.put("uuid", getUniqueId().toString())
-		.put("texValue", texture.getValue())
-		.put("texSig", texture.getSignature());
+		.put("texValue", texture.value())
+		.put("texSig", texture.signature());
 		return obj;
 	}
 
